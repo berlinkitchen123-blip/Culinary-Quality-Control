@@ -229,31 +229,53 @@ function listenToGlobalHistory() {
 }
 
 function listenToProductionOrders() {
-    // 1. Production Orders Cleanup
+    // 1. Cleanup
     if (state.productionListener) {
         off(state.productionRef, 'value', state.productionListener);
     }
-
-    // 2. Production Checks Cleanup
     if (state.productionChecksListener) {
         off(state.productionChecksRef, 'value', state.productionChecksListener);
     }
 
     const date = state.selectedDate;
+    const ordersKey = `prod_orders_${date}`;
+    const checksKey = `prod_checks_${date}`;
 
-    // 3. New Orders Listener
+    // 2. Cache Load (Instant)
+    const cachedOrders = loadFromCache(ordersKey);
+    if (cachedOrders) {
+        state.productionOrders = cachedOrders;
+        if (state.currentView === 'production') renderProductionView();
+    }
+    const cachedChecks = loadFromCache(checksKey);
+    if (cachedChecks) {
+        state.productionChecks = cachedChecks;
+        if (state.currentView === 'production' && state.productionMode === 'kitchen') renderProductionView();
+    }
+
+    // 3. New Orders Listener (Sync)
     state.productionRef = ref(database, `production-orders/${date}`);
     state.productionListener = onValue(state.productionRef, (snapshot) => {
         const val = snapshot.val();
-        state.productionOrders = val ? (Array.isArray(val) ? val : Object.values(val)) : [];
-        if (state.currentView === 'production') renderProductionView();
+        const data = val ? (Array.isArray(val) ? val : Object.values(val)) : [];
+
+        // Update only if changed (prevents re-render loops if cache matches server)
+        if (JSON.stringify(data) !== JSON.stringify(state.productionOrders)) {
+            state.productionOrders = data;
+            saveToCache(ordersKey, data);
+            if (state.currentView === 'production') renderProductionView();
+        }
     });
 
-    // 4. New Checks Listener
+    // 4. New Checks Listener (Sync)
     state.productionChecksRef = ref(database, `production-checks/${date}`);
     state.productionChecksListener = onValue(state.productionChecksRef, (snapshot) => {
-        state.productionChecks = snapshot.val() || {};
-        if (state.currentView === 'production' && state.productionMode === 'kitchen') renderProductionView();
+        const val = snapshot.val() || {};
+        if (JSON.stringify(val) !== JSON.stringify(state.productionChecks)) {
+            state.productionChecks = val;
+            saveToCache(checksKey, val);
+            if (state.currentView === 'production' && state.productionMode === 'kitchen') renderProductionView();
+        }
     });
 }
 

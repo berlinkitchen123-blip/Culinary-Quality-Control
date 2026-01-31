@@ -1157,20 +1157,58 @@ function renderApp() {
 }
 
 function renderDateSelector() {
+    // Current visible week context
     const viewDate = getStartOfWeek(new Date(state.selectedDate + 'T12:00:00Z'));
+
+    // Generate 5 days (Mon-Fri)
     const weekDays = Array.from({ length: 5 }).map((_, i) => {
-        const d = new Date(viewDate); d.setDate(viewDate.getDate() + i); return d;
+        const d = new Date(viewDate);
+        d.setDate(viewDate.getDate() + i);
+        return d;
     });
+
     DOMElements.dateButtonsContainer.innerHTML = '';
+
+    // Prev Week Button
+    const prevBtn = document.createElement('button');
+    prevBtn.className = "flex items-center justify-center w-8 h-16 sm:h-20 rounded-l-[1.25rem] bg-slate-800/50 text-slate-500 hover:bg-slate-700/50 hover:text-white transition-all border-y border-l border-slate-700/50";
+    prevBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg>`;
+    prevBtn.onclick = () => {
+        const d = new Date(state.selectedDate);
+        d.setDate(d.getDate() - 7);
+        state.selectedDate = d.toISOString().split('T')[0];
+        fetchCheckData(); // refresh all data
+        if (state.currentView === 'production') renderProductionView(); // refresh prod view if active
+    };
+    DOMElements.dateButtonsContainer.appendChild(prevBtn);
+
+    // Days Objects
     weekDays.forEach(day => {
         const dayString = day.toISOString().split('T')[0];
         const isSelected = dayString === state.selectedDate;
         const button = document.createElement('button');
-        button.className = `flex flex-col items-center justify-center w-12 h-16 sm:w-16 sm:h-20 rounded-[1.25rem] sm:rounded-[1.5rem] transition-all duration-300 transform active:scale-90 shadow-xl ${isSelected ? 'bg-indigo-600 text-white shadow-indigo-600/40 ring-4 ring-indigo-400/20' : 'bg-slate-800/80 text-slate-500 border border-slate-700/50'}`;
+        button.className = `flex flex-col items-center justify-center w-12 h-16 sm:w-16 sm:h-20 rounded-[1rem] sm:rounded-[1.25rem] transition-all duration-300 transform active:scale-95 shadow-xl mx-0.5 ${isSelected ? 'bg-indigo-600 text-white shadow-indigo-600/40 ring-2 ring-indigo-400/50 z-10 scale-110' : 'bg-slate-800/80 text-slate-500 border border-slate-700/50 hover:bg-slate-700'}`;
         button.innerHTML = `<span class="text-[9px] sm:text-[10px] uppercase font-black opacity-70 mb-1">${day.toLocaleDateString('en-US', { weekday: 'short' })}</span><span class="text-base sm:text-lg font-black">${day.getDate()}</span>`;
-        button.onclick = () => { state.selectedDate = dayString; fetchCheckData(); };
+        button.onclick = () => {
+            state.selectedDate = dayString;
+            fetchCheckData();
+            if (state.currentView === 'production') renderProductionView();
+        };
         DOMElements.dateButtonsContainer.appendChild(button);
     });
+
+    // Next Week Button
+    const nextBtn = document.createElement('button');
+    nextBtn.className = "flex items-center justify-center w-8 h-16 sm:h-20 rounded-r-[1.25rem] bg-slate-800/50 text-slate-500 hover:bg-slate-700/50 hover:text-white transition-all border-y border-r border-slate-700/50";
+    nextBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>`;
+    nextBtn.onclick = () => {
+        const d = new Date(state.selectedDate);
+        d.setDate(d.getDate() + 7);
+        state.selectedDate = d.toISOString().split('T')[0];
+        fetchCheckData();
+        if (state.currentView === 'production') renderProductionView();
+    };
+    DOMElements.dateButtonsContainer.appendChild(nextBtn);
 }
 
 function renderDishSelectionGrid() {

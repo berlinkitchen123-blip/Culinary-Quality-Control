@@ -1177,8 +1177,9 @@ function renderDateSelector() {
         const d = new Date(state.selectedDate);
         d.setDate(d.getDate() - 7);
         state.selectedDate = d.toISOString().split('T')[0];
-        fetchCheckData(); // refresh all data
-        if (state.currentView === 'production') renderProductionView(); // refresh prod view if active
+        fetchMenu();      // Refresh Menu for the new week context
+        fetchCheckData(); // Refresh Checks
+        if (state.currentView === 'production') renderProductionView();
     };
     DOMElements.dateButtonsContainer.appendChild(prevBtn);
 
@@ -1191,6 +1192,7 @@ function renderDateSelector() {
         button.innerHTML = `<span class="text-[9px] sm:text-[10px] uppercase font-black opacity-70 mb-1">${day.toLocaleDateString('en-US', { weekday: 'short' })}</span><span class="text-base sm:text-lg font-black">${day.getDate()}</span>`;
         button.onclick = () => {
             state.selectedDate = dayString;
+            fetchMenu(); // Ensure menu context is correct (e.g. crossing week boundary via manual date selection)
             fetchCheckData();
             if (state.currentView === 'production') renderProductionView();
         };

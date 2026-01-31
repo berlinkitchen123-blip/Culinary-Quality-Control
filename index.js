@@ -37,7 +37,8 @@ let state = {
     isLibraryLoaded: false,
     totalRecordsFound: 0,
     hasFetchedHistory: false,
-    isHistoryLoading: false
+    isHistoryLoading: false,
+    currentWeekId: null // Track currently loaded menu week
 };
 
 // --- Definitions ---
@@ -1192,8 +1193,14 @@ function renderDateSelector() {
         const d = new Date(state.selectedDate);
         d.setDate(d.getDate() - 7);
         state.selectedDate = d.toISOString().split('T')[0];
-        fetchMenu();      // Refresh Menu for the new week context
-        fetchCheckData(); // Refresh Checks
+
+        // Check if week changed
+        const newWeekId = getWeekId(new Date(state.selectedDate + 'T12:00:00Z'));
+        if (newWeekId !== state.currentWeekId) {
+            fetchMenu();
+        }
+
+        fetchCheckData();
         if (state.currentView === 'production') renderProductionView();
     };
     DOMElements.dateButtonsContainer.appendChild(prevBtn);
@@ -1207,7 +1214,13 @@ function renderDateSelector() {
         button.innerHTML = `<span class="text-[9px] sm:text-[10px] uppercase font-black opacity-70 mb-1">${day.toLocaleDateString('en-US', { weekday: 'short' })}</span><span class="text-base sm:text-lg font-black">${day.getDate()}</span>`;
         button.onclick = () => {
             state.selectedDate = dayString;
-            fetchMenu(); // Ensure menu context is correct (e.g. crossing week boundary via manual date selection)
+
+            // Check if week changed (unlikely for day clicks within view, but safest for edge cases)
+            const newWeekId = getWeekId(new Date(state.selectedDate + 'T12:00:00Z'));
+            if (newWeekId !== state.currentWeekId) {
+                fetchMenu();
+            }
+
             fetchCheckData();
             if (state.currentView === 'production') renderProductionView();
         };
@@ -1222,6 +1235,13 @@ function renderDateSelector() {
         const d = new Date(state.selectedDate);
         d.setDate(d.getDate() + 7);
         state.selectedDate = d.toISOString().split('T')[0];
+
+        // Check if week changed
+        const newWeekId = getWeekId(new Date(state.selectedDate + 'T12:00:00Z'));
+        if (newWeekId !== state.currentWeekId) {
+            fetchMenu();
+        }
+
         fetchCheckData();
         if (state.currentView === 'production') renderProductionView();
     };

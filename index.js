@@ -705,29 +705,29 @@ function renderKitchenView(container) {
     };
 
     const html = `
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-in slide-in-from-bottom-4 duration-500">
+        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 md:gap-6 animate-in slide-in-from-bottom-4 duration-500 pb-20">
             ${ingredients.map(ing => {
         const sop = getSOP(ing.name);
         const isDone = state.productionChecks?.[ing.id]?.done;
 
         return `
-                <div class="bg-slate-900/80 border ${isDone ? 'border-green-500/30' : 'border-slate-800'} rounded-[2.5rem] p-6 shadow-xl relative overflow-hidden group transition-all">
+                <div class="bg-slate-900/80 border ${isDone ? 'border-green-500/30' : 'border-slate-800'} rounded-[2rem] md:rounded-[2.5rem] p-5 md:p-6 shadow-xl relative overflow-hidden group transition-all">
                     <!-- Header (Click to Expand) -->
                     <div class="cursor-pointer" onclick="window.toggleKitchenDetails('${ing.id}')">
-                        <div class="flex justify-between items-start mb-6">
-                            <div class="h-14 w-14 rounded-2xl bg-indigo-600/10 border border-indigo-500/20 flex items-center justify-center text-2xl shadow-inner">
+                        <div class="flex justify-between items-start mb-4 md:mb-6">
+                            <div class="h-12 w-12 md:h-14 md:w-14 rounded-2xl bg-indigo-600/10 border border-indigo-500/20 flex items-center justify-center text-xl md:text-2xl shadow-inner">
                                 ${ing.icon}
                             </div>
                             <div class="text-right">
-                                    <span class="text-3xl font-black text-white tracking-tighter block">${(ing.totalWeight / 1000).toFixed(1)}<span class="text-sm text-slate-500 ml-1">kg</span></span>
+                                    <span class="text-2xl md:text-3xl font-black text-white tracking-tighter block">${(ing.totalWeight / 1000).toFixed(1)}<span class="text-sm text-slate-500 ml-1">kg</span></span>
                                     <span class="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Total Required</span>
                             </div>
                         </div>
                         
-                        <h3 class="text-lg font-black text-white uppercase italic leading-tight mb-4 pr-10 hover:text-indigo-400 transition-colors">${ing.name} <span class="text-[10px] text-slate-500 ml-2 not-italic font-normal border border-slate-700 px-2 py-0.5 rounded-full">Details &darr;</span></h3>
+                        <h3 class="text-base md:text-lg font-black text-white uppercase italic leading-tight mb-4 pr-10 hover:text-indigo-400 transition-colors">${ing.name} <span class="text-[10px] text-slate-500 ml-2 not-italic font-normal border border-slate-700 px-2 py-0.5 rounded-full inline-block mt-1 md:mt-0">Details &darr;</span></h3>
                         
                         <!-- HACCP Brief -->
-                        <div class="bg-slate-950/50 rounded-xl p-4 border border-slate-800/50 mb-0 space-y-2 group-hover:bg-slate-900 transition-colors">
+                        <div class="bg-slate-950/50 rounded-xl p-3 md:p-4 border border-slate-800/50 mb-0 space-y-2 group-hover:bg-slate-900 transition-colors">
                             <div class="flex justify-between">
                                 <span class="text-[9px] text-slate-500 uppercase font-bold">Target Temp</span>
                                 <span class="text-[9px] text-orange-400 font-mono font-bold">${sop.temp}</span>
@@ -740,14 +740,14 @@ function renderKitchenView(container) {
                     </div>
 
                     <!-- Expandable Details -->
-                    <div id="kitchen-details-${ing.id}" class="hidden mt-6 pt-6 border-t border-slate-800/50 animate-in slide-in-from-top-2 duration-300">
+                    <div id="kitchen-details-${ing.id}" class="hidden mt-4 md:mt-6 pt-4 md:pt-6 border-t border-slate-800/50 animate-in slide-in-from-top-2 duration-300">
                         <p class="text-[9px] font-black text-slate-500 uppercase tracking-[0.3em] mb-4">Cooking Standard (SOP)</p>
                         
                         <div class="space-y-3 mb-6">
                             ${sop.steps.map((step, idx) => `
                                 <div class="flex gap-3">
                                     <div class="h-5 w-5 shrink-0 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-[10px] font-bold text-slate-400">${idx + 1}</div>
-                                    <p class="text-sm font-medium text-slate-300 leading-tight">${step}</p>
+                                    <p class="text-xs md:text-sm font-medium text-slate-300 leading-tight">${step}</p>
                                 </div>
                             `).join('')}
                         </div>
@@ -758,11 +758,11 @@ function renderKitchenView(container) {
                     </div>
 
                     <!-- Action -->
-                    <button onclick="window.toggleKitchenCheck('${ing.id}')" class="w-full mt-6 py-4 rounded-2xl font-black uppercase tracking-[0.2em] text-[10px] transition-all flex items-center justify-center gap-2 ${isDone ? 'bg-green-600 text-white shadow-green-900/20' : 'bg-slate-800 text-slate-400 hover:bg-indigo-600 hover:text-white hover:shadow-indigo-600/30'}">
+                    <button onclick="window.toggleKitchenCheck('${ing.id}')" class="w-full mt-6 py-3 md:py-4 rounded-xl md:rounded-2xl font-black uppercase tracking-[0.2em] text-[10px] transition-all flex items-center justify-center gap-2 active:scale-95 ${isDone ? 'bg-green-600 text-white shadow-green-900/20' : 'bg-slate-800 text-slate-400 hover:bg-indigo-600 hover:text-white hover:shadow-indigo-600/30'}">
                         ${isDone ? '<svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" /></svg> Completed' : 'Mark Produced'}
                     </button>
                     
-                    <div class="absolute top-4 right-4 text-slate-700 font-black text-[60px] opacity-10 pointer-events-none -rotate-12">
+                    <div class="absolute top-4 right-4 text-slate-700 font-black text-[50px] md:text-[60px] opacity-10 pointer-events-none -rotate-12">
                         ${ing.name.substring(0, 2)}
                     </div>
                 </div>
@@ -783,12 +783,12 @@ function renderAssemblyView(container, dishes) {
         const bgHeader = colorTheme === 'blue' ? 'bg-blue-900/20' : 'bg-red-900/20';
 
         let html = `
-            <div class="bg-slate-900/50 rounded-[2.5rem] border border-slate-800 overflow-hidden h-fit">
-                <div class="p-6 border-b border-slate-800 ${bgHeader} flex justify-between items-center">
-                    <h3 class="text-xl font-black ${titleColor} uppercase tracking-widest italic">${title} STATION</h3>
+            <div class="bg-slate-900/50 rounded-[2rem] md:rounded-[2.5rem] border border-slate-800 overflow-hidden h-fit mb-6 md:mb-0">
+                <div class="p-5 md:p-6 border-b border-slate-800 ${bgHeader} flex justify-between items-center sticky top-0 backdrop-blur-md z-10">
+                    <h3 class="text-lg md:text-xl font-black ${titleColor} uppercase tracking-widest italic">${title} STATION</h3>
                     <span class="text-[10px] font-bold text-slate-500 uppercase bg-slate-950 px-3 py-1 rounded-lg border border-slate-800">${items.length} Dishes</span>
                 </div>
-                <div class="p-6 space-y-4">
+                <div class="p-4 md:p-6 space-y-4">
         `;
 
         if (items.length === 0) {
@@ -800,26 +800,26 @@ function renderAssemblyView(container, dishes) {
                     <div class="flex justify-between items-center py-2 border-b border-slate-800/50 last:border-0 px-2 rounded-lg hover:bg-slate-800/30 transition-colors">
                         <div class="flex items-center gap-3">
                                 <div class="h-5 w-5 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-[9px] font-bold text-slate-500">${i + 1}</div>
-                                <span class="text-[11px] font-bold text-slate-300 uppercase tracking-tight">${ing.name}</span>
+                                <span class="text-[10px] md:text-[11px] font-bold text-slate-300 uppercase tracking-tight">${ing.name}</span>
                         </div>
-                        <span class="text-[11px] font-mono font-black ${titleColor}">${ing.unitWeight ? ing.unitWeight + 'g' : 'x'}</span>
+                        <span class="text-[10px] md:text-[11px] font-mono font-black ${titleColor}">${ing.unitWeight ? ing.unitWeight + 'g' : 'x'}</span>
                     </div>
                 `).join('');
 
                 const readyTime = formatTime(dish.readyBy);
 
                 html += `
-                    <div class="bg-slate-950 border ${borderColor} rounded-[2rem] p-6 shadow-xl relative overflow-hidden cursor-pointer hover:border-opacity-100 transition-all group" onclick="window.toggleProductionDetails('${safeId}')">
+                    <div class="bg-slate-950 border ${borderColor} rounded-[1.5rem] md:rounded-[2rem] p-5 md:p-6 shadow-xl relative overflow-hidden cursor-pointer hover:border-opacity-100 transition-all group" onclick="window.toggleProductionDetails('${safeId}')">
                         <div class="flex justify-between items-start">
-                            <div class="pr-4">
-                                <h4 class="text-lg font-black text-white uppercase leading-none mb-3 group-hover:${titleColor} transition-colors">${dish.name}</h4>
-                                <div class="flex gap-2">
-                                        <span class="text-[9px] font-bold text-slate-400 uppercase tracking-widest bg-slate-900 px-2 py-1 rounded border border-slate-800">Use By: ${readyTime}</span>
+                            <div class="pr-4 flex-1">
+                                <h4 class="text-base md:text-lg font-black text-white uppercase leading-none mb-3 group-hover:${titleColor} transition-colors">${dish.name}</h4>
+                                <div class="flex flex-wrap gap-2">
+                                        <span class="text-[9px] font-bold text-slate-400 uppercase tracking-widest bg-slate-900 px-2 py-1 rounded border border-slate-800 whitespace-nowrap">Use By: ${readyTime}</span>
                                         <span class="text-[9px] font-bold text-slate-500 uppercase tracking-widest px-2 py-1 ">${dish.type}</span>
                                 </div>
                             </div>
-                            <div class="flex flex-col items-center justify-center bg-slate-900 rounded-2xl w-14 h-14 border border-slate-800 shadow-inner group-hover:bg-slate-800 transition-colors">
-                                <span class="text-2xl font-black text-white">${dish.count}</span>
+                            <div class="flex flex-col items-center justify-center bg-slate-900 rounded-2xl w-12 h-12 md:w-14 md:h-14 border border-slate-800 shadow-inner group-hover:bg-slate-800 transition-colors shrink-0">
+                                <span class="text-xl md:text-2xl font-black text-white">${dish.count}</span>
                                 <span class="text-[7px] font-bold text-slate-500 uppercase">TO MAKE</span>
                             </div>
                         </div>
@@ -862,7 +862,7 @@ function renderAssemblyView(container, dishes) {
     };
 
     container.innerHTML = `
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div class="grid grid-cols-1 xl:grid-cols-2 gap-6 md:gap-8 pb-20">
             ${renderColumn('Cold Assembly', coldDishes, 'blue')}
             ${renderColumn('Hot Assembly', hotDishes, 'red')}
         </div>

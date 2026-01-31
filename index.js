@@ -943,12 +943,27 @@ function fetchCheckData() {
 }
 
 function fetchMenu() {
-    state.isMenuLoading = true; renderApp();
+    state.isMenuLoading = true;
+    renderApp();
+
     const weekId = getWeekId(new Date(state.selectedDate + 'T12:00:00Z'));
-    onValue(ref(database, `menus/${weekId}`), (snapshot) => {
+    const menuRef = ref(database, `menus/${weekId}`);
+
+    // Unsubscribe from previous listener if it exists
+    if (state.menuListener) {
+        off(state.menuRef, 'value', state.menuListener);
+    }
+
+    // Store ref to allow unsubscription later (firebase requires same ref & callback)
+    state.menuRef = menuRef;
+
+    // Create new listener
+    state.menuListener = onValue(menuRef, (snapshot) => {
         state.menu = snapshot.val() || null;
         state.isMenuLoading = false;
         renderApp();
+
+        // Refresh dependent views
         if (state.currentView === 'prep') renderPrepView();
         if (state.currentView === 'audit') window.renderAuditDishLibrary();
     });

@@ -41,6 +41,22 @@ let state = {
     currentWeekId: null // Track currently loaded menu week
 };
 
+// --- Local Caching Helpers ---
+const CACHE_PREFIX = 'CQC_';
+
+const saveToCache = (key, data) => {
+    try {
+        localStorage.setItem(CACHE_PREFIX + key, JSON.stringify(data));
+    } catch (e) { console.warn('Cache Full', e); }
+};
+
+const loadFromCache = (key) => {
+    try {
+        const item = localStorage.getItem(CACHE_PREFIX + key);
+        return item ? JSON.parse(item) : null;
+    } catch (e) { return null; }
+};
+
 // --- Definitions ---
 const PREP_STAGES = [
     { id: 'cooking', label: 'After Cooking', short: 'Cooking', icon: '🔥' },

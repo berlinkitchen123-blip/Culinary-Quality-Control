@@ -25,6 +25,8 @@ let state = {
     prepData: {},
     productionOrders: [],
     selectedDate: new Date().toISOString().split('T')[0],
+    productionMode: 'kitchen', // 'kitchen' | 'assembly'
+    productionListener: null,
     selectedDish: null,
     selectedPrepItem: null,
     isMenuLoading: true,
@@ -226,10 +228,23 @@ function listenToGlobalHistory() {
 }
 
 function listenToProductionOrders() {
-    onValue(ref(database, 'production-orders'), (snapshot) => {
+    if (state.productionListener) {
+        state.productionListener(); // Unsubscribe previous
+        state.productionListener = null;
+    }
+    const date = state.selectedDate;
+    // Listen to orders for the selected date
+    state.productionListener = onValue(ref(database, `production-orders/${date}`), (snapshot) => {
         const val = snapshot.val();
-        state.productionOrders = Array.isArray(val) ? val : (val ? [val] : []);
+        // Handle both array and object formats from Firebase
+        state.productionOrders = val ? (Array.isArray(val) ? val : Object.values(val)) : [];
         if (state.currentView === 'production') renderProductionView();
+    });
+    
+    // Also listen to cooking checks (HACCP done states)
+    onValue(ref(database, `production-checks/${date}`), (snapshot) => {
+        state.productionChecks = snapshot.val() || {};
+        if (state.currentView === 'production' && state.productionMode === 'kitchen') renderProductionView();
     });
 }
 
@@ -487,6 +502,38 @@ function formatTime(minutes) {
     return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
 }
 
+// --- Kitchen Aggregation Logic ---
+function aggregateKitchenIngredients() {
+    const ingredients = {};
+    
+    state.productionOrders.forEach(order => {
+        if (!order || !order.recipe) return;
+        const qty = order.quantity || 1;
+        
+        order.recipe.forEach(line => {
+            const parsed = parseProductionRecipeItem(line);
+            const key = parsed.name.toLowerCase(); // distinct by name
+            
+            if (!ingredients[key]) {
+                ingredients[key] = {
+                    id: key.replace(/\s+/g, '_'),
+                    name: parsed.name,
+                    totalWeight: 0,
+                    icon: getPrepIcon(parsed.name),
+                    dishes: [] 
+                };
+            }
+            ingredients[key].totalWeight += (parsed.weight * qty);
+            // Track which dishes need this (for tooltip/intel)
+            if (!ingredients[key].dishes.includes(order.name)) {
+                ingredients[key].dishes.push(order.name);
+            }
+        });
+    });
+    
+    return Object.values(ingredients).sort((a,b) => b.totalWeight - a.totalWeight);
+}
+
 function aggregateProductionData() {
     const dishes = {};
     const summary = { hot: 0, cold: 0, total: 0 };
@@ -533,30 +580,137 @@ function aggregateProductionData() {
     return { dishes: result, summary };
 }
 
-// Global Toggle for Production Cards
-window.toggleProductionDetails = (safeId) => {
-    const el = document.getElementById(`prod-details-${safeId}`);
-    if (el) {
-        el.classList.toggle('hidden');
-    }
+// Toggle Production Modes
+window.setProductionMode = (mode) => {
+    state.productionMode = mode;
+    renderProductionView();
+};
+
+window.toggleKitchenCheck = (ingId) => {
+    const date = state.selectedDate;
+    const current = state.productionChecks?.[ingId]?.done || false;
+    update(ref(database, `production-checks/${date}/${ingId}`), {
+        done: !current,
+        timestamp: new Date().toISOString()
+    });
 };
 
 function renderProductionView() {
-    const { dishes, summary } = aggregateProductionData();
     const container = document.getElementById('production-content-container');
     const headerStats = document.getElementById('production-stats');
+    const { dishes, summary } = aggregateProductionData(); // Still useful for summary
     
+    // Header with Tabs
     headerStats.innerHTML = `
-        <div class="px-5 py-3 bg-blue-900/30 border border-blue-500/30 rounded-2xl flex flex-col items-center">
-            <span class="text-[9px] font-black text-blue-400 uppercase tracking-widest">Cold</span>
-            <span class="text-2xl font-black text-white leading-none mt-1">${summary.cold}</span>
-        </div>
-        <div class="px-5 py-3 bg-red-900/30 border border-red-500/30 rounded-2xl flex flex-col items-center">
-            <span class="text-[9px] font-black text-red-400 uppercase tracking-widest">Hot</span>
-            <span class="text-2xl font-black text-white leading-none mt-1">${summary.hot}</span>
+        <div class="flex flex-col w-full gap-6">
+            <!-- Stats -->
+            <div class="flex justify-between items-center bg-slate-800/50 p-4 rounded-3xl border border-slate-700/50">
+                <div class="flex gap-4">
+                     <div class="px-5 py-3 bg-blue-900/30 border border-blue-500/30 rounded-2xl flex flex-col items-center">
+                        <span class="text-[9px] font-black text-blue-400 uppercase tracking-widest">Cold Items</span>
+                        <span class="text-2xl font-black text-white leading-none mt-1">${summary.cold}</span>
+                    </div>
+                    <div class="px-5 py-3 bg-red-900/30 border border-red-500/30 rounded-2xl flex flex-col items-center">
+                        <span class="text-[9px] font-black text-red-400 uppercase tracking-widest">Hot Items</span>
+                        <span class="text-2xl font-black text-white leading-none mt-1">${summary.hot}</span>
+                    </div>
+                </div>
+                <!-- Mode Switcher -->
+                <div class="flex bg-slate-900 p-1.5 rounded-2xl border border-slate-800">
+                    <button onclick="window.setProductionMode('kitchen')" class="px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${state.productionMode === 'kitchen' ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-500 hover:text-slate-300'}">
+                        Kitchen (Cooking)
+                    </button>
+                    <button onclick="window.setProductionMode('assembly')" class="px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${state.productionMode === 'assembly' ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-500 hover:text-slate-300'}">
+                        Assembly
+                    </button>
+                </div>
+            </div>
         </div>
     `;
 
+    if (state.productionMode === 'kitchen') {
+        renderKitchenView(container);
+    } else {
+        renderAssemblyView(container, dishes);
+    }
+}
+
+function renderKitchenView(container) {
+    const ingredients = aggregateKitchenIngredients();
+    
+    if (ingredients.length === 0) {
+         container.innerHTML = `<div class="text-center py-20 opacity-50 text-[10px] font-black uppercase tracking-widest text-slate-600">No Cooking Tasks Pending</div>`;
+         return;
+    }
+
+    // Mock HACCP Data for demo
+    const getHACCP = (name) => {
+        if (name.toLowerCase().includes('chicken')) return { temp: '75°C', time: '20 min', method: 'Oven Roast' };
+        if (name.toLowerCase().includes('rice')) return { temp: '100°C', time: '15 min', method: 'Steam' };
+        return { temp: '>65°C', time: 'Varies', method: 'Heat & Hold' };
+    };
+
+    const html = `
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-in slide-in-from-bottom-4 duration-500">
+            ${ingredients.map(ing => {
+                const haccp = getHACCP(ing.name);
+                const isDone = state.productionChecks?.[ing.id]?.done;
+                
+                return `
+                <div class="bg-slate-900/80 border ${isDone ? 'border-green-500/30' : 'border-slate-800'} rounded-[2.5rem] p-6 shadow-xl relative overflow-hidden group transition-all">
+                    <div class="flex justify-between items-start mb-6">
+                        <div class="h-14 w-14 rounded-2xl bg-indigo-600/10 border border-indigo-500/20 flex items-center justify-center text-2xl shadow-inner">
+                            ${ing.icon}
+                        </div>
+                        <div class="text-right">
+                             <span class="text-3xl font-black text-white tracking-tighter block">${(ing.totalWeight/1000).toFixed(1)}<span class="text-sm text-slate-500 ml-1">kg</span></span>
+                             <span class="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Total Required</span>
+                        </div>
+                    </div>
+                    
+                    <h3 class="text-lg font-black text-white uppercase italic leading-tight mb-4 pr-10">${ing.name}</h3>
+                    
+                    <!-- HACCP Intel -->
+                    <div class="bg-slate-950/50 rounded-xl p-4 border border-slate-800/50 mb-6 space-y-2">
+                        <div class="flex justify-between">
+                            <span class="text-[9px] text-slate-500 uppercase font-bold">Target Temp</span>
+                            <span class="text-[9px] text-orange-400 font-mono font-bold">${haccp.temp}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-[9px] text-slate-500 uppercase font-bold">Method</span>
+                            <span class="text-[9px] text-indigo-300 font-bold text-right">${haccp.method}</span>
+                        </div>
+                    </div>
+
+                    <!-- Step Checklist (Mock) -->
+                    <div class="space-y-2 mb-6">
+                        <div class="flex items-center gap-3 opacity-50">
+                            <div class="h-4 w-4 rounded-full border border-slate-600"></div>
+                            <span class="text-[9px] text-slate-400 font-bold uppercase">Prep Ingredients</span>
+                        </div>
+                         <div class="flex items-center gap-3 opacity-50">
+                            <div class="h-4 w-4 rounded-full border border-slate-600"></div>
+                            <span class="text-[9px] text-slate-400 font-bold uppercase">Cook to Temp</span>
+                        </div>
+                    </div>
+
+                    <!-- Action -->
+                    <button onclick="window.toggleKitchenCheck('${ing.id}')" class="w-full py-4 rounded-2xl font-black uppercase tracking-[0.2em] text-[10px] transition-all flex items-center justify-center gap-2 ${isDone ? 'bg-green-600 text-white shadow-green-900/20' : 'bg-slate-800 text-slate-400 hover:bg-indigo-600 hover:text-white hover:shadow-indigo-600/30'}">
+                        ${isDone ? '<svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" /></svg> Completed' : 'Mark Produced'}
+                    </button>
+                    
+                    <div class="absolute top-4 right-4 text-slate-700 font-black text-[60px] opacity-10 pointer-events-none -rotate-12">
+                        ${ing.name.substring(0,2)}
+                    </div>
+                </div>
+                `;
+            }).join('')}
+        </div>
+    `;
+    container.innerHTML = html;
+}
+
+function renderAssemblyView(container, dishes) {
     const coldDishes = dishes.filter(d => d.type !== 'hot').sort((a,b) => (a.readyBy || 0) - (b.readyBy || 0));
     const hotDishes = dishes.filter(d => d.type === 'hot').sort((a,b) => (a.readyBy || 0) - (b.readyBy || 0));
 
@@ -569,7 +723,7 @@ function renderProductionView() {
             <div class="bg-slate-900/50 rounded-[2.5rem] border border-slate-800 overflow-hidden h-fit">
                 <div class="p-6 border-b border-slate-800 ${bgHeader} flex justify-between items-center">
                     <h3 class="text-xl font-black ${titleColor} uppercase tracking-widest italic">${title} STATION</h3>
-                    <span class="text-[10px] font-bold text-slate-500 uppercase bg-slate-950 px-3 py-1 rounded-lg border border-slate-800">${items.length} SKUs</span>
+                    <span class="text-[10px] font-bold text-slate-500 uppercase bg-slate-950 px-3 py-1 rounded-lg border border-slate-800">${items.length} Dishes</span>
                 </div>
                 <div class="p-6 space-y-4">
         `;
@@ -579,13 +733,13 @@ function renderProductionView() {
         } else {
             items.forEach((dish, idx) => {
                 const safeId = `${colorTheme}-${idx}`;
-                const ingredientsList = Object.values(dish.ingredients).map(ing => `
+                const ingredientsList = Object.values(dish.ingredients).map((ing, i) => `
                     <div class="flex justify-between items-center py-2 border-b border-slate-800/50 last:border-0 px-2 rounded-lg hover:bg-slate-800/30 transition-colors">
                         <div class="flex items-center gap-3">
-                             <div class="h-1.5 w-1.5 rounded-full bg-${colorTheme}-500"></div>
+                             <div class="h-5 w-5 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-[9px] font-bold text-slate-500">${i+1}</div>
                              <span class="text-[11px] font-bold text-slate-300 uppercase tracking-tight">${ing.name}</span>
                         </div>
-                        <span class="text-[11px] font-mono font-black ${titleColor}">${ing.totalWeight.toFixed(0)}g</span>
+                        <span class="text-[11px] font-mono font-black ${titleColor}">${ing.unitWeight ? ing.unitWeight + 'g' : 'x'}</span>
                     </div>
                 `).join('');
 
@@ -597,25 +751,31 @@ function renderProductionView() {
                             <div class="pr-4">
                                 <h4 class="text-lg font-black text-white uppercase leading-none mb-3 group-hover:${titleColor} transition-colors">${dish.name}</h4>
                                 <div class="flex gap-2">
-                                     <span class="text-[9px] font-bold text-slate-400 uppercase tracking-widest bg-slate-900 px-2 py-1 rounded border border-slate-800">Ready: ${readyTime}</span>
-                                     <span class="text-[9px] font-bold text-slate-400 uppercase tracking-widest bg-slate-900 px-2 py-1 rounded border border-slate-800">Date: ${dish.deliveryDate || 'N/A'}</span>
+                                     <span class="text-[9px] font-bold text-slate-400 uppercase tracking-widest bg-slate-900 px-2 py-1 rounded border border-slate-800">Use By: ${readyTime}</span>
+                                     <span class="text-[9px] font-bold text-slate-500 uppercase tracking-widest px-2 py-1 ">${dish.type}</span>
                                 </div>
                             </div>
                             <div class="flex flex-col items-center justify-center bg-slate-900 rounded-2xl w-14 h-14 border border-slate-800 shadow-inner group-hover:bg-slate-800 transition-colors">
                                 <span class="text-2xl font-black text-white">${dish.count}</span>
-                                <span class="text-[7px] font-bold text-slate-500 uppercase">QTY</span>
+                                <span class="text-[7px] font-bold text-slate-500 uppercase">TO MAKE</span>
                             </div>
                         </div>
                         
                         <div id="prod-details-${safeId}" class="hidden mt-6 pt-6 border-t border-slate-800/50 animate-in slide-in-from-top-2 duration-200">
-                             <p class="text-[9px] font-black text-slate-500 uppercase tracking-[0.3em] mb-3">Total Batch Requirements</p>
+                             <div class="flex justify-between items-center mb-4">
+                                <p class="text-[9px] font-black text-slate-500 uppercase tracking-[0.3em]">Assembly Layering</p>
+                                <span class="text-[9px] font-black text-indigo-400 uppercase tracking-widest cursor-pointer hover:text-white">Training Mode ></span>
+                             </div>
+                             
+                             <!-- Assembly Visual Placeholder -->
+                             <div class="h-24 w-full bg-slate-900 rounded-xl mb-4 border border-slate-800 flex items-center justify-center relative overflow-hidden group-inner">
+                                <span class="text-[9px] text-slate-600 uppercase font-black tracking-widest z-10">Assembly Diagram</span>
+                                <div class="absolute inset-0 bg-gradient-to-r from-transparent via-slate-800/30 to-transparent opacity-50"></div>
+                             </div>
+
                              <div class="bg-slate-900/50 rounded-xl p-2 border border-slate-800/50">
                                 ${ingredientsList}
                              </div>
-                        </div>
-                        
-                        <div class="absolute bottom-2 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <span class="text-[8px] font-black text-slate-600 uppercase tracking-widest">Tap for Details</span>
                         </div>
                     </div>
                 `;
@@ -627,8 +787,10 @@ function renderProductionView() {
     };
 
     container.innerHTML = `
-        ${renderColumn('Cold', coldDishes, 'blue')}
-        ${renderColumn('Hot', hotDishes, 'red')}
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            ${renderColumn('Cold Assembly', coldDishes, 'blue')}
+            ${renderColumn('Hot Assembly', hotDishes, 'red')}
+        </div>
     `;
 }
 
@@ -700,6 +862,7 @@ function renderPrepView() {
 
 function fetchCheckData() { 
     state.isCheckDataLoading = true; renderApp(); 
+    listenToProductionOrders(); // Refresh production listeners for new Date
     onValue(ref(database, `quality-checks/${state.selectedDate}`), (snapshot) => { state.checkedData = snapshot.val() || {}; state.isCheckDataLoading = false; renderApp(); }); 
     onValue(ref(database, `prep-checks/${state.selectedDate}`), (snapshot) => { state.prepData = snapshot.val() || {}; if(state.currentView === 'prep') renderPrepView(); }); 
 }
@@ -752,14 +915,31 @@ DOMElements.tabMenuBtn.onclick = () => switchSettingsTab('menu');
 
 DOMElements.settingsSaveBtn.onclick = async () => {
     // 1. Handle Production JSON if present
+    // 1. Handle Production JSON if present
     const prodVal = DOMElements.productionJsonInput.value.trim();
     if (prodVal) {
         try {
             const parsed = JSON.parse(prodVal);
-            const dataToSave = Array.isArray(parsed) ? parsed : [parsed];
-            await set(ref(database, 'production-orders'), dataToSave);
+            const rawOrders = Array.isArray(parsed) ? parsed : [parsed];
+            
+            // Group by Delivery Date
+            const ordersByDate = {};
+            rawOrders.forEach(order => {
+                const date = order.deliveryDate || state.selectedDate; // Fallback to selected
+                if (!ordersByDate[date]) ordersByDate[date] = [];
+                ordersByDate[date].push(order);
+            });
+            
+            // Save each batch
+            const promises = Object.entries(ordersByDate).map(([date, orders]) => {
+                return set(ref(database, `production-orders/${date}`), orders);
+            });
+            
+            await Promise.all(promises);
             DOMElements.productionJsonInput.value = ''; 
+            alert(`Imported ${rawOrders.length} orders across ${Object.keys(ordersByDate).length} dates.`);
         } catch (e) {
+            console.error(e);
             DOMElements.settingsError.textContent = "Production JSON Invalid format.";
             return;
         }

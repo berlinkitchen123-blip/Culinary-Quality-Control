@@ -944,33 +944,99 @@ function renderPrepView() {
     });
 }
 
-function fetchCheckData() {
-    state.isCheckDataLoading = true;
-    renderApp();
-    listenToProductionOrders(); // Reference refresh
+// --- View-Based Data Loaders ---
 
-    // 1. Quality Checks Management
-    const qualRef = ref(database, `quality-checks/${state.selectedDate}`);
+function stopAllListeners() {
+    // Quality Checks
     if (state.qualityCheckListener) {
         off(state.qualityCheckRef, 'value', state.qualityCheckListener);
+        state.qualityCheckListener = null;
     }
+    // Prep Checks
+    if (state.prepCheckListener) {
+        off(state.prepCheckRef, 'value', state.prepCheckListener);
+        state.prepCheckListener = null;
+    }
+    // Production Orders
+    if (state.productionListener) {
+        off(state.productionRef, 'value', state.productionListener);
+        state.productionListener = null;
+    }
+    // Production Checks
+    if (state.productionChecksListener) {
+        off(state.productionChecksRef, 'value', state.productionChecksListener);
+        state.productionChecksListener = null;
+    }
+}
+
+function listenToQualityChecks() {
+    const qualRef = ref(database, `quality-checks/${state.selectedDate}`);
     state.qualityCheckRef = qualRef;
     state.qualityCheckListener = onValue(qualRef, (snapshot) => {
         state.checkedData = snapshot.val() || {};
         state.isCheckDataLoading = false;
         renderApp();
     });
+}
 
-    // 2. Prep Checks Management
+function listenToPrepChecks() {
     const prepRef = ref(database, `prep-checks/${state.selectedDate}`);
-    if (state.prepCheckListener) {
-        off(state.prepCheckRef, 'value', state.prepCheckListener);
-    }
     state.prepCheckRef = prepRef;
     state.prepCheckListener = onValue(prepRef, (snapshot) => {
         state.prepData = snapshot.val() || {};
         if (state.currentView === 'prep') renderPrepView();
     });
+}
+
+function refreshActiveViewData() {
+    state.isCheckDataLoading = true;
+    stopAllListeners(); // Clean slate first
+
+    // Only load what is needed for the current view
+    if (state.currentView === 'dashboard' || state.currentView === 'detail') {
+        listenToQualityChecks();
+    } else if (state.currentView === 'prep') {
+        listenToPrepChecks();
+    } else if (state.currentView === 'production') {
+        listenToProductionOrders();
+    }
+}
+
+// --- Navigation & Core Controllers ---
+
+function showView(viewName) {
+    state.currentView = viewName;
+
+    // Toggle UI Visibility
+    DOMElements.mainView.classList.toggle('hidden', viewName !== 'dashboard');
+    DOMElements.prepView.classList.toggle('hidden', viewName !== 'prep');
+    DOMElements.aiAgentView.classList.toggle('hidden', viewName !== 'audit');
+    DOMElements.dishDetailView.classList.toggle('hidden', viewName !== 'detail');
+    DOMElements.productionView.classList.toggle('hidden', viewName !== 'production');
+
+    // Button Styling
+    const active = "bg-indigo-600 text-white shadow-2xl shadow-indigo-600/30";
+    const activePrep = "bg-emerald-600 text-white shadow-2xl shadow-emerald-600/30";
+    const activeProd = "bg-orange-600 text-white shadow-2xl shadow-orange-600/30";
+    const inactive = "text-slate-400 hover:text-white";
+
+    DOMElements.navDashboardBtn.className = `px-5 py-2.5 text-[10px] font-black rounded-xl transition-all uppercase ${viewName === 'dashboard' ? active : inactive}`;
+    DOMElements.navAuditBtn.className = `px-5 py-2.5 text-[10px] font-black rounded-xl transition-all uppercase ${viewName === 'audit' ? active : inactive}`;
+    DOMElements.navPrepBtn.className = `px-5 py-2.5 text-[10px] font-black rounded-xl transition-all uppercase ${viewName === 'prep' ? activePrep : inactive}`;
+    DOMElements.navProductionBtn.className = `px-5 py-2.5 text-[10px] font-black rounded-xl transition-all uppercase ${viewName === 'production' ? activeProd : inactive}`;
+
+    // Data Loading Strategy: Download ONLY what is needed
+    // If Audit, we call its own loader if needed, but standard Refresh handles it.
+    if (viewName !== 'audit') {
+        refreshActiveViewData();
+    } else {
+        // Audit specific handling if any, for now it relies on global history
+    }
+}
+
+// Replaces old fetchCheckData to ensure date selection uses new logic
+function fetchCheckData() {
+    refreshActiveViewData();
 }
 
 function fetchMenu() {

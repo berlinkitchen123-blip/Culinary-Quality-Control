@@ -229,21 +229,29 @@ function listenToGlobalHistory() {
 }
 
 function listenToProductionOrders() {
+    // 1. Production Orders Cleanup
     if (state.productionListener) {
-        state.productionListener(); // Unsubscribe previous
-        state.productionListener = null;
+        off(state.productionRef, 'value', state.productionListener);
     }
+
+    // 2. Production Checks Cleanup
+    if (state.productionChecksListener) {
+        off(state.productionChecksRef, 'value', state.productionChecksListener);
+    }
+
     const date = state.selectedDate;
-    // Listen to orders for the selected date
-    state.productionListener = onValue(ref(database, `production-orders/${date}`), (snapshot) => {
+
+    // 3. New Orders Listener
+    state.productionRef = ref(database, `production-orders/${date}`);
+    state.productionListener = onValue(state.productionRef, (snapshot) => {
         const val = snapshot.val();
-        // Handle both array and object formats from Firebase
         state.productionOrders = val ? (Array.isArray(val) ? val : Object.values(val)) : [];
         if (state.currentView === 'production') renderProductionView();
     });
 
-    // Also listen to cooking checks (HACCP done states)
-    onValue(ref(database, `production-checks/${date}`), (snapshot) => {
+    // 4. New Checks Listener
+    state.productionChecksRef = ref(database, `production-checks/${date}`);
+    state.productionChecksListener = onValue(state.productionChecksRef, (snapshot) => {
         state.productionChecks = snapshot.val() || {};
         if (state.currentView === 'production' && state.productionMode === 'kitchen') renderProductionView();
     });
@@ -937,10 +945,32 @@ function renderPrepView() {
 }
 
 function fetchCheckData() {
-    state.isCheckDataLoading = true; renderApp();
-    listenToProductionOrders(); // Refresh production listeners for new Date
-    onValue(ref(database, `quality-checks/${state.selectedDate}`), (snapshot) => { state.checkedData = snapshot.val() || {}; state.isCheckDataLoading = false; renderApp(); });
-    onValue(ref(database, `prep-checks/${state.selectedDate}`), (snapshot) => { state.prepData = snapshot.val() || {}; if (state.currentView === 'prep') renderPrepView(); });
+    state.isCheckDataLoading = true;
+    renderApp();
+    listenToProductionOrders(); // Reference refresh
+
+    // 1. Quality Checks Management
+    const qualRef = ref(database, `quality-checks/${state.selectedDate}`);
+    if (state.qualityCheckListener) {
+        off(state.qualityCheckRef, 'value', state.qualityCheckListener);
+    }
+    state.qualityCheckRef = qualRef;
+    state.qualityCheckListener = onValue(qualRef, (snapshot) => {
+        state.checkedData = snapshot.val() || {};
+        state.isCheckDataLoading = false;
+        renderApp();
+    });
+
+    // 2. Prep Checks Management
+    const prepRef = ref(database, `prep-checks/${state.selectedDate}`);
+    if (state.prepCheckListener) {
+        off(state.prepCheckRef, 'value', state.prepCheckListener);
+    }
+    state.prepCheckRef = prepRef;
+    state.prepCheckListener = onValue(prepRef, (snapshot) => {
+        state.prepData = snapshot.val() || {};
+        if (state.currentView === 'prep') renderPrepView();
+    });
 }
 
 function fetchMenu() {

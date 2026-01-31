@@ -918,29 +918,7 @@ function renderAssemblyView(container, dishes) {
 
 // --- Navigation & Core Controllers ---
 
-function showView(viewName) {
-    state.currentView = viewName;
-    DOMElements.mainView.classList.toggle('hidden', viewName !== 'dashboard');
-    DOMElements.prepView.classList.toggle('hidden', viewName !== 'prep');
-    DOMElements.aiAgentView.classList.toggle('hidden', viewName !== 'audit');
-    DOMElements.dishDetailView.classList.toggle('hidden', viewName !== 'detail');
-    DOMElements.productionView.classList.toggle('hidden', viewName !== 'production');
 
-    const active = "bg-indigo-600 text-white shadow-2xl shadow-indigo-600/30";
-    const activePrep = "bg-emerald-600 text-white shadow-2xl shadow-emerald-600/30";
-    const activeProd = "bg-orange-600 text-white shadow-2xl shadow-orange-600/30";
-    const inactive = "text-slate-400 hover:text-white";
-
-    DOMElements.navDashboardBtn.className = `px-5 py-2.5 text-[10px] font-black rounded-xl transition-all uppercase ${viewName === 'dashboard' ? active : inactive}`;
-    DOMElements.navAuditBtn.className = `px-5 py-2.5 text-[10px] font-black rounded-xl transition-all uppercase ${viewName === 'audit' ? active : inactive}`;
-    DOMElements.navPrepBtn.className = `px-5 py-2.5 text-[10px] font-black rounded-xl transition-all uppercase ${viewName === 'prep' ? activePrep : inactive}`;
-    DOMElements.navProductionBtn.className = `px-5 py-2.5 text-[10px] font-black rounded-xl transition-all uppercase ${viewName === 'production' ? activeProd : inactive}`;
-
-    if (viewName === 'audit') { window.renderAuditDishLibrary(); }
-    if (viewName === 'prep') { renderPrepView(); }
-    if (viewName === 'production') { renderProductionView(); }
-    if (viewName === 'dashboard') renderApp();
-}
 
 function renderPrepView() {
     DOMElements.prepGridContainer.innerHTML = '';

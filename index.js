@@ -635,6 +635,18 @@ function renderProductionView() {
     }
 }
 
+// Toggle Kitchen Details Panel
+window.toggleKitchenDetails = (id) => {
+    const el = document.getElementById(`kitchen-details-${id}`);
+    if (el) el.classList.toggle('hidden');
+};
+
+// Toggle Assembly Details Panel
+window.toggleProductionDetails = (id) => {
+    const el = document.getElementById(`prod-details-${id}`);
+    if (el) el.classList.toggle('hidden');
+};
+
 function renderKitchenView(container) {
     const ingredients = aggregateKitchenIngredients();
 
@@ -643,59 +655,110 @@ function renderKitchenView(container) {
         return;
     }
 
-    // Mock HACCP Data for demo
-    const getHACCP = (name) => {
-        if (name.toLowerCase().includes('chicken')) return { temp: '75°C', time: '20 min', method: 'Oven Roast' };
-        if (name.toLowerCase().includes('rice')) return { temp: '100°C', time: '15 min', method: 'Steam' };
-        return { temp: '>65°C', time: 'Varies', method: 'Heat & Hold' };
+    // Advanced Mock Data for SOPs
+    const getSOP = (name) => {
+        const lower = name.toLowerCase();
+        if (lower.includes('chicken')) return {
+            temp: '75°C',
+            time: '20 min',
+            method: 'Oven Roast',
+            steps: [
+                "Marinate with spices for 30m.",
+                "Preheat oven to 200°C.",
+                "Roast on tray for 20 minutes.",
+                "Check core temp > 75°C.",
+                "Hold above 65°C."
+            ]
+        };
+        if (lower.includes('rice')) return {
+            temp: '100°C',
+            time: '15 min',
+            method: 'Steam',
+            steps: [
+                "Rinse 3 times until water clear.",
+                "Ratio 1:1.5 (Rice:Water).",
+                "Steam at 100°C for 15 mins.",
+                "Fluff with fork immediately."
+            ]
+        };
+        if (lower.includes('potato') || lower.includes('veg')) return {
+            temp: '180°C',
+            time: '25 min',
+            method: 'Roast',
+            steps: [
+                "Wash and cut into 2cm cubes.",
+                "Toss with olive oil & salt.",
+                "Roast at 180°C until tender.",
+                "Blast chill if for cold salad."
+            ]
+        };
+        return {
+            temp: '>65°C',
+            time: 'Varies',
+            method: 'Heat & Hold',
+            steps: [
+                "Check expiry date.",
+                "Heat strictly to standard.",
+                "Record measurements."
+            ]
+        };
     };
 
     const html = `
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-in slide-in-from-bottom-4 duration-500">
             ${ingredients.map(ing => {
-        const haccp = getHACCP(ing.name);
+        const sop = getSOP(ing.name);
         const isDone = state.productionChecks?.[ing.id]?.done;
 
         return `
                 <div class="bg-slate-900/80 border ${isDone ? 'border-green-500/30' : 'border-slate-800'} rounded-[2.5rem] p-6 shadow-xl relative overflow-hidden group transition-all">
-                    <div class="flex justify-between items-start mb-6">
-                        <div class="h-14 w-14 rounded-2xl bg-indigo-600/10 border border-indigo-500/20 flex items-center justify-center text-2xl shadow-inner">
-                            ${ing.icon}
+                    <!-- Header (Click to Expand) -->
+                    <div class="cursor-pointer" onclick="window.toggleKitchenDetails('${ing.id}')">
+                        <div class="flex justify-between items-start mb-6">
+                            <div class="h-14 w-14 rounded-2xl bg-indigo-600/10 border border-indigo-500/20 flex items-center justify-center text-2xl shadow-inner">
+                                ${ing.icon}
+                            </div>
+                            <div class="text-right">
+                                    <span class="text-3xl font-black text-white tracking-tighter block">${(ing.totalWeight / 1000).toFixed(1)}<span class="text-sm text-slate-500 ml-1">kg</span></span>
+                                    <span class="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Total Required</span>
+                            </div>
                         </div>
-                        <div class="text-right">
-                             <span class="text-3xl font-black text-white tracking-tighter block">${(ing.totalWeight / 1000).toFixed(1)}<span class="text-sm text-slate-500 ml-1">kg</span></span>
-                             <span class="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Total Required</span>
-                        </div>
-                    </div>
-                    
-                    <h3 class="text-lg font-black text-white uppercase italic leading-tight mb-4 pr-10">${ing.name}</h3>
-                    
-                    <!-- HACCP Intel -->
-                    <div class="bg-slate-950/50 rounded-xl p-4 border border-slate-800/50 mb-6 space-y-2">
-                        <div class="flex justify-between">
-                            <span class="text-[9px] text-slate-500 uppercase font-bold">Target Temp</span>
-                            <span class="text-[9px] text-orange-400 font-mono font-bold">${haccp.temp}</span>
-                        </div>
-                        <div class="flex justify-between">
-                            <span class="text-[9px] text-slate-500 uppercase font-bold">Method</span>
-                            <span class="text-[9px] text-indigo-300 font-bold text-right">${haccp.method}</span>
+                        
+                        <h3 class="text-lg font-black text-white uppercase italic leading-tight mb-4 pr-10 hover:text-indigo-400 transition-colors">${ing.name} <span class="text-[10px] text-slate-500 ml-2 not-italic font-normal border border-slate-700 px-2 py-0.5 rounded-full">Details &darr;</span></h3>
+                        
+                        <!-- HACCP Brief -->
+                        <div class="bg-slate-950/50 rounded-xl p-4 border border-slate-800/50 mb-0 space-y-2 group-hover:bg-slate-900 transition-colors">
+                            <div class="flex justify-between">
+                                <span class="text-[9px] text-slate-500 uppercase font-bold">Target Temp</span>
+                                <span class="text-[9px] text-orange-400 font-mono font-bold">${sop.temp}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-[9px] text-slate-500 uppercase font-bold">Method</span>
+                                <span class="text-[9px] text-indigo-300 font-bold text-right">${sop.method}</span>
+                            </div>
                         </div>
                     </div>
 
-                    <!-- Step Checklist (Mock) -->
-                    <div class="space-y-2 mb-6">
-                        <div class="flex items-center gap-3 opacity-50">
-                            <div class="h-4 w-4 rounded-full border border-slate-600"></div>
-                            <span class="text-[9px] text-slate-400 font-bold uppercase">Prep Ingredients</span>
+                    <!-- Expandable Details -->
+                    <div id="kitchen-details-${ing.id}" class="hidden mt-6 pt-6 border-t border-slate-800/50 animate-in slide-in-from-top-2 duration-300">
+                        <p class="text-[9px] font-black text-slate-500 uppercase tracking-[0.3em] mb-4">Cooking Standard (SOP)</p>
+                        
+                        <div class="space-y-3 mb-6">
+                            ${sop.steps.map((step, idx) => `
+                                <div class="flex gap-3">
+                                    <div class="h-5 w-5 shrink-0 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-[10px] font-bold text-slate-400">${idx + 1}</div>
+                                    <p class="text-sm font-medium text-slate-300 leading-tight">${step}</p>
+                                </div>
+                            `).join('')}
                         </div>
-                         <div class="flex items-center gap-3 opacity-50">
-                            <div class="h-4 w-4 rounded-full border border-slate-600"></div>
-                            <span class="text-[9px] text-slate-400 font-bold uppercase">Cook to Temp</span>
+
+                         <div class="p-3 bg-slate-800/50 rounded-xl border border-slate-700/50 text-[10px] text-slate-400 font-medium italic">
+                            Running low? Contact Dispatch immediately.
                         </div>
                     </div>
 
                     <!-- Action -->
-                    <button onclick="window.toggleKitchenCheck('${ing.id}')" class="w-full py-4 rounded-2xl font-black uppercase tracking-[0.2em] text-[10px] transition-all flex items-center justify-center gap-2 ${isDone ? 'bg-green-600 text-white shadow-green-900/20' : 'bg-slate-800 text-slate-400 hover:bg-indigo-600 hover:text-white hover:shadow-indigo-600/30'}">
+                    <button onclick="window.toggleKitchenCheck('${ing.id}')" class="w-full mt-6 py-4 rounded-2xl font-black uppercase tracking-[0.2em] text-[10px] transition-all flex items-center justify-center gap-2 ${isDone ? 'bg-green-600 text-white shadow-green-900/20' : 'bg-slate-800 text-slate-400 hover:bg-indigo-600 hover:text-white hover:shadow-indigo-600/30'}">
                         ${isDone ? '<svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" /></svg> Completed' : 'Mark Produced'}
                     </button>
                     
@@ -736,8 +799,8 @@ function renderAssemblyView(container, dishes) {
                 const ingredientsList = Object.values(dish.ingredients).map((ing, i) => `
                     <div class="flex justify-between items-center py-2 border-b border-slate-800/50 last:border-0 px-2 rounded-lg hover:bg-slate-800/30 transition-colors">
                         <div class="flex items-center gap-3">
-                             <div class="h-5 w-5 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-[9px] font-bold text-slate-500">${i + 1}</div>
-                             <span class="text-[11px] font-bold text-slate-300 uppercase tracking-tight">${ing.name}</span>
+                                <div class="h-5 w-5 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-[9px] font-bold text-slate-500">${i + 1}</div>
+                                <span class="text-[11px] font-bold text-slate-300 uppercase tracking-tight">${ing.name}</span>
                         </div>
                         <span class="text-[11px] font-mono font-black ${titleColor}">${ing.unitWeight ? ing.unitWeight + 'g' : 'x'}</span>
                     </div>
@@ -751,8 +814,8 @@ function renderAssemblyView(container, dishes) {
                             <div class="pr-4">
                                 <h4 class="text-lg font-black text-white uppercase leading-none mb-3 group-hover:${titleColor} transition-colors">${dish.name}</h4>
                                 <div class="flex gap-2">
-                                     <span class="text-[9px] font-bold text-slate-400 uppercase tracking-widest bg-slate-900 px-2 py-1 rounded border border-slate-800">Use By: ${readyTime}</span>
-                                     <span class="text-[9px] font-bold text-slate-500 uppercase tracking-widest px-2 py-1 ">${dish.type}</span>
+                                        <span class="text-[9px] font-bold text-slate-400 uppercase tracking-widest bg-slate-900 px-2 py-1 rounded border border-slate-800">Use By: ${readyTime}</span>
+                                        <span class="text-[9px] font-bold text-slate-500 uppercase tracking-widest px-2 py-1 ">${dish.type}</span>
                                 </div>
                             </div>
                             <div class="flex flex-col items-center justify-center bg-slate-900 rounded-2xl w-14 h-14 border border-slate-800 shadow-inner group-hover:bg-slate-800 transition-colors">
@@ -762,20 +825,32 @@ function renderAssemblyView(container, dishes) {
                         </div>
                         
                         <div id="prod-details-${safeId}" class="hidden mt-6 pt-6 border-t border-slate-800/50 animate-in slide-in-from-top-2 duration-200">
-                             <div class="flex justify-between items-center mb-4">
-                                <p class="text-[9px] font-black text-slate-500 uppercase tracking-[0.3em]">Assembly Layering</p>
-                                <span class="text-[9px] font-black text-indigo-400 uppercase tracking-widest cursor-pointer hover:text-white">Training Mode ></span>
-                             </div>
-                             
-                             <!-- Assembly Visual Placeholder -->
-                             <div class="h-24 w-full bg-slate-900 rounded-xl mb-4 border border-slate-800 flex items-center justify-center relative overflow-hidden group-inner">
-                                <span class="text-[9px] text-slate-600 uppercase font-black tracking-widest z-10">Assembly Diagram</span>
-                                <div class="absolute inset-0 bg-gradient-to-r from-transparent via-slate-800/30 to-transparent opacity-50"></div>
-                             </div>
+                                <div class="flex justify-between items-center mb-4">
+                                <p class="text-[9px] font-black text-slate-500 uppercase tracking-[0.3em] inline-block">Assembly Layering</p>
+                                <span class="text-[9px] font-black text-indigo-400 uppercase tracking-widest cursor-pointer hover:text-white border border-indigo-500/30 px-2 py-1 rounded-lg bg-indigo-500/10">Full Training Mode ></span>
+                                </div>
+                                
+                                <!-- Visual Assembly Guide -->
+                                <div class="flex gap-2 mb-4 overflow-x-auto pb-2 scrollbar-hide">
+                                    <div class="h-16 w-24 bg-slate-900 rounded-lg flex-shrink-0 border border-slate-800 flex flex-col items-center justify-center p-2">
+                                        <span class="text-[8px] text-slate-500 uppercase font-black text-center mb-1">Step 1</span>
+                                        <span class="text-[10px] text-white font-bold">Base</span>
+                                    </div>
+                                    <div class="h-16 w-6 text-slate-600 flex items-center justify-center">&rarr;</div>
+                                    <div class="h-16 w-24 bg-slate-900 rounded-lg flex-shrink-0 border border-slate-800 flex flex-col items-center justify-center p-2">
+                                        <span class="text-[8px] text-slate-500 uppercase font-black text-center mb-1">Step 2</span>
+                                        <span class="text-[10px] text-white font-bold">Protein</span>
+                                    </div>
+                                    <div class="h-16 w-6 text-slate-600 flex items-center justify-center">&rarr;</div>
+                                    <div class="h-16 w-24 bg-slate-900 rounded-lg flex-shrink-0 border border-slate-800 flex flex-col items-center justify-center p-2">
+                                        <span class="text-[8px] text-slate-500 uppercase font-black text-center mb-1">Step 3</span>
+                                        <span class="text-[10px] text-white font-bold">Garnish</span>
+                                    </div>
+                                </div>
 
-                             <div class="bg-slate-900/50 rounded-xl p-2 border border-slate-800/50">
+                                <div class="bg-slate-900/50 rounded-xl p-2 border border-slate-800/50">
                                 ${ingredientsList}
-                             </div>
+                                </div>
                         </div>
                     </div>
                 `;

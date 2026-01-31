@@ -888,10 +888,7 @@ DOMElements.settingsCloseBtn.onclick = () => DOMElements.settingsModal.classList
 DOMElements.backToMenuBtn.onclick = () => showView(state.currentView === 'detail' && state.selectedPrepItem ? 'prep' : 'dashboard');
 
 // Settings Tab Logic
-DOMElements.tabProdBtn.classList.add('text-slate-500', 'border-transparent');
-DOMElements.tabProdBtn.classList.remove('text-orange-400', 'border-orange-500', 'bg-slate-800/30');
-    }
-};
+
 
 // --- Mock Data Generator ---
 window.generateDemoData = async () => {

@@ -934,99 +934,99 @@ window.generateDemoData = async () => {
         orders.push({
             id: `demo_${Date.now()}_${i}`,
             name: dish.name,
-            type: dish.type,
-            quantity: qty,
-            deliveryDate: today, // Focus on today for demo
-            status: "processing",
-            readyBy: 600 + Math.floor(Math.random() * 300), // Random time between 10:00 - 15:00
-            recipe: recipe
-        });
-    }
+            type:const switchSettingsTab = (tab) => {
+                if (tab === 'production') {
+                    DOMElements.tabProdContent.classList.remove('hidden');
+                    DOMElements.tabMenuContent.classList.add('hidden');
 
-    try {
-        await set(ref(database, `production-orders/${today}`), orders);
-        alert(`Generated ${orders.length} demo orders for ${today}. Production View updated.`);
-        DOMElements.settingsModal.classList.add('hidden');
-        renderProductionView();
-    } catch (e) {
-        alert("Error generating data: " + e.message);
-    } finally {
-        DOMElements.settingsSaveBtn.textContent = "Save Changes";
-        DOMElements.settingsSaveBtn.disabled = false;
-    }
-};
+                    DOMElements.tabProdBtn.classList.remove('text-slate-500', 'border-transparent');
+                    DOMElements.tabProdBtn.classList.add('text-orange-400', 'border-orange-500', 'bg-slate-800/30');
 
-DOMElements.tabProdBtn.onclick = () => switchSettingsTab('production');
-DOMElements.tabMenuBtn.onclick = () => switchSettingsTab('menu');
+                    DOMElements.tabMenuBtn.classList.add('text-slate-500', 'border-transparent');
+                    DOMElements.tabMenuBtn.classList.remove('text-indigo-400', 'border-indigo-500', 'bg-slate-800/30');
 
-// Inject Button into HTML (since we can't easily edit index.html from here without full re-render, we append it dynamically on load or inside the verify block)
-// Actually better to append it to the tab content now
-document.addEventListener('DOMContentLoaded', () => {
-    const container = document.getElementById('tab-prod-content');
-    if (container) {
-        const btn = document.createElement('button');
-        btn.type = "button";
-        btn.className = "mt-4 w-full py-4 bg-slate-800 hover:bg-slate-700 text-indigo-400 font-black uppercase tracking-widest rounded-2xl border border-indigo-500/30 transition-all";
-        btn.textContent = "⚡ Generate 500 Demo Orders";
-        btn.onclick = window.generateDemoData;
-        container.appendChild(btn);
-    }
-});
+                    // Ensure Demo Button exists (Lazy Render)
+                    const container = document.getElementById('tab-prod-content');
+                    if (container && !document.getElementById('demo-gen-btn')) {
+                        const btn = document.createElement('button');
+                        btn.id = 'demo-gen-btn';
+                        btn.type = "button";
+                        btn.className = "mt-4 w-full py-4 bg-slate-800 hover:bg-slate-700 text-indigo-400 font-black uppercase tracking-widest rounded-2xl border border-indigo-500/30 transition-all";
+                        btn.textContent = "⚡ Generate 500 Demo Orders";
+                        btn.onclick = window.generateDemoData;
+                        container.appendChild(btn);
+                    }
 
-DOMElements.settingsSaveBtn.onclick = async () => {
-    // 1. Handle Production JSON if present
-    // 1. Handle Production JSON if present
-    const prodVal = DOMElements.productionJsonInput.value.trim();
-    if (prodVal) {
-        try {
-            const parsed = JSON.parse(prodVal);
-            const rawOrders = Array.isArray(parsed) ? parsed : [parsed];
+                } else {
+                    DOMElements.tabProdContent.classList.add('hidden');
+                    DOMElements.tabMenuContent.classList.remove('hidden');
 
-            // Group by Delivery Date
-            const ordersByDate = {};
-            rawOrders.forEach(order => {
-                const date = order.deliveryDate || state.selectedDate; // Fallback to selected
-                if (!ordersByDate[date]) ordersByDate[date] = [];
-                ordersByDate[date].push(order);
-            });
+                    DOMElements.tabMenuBtn.classList.remove('text-slate-500', 'border-transparent');
+                    DOMElements.tabMenuBtn.classList.add('text-indigo-400', 'border-indigo-500', 'bg-slate-800/30');
 
-            // Save each batch
-            const promises = Object.entries(ordersByDate).map(([date, orders]) => {
-                return set(ref(database, `production-orders/${date}`), orders);
-            });
+                    DOMElements.tabProdBtn.classList.add('text-slate-500', 'border-transparent');
+                    DOMElements.tabProdBtn.classList.remove('text-orange-400', 'border-orange-500', 'bg-slate-800/30');
+                }
+            };
 
-            await Promise.all(promises);
-            DOMElements.productionJsonInput.value = '';
-            alert(`Imported ${rawOrders.length} orders across ${Object.keys(ordersByDate).length} dates.`);
-        } catch (e) {
-            console.error(e);
-            DOMElements.settingsError.textContent = "Production JSON Invalid format.";
-            return;
-        }
-    }
+            DOMElements.tabProdBtn.onclick = () => switchSettingsTab('production');
+            DOMElements.tabMenuBtn.onclick = () => switchSettingsTab('menu');
 
-    // 2. Handle Menu Manifest if present
-    const val = DOMElements.jsonInput.value.trim();
-    if (val) {
-        try {
-            const p = JSON.parse(val);
-            const dishes = p.dishes.filter(d => d.stickerNo && d.stickerNo !== 'addons').map(d => ({ dishLetter: d.stickerNo, dishName: d.variantName, dishImage: d.webUrl, dishType: ['hot', 'cold'].includes(d.type) ? d.type : 'extras', dishIngredients: (d.ingredients || []).map(i => ({ name: i.name, weight: i.amount + 'g' })), theoreticalWeight: (d.ingredients || []).reduce((sum, ing) => sum + (parseFloat(ing.amount) || 0), 0) }));
-            const menuWeekId = getWeekId(new Date(p.startDate + 'T12:00:00Z'));
-            await set(ref(database, `menus/${menuWeekId}`), { dishes, startDate: p.startDate });
-            DOMElements.jsonInput.value = '';
-            fetchMenu();
-        } catch (e) {
-            DOMElements.settingsError.textContent = "Menu Manifest Validation Fault.";
-            return;
-        }
-    }
 
-    DOMElements.settingsModal.classList.add('hidden');
-    DOMElements.settingsError.textContent = "";
-};
+            DOMElements.settingsSaveBtn.onclick = async () => {
+                // 1. Handle Production JSON if present
+                // 1. Handle Production JSON if present
+                const prodVal = DOMElements.productionJsonInput.value.trim();
+                if (prodVal) {
+                    try {
+                        const parsed = JSON.parse(prodVal);
+                        const rawOrders = Array.isArray(parsed) ? parsed : [parsed];
 
-function renderWelcomePlaceholder() {
-    DOMElements.welcomePlaceholder.innerHTML = `
+                        // Group by Delivery Date
+                        const ordersByDate = {};
+                        rawOrders.forEach(order => {
+                            const date = order.deliveryDate || state.selectedDate; // Fallback to selected
+                            if (!ordersByDate[date]) ordersByDate[date] = [];
+                            ordersByDate[date].push(order);
+                        });
+
+                        // Save each batch
+                        const promises = Object.entries(ordersByDate).map(([date, orders]) => {
+                            return set(ref(database, `production-orders/${date}`), orders);
+                        });
+
+                        await Promise.all(promises);
+                        DOMElements.productionJsonInput.value = '';
+                        alert(`Imported ${rawOrders.length} orders across ${Object.keys(ordersByDate).length} dates.`);
+                    } catch (e) {
+                        console.error(e);
+                        DOMElements.settingsError.textContent = "Production JSON Invalid format.";
+                        return;
+                    }
+                }
+
+                // 2. Handle Menu Manifest if present
+                const val = DOMElements.jsonInput.value.trim();
+                if (val) {
+                    try {
+                        const p = JSON.parse(val);
+                        const dishes = p.dishes.filter(d => d.stickerNo && d.stickerNo !== 'addons').map(d => ({ dishLetter: d.stickerNo, dishName: d.variantName, dishImage: d.webUrl, dishType: ['hot', 'cold'].includes(d.type) ? d.type : 'extras', dishIngredients: (d.ingredients || []).map(i => ({ name: i.name, weight: i.amount + 'g' })), theoreticalWeight: (d.ingredients || []).reduce((sum, ing) => sum + (parseFloat(ing.amount) || 0), 0) }));
+                        const menuWeekId = getWeekId(new Date(p.startDate + 'T12:00:00Z'));
+                        await set(ref(database, `menus/${menuWeekId}`), { dishes, startDate: p.startDate });
+                        DOMElements.jsonInput.value = '';
+                        fetchMenu();
+                    } catch (e) {
+                        DOMElements.settingsError.textContent = "Menu Manifest Validation Fault.";
+                        return;
+                    }
+                }
+
+                DOMElements.settingsModal.classList.add('hidden');
+                DOMElements.settingsError.textContent = "";
+            };
+
+            function renderWelcomePlaceholder() {
+            DOMElements.welcomePlaceholder.innerHTML = `
         <div class="flex flex-col items-center justify-center min-h-[50vh] text-center p-8 animate-in fade-in zoom-in-95 duration-500">
             <div class="bg-slate-800/50 p-6 rounded-[2.5rem] mb-8 border border-slate-700/50 shadow-2xl backdrop-blur-sm">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -1042,81 +1042,81 @@ function renderWelcomePlaceholder() {
             </button>
         </div>
     `;
-    DOMElements.welcomePlaceholder.classList.remove('hidden');
-    DOMElements.dishGridContainer.classList.add('hidden');
-}
+            DOMElements.welcomePlaceholder.classList.remove('hidden');
+            DOMElements.dishGridContainer.classList.add('hidden');
+        }
 
 function renderApp() {
-    DOMElements.loadingIndicator.classList.toggle('hidden', !state.isMenuLoading && !state.isCheckDataLoading);
-    DOMElements.mainView.classList.toggle('hidden', state.isMenuLoading || state.isCheckDataLoading || state.currentView !== 'dashboard');
-    if (state.menu && state.menu.dishes.length > 0) {
-        DOMElements.welcomePlaceholder.classList.add('hidden');
-        DOMElements.dishGridContainer.classList.remove('hidden');
-        DOMElements.dailySummarySection.classList.remove('hidden');
-        renderDishSelectionGrid();
-        renderDailySummaryTable();
-    } else {
-        renderWelcomePlaceholder();
-        DOMElements.dailySummarySection.classList.add('hidden');
-    }
-    renderDateSelector();
-}
+                DOMElements.loadingIndicator.classList.toggle('hidden', !state.isMenuLoading && !state.isCheckDataLoading);
+                DOMElements.mainView.classList.toggle('hidden', state.isMenuLoading || state.isCheckDataLoading || state.currentView !== 'dashboard');
+                if (state.menu && state.menu.dishes.length > 0) {
+                    DOMElements.welcomePlaceholder.classList.add('hidden');
+                    DOMElements.dishGridContainer.classList.remove('hidden');
+                    DOMElements.dailySummarySection.classList.remove('hidden');
+                    renderDishSelectionGrid();
+                    renderDailySummaryTable();
+                } else {
+                    renderWelcomePlaceholder();
+                    DOMElements.dailySummarySection.classList.add('hidden');
+                }
+                renderDateSelector();
+            }
 
 function renderDateSelector() {
-    const viewDate = getStartOfWeek(new Date(state.selectedDate + 'T12:00:00Z'));
-    const weekDays = Array.from({ length: 5 }).map((_, i) => {
-        const d = new Date(viewDate); d.setDate(viewDate.getDate() + i); return d;
-    });
-    DOMElements.dateButtonsContainer.innerHTML = '';
-    weekDays.forEach(day => {
-        const dayString = day.toISOString().split('T')[0];
-        const isSelected = dayString === state.selectedDate;
-        const button = document.createElement('button');
-        button.className = `flex flex-col items-center justify-center w-12 h-16 sm:w-16 sm:h-20 rounded-[1.25rem] sm:rounded-[1.5rem] transition-all duration-300 transform active:scale-90 shadow-xl ${isSelected ? 'bg-indigo-600 text-white shadow-indigo-600/40 ring-4 ring-indigo-400/20' : 'bg-slate-800/80 text-slate-500 border border-slate-700/50'}`;
-        button.innerHTML = `<span class="text-[9px] sm:text-[10px] uppercase font-black opacity-70 mb-1">${day.toLocaleDateString('en-US', { weekday: 'short' })}</span><span class="text-base sm:text-lg font-black">${day.getDate()}</span>`;
-        button.onclick = () => { state.selectedDate = dayString; fetchCheckData(); };
-        DOMElements.dateButtonsContainer.appendChild(button);
-    });
-}
+                const viewDate = getStartOfWeek(new Date(state.selectedDate + 'T12:00:00Z'));
+                const weekDays = Array.from({ length: 5 }).map((_, i) => {
+                    const d = new Date(viewDate); d.setDate(viewDate.getDate() + i); return d;
+                });
+                DOMElements.dateButtonsContainer.innerHTML = '';
+                weekDays.forEach(day => {
+                    const dayString = day.toISOString().split('T')[0];
+                    const isSelected = dayString === state.selectedDate;
+                    const button = document.createElement('button');
+                    button.className = `flex flex-col items-center justify-center w-12 h-16 sm:w-16 sm:h-20 rounded-[1.25rem] sm:rounded-[1.5rem] transition-all duration-300 transform active:scale-90 shadow-xl ${isSelected ? 'bg-indigo-600 text-white shadow-indigo-600/40 ring-4 ring-indigo-400/20' : 'bg-slate-800/80 text-slate-500 border border-slate-700/50'}`;
+                    button.innerHTML = `<span class="text-[9px] sm:text-[10px] uppercase font-black opacity-70 mb-1">${day.toLocaleDateString('en-US', { weekday: 'short' })}</span><span class="text-base sm:text-lg font-black">${day.getDate()}</span>`;
+                    button.onclick = () => { state.selectedDate = dayString; fetchCheckData(); };
+                    DOMElements.dateButtonsContainer.appendChild(button);
+                });
+            }
 
 function renderDishSelectionGrid() {
-    DOMElements.dishGridContainer.innerHTML = '';
-    const sorted = [...(state.menu.dishes || [])].sort((a, b) => a.dishLetter.localeCompare(b.dishLetter));
-    const groups = { cold: sorted.filter(d => d.dishType === 'cold'), hot: sorted.filter(d => d.dishType === 'hot'), extras: sorted.filter(d => d.dishType !== 'cold' && d.dishType !== 'hot') };
-    const themes = { hot: 'bg-red-500', cold: 'bg-blue-500', default: 'bg-indigo-600' };
+                DOMElements.dishGridContainer.innerHTML = '';
+                const sorted = [...(state.menu.dishes || [])].sort((a, b) => a.dishLetter.localeCompare(b.dishLetter));
+                const groups = { cold: sorted.filter(d => d.dishType === 'cold'), hot: sorted.filter(d => d.dishType === 'hot'), extras: sorted.filter(d => d.dishType !== 'cold' && d.dishType !== 'hot') };
+                const themes = { hot: 'bg-red-500', cold: 'bg-blue-500', default: 'bg-indigo-600' };
 
-    Object.keys(groups).forEach(type => {
-        const list = groups[type];
-        if (list.length === 0) return;
-        const h = document.createElement('div'); h.className = 'col-span-full text-[10px] font-black text-slate-500 uppercase tracking-[0.4em] mt-8 mb-3 pl-3 border-l-4 border-indigo-500/30'; h.textContent = `${type} BLOCK`;
-        DOMElements.dishGridContainer.appendChild(h);
-        list.forEach(dish => {
-            const isChecked = !!state.checkedData[dish.dishLetter];
-            const button = document.createElement('button');
-            button.className = `group relative flex flex-col items-center justify-center p-4 sm:p-6 border border-slate-700/50 rounded-[1.75rem] sm:rounded-[2.5rem] bg-slate-800/50 hover:scale-105 active:scale-95 shadow-xl backdrop-blur-md transition-all duration-300`;
-            button.onclick = () => { state.selectedDish = dish; state.selectedPrepItem = null; showView('detail'); renderDishCard(); };
-            button.innerHTML = `
+                Object.keys(groups).forEach(type => {
+                    const list = groups[type];
+                    if (list.length === 0) return;
+                    const h = document.createElement('div'); h.className = 'col-span-full text-[10px] font-black text-slate-500 uppercase tracking-[0.4em] mt-8 mb-3 pl-3 border-l-4 border-indigo-500/30'; h.textContent = `${type} BLOCK`;
+                    DOMElements.dishGridContainer.appendChild(h);
+                    list.forEach(dish => {
+                        const isChecked = !!state.checkedData[dish.dishLetter];
+                        const button = document.createElement('button');
+                        button.className = `group relative flex flex-col items-center justify-center p-4 sm:p-6 border border-slate-700/50 rounded-[1.75rem] sm:rounded-[2.5rem] bg-slate-800/50 hover:scale-105 active:scale-95 shadow-xl backdrop-blur-md transition-all duration-300`;
+                        button.onclick = () => { state.selectedDish = dish; state.selectedPrepItem = null; showView('detail'); renderDishCard(); };
+                        button.innerHTML = `
                 ${isChecked ? '<div class="absolute -top-1 -right-1 bg-green-500 rounded-full p-1.5 text-white shadow-2xl ring-4 ring-slate-900 z-10"><svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="5" d="M5 13l4 4L19 7"></path></svg></div>' : ''}
                 <div class="mb-3 sm:mb-4 h-12 w-12 sm:h-14 sm:w-14 rounded-[1.25rem] sm:rounded-[1.5rem] flex items-center justify-center text-lg sm:text-xl font-black shadow-2xl ${themes[dish.dishType] || themes.default} text-white uppercase italic">${dish.dishLetter}</div>
                 <p class="font-black text-[9px] sm:text-[11px] text-slate-300 px-1 text-center line-clamp-2 uppercase h-8 sm:h-10 flex items-center group-hover:text-white leading-tight">${dish.dishName}</p>
             `;
-            DOMElements.dishGridContainer.appendChild(button);
-        });
-    });
-}
+                        DOMElements.dishGridContainer.appendChild(button);
+                    });
+                });
+            }
 
 function renderDailySummaryTable() {
-    if (!state.menu || !state.menu.dishes) return;
-    const sorted = [...state.menu.dishes].sort((a, b) => a.dishLetter.localeCompare(b.dishLetter));
+                if (!state.menu || !state.menu.dishes) return;
+                const sorted = [...state.menu.dishes].sort((a, b) => a.dishLetter.localeCompare(b.dishLetter));
 
-    const createTableHTML = (list, type) => {
-        if (list.length === 0) return '';
-        const headerColor = type === 'hot' ? 'bg-red-600/30' : type === 'cold' ? 'bg-blue-600/30' : 'bg-slate-700/50';
+                const createTableHTML = (list, type) => {
+                    if (list.length === 0) return '';
+                    const headerColor = type === 'hot' ? 'bg-red-600/30' : type === 'cold' ? 'bg-blue-600/30' : 'bg-slate-700/50';
 
-        const letterColor = type === 'hot' ? 'text-red-400' : type === 'cold' ? 'text-blue-400' : 'text-white';
-        const nameColor = type === 'hot' ? 'text-red-400' : type === 'cold' ? 'text-blue-400' : 'text-slate-300';
+                    const letterColor = type === 'hot' ? 'text-red-400' : type === 'cold' ? 'text-blue-400' : 'text-white';
+                    const nameColor = type === 'hot' ? 'text-red-400' : type === 'cold' ? 'text-blue-400' : 'text-slate-300';
 
-        return `
+                    return `
             <div class="bg-slate-800/40 rounded-[2rem] sm:rounded-[2.5rem] border border-slate-700/50 overflow-hidden shadow-2xl backdrop-blur-xl h-full flex flex-col min-h-[150px]">
                 <div class="px-4 py-3 sm:px-6 sm:py-4 text-[10px] sm:text-[11px] font-black uppercase tracking-[0.3em] text-white border-b border-white/5 ${headerColor}">
                     ${type} Recap
@@ -1135,20 +1135,20 @@ function renderDailySummaryTable() {
                         </thead>
                         <tbody class="divide-y divide-slate-800/50">
                             ${list.map(dish => {
-            const check = state.checkedData[dish.dishLetter];
-            const temps = (check?.temperatures || []).map(t => parseFloat(t)).filter(t => !isNaN(t));
-            const avgTemp = temps.length ? (temps.reduce((a, b) => a + b, 0) / temps.length).toFixed(1) + '°' : '-';
-            const weights = (check?.weights || []).map(w => parseFloat(w)).filter(w => !isNaN(w));
-            const avgWgt = weights.length ? (weights.reduce((a, b) => a + b, 0) / weights.length).toFixed(0) + 'g' : '-';
-            let theo = dish.theoreticalWeight;
-            if (!theo) {
-                theo = (dish.dishIngredients || []).reduce((sum, ing) => sum + (parseFloat(ing.amount) || parseFloat(ing.weight) || 0), 0);
-            }
-            const theoStr = theo ? theo.toFixed(0) + 'g' : '-';
-            const ai = check?.aiCheckResult?.score || '-';
-            const aiClass = check && ai > 7 ? 'text-green-400' : 'text-indigo-400';
+                        const check = state.checkedData[dish.dishLetter];
+                        const temps = (check?.temperatures || []).map(t => parseFloat(t)).filter(t => !isNaN(t));
+                        const avgTemp = temps.length ? (temps.reduce((a, b) => a + b, 0) / temps.length).toFixed(1) + '°' : '-';
+                        const weights = (check?.weights || []).map(w => parseFloat(w)).filter(w => !isNaN(w));
+                        const avgWgt = weights.length ? (weights.reduce((a, b) => a + b, 0) / weights.length).toFixed(0) + 'g' : '-';
+                        let theo = dish.theoreticalWeight;
+                        if (!theo) {
+                            theo = (dish.dishIngredients || []).reduce((sum, ing) => sum + (parseFloat(ing.amount) || parseFloat(ing.weight) || 0), 0);
+                        }
+                        const theoStr = theo ? theo.toFixed(0) + 'g' : '-';
+                        const ai = check?.aiCheckResult?.score || '-';
+                        const aiClass = check && ai > 7 ? 'text-green-400' : 'text-indigo-400';
 
-            return `
+                        return `
                                     <tr class="hover:bg-slate-700/40 cursor-pointer transition-colors ${!check ? 'opacity-30' : ''}" onclick="window.handleSelectDish('${dish.dishLetter}')">
                                         <td class="px-2 py-3 text-center font-black ${letterColor}">${dish.dishLetter}</td>
                                         <td class="px-2 py-3 ${nameColor} font-bold uppercase truncate italic">${dish.dishName}</td>
@@ -1158,30 +1158,30 @@ function renderDailySummaryTable() {
                                         <td class="px-1 py-3 text-center font-black ${aiClass}">${ai}</td>
                                     </tr>
                                 `;
-        }).join('')}
+                    }).join('')}
                         </tbody>
                     </table>
                 </div>
             </div>
         `;
-    };
+                };
 
-    let splitHtml = `
+                let splitHtml = `
         <div id="cold-summary">${createTableHTML(sorted.filter(d => d.dishType === 'cold'), 'cold')}</div>
         <div id="hot-summary">${createTableHTML(sorted.filter(d => d.dishType === 'hot'), 'hot')}</div>
     `;
-    const extras = sorted.filter(d => d.dishType !== 'cold' && d.dishType !== 'hot');
-    if (extras.length > 0) splitHtml += `<div class="full-width-section">${createTableHTML(extras, 'additional')}</div>`;
+                const extras = sorted.filter(d => d.dishType !== 'cold' && d.dishType !== 'hot');
+                if (extras.length > 0) splitHtml += `<div class="full-width-section">${createTableHTML(extras, 'additional')}</div>`;
 
-    DOMElements.dailySummaryContainer.innerHTML = splitHtml;
-}
+                DOMElements.dailySummaryContainer.innerHTML = splitHtml;
+            }
 
 function renderDishCard() {
-    const dish = state.selectedDish; if (!dish) return;
-    const savedData = state.checkedData[dish.dishLetter];
-    const formData = savedData || { temperatures: ['', '', ''], weights: ['', '', ''], comment: '', selectedIngredients: [] };
-    const headerBg = dish.dishType === 'hot' ? 'bg-red-600/30' : dish.dishType === 'cold' ? 'bg-blue-600/30' : 'bg-indigo-600/30';
-    DOMElements.dishCardContainer.innerHTML = `
+                const dish = state.selectedDish; if (!dish) return;
+                const savedData = state.checkedData[dish.dishLetter];
+                const formData = savedData || { temperatures: ['', '', ''], weights: ['', '', ''], comment: '', selectedIngredients: [] };
+                const headerBg = dish.dishType === 'hot' ? 'bg-red-600/30' : dish.dishType === 'cold' ? 'bg-blue-600/30' : 'bg-indigo-600/30';
+                DOMElements.dishCardContainer.innerHTML = `
         <div class="bg-slate-800/80 rounded-[2.5rem] sm:rounded-[4.5rem] shadow-2xl overflow-hidden border border-slate-700/50 backdrop-blur-3xl animate-in zoom-in-95 duration-500">
             <div class="px-6 py-10 sm:px-14 sm:py-12 flex flex-col gap-6 sm:flex-row sm:justify-between sm:items-start ${headerBg} border-b border-white/5">
                 <div>
@@ -1212,92 +1212,92 @@ function renderDishCard() {
         </div>
     `;
 
-    if (savedData && !savedData.capturedImage) {
-        const imgRef = ref(database, `check-images/${state.selectedDate}/${dish.dishLetter}`);
-        get(imgRef).then((snapshot) => {
-            if (snapshot.exists()) {
-                const val = snapshot.val();
-                const preview = document.getElementById('preview-img');
-                const placeholder = document.getElementById('camera-placeholder');
-                const previewContainer = document.getElementById('image-preview');
-                const form = document.getElementById('dish-form');
+                if (savedData && !savedData.capturedImage) {
+                    const imgRef = ref(database, `check-images/${state.selectedDate}/${dish.dishLetter}`);
+                    get(imgRef).then((snapshot) => {
+                        if (snapshot.exists()) {
+                            const val = snapshot.val();
+                            const preview = document.getElementById('preview-img');
+                            const placeholder = document.getElementById('camera-placeholder');
+                            const previewContainer = document.getElementById('image-preview');
+                            const form = document.getElementById('dish-form');
 
-                if (preview && placeholder && previewContainer && form) {
-                    preview.src = val;
-                    form.dataset.capturedImage = val;
-                    placeholder.classList.add('hidden');
-                    previewContainer.classList.remove('hidden');
+                            if (preview && placeholder && previewContainer && form) {
+                                preview.src = val;
+                                form.dataset.capturedImage = val;
+                                placeholder.classList.add('hidden');
+                                previewContainer.classList.remove('hidden');
+                            }
+                        }
+                    });
                 }
-            }
-        });
-    }
 
-    const form = DOMElements.dishCardContainer.querySelector('#dish-form');
-    const setFormDisabled = (disabled) => { form.querySelectorAll('input, textarea').forEach(el => el.disabled = disabled); DOMElements.dishCardContainer.querySelector('#edit-btn').classList.toggle('hidden', !disabled); DOMElements.dishCardContainer.querySelector('#submit-btn').classList.toggle('hidden', disabled); };
-    DOMElements.dishCardContainer.querySelector('#edit-btn').onclick = () => setFormDisabled(false);
-    form.onsubmit = (e) => {
-        e.preventDefault(); const data = new FormData(e.target);
-        saveCheckData({ dishLetter: dish.dishLetter, dishName: dish.dishName, dishType: dish.dishType, date: state.selectedDate, capturedImage: e.target.dataset.capturedImage || null, selectedIngredients: data.getAll('selectedIngredients'), temperatures: data.getAll('temperatures'), weights: data.getAll('weights'), comment: data.get('comment'), aiCheckResult: e.target.dataset.aiFeedback ? JSON.parse(e.target.dataset.aiFeedback) : null, timestamp: new Date().toISOString() });
-    };
-    setFormDisabled(!!savedData);
-    renderCameraCapture({ dishName: dish.dishName }, savedData?.capturedImage);
-    if (savedData?.aiCheckResult) renderAiFeedback(savedData.aiCheckResult);
-    renderHistoricalIntel(dish.dishName);
-}
+                const form = DOMElements.dishCardContainer.querySelector('#dish-form');
+                const setFormDisabled = (disabled) => { form.querySelectorAll('input, textarea').forEach(el => el.disabled = disabled); DOMElements.dishCardContainer.querySelector('#edit-btn').classList.toggle('hidden', !disabled); DOMElements.dishCardContainer.querySelector('#submit-btn').classList.toggle('hidden', disabled); };
+                DOMElements.dishCardContainer.querySelector('#edit-btn').onclick = () => setFormDisabled(false);
+                form.onsubmit = (e) => {
+                    e.preventDefault(); const data = new FormData(e.target);
+                    saveCheckData({ dishLetter: dish.dishLetter, dishName: dish.dishName, dishType: dish.dishType, date: state.selectedDate, capturedImage: e.target.dataset.capturedImage || null, selectedIngredients: data.getAll('selectedIngredients'), temperatures: data.getAll('temperatures'), weights: data.getAll('weights'), comment: data.get('comment'), aiCheckResult: e.target.dataset.aiFeedback ? JSON.parse(e.target.dataset.aiFeedback) : null, timestamp: new Date().toISOString() });
+                };
+                setFormDisabled(!!savedData);
+                renderCameraCapture({ dishName: dish.dishName }, savedData?.capturedImage);
+                if (savedData?.aiCheckResult) renderAiFeedback(savedData.aiCheckResult);
+                renderHistoricalIntel(dish.dishName);
+            }
 
 function renderCameraCapture(item, initialImage) {
-    const container = document.getElementById('camera-container');
-    container.innerHTML = `<p class="text-[10px] sm:text-[11px] font-black text-slate-400 uppercase tracking-[0.4em] mb-4 sm:mb-5 text-center">Specimen Optic Capture</p><div id="camera-placeholder" class="w-full aspect-square rounded-[2rem] sm:rounded-[4rem] bg-slate-950 border-4 border-dashed border-slate-800 flex flex-col items-center justify-center text-slate-700 cursor-pointer overflow-hidden shadow-inner hover:border-indigo-500/50 transition-all"><svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 sm:h-16 sm:w-16 mb-4 sm:mb-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path></svg><span class="text-[11px] sm:text-[12px] uppercase font-black tracking-widest">Activate Camera</span></div><div id="camera-view" class="w-full aspect-square rounded-[2rem] sm:rounded-[4rem] bg-black hidden relative overflow-hidden"><video id="camera-video" autoplay playsinline class="w-full h-full object-cover"></video><button type="button" id="capture-btn" class="absolute bottom-12 left-1/2 -translate-x-1/2 w-20 h-20 sm:w-24 sm:h-24 rounded-full border-[8px] sm:border-[10px] border-white/20 bg-indigo-600 shadow-2xl active:scale-90 transition-all"></button></div><div id="image-preview" class="w-full aspect-square rounded-[2rem] sm:rounded-[4rem] relative hidden group border-4 border-slate-700 overflow-hidden shadow-2xl"><img id="preview-img" class="w-full h-full object-cover"/><div class="absolute inset-0 bg-slate-950/80 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all backdrop-blur-xl"><button type="button" id="retake-btn" class="px-10 py-4 sm:px-12 sm:py-5 bg-white text-slate-900 rounded-[1.5rem] sm:rounded-[2rem] text-[11px] sm:text-[12px] font-black uppercase tracking-[0.4em] border-b-4 border-slate-300">Recapture</button></div></div>`;
-    const videoEl = container.querySelector('#camera-video'); const form = DOMElements.dishCardContainer.querySelector('form'); let stream = null;
-    container.querySelector('#camera-placeholder').onclick = async () => { if (form.querySelector('input').disabled) return; try { stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } }); videoEl.srcObject = stream; container.querySelector('#camera-placeholder').classList.add('hidden'); container.querySelector('#camera-view').classList.remove('hidden'); } catch (e) { alert("Camera offline."); } };
-    container.querySelector('#capture-btn').onclick = () => { const canvas = document.createElement('canvas'); canvas.width = 1024; canvas.height = 1024; canvas.getContext('2d').drawImage(videoEl, 0, 0, 1024, 1024); const dataUrl = canvas.toDataURL('image/jpeg', 0.95); container.querySelector('#preview-img').src = dataUrl; form.dataset.capturedImage = dataUrl; if (stream) stream.getTracks().forEach(t => t.stop()); container.querySelector('#camera-view').classList.add('hidden'); container.querySelector('#image-preview').classList.remove('hidden'); if (form.id === 'dish-form') handleAiCheck(state.selectedDish, dataUrl); };
-    container.querySelector('#retake-btn').onclick = () => { if (!form.querySelector('input').disabled) { container.querySelector('#image-preview').classList.add('hidden'); container.querySelector('#camera-placeholder').classList.remove('hidden'); } };
-    if (initialImage) { container.querySelector('#preview-img').src = initialImage; form.dataset.capturedImage = initialImage; container.querySelector('#camera-placeholder').classList.add('hidden'); container.querySelector('#image-preview').classList.remove('hidden'); }
-}
+                const container = document.getElementById('camera-container');
+                container.innerHTML = `<p class="text-[10px] sm:text-[11px] font-black text-slate-400 uppercase tracking-[0.4em] mb-4 sm:mb-5 text-center">Specimen Optic Capture</p><div id="camera-placeholder" class="w-full aspect-square rounded-[2rem] sm:rounded-[4rem] bg-slate-950 border-4 border-dashed border-slate-800 flex flex-col items-center justify-center text-slate-700 cursor-pointer overflow-hidden shadow-inner hover:border-indigo-500/50 transition-all"><svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 sm:h-16 sm:w-16 mb-4 sm:mb-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path></svg><span class="text-[11px] sm:text-[12px] uppercase font-black tracking-widest">Activate Camera</span></div><div id="camera-view" class="w-full aspect-square rounded-[2rem] sm:rounded-[4rem] bg-black hidden relative overflow-hidden"><video id="camera-video" autoplay playsinline class="w-full h-full object-cover"></video><button type="button" id="capture-btn" class="absolute bottom-12 left-1/2 -translate-x-1/2 w-20 h-20 sm:w-24 sm:h-24 rounded-full border-[8px] sm:border-[10px] border-white/20 bg-indigo-600 shadow-2xl active:scale-90 transition-all"></button></div><div id="image-preview" class="w-full aspect-square rounded-[2rem] sm:rounded-[4rem] relative hidden group border-4 border-slate-700 overflow-hidden shadow-2xl"><img id="preview-img" class="w-full h-full object-cover"/><div class="absolute inset-0 bg-slate-950/80 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all backdrop-blur-xl"><button type="button" id="retake-btn" class="px-10 py-4 sm:px-12 sm:py-5 bg-white text-slate-900 rounded-[1.5rem] sm:rounded-[2rem] text-[11px] sm:text-[12px] font-black uppercase tracking-[0.4em] border-b-4 border-slate-300">Recapture</button></div></div>`;
+                const videoEl = container.querySelector('#camera-video'); const form = DOMElements.dishCardContainer.querySelector('form'); let stream = null;
+                container.querySelector('#camera-placeholder').onclick = async () => { if (form.querySelector('input').disabled) return; try { stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } }); videoEl.srcObject = stream; container.querySelector('#camera-placeholder').classList.add('hidden'); container.querySelector('#camera-view').classList.remove('hidden'); } catch (e) { alert("Camera offline."); } };
+                container.querySelector('#capture-btn').onclick = () => { const canvas = document.createElement('canvas'); canvas.width = 1024; canvas.height = 1024; canvas.getContext('2d').drawImage(videoEl, 0, 0, 1024, 1024); const dataUrl = canvas.toDataURL('image/jpeg', 0.95); container.querySelector('#preview-img').src = dataUrl; form.dataset.capturedImage = dataUrl; if (stream) stream.getTracks().forEach(t => t.stop()); container.querySelector('#camera-view').classList.add('hidden'); container.querySelector('#image-preview').classList.remove('hidden'); if (form.id === 'dish-form') handleAiCheck(state.selectedDish, dataUrl); };
+                container.querySelector('#retake-btn').onclick = () => { if (!form.querySelector('input').disabled) { container.querySelector('#image-preview').classList.add('hidden'); container.querySelector('#camera-placeholder').classList.remove('hidden'); } };
+                if (initialImage) { container.querySelector('#preview-img').src = initialImage; form.dataset.capturedImage = initialImage; container.querySelector('#camera-placeholder').classList.add('hidden'); container.querySelector('#image-preview').classList.remove('hidden'); }
+            }
 
 async function handleAiCheck(dish, capturedImageDataUrl) {
-    const feedbackContainer = document.getElementById('ai-feedback-container'); if (!feedbackContainer) return;
-    feedbackContainer.innerHTML = `<div class="p-10 sm:p-14 border-2 border-indigo-500/30 bg-indigo-900/10 rounded-[2.5rem] sm:rounded-[4rem] flex flex-col items-center justify-center space-y-6 sm:space-y-8 shadow-2xl backdrop-blur-3xl"><div class="relative w-10 h-10 sm:w-12 sm:h-12"><div class="absolute inset-0 border-4 sm:border-8 border-indigo-500/10 rounded-full"></div><div class="absolute inset-0 border-4 sm:border-8 border-indigo-500 border-t-transparent rounded-full animate-spin"></div></div><p class="font-black text-indigo-400 text-[10px] sm:text-[12px] uppercase tracking-[0.6em] animate-pulse italic">Analyzing Visual Compliance</p></div>`;
-    try {
-        const ai = new GoogleGenAI({ apiKey: process.env.API_KEY }); let refImgPart = null; try { const refRes = await fetch(dish.dishImage); if (refRes.ok) { const blob = await refRes.blob(); const refBase64 = await new Promise(res => { const fr = new FileReader(); fr.onloadend = () => res(fr.result.split(',')[1]); fr.readAsDataURL(blob); }); refImgPart = { inlineData: { mimeType: 'image/jpeg', data: refBase64 } }; } } catch (e) { console.warn("Reference failed."); }
-        const result = await ai.models.generateContent({ model: 'gemini-3-pro-preview', contents: { parts: [{ text: `Audit '${dish.dishName}'. JSON: { "score": 1-10, "positives": string[], "improvements": string[], "overall_comment": string }` }, ...(refImgPart ? [refImgPart] : []), { inlineData: { mimeType: 'image/jpeg', data: capturedImageDataUrl.split(',')[1] } }] }, config: { responseMimeType: "application/json", temperature: 0.1 } });
-        const feedbackData = JSON.parse(result.text); document.getElementById('dish-form').dataset.aiFeedback = JSON.stringify(feedbackData); renderAiFeedback(feedbackData);
-    } catch (e) { feedbackContainer.innerHTML = `<div class="p-8 border border-red-900/40 bg-red-950/30 rounded-[2rem] text-[10px] text-red-400 uppercase font-black text-center shadow-xl">AI Logic Disconnected</div>`; }
-}
+                const feedbackContainer = document.getElementById('ai-feedback-container'); if (!feedbackContainer) return;
+                feedbackContainer.innerHTML = `<div class="p-10 sm:p-14 border-2 border-indigo-500/30 bg-indigo-900/10 rounded-[2.5rem] sm:rounded-[4rem] flex flex-col items-center justify-center space-y-6 sm:space-y-8 shadow-2xl backdrop-blur-3xl"><div class="relative w-10 h-10 sm:w-12 sm:h-12"><div class="absolute inset-0 border-4 sm:border-8 border-indigo-500/10 rounded-full"></div><div class="absolute inset-0 border-4 sm:border-8 border-indigo-500 border-t-transparent rounded-full animate-spin"></div></div><p class="font-black text-indigo-400 text-[10px] sm:text-[12px] uppercase tracking-[0.6em] animate-pulse italic">Analyzing Visual Compliance</p></div>`;
+                try {
+                    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY }); let refImgPart = null; try { const refRes = await fetch(dish.dishImage); if (refRes.ok) { const blob = await refRes.blob(); const refBase64 = await new Promise(res => { const fr = new FileReader(); fr.onloadend = () => res(fr.result.split(',')[1]); fr.readAsDataURL(blob); }); refImgPart = { inlineData: { mimeType: 'image/jpeg', data: refBase64 } }; } } catch (e) { console.warn("Reference failed."); }
+                    const result = await ai.models.generateContent({ model: 'gemini-3-pro-preview', contents: { parts: [{ text: `Audit '${dish.dishName}'. JSON: { "score": 1-10, "positives": string[], "improvements": string[], "overall_comment": string }` }, ...(refImgPart ? [refImgPart] : []), { inlineData: { mimeType: 'image/jpeg', data: capturedImageDataUrl.split(',')[1] } }] }, config: { responseMimeType: "application/json", temperature: 0.1 } });
+                    const feedbackData = JSON.parse(result.text); document.getElementById('dish-form').dataset.aiFeedback = JSON.stringify(feedbackData); renderAiFeedback(feedbackData);
+                } catch (e) { feedbackContainer.innerHTML = `<div class="p-8 border border-red-900/40 bg-red-950/30 rounded-[2rem] text-[10px] text-red-400 uppercase font-black text-center shadow-xl">AI Logic Disconnected</div>`; }
+            }
 
 function renderAiFeedback(feedbackData) {
-    const container = document.getElementById('ai-feedback-container'); if (!container || !feedbackData) return;
-    container.innerHTML = `<div class="bg-slate-900/90 border border-slate-700/50 rounded-[2.5rem] sm:rounded-[4rem] overflow-hidden shadow-2xl backdrop-blur-3xl animate-in slide-in-from-bottom-12 duration-700"><div class="px-8 py-6 sm:px-12 sm:py-8 flex justify-between items-center bg-slate-800/80 border-b border-white/5"><span class="text-[9px] sm:text-[11px] font-black uppercase text-indigo-400 tracking-[0.5em]">Neural Insight Logic</span><span class="text-2xl sm:text-3xl font-black text-white bg-indigo-600 px-8 py-3 sm:px-10 sm:py-4 rounded-2xl sm:rounded-3xl italic shadow-2xl border-b-8 border-indigo-800">${feedbackData.score}/10</span></div><div class="p-8 sm:p-12 grid grid-cols-1 sm:grid-cols-2 gap-8 sm:gap-12 text-xs sm:text-sm leading-relaxed italic"><div class="bg-green-500/5 p-6 sm:p-8 rounded-[1.5rem] sm:rounded-[2.5rem] border border-green-500/10"><p class="font-black text-green-400 uppercase tracking-[0.3em] mb-4 sm:mb-6">Compliance Hits</p><ul class="text-slate-300 space-y-3 sm:space-y-4 font-medium">${(feedbackData.positives || []).map(p => `<li class="flex items-start gap-4"><div class="h-1.5 w-1.5 rounded-full bg-green-500 mt-1.5"></div>${p}</li>`).join('') || 'Blueprint matched'}</ul></div><div class="bg-yellow-500/5 p-6 sm:p-8 rounded-[1.5rem] sm:rounded-[2.5rem] border border-yellow-500/10"><p class="font-black text-yellow-400 uppercase tracking-[0.3em] mb-4 sm:mb-6">Delta Improvements</p><ul class="text-slate-300 space-y-3 sm:space-y-4 font-medium">${(feedbackData.improvements || []).map(i => `<li class="flex items-start gap-4"><div class="h-1.5 w-1.5 rounded-full bg-yellow-500 mt-1.5"></div>${i}</li>`).join('') || 'Peak stability detected'}</ul></div></div><div class="px-8 pb-8 sm:px-12 sm:pb-12"><div class="bg-slate-950/80 p-8 sm:p-10 rounded-[2rem] sm:rounded-[3rem] border border-slate-800 shadow-inner"><p class="text-[12px] sm:text-[13px] italic text-slate-400 leading-relaxed font-medium">"${feedbackData.overall_comment}"</p></div></div></div>`;
-}
+                const container = document.getElementById('ai-feedback-container'); if (!container || !feedbackData) return;
+                container.innerHTML = `<div class="bg-slate-900/90 border border-slate-700/50 rounded-[2.5rem] sm:rounded-[4rem] overflow-hidden shadow-2xl backdrop-blur-3xl animate-in slide-in-from-bottom-12 duration-700"><div class="px-8 py-6 sm:px-12 sm:py-8 flex justify-between items-center bg-slate-800/80 border-b border-white/5"><span class="text-[9px] sm:text-[11px] font-black uppercase text-indigo-400 tracking-[0.5em]">Neural Insight Logic</span><span class="text-2xl sm:text-3xl font-black text-white bg-indigo-600 px-8 py-3 sm:px-10 sm:py-4 rounded-2xl sm:rounded-3xl italic shadow-2xl border-b-8 border-indigo-800">${feedbackData.score}/10</span></div><div class="p-8 sm:p-12 grid grid-cols-1 sm:grid-cols-2 gap-8 sm:gap-12 text-xs sm:text-sm leading-relaxed italic"><div class="bg-green-500/5 p-6 sm:p-8 rounded-[1.5rem] sm:rounded-[2.5rem] border border-green-500/10"><p class="font-black text-green-400 uppercase tracking-[0.3em] mb-4 sm:mb-6">Compliance Hits</p><ul class="text-slate-300 space-y-3 sm:space-y-4 font-medium">${(feedbackData.positives || []).map(p => `<li class="flex items-start gap-4"><div class="h-1.5 w-1.5 rounded-full bg-green-500 mt-1.5"></div>${p}</li>`).join('') || 'Blueprint matched'}</ul></div><div class="bg-yellow-500/5 p-6 sm:p-8 rounded-[1.5rem] sm:rounded-[2.5rem] border border-yellow-500/10"><p class="font-black text-yellow-400 uppercase tracking-[0.3em] mb-4 sm:mb-6">Delta Improvements</p><ul class="text-slate-300 space-y-3 sm:space-y-4 font-medium">${(feedbackData.improvements || []).map(i => `<li class="flex items-start gap-4"><div class="h-1.5 w-1.5 rounded-full bg-yellow-500 mt-1.5"></div>${i}</li>`).join('') || 'Peak stability detected'}</ul></div></div><div class="px-8 pb-8 sm:px-12 sm:pb-12"><div class="bg-slate-950/80 p-8 sm:p-10 rounded-[2rem] sm:rounded-[3rem] border border-slate-800 shadow-inner"><p class="text-[12px] sm:text-[13px] italic text-slate-400 leading-relaxed font-medium">"${feedbackData.overall_comment}"</p></div></div></div>`;
+            }
 
 async function renderHistoricalIntel(dishName) {
-    const intelContainer = document.getElementById('historical-intel-container');
-    if (!intelContainer) return;
-    const matches = state.allHistoricalChecks.filter(c => isDishMatch(c.dishName, dishName));
-    if (matches.length === 0) {
-        intelContainer.innerHTML = `<span class="text-slate-500 font-black tracking-widest italic uppercase text-[9px]">Zero Historical Data Points</span>`;
-        return;
-    }
-    const recent = [...matches].sort((a, b) => (b.timestamp || "").localeCompare(a.timestamp || "")).slice(0, 5);
-    const avg = (recent.reduce((sum, c) => sum + (c.aiCheckResult?.score || 0), 0) / recent.length).toFixed(1);
-    intelContainer.innerHTML = `
+                const intelContainer = document.getElementById('historical-intel-container');
+                if (!intelContainer) return;
+                const matches = state.allHistoricalChecks.filter(c => isDishMatch(c.dishName, dishName));
+                if (matches.length === 0) {
+                    intelContainer.innerHTML = `<span class="text-slate-500 font-black tracking-widest italic uppercase text-[9px]">Zero Historical Data Points</span>`;
+                    return;
+                }
+                const recent = [...matches].sort((a, b) => (b.timestamp || "").localeCompare(a.timestamp || "")).slice(0, 5);
+                const avg = (recent.reduce((sum, c) => sum + (c.aiCheckResult?.score || 0), 0) / recent.length).toFixed(1);
+                intelContainer.innerHTML = `
         <div class="flex items-center gap-4 animate-in fade-in duration-700">
             <div class="flex items-center gap-1.5">${recent.map(c => `<div class="w-2.5 h-2.5 rounded-full ${c.aiCheckResult?.score > 7 ? 'bg-green-500' : 'bg-indigo-500'} shadow-lg"></div>`).join('')}</div>
             <div class="h-4 w-px bg-slate-800"></div>
             <span class="text-[10px] font-black text-indigo-400 uppercase tracking-widest italic">${avg} Quality index (${matches.length} Total Logs)</span>
         </div>
     `;
-}
+            }
 
 // --- INTELLIGENCE ANALYTICS CORE ---
 
 function renderAuditDishLibrary() {
-    DOMElements.auditResultsContainer.innerHTML = '';
+                DOMElements.auditResultsContainer.innerHTML = '';
 
-    // --- CHECK FOR MANUAL FETCH ---
-    if (!state.hasFetchedHistory) {
-        if (state.isHistoryLoading) {
-            DOMElements.auditResultsContainer.innerHTML = `
+                // --- CHECK FOR MANUAL FETCH ---
+                if (!state.hasFetchedHistory) {
+                    if (state.isHistoryLoading) {
+                        DOMElements.auditResultsContainer.innerHTML = `
                 <div class="flex flex-col items-center justify-center py-24 animate-pulse">
                     <div class="relative w-20 h-20 mb-8">
                         <div class="absolute inset-0 border-4 border-indigo-500/20 rounded-full"></div>
@@ -1307,9 +1307,9 @@ function renderAuditDishLibrary() {
                     <p class="text-slate-600 font-mono text-[9px] mt-2">Connecting to Neural Database</p>
                 </div>
             `;
-        } else {
-            // "Connect to Database" Button State
-            DOMElements.auditResultsContainer.innerHTML = `
+                    } else {
+                        // "Connect to Database" Button State
+                        DOMElements.auditResultsContainer.innerHTML = `
                 <div class="flex flex-col items-center justify-center py-24 px-6 animate-in fade-in zoom-in-95 duration-500 border-2 border-dashed border-slate-800 rounded-[3rem] bg-slate-900/50">
                     <div class="bg-indigo-600/10 p-8 rounded-[2.5rem] mb-8 shadow-2xl shadow-indigo-500/10 ring-1 ring-indigo-500/30">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -1326,48 +1326,48 @@ function renderAuditDishLibrary() {
                     </button>
                 </div>
             `;
-        }
-        return;
-    }
+                    }
+                    return;
+                }
 
-    // Clear old charts to prevent memory leaks
-    if (window.auditCharts) {
-        window.auditCharts.forEach(c => c.destroy());
-        window.auditCharts = [];
-    }
+                // Clear old charts to prevent memory leaks
+                if (window.auditCharts) {
+                    window.auditCharts.forEach(c => c.destroy());
+                    window.auditCharts = [];
+                }
 
-    // 1. Group ALL history by Normalized Name
-    const dishStats = {};
-    const allDates = new Set();
+                // 1. Group ALL history by Normalized Name
+                const dishStats = {};
+                const allDates = new Set();
 
-    state.allHistoricalChecks.forEach(check => {
-        const key = normalizeName(check.dishName);
-        if (check.pathDate) allDates.add(check.pathDate);
+                state.allHistoricalChecks.forEach(check => {
+                    const key = normalizeName(check.dishName);
+                    if (check.pathDate) allDates.add(check.pathDate);
 
-        if (!dishStats[key]) {
-            dishStats[key] = {
-                name: check.dishName,
-                checks: [],
-                scores: []
-            };
-        }
-        if (check.timestamp && (!dishStats[key].lastTs || check.timestamp > dishStats[key].lastTs)) {
-            dishStats[key].name = check.dishName;
-            dishStats[key].lastTs = check.timestamp;
-        }
-        dishStats[key].checks.push(check);
-        if (check.aiCheckResult && typeof check.aiCheckResult.score === 'number') {
-            dishStats[key].scores.push(check.aiCheckResult.score);
-        }
-    });
+                    if (!dishStats[key]) {
+                        dishStats[key] = {
+                            name: check.dishName,
+                            checks: [],
+                            scores: []
+                        };
+                    }
+                    if (check.timestamp && (!dishStats[key].lastTs || check.timestamp > dishStats[key].lastTs)) {
+                        dishStats[key].name = check.dishName;
+                        dishStats[key].lastTs = check.timestamp;
+                    }
+                    dishStats[key].checks.push(check);
+                    if (check.aiCheckResult && typeof check.aiCheckResult.score === 'number') {
+                        dishStats[key].scores.push(check.aiCheckResult.score);
+                    }
+                });
 
-    // --- GLOBAL HEADER ---
-    const dateArray = Array.from(allDates).sort();
-    const rangeStart = dateArray.length ? new Date(dateArray[0]).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) : 'N/A';
-    const rangeEnd = dateArray.length ? new Date(dateArray[dateArray.length - 1]).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) : 'N/A';
+                // --- GLOBAL HEADER ---
+                const dateArray = Array.from(allDates).sort();
+                const rangeStart = dateArray.length ? new Date(dateArray[0]).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) : 'N/A';
+                const rangeEnd = dateArray.length ? new Date(dateArray[dateArray.length - 1]).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) : 'N/A';
 
-    const headerDiv = document.createElement('div');
-    headerDiv.innerHTML = `
+                const headerDiv = document.createElement('div');
+                headerDiv.innerHTML = `
         <div class="flex flex-col sm:flex-row justify-between items-end border-b border-indigo-500/30 pb-4 mb-8 gap-4">
             <div>
                 <h3 class="text-xl font-black text-white italic tracking-tight">Global Knowledge Base</h3>
@@ -1386,59 +1386,59 @@ function renderAuditDishLibrary() {
             </div>
         </div>
     `;
-    DOMElements.auditResultsContainer.appendChild(headerDiv);
+                DOMElements.auditResultsContainer.appendChild(headerDiv);
 
-    const getTopicFrequency = (items) => {
-        const counts = {};
-        items.forEach(i => {
-            if (!i) return;
-            const k = i.trim().toLowerCase().replace(/[.,!]/g, '');
-            if (!counts[k]) counts[k] = { text: i.trim(), count: 0 };
-            counts[k].count++;
-        });
-        return Object.values(counts).sort((a, b) => b.count - a.count).slice(0, 5);
-    };
+                const getTopicFrequency = (items) => {
+                    const counts = {};
+                    items.forEach(i => {
+                        if (!i) return;
+                        const k = i.trim().toLowerCase().replace(/[.,!]/g, '');
+                        if (!counts[k]) counts[k] = { text: i.trim(), count: 0 };
+                        counts[k].count++;
+                    });
+                    return Object.values(counts).sort((a, b) => b.count - a.count).slice(0, 5);
+                };
 
-    // --- SPLIT LOGIC: ACTIVE MENU vs ARCHIVE ---
-    // Iterate state.menu to ensure ALL current menu items are shown, even if no history exists.
+                // --- SPLIT LOGIC: ACTIVE MENU vs ARCHIVE ---
+                // Iterate state.menu to ensure ALL current menu items are shown, even if no history exists.
 
-    const activeDishes = [];
-    const usedStatsKeys = new Set();
+                const activeDishes = [];
+                const usedStatsKeys = new Set();
 
-    if (state.menu && state.menu.dishes) {
-        state.menu.dishes.forEach(menuDish => {
-            const key = normalizeName(menuDish.dishName);
-            usedStatsKeys.add(key);
+                if (state.menu && state.menu.dishes) {
+                    state.menu.dishes.forEach(menuDish => {
+                        const key = normalizeName(menuDish.dishName);
+                        usedStatsKeys.add(key);
 
-            if (dishStats[key]) {
-                activeDishes.push({
-                    ...dishStats[key],
-                    isActive: true
+                        if (dishStats[key]) {
+                            activeDishes.push({
+                                ...dishStats[key],
+                                isActive: true
+                            });
+                        } else {
+                            // Dish is in menu but has no history in Firebase
+                            activeDishes.push({
+                                name: menuDish.dishName,
+                                checks: [],
+                                scores: [],
+                                isActive: true,
+                                isNew: true
+                            });
+                        }
+                    });
+                }
+
+                const archivedDishes = [];
+                Object.keys(dishStats).forEach(key => {
+                    if (!usedStatsKeys.has(key)) {
+                        archivedDishes.push({
+                            ...dishStats[key],
+                            isActive: false
+                        });
+                    }
                 });
-            } else {
-                // Dish is in menu but has no history in Firebase
-                activeDishes.push({
-                    name: menuDish.dishName,
-                    checks: [],
-                    scores: [],
-                    isActive: true,
-                    isNew: true
-                });
-            }
-        });
-    }
 
-    const archivedDishes = [];
-    Object.keys(dishStats).forEach(key => {
-        if (!usedStatsKeys.has(key)) {
-            archivedDishes.push({
-                ...dishStats[key],
-                isActive: false
-            });
-        }
-    });
-
-    const createSectionHeader = (title, count, iconSvg, colorClass) => `
+                const createSectionHeader = (title, count, iconSvg, colorClass) => `
         <div class="flex items-center gap-4 mb-6 mt-12 border-b border-slate-800 pb-4 animate-in slide-in-from-left-8 duration-700">
             <div class="p-3 rounded-2xl ${colorClass.replace('bg-', 'bg-opacity-10 text-')} ${colorClass} bg-opacity-10">
                 ${iconSvg}
@@ -1450,65 +1450,65 @@ function renderAuditDishLibrary() {
         </div>
     `;
 
-    // Render Function
-    const renderDishList = (dishes, startIndex) => {
-        dishes.forEach((dish, i) => {
-            const index = startIndex + i;
-            const total = dish.checks.length;
+                // Render Function
+                const renderDishList = (dishes, startIndex) => {
+                    dishes.forEach((dish, i) => {
+                        const index = startIndex + i;
+                        const total = dish.checks.length;
 
-            // Stats Calculation
-            let avgScore = 'N/A';
-            let tier = 'N';
-            let tierColor = 'text-slate-500';
-            let tierBg = 'bg-slate-500/10 border-slate-500/20';
-            let sortedChecks = [];
-            let labels = [];
-            let dataPoints = [];
-            let goodInsights = [];
-            let badInsights = [];
-            let allPositives = [];
-            let allImprovements = [];
+                        // Stats Calculation
+                        let avgScore = 'N/A';
+                        let tier = 'N';
+                        let tierColor = 'text-slate-500';
+                        let tierBg = 'bg-slate-500/10 border-slate-500/20';
+                        let sortedChecks = [];
+                        let labels = [];
+                        let dataPoints = [];
+                        let goodInsights = [];
+                        let badInsights = [];
+                        let allPositives = [];
+                        let allImprovements = [];
 
-            if (total > 0) {
-                const sum = dish.scores.reduce((a, b) => a + b, 0);
-                const mean = sum / total;
-                avgScore = mean.toFixed(1);
+                        if (total > 0) {
+                            const sum = dish.scores.reduce((a, b) => a + b, 0);
+                            const mean = sum / total;
+                            avgScore = mean.toFixed(1);
 
-                const variance = dish.scores.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / total;
-                const stdDev = Math.sqrt(variance);
+                            const variance = dish.scores.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / total;
+                            const stdDev = Math.sqrt(variance);
 
-                tier = 'C'; tierColor = 'text-red-500'; tierBg = 'bg-red-500/10 border-red-500/20';
-                if (mean >= 9 && stdDev < 1.0) { tier = 'S'; tierColor = 'text-purple-400'; tierBg = 'bg-purple-500/10 border-purple-500/20'; }
-                else if (mean >= 8 && stdDev < 2.0) { tier = 'A'; tierColor = 'text-emerald-400'; tierBg = 'bg-emerald-500/10 border-emerald-500/20'; }
-                else if (mean >= 6.5) { tier = 'B'; tierColor = 'text-yellow-400'; tierBg = 'bg-yellow-500/10 border-yellow-500/20'; }
+                            tier = 'C'; tierColor = 'text-red-500'; tierBg = 'bg-red-500/10 border-red-500/20';
+                            if (mean >= 9 && stdDev < 1.0) { tier = 'S'; tierColor = 'text-purple-400'; tierBg = 'bg-purple-500/10 border-purple-500/20'; }
+                            else if (mean >= 8 && stdDev < 2.0) { tier = 'A'; tierColor = 'text-emerald-400'; tierBg = 'bg-emerald-500/10 border-emerald-500/20'; }
+                            else if (mean >= 6.5) { tier = 'B'; tierColor = 'text-yellow-400'; tierBg = 'bg-yellow-500/10 border-yellow-500/20'; }
 
-                sortedChecks = dish.checks.sort((a, b) => (a.timestamp || '').localeCompare(b.timestamp || ''));
-                labels = sortedChecks.map(c => c.timestamp ? new Date(c.timestamp).toLocaleDateString(undefined, { month: 'numeric', day: 'numeric' }) : '-');
-                dataPoints = sortedChecks.map(c => c.aiCheckResult?.score || 0);
+                            sortedChecks = dish.checks.sort((a, b) => (a.timestamp || '').localeCompare(b.timestamp || ''));
+                            labels = sortedChecks.map(c => c.timestamp ? new Date(c.timestamp).toLocaleDateString(undefined, { month: 'numeric', day: 'numeric' }) : '-');
+                            dataPoints = sortedChecks.map(c => c.aiCheckResult?.score || 0);
 
-                const goodChecks = sortedChecks.filter(c => c.aiCheckResult?.score >= 8);
-                const badChecks = sortedChecks.filter(c => c.aiCheckResult?.score <= 6);
+                            const goodChecks = sortedChecks.filter(c => c.aiCheckResult?.score >= 8);
+                            const badChecks = sortedChecks.filter(c => c.aiCheckResult?.score <= 6);
 
-                const getInsights = (checks) => checks.map(c => c.aiCheckResult?.overall_comment || "").filter(c => c.length > 5).slice(0, 3);
+                            const getInsights = (checks) => checks.map(c => c.aiCheckResult?.overall_comment || "").filter(c => c.length > 5).slice(0, 3);
 
-                goodInsights = getInsights(goodChecks);
-                badInsights = getInsights(badChecks);
+                            goodInsights = getInsights(goodChecks);
+                            badInsights = getInsights(badChecks);
 
-                allPositives = getTopicFrequency(sortedChecks.flatMap(c => c.aiCheckResult?.positives || []));
-                allImprovements = getTopicFrequency(sortedChecks.flatMap(c => c.aiCheckResult?.improvements || []));
-            }
+                            allPositives = getTopicFrequency(sortedChecks.flatMap(c => c.aiCheckResult?.positives || []));
+                            allImprovements = getTopicFrequency(sortedChecks.flatMap(c => c.aiCheckResult?.improvements || []));
+                        }
 
-            const card = document.createElement('div');
-            card.className = "bg-slate-800/60 rounded-[2.5rem] p-8 border border-slate-700/50 backdrop-blur-md hover:bg-slate-800/80 transition-all relative overflow-hidden mb-8 group";
-            const canvasId = `chart-${index}`;
+                        const card = document.createElement('div');
+                        card.className = "bg-slate-800/60 rounded-[2.5rem] p-8 border border-slate-700/50 backdrop-blur-md hover:bg-slate-800/80 transition-all relative overflow-hidden mb-8 group";
+                        const canvasId = `chart-${index}`;
 
-            // Conditional HTML content
-            const chartHtml = total > 0
-                ? `<div class="h-40 w-full relative"><canvas id="${canvasId}"></canvas></div>`
-                : `<div class="h-40 w-full flex items-center justify-center border-2 border-dashed border-slate-700/50 rounded-3xl"><p class="text-[10px] font-black text-slate-600 uppercase tracking-[0.3em]">No Trend Data Available</p></div>`;
+                        // Conditional HTML content
+                        const chartHtml = total > 0
+                            ? `<div class="h-40 w-full relative"><canvas id="${canvasId}"></canvas></div>`
+                            : `<div class="h-40 w-full flex items-center justify-center border-2 border-dashed border-slate-700/50 rounded-3xl"><p class="text-[10px] font-black text-slate-600 uppercase tracking-[0.3em]">No Trend Data Available</p></div>`;
 
-            const deepDiveHtml = total > 0
-                ? `
+                        const deepDiveHtml = total > 0
+                            ? `
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 border-t border-white/5 pt-8">
                         <div class="bg-slate-900/50 p-6 rounded-3xl border border-slate-800 space-y-6">
                             <div class="flex items-center gap-3 mb-2">
@@ -1530,9 +1530,9 @@ function renderAuditDishLibrary() {
                         </div>
                     </div>
                 `
-                : '';
+                            : '';
 
-            card.innerHTML = `
+                        card.innerHTML = `
                 <div class="flex flex-col gap-8 relative z-10">
                     <!-- Header -->
                     <div class="border-b border-white/5 pb-6 flex justify-between items-start">
@@ -1566,69 +1566,69 @@ function renderAuditDishLibrary() {
                     ` : ''}
                 </div>
             `;
-            DOMElements.auditResultsContainer.appendChild(card);
+                        DOMElements.auditResultsContainer.appendChild(card);
 
-            // Chart Rendering
-            if (total > 0 && typeof Chart !== 'undefined') {
-                const ctx = document.getElementById(canvasId).getContext('2d');
-                const chart = new Chart(ctx, {
-                    type: 'line',
-                    data: {
-                        labels: labels,
-                        datasets: [{
-                            label: 'Quality Score',
-                            data: dataPoints,
-                            borderColor: '#6366f1',
-                            backgroundColor: (context) => {
-                                const bg = context.chart.ctx.createLinearGradient(0, 0, 0, 200);
-                                bg.addColorStop(0, 'rgba(99, 102, 241, 0.5)');
-                                bg.addColorStop(1, 'rgba(99, 102, 241, 0)');
-                                return bg;
-                            },
-                            borderWidth: 2,
-                            pointBackgroundColor: '#1e293b',
-                            pointBorderColor: '#818cf8',
-                            pointRadius: 4,
-                            fill: true,
-                            tension: 0.4
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: { legend: { display: false } },
-                        scales: {
-                            y: { min: 0, max: 10, grid: { color: 'rgba(148, 163, 184, 0.1)' }, ticks: { color: '#64748b', font: { size: 10, weight: 'bold' } } },
-                            x: { grid: { display: false }, ticks: { color: '#64748b', font: { size: 9, weight: 'bold' }, maxTicksLimit: 6 } }
+                        // Chart Rendering
+                        if (total > 0 && typeof Chart !== 'undefined') {
+                            const ctx = document.getElementById(canvasId).getContext('2d');
+                            const chart = new Chart(ctx, {
+                                type: 'line',
+                                data: {
+                                    labels: labels,
+                                    datasets: [{
+                                        label: 'Quality Score',
+                                        data: dataPoints,
+                                        borderColor: '#6366f1',
+                                        backgroundColor: (context) => {
+                                            const bg = context.chart.ctx.createLinearGradient(0, 0, 0, 200);
+                                            bg.addColorStop(0, 'rgba(99, 102, 241, 0.5)');
+                                            bg.addColorStop(1, 'rgba(99, 102, 241, 0)');
+                                            return bg;
+                                        },
+                                        borderWidth: 2,
+                                        pointBackgroundColor: '#1e293b',
+                                        pointBorderColor: '#818cf8',
+                                        pointRadius: 4,
+                                        fill: true,
+                                        tension: 0.4
+                                    }]
+                                },
+                                options: {
+                                    responsive: true,
+                                    maintainAspectRatio: false,
+                                    plugins: { legend: { display: false } },
+                                    scales: {
+                                        y: { min: 0, max: 10, grid: { color: 'rgba(148, 163, 184, 0.1)' }, ticks: { color: '#64748b', font: { size: 10, weight: 'bold' } } },
+                                        x: { grid: { display: false }, ticks: { color: '#64748b', font: { size: 9, weight: 'bold' }, maxTicksLimit: 6 } }
+                                    }
+                                }
+                            });
+                            window.auditCharts.push(chart);
                         }
-                    }
-                });
-                window.auditCharts.push(chart);
+                    });
+                };
+
+                if (activeDishes.length > 0) {
+                    DOMElements.auditResultsContainer.insertAdjacentHTML('beforeend', createSectionHeader("Active Menu Matrix", activeDishes.length, '<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>', 'bg-emerald-500'));
+                    renderDishList(activeDishes, 0);
+                }
+
+                if (archivedDishes.length > 0) {
+                    DOMElements.auditResultsContainer.insertAdjacentHTML('beforeend', createSectionHeader("Historical Archive", archivedDishes.length, '<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>', 'bg-slate-500'));
+                    renderDishList(archivedDishes, activeDishes.length);
+                }
+
+                if (activeDishes.length === 0 && archivedDishes.length === 0) {
+                    DOMElements.auditResultsContainer.innerHTML += `<div class="text-center py-20 border-2 border-dashed border-slate-800 rounded-[3rem]"><p class="text-[10px] font-black text-slate-600 uppercase tracking-[0.4em]">No Records Found</p></div>`;
+                }
             }
-        });
-    };
-
-    if (activeDishes.length > 0) {
-        DOMElements.auditResultsContainer.insertAdjacentHTML('beforeend', createSectionHeader("Active Menu Matrix", activeDishes.length, '<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>', 'bg-emerald-500'));
-        renderDishList(activeDishes, 0);
-    }
-
-    if (archivedDishes.length > 0) {
-        DOMElements.auditResultsContainer.insertAdjacentHTML('beforeend', createSectionHeader("Historical Archive", archivedDishes.length, '<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>', 'bg-slate-500'));
-        renderDishList(archivedDishes, activeDishes.length);
-    }
-
-    if (activeDishes.length === 0 && archivedDishes.length === 0) {
-        DOMElements.auditResultsContainer.innerHTML += `<div class="text-center py-20 border-2 border-dashed border-slate-800 rounded-[3rem]"><p class="text-[10px] font-black text-slate-600 uppercase tracking-[0.4em]">No Records Found</p></div>`;
-    }
-}
 
 // Make it available globally
 window.renderAuditDishLibrary = renderAuditDishLibrary;
-window.listenToGlobalHistory = listenToGlobalHistory;
+        window.listenToGlobalHistory = listenToGlobalHistory;
 
-// Ignition
-fetchMenu();
-fetchCheckData();
-listenToProductionOrders();
-showView('prep');
+        // Ignition
+        fetchMenu();
+        fetchCheckData();
+        listenToProductionOrders();
+        showView('prep');

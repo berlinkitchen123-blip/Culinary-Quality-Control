@@ -33,7 +33,7 @@ let state = {
     isCheckDataLoading: true,
     currentView: 'prep',
     historicalDishLibrary: [],
-    allHistoricalChecks: [], 
+    allHistoricalChecks: [],
     isLibraryLoaded: false,
     totalRecordsFound: 0,
     hasFetchedHistory: false,
@@ -95,7 +95,7 @@ const normalizeName = (name) => {
     return name
         .toLowerCase()
         .replace(/&/g, 'and')
-        .replace(/[^\w\s]/gi, '') 
+        .replace(/[^\w\s]/gi, '')
         .replace(/\b(with|rice|chips|salad|side|and|the|of|for|pasta|potato|extra|veg|vege|bb|b&b)\b/g, '')
         .replace(/\b(fresh|classic|traditional|homemade|chef's|special|spicy|hot|sweet|sour|grilled|fried|roasted|steamed|baked)\b/g, '')
         .replace(/\s+/g, ' ')
@@ -127,8 +127,8 @@ const getWeekId = (date) => {
 const discoverLogs = (node, found = [], dateContext = null) => {
     if (!node || typeof node !== 'object') return found;
     if (node.dishName || node.aiCheckResult || (node.temperatures && node.weights)) {
-        if(node.dishName) { 
-             found.push({
+        if (node.dishName) {
+            found.push({
                 ...node,
                 pathDate: dateContext || node.date || (node.timestamp ? node.timestamp.split('T')[0] : 'Historical')
             });
@@ -148,9 +148,9 @@ function saveCheckData(data) {
     const { capturedImage, ...metaData } = data;
     const updates = {};
     const dishKey = data.dishLetter;
-    
+
     updates[`quality-checks/${data.date}/${dishKey}`] = metaData;
-    
+
     if (capturedImage) {
         updates[`check-images/${data.date}/${dishKey}`] = capturedImage;
     }
@@ -200,10 +200,10 @@ function extractPrepItems(menu) {
 
 function listenToGlobalHistory() {
     state.isHistoryLoading = true;
-    if(state.currentView === 'audit') window.renderAuditDishLibrary();
+    if (state.currentView === 'audit') window.renderAuditDishLibrary();
 
     const historyQuery = query(ref(database, 'quality-checks'), orderByKey());
-    
+
     onValue(historyQuery, (snapshot) => {
         const data = snapshot.val();
         const logs = discoverLogs(data);
@@ -218,12 +218,12 @@ function listenToGlobalHistory() {
                 dishMap.get(key).count += 1;
             }
         });
-        state.historicalDishLibrary = Array.from(dishMap.values()).sort((a,b) => b.count - a.count);
+        state.historicalDishLibrary = Array.from(dishMap.values()).sort((a, b) => b.count - a.count);
         state.isLibraryLoaded = true;
         state.hasFetchedHistory = true;
         state.isHistoryLoading = false;
-        
-        if(state.currentView === 'audit') window.renderAuditDishLibrary();
+
+        if (state.currentView === 'audit') window.renderAuditDishLibrary();
     });
 }
 
@@ -240,7 +240,7 @@ function listenToProductionOrders() {
         state.productionOrders = val ? (Array.isArray(val) ? val : Object.values(val)) : [];
         if (state.currentView === 'production') renderProductionView();
     });
-    
+
     // Also listen to cooking checks (HACCP done states)
     onValue(ref(database, `production-checks/${date}`), (snapshot) => {
         state.productionChecks = snapshot.val() || {};
@@ -281,7 +281,7 @@ function renderIndependentCamera(containerId, initialImage) {
                 <button type="button" id="${retakeId}" class="absolute top-2 right-2 p-2 bg-black/50 text-white rounded-lg backdrop-blur-md text-[9px] font-black uppercase tracking-wider hover:bg-red-500/80 transition-colors">Retake</button>
             </div>
         `;
-        
+
         // Bind events
         const ph = document.getElementById(phId);
         const view = document.getElementById(viewId);
@@ -296,13 +296,13 @@ function renderIndependentCamera(containerId, initialImage) {
             img.src = initialImage;
             preview.classList.remove('hidden');
             ph.classList.add('hidden');
-            if(form) form.dataset.capturedImage = initialImage;
+            if (form) form.dataset.capturedImage = initialImage;
         }
 
         let stream = null;
 
         ph.onclick = async () => {
-             // Check if inputs are disabled (stage done)
+            // Check if inputs are disabled (stage done)
             if (form && form.querySelector('input').disabled) return;
 
             try {
@@ -323,10 +323,10 @@ function renderIndependentCamera(containerId, initialImage) {
             const ctx = canvas.getContext('2d');
             ctx.drawImage(video, 0, 0);
             const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
-            
+
             img.src = dataUrl;
-            if(form) form.dataset.capturedImage = dataUrl;
-            
+            if (form) form.dataset.capturedImage = dataUrl;
+
             // Stop stream
             if (stream) stream.getTracks().forEach(t => t.stop());
             view.classList.add('hidden');
@@ -334,10 +334,10 @@ function renderIndependentCamera(containerId, initialImage) {
         };
 
         retake.onclick = () => {
-             if (form && form.querySelector('input').disabled) return;
-             preview.classList.add('hidden');
-             ph.classList.remove('hidden');
-             if(form) delete form.dataset.capturedImage;
+            if (form && form.querySelector('input').disabled) return;
+            preview.classList.add('hidden');
+            ph.classList.remove('hidden');
+            if (form) delete form.dataset.capturedImage;
         };
     };
 
@@ -349,7 +349,7 @@ window.unlockStage = (stageId) => {
     if (form) {
         form.querySelectorAll('input').forEach(i => i.disabled = false);
         const btn = document.getElementById(`btn-${stageId}`);
-        if(btn) {
+        if (btn) {
             btn.disabled = false;
             btn.className = "w-full py-5 rounded-[1.5rem] font-black uppercase tracking-[0.3em] text-[10px] transition-all bg-indigo-600 text-white hover:bg-indigo-500 shadow-xl shadow-indigo-600/20 active:scale-95";
             btn.textContent = "Update Stage";
@@ -363,11 +363,11 @@ function renderPrepCard() {
     const stagesData = saved.stages || {};
 
     let stagesHtml = '';
-    
+
     PREP_STAGES.forEach(stage => {
         const data = stagesData[stage.id] || {};
         const isDone = !!data.timestamp;
-        
+
         stagesHtml += `
             <div class="bg-slate-800/50 rounded-[2rem] border border-slate-700/50 p-6 sm:p-8 relative overflow-hidden group">
                 ${isDone ? '<div class="absolute top-0 right-0 p-4"><div class="bg-emerald-500/20 text-emerald-400 p-2 rounded-xl"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg></div></div>' : ''}
@@ -423,7 +423,7 @@ function renderPrepCard() {
     PREP_STAGES.forEach(stage => {
         const data = stagesData[stage.id] || {};
         const form = document.getElementById(`form-${stage.id}`);
-        
+
         // Init Camera
         renderIndependentCamera(`camera-container-${stage.id}`, data.image);
 
@@ -438,7 +438,7 @@ function renderPrepCard() {
             e.preventDefault();
             const fd = new FormData(e.target);
             const image = form.dataset.capturedImage || data.image || null; // Logic needs to ensure dataset is set by camera
-            
+
             if (!image) {
                 alert("Please capture an image for this stage.");
                 return;
@@ -457,9 +457,9 @@ function renderPrepCard() {
             update(ref(database, `prep-checks/${state.selectedDate}/${item.id}/stages/${stage.id}`), payload)
                 .then(() => {
                     // Refresh
-                     onValue(ref(database, `prep-checks/${state.selectedDate}`), (snapshot) => { 
-                        state.prepData = snapshot.val() || {}; 
-                        renderPrepCard(); 
+                    onValue(ref(database, `prep-checks/${state.selectedDate}`), (snapshot) => {
+                        state.prepData = snapshot.val() || {};
+                        renderPrepCard();
                     }, { onlyOnce: true });
                 });
         };
@@ -472,26 +472,26 @@ window.renderPrepCard = renderPrepCard;
 function parseProductionRecipeItem(str) {
     let name = str;
     let weight = 0;
-    
+
     // Extract weight like "(150gr)"
     const weightMatch = str.match(/\((\d+(?:\.\d+)?)\s*gr\)/i);
     if (weightMatch) {
         weight = parseFloat(weightMatch[1]);
     }
-    
+
     // Clean name: everything before " x"
     const splitIndex = str.indexOf(' x');
     if (splitIndex > -1) {
         name = str.substring(0, splitIndex).trim();
     } else {
         const xIndex = str.lastIndexOf('x');
-        if (xIndex > -1 && xIndex < str.length - 3) { 
-             // Simple fallback
-             const preX = str.substring(0, xIndex).trim();
-             if(preX.length > 2) name = preX;
+        if (xIndex > -1 && xIndex < str.length - 3) {
+            // Simple fallback
+            const preX = str.substring(0, xIndex).trim();
+            if (preX.length > 2) name = preX;
         }
     }
-    
+
     return { name, weight, original: str };
 }
 
@@ -505,22 +505,22 @@ function formatTime(minutes) {
 // --- Kitchen Aggregation Logic ---
 function aggregateKitchenIngredients() {
     const ingredients = {};
-    
+
     state.productionOrders.forEach(order => {
         if (!order || !order.recipe) return;
         const qty = order.quantity || 1;
-        
+
         order.recipe.forEach(line => {
             const parsed = parseProductionRecipeItem(line);
             const key = parsed.name.toLowerCase(); // distinct by name
-            
+
             if (!ingredients[key]) {
                 ingredients[key] = {
                     id: key.replace(/\s+/g, '_'),
                     name: parsed.name,
                     totalWeight: 0,
                     icon: getPrepIcon(parsed.name),
-                    dishes: [] 
+                    dishes: []
                 };
             }
             ingredients[key].totalWeight += (parsed.weight * qty);
@@ -530,17 +530,17 @@ function aggregateKitchenIngredients() {
             }
         });
     });
-    
-    return Object.values(ingredients).sort((a,b) => b.totalWeight - a.totalWeight);
+
+    return Object.values(ingredients).sort((a, b) => b.totalWeight - a.totalWeight);
 }
 
 function aggregateProductionData() {
     const dishes = {};
     const summary = { hot: 0, cold: 0, total: 0 };
-    
+
     state.productionOrders.forEach(order => {
         if (!order) return;
-        
+
         const key = order.name;
         if (!dishes[key]) {
             dishes[key] = {
@@ -552,9 +552,9 @@ function aggregateProductionData() {
                 readyBy: order.readyBy
             };
         }
-        
+
         dishes[key].count += (order.quantity || 1);
-        
+
         if (order.recipe && Array.isArray(order.recipe)) {
             order.recipe.forEach(line => {
                 const parsed = parseProductionRecipeItem(line);
@@ -599,7 +599,7 @@ function renderProductionView() {
     const container = document.getElementById('production-content-container');
     const headerStats = document.getElementById('production-stats');
     const { dishes, summary } = aggregateProductionData(); // Still useful for summary
-    
+
     // Header with Tabs
     headerStats.innerHTML = `
         <div class="flex flex-col w-full gap-6">
@@ -637,10 +637,10 @@ function renderProductionView() {
 
 function renderKitchenView(container) {
     const ingredients = aggregateKitchenIngredients();
-    
+
     if (ingredients.length === 0) {
-         container.innerHTML = `<div class="text-center py-20 opacity-50 text-[10px] font-black uppercase tracking-widest text-slate-600">No Cooking Tasks Pending</div>`;
-         return;
+        container.innerHTML = `<div class="text-center py-20 opacity-50 text-[10px] font-black uppercase tracking-widest text-slate-600">No Cooking Tasks Pending</div>`;
+        return;
     }
 
     // Mock HACCP Data for demo
@@ -653,17 +653,17 @@ function renderKitchenView(container) {
     const html = `
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-in slide-in-from-bottom-4 duration-500">
             ${ingredients.map(ing => {
-                const haccp = getHACCP(ing.name);
-                const isDone = state.productionChecks?.[ing.id]?.done;
-                
-                return `
+        const haccp = getHACCP(ing.name);
+        const isDone = state.productionChecks?.[ing.id]?.done;
+
+        return `
                 <div class="bg-slate-900/80 border ${isDone ? 'border-green-500/30' : 'border-slate-800'} rounded-[2.5rem] p-6 shadow-xl relative overflow-hidden group transition-all">
                     <div class="flex justify-between items-start mb-6">
                         <div class="h-14 w-14 rounded-2xl bg-indigo-600/10 border border-indigo-500/20 flex items-center justify-center text-2xl shadow-inner">
                             ${ing.icon}
                         </div>
                         <div class="text-right">
-                             <span class="text-3xl font-black text-white tracking-tighter block">${(ing.totalWeight/1000).toFixed(1)}<span class="text-sm text-slate-500 ml-1">kg</span></span>
+                             <span class="text-3xl font-black text-white tracking-tighter block">${(ing.totalWeight / 1000).toFixed(1)}<span class="text-sm text-slate-500 ml-1">kg</span></span>
                              <span class="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Total Required</span>
                         </div>
                     </div>
@@ -700,19 +700,19 @@ function renderKitchenView(container) {
                     </button>
                     
                     <div class="absolute top-4 right-4 text-slate-700 font-black text-[60px] opacity-10 pointer-events-none -rotate-12">
-                        ${ing.name.substring(0,2)}
+                        ${ing.name.substring(0, 2)}
                     </div>
                 </div>
                 `;
-            }).join('')}
+    }).join('')}
         </div>
     `;
     container.innerHTML = html;
 }
 
 function renderAssemblyView(container, dishes) {
-    const coldDishes = dishes.filter(d => d.type !== 'hot').sort((a,b) => (a.readyBy || 0) - (b.readyBy || 0));
-    const hotDishes = dishes.filter(d => d.type === 'hot').sort((a,b) => (a.readyBy || 0) - (b.readyBy || 0));
+    const coldDishes = dishes.filter(d => d.type !== 'hot').sort((a, b) => (a.readyBy || 0) - (b.readyBy || 0));
+    const hotDishes = dishes.filter(d => d.type === 'hot').sort((a, b) => (a.readyBy || 0) - (b.readyBy || 0));
 
     const renderColumn = (title, items, colorTheme) => {
         const borderColor = colorTheme === 'blue' ? 'border-blue-500/30' : 'border-red-500/30';
@@ -736,7 +736,7 @@ function renderAssemblyView(container, dishes) {
                 const ingredientsList = Object.values(dish.ingredients).map((ing, i) => `
                     <div class="flex justify-between items-center py-2 border-b border-slate-800/50 last:border-0 px-2 rounded-lg hover:bg-slate-800/30 transition-colors">
                         <div class="flex items-center gap-3">
-                             <div class="h-5 w-5 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-[9px] font-bold text-slate-500">${i+1}</div>
+                             <div class="h-5 w-5 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-[9px] font-bold text-slate-500">${i + 1}</div>
                              <span class="text-[11px] font-bold text-slate-300 uppercase tracking-tight">${ing.name}</span>
                         </div>
                         <span class="text-[11px] font-mono font-black ${titleColor}">${ing.unitWeight ? ing.unitWeight + 'g' : 'x'}</span>
@@ -744,7 +744,7 @@ function renderAssemblyView(container, dishes) {
                 `).join('');
 
                 const readyTime = formatTime(dish.readyBy);
-                
+
                 html += `
                     <div class="bg-slate-950 border ${borderColor} rounded-[2rem] p-6 shadow-xl relative overflow-hidden cursor-pointer hover:border-opacity-100 transition-all group" onclick="window.toggleProductionDetails('${safeId}')">
                         <div class="flex justify-between items-start">
@@ -781,7 +781,7 @@ function renderAssemblyView(container, dishes) {
                 `;
             });
         }
-        
+
         html += `</div></div>`;
         return html;
     };
@@ -803,17 +803,17 @@ function showView(viewName) {
     DOMElements.aiAgentView.classList.toggle('hidden', viewName !== 'audit');
     DOMElements.dishDetailView.classList.toggle('hidden', viewName !== 'detail');
     DOMElements.productionView.classList.toggle('hidden', viewName !== 'production');
-    
+
     const active = "bg-indigo-600 text-white shadow-2xl shadow-indigo-600/30";
     const activePrep = "bg-emerald-600 text-white shadow-2xl shadow-emerald-600/30";
     const activeProd = "bg-orange-600 text-white shadow-2xl shadow-orange-600/30";
     const inactive = "text-slate-400 hover:text-white";
-    
+
     DOMElements.navDashboardBtn.className = `px-5 py-2.5 text-[10px] font-black rounded-xl transition-all uppercase ${viewName === 'dashboard' ? active : inactive}`;
     DOMElements.navAuditBtn.className = `px-5 py-2.5 text-[10px] font-black rounded-xl transition-all uppercase ${viewName === 'audit' ? active : inactive}`;
     DOMElements.navPrepBtn.className = `px-5 py-2.5 text-[10px] font-black rounded-xl transition-all uppercase ${viewName === 'prep' ? activePrep : inactive}`;
     DOMElements.navProductionBtn.className = `px-5 py-2.5 text-[10px] font-black rounded-xl transition-all uppercase ${viewName === 'production' ? activeProd : inactive}`;
-    
+
     if (viewName === 'audit') { window.renderAuditDishLibrary(); }
     if (viewName === 'prep') { renderPrepView(); }
     if (viewName === 'production') { renderProductionView(); }
@@ -828,21 +828,21 @@ function renderPrepView() {
         { id: 'prep_sauce_red', name: 'Tomato/Curry Base', icon: '🥫' },
         { id: 'prep_veg', name: 'Roasted Seasonal Veg', icon: '🥦' }
     ];
-    
+
     items.forEach(item => {
         const savedItem = state.prepData[item.id] || {};
         const stages = savedItem.stages || {};
         const completedCount = PREP_STAGES.filter(s => stages[s.id]).length;
         const isFullyDone = completedCount === 3;
-        
+
         const btn = document.createElement('button');
         btn.className = `group relative flex flex-col items-center justify-center p-5 bg-slate-800/40 border border-slate-700/50 rounded-[2rem] shadow-xl hover:scale-105 active:scale-95 transition-all backdrop-blur-md`;
-        btn.onclick = () => { 
-            state.selectedPrepItem = item; 
-            showView('detail'); 
-            renderPrepCard(); 
+        btn.onclick = () => {
+            state.selectedPrepItem = item;
+            showView('detail');
+            renderPrepCard();
         };
-        
+
         let statusBadge = '';
         if (isFullyDone) {
             statusBadge = '<div class="absolute -top-1 -right-1 bg-emerald-500 rounded-full p-2 text-white shadow-2xl ring-4 ring-slate-900 z-10"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="5" d="M5 13l4 4L19 7"></path></svg></div>';
@@ -860,23 +860,23 @@ function renderPrepView() {
     });
 }
 
-function fetchCheckData() { 
-    state.isCheckDataLoading = true; renderApp(); 
+function fetchCheckData() {
+    state.isCheckDataLoading = true; renderApp();
     listenToProductionOrders(); // Refresh production listeners for new Date
-    onValue(ref(database, `quality-checks/${state.selectedDate}`), (snapshot) => { state.checkedData = snapshot.val() || {}; state.isCheckDataLoading = false; renderApp(); }); 
-    onValue(ref(database, `prep-checks/${state.selectedDate}`), (snapshot) => { state.prepData = snapshot.val() || {}; if(state.currentView === 'prep') renderPrepView(); }); 
+    onValue(ref(database, `quality-checks/${state.selectedDate}`), (snapshot) => { state.checkedData = snapshot.val() || {}; state.isCheckDataLoading = false; renderApp(); });
+    onValue(ref(database, `prep-checks/${state.selectedDate}`), (snapshot) => { state.prepData = snapshot.val() || {}; if (state.currentView === 'prep') renderPrepView(); });
 }
 
-function fetchMenu() { 
-    state.isMenuLoading = true; renderApp(); 
-    const weekId = getWeekId(new Date(state.selectedDate + 'T12:00:00Z')); 
-    onValue(ref(database, `menus/${weekId}`), (snapshot) => { 
-        state.menu = snapshot.val() || null; 
-        state.isMenuLoading = false; 
-        renderApp(); 
-        if(state.currentView === 'prep') renderPrepView(); 
-        if(state.currentView === 'audit') window.renderAuditDishLibrary();
-    }); 
+function fetchMenu() {
+    state.isMenuLoading = true; renderApp();
+    const weekId = getWeekId(new Date(state.selectedDate + 'T12:00:00Z'));
+    onValue(ref(database, `menus/${weekId}`), (snapshot) => {
+        state.menu = snapshot.val() || null;
+        state.isMenuLoading = false;
+        renderApp();
+        if (state.currentView === 'prep') renderPrepView();
+        if (state.currentView === 'audit') window.renderAuditDishLibrary();
+    });
 }
 
 DOMElements.navDashboardBtn.onclick = () => showView('dashboard');
@@ -888,30 +888,90 @@ DOMElements.settingsCloseBtn.onclick = () => DOMElements.settingsModal.classList
 DOMElements.backToMenuBtn.onclick = () => showView(state.currentView === 'detail' && state.selectedPrepItem ? 'prep' : 'dashboard');
 
 // Settings Tab Logic
-const switchSettingsTab = (tab) => {
-    if (tab === 'production') {
-        DOMElements.tabProdContent.classList.remove('hidden');
-        DOMElements.tabMenuContent.classList.add('hidden');
-        
-        DOMElements.tabProdBtn.classList.remove('text-slate-500', 'border-transparent');
-        DOMElements.tabProdBtn.classList.add('text-orange-400', 'border-orange-500', 'bg-slate-800/30');
-        
-        DOMElements.tabMenuBtn.classList.add('text-slate-500', 'border-transparent');
-        DOMElements.tabMenuBtn.classList.remove('text-indigo-400', 'border-indigo-500', 'bg-slate-800/30');
-    } else {
-        DOMElements.tabProdContent.classList.add('hidden');
-        DOMElements.tabMenuContent.classList.remove('hidden');
-        
-        DOMElements.tabMenuBtn.classList.remove('text-slate-500', 'border-transparent');
-        DOMElements.tabMenuBtn.classList.add('text-indigo-400', 'border-indigo-500', 'bg-slate-800/30');
-        
-        DOMElements.tabProdBtn.classList.add('text-slate-500', 'border-transparent');
-        DOMElements.tabProdBtn.classList.remove('text-orange-400', 'border-orange-500', 'bg-slate-800/30');
+DOMElements.tabProdBtn.classList.add('text-slate-500', 'border-transparent');
+DOMElements.tabProdBtn.classList.remove('text-orange-400', 'border-orange-500', 'bg-slate-800/30');
+    }
+};
+
+// --- Mock Data Generator ---
+window.generateDemoData = async () => {
+    DOMElements.settingsSaveBtn.textContent = "Generating...";
+    DOMElements.settingsSaveBtn.disabled = true;
+
+    const ingredientsPool = [
+        { name: "Roasted Sweet Potato", weight: 150, icon: "🍠" },
+        { name: "Grilled Chicken Breast", weight: 120, icon: "🍗" },
+        { name: "Steamed Broccoli", weight: 80, icon: "🥦" },
+        { name: "Basmati Rice", weight: 200, icon: "🍚" },
+        { name: "Curry Sauce", weight: 100, icon: "🍛" },
+        { name: "Mixed Seeds", weight: 20, icon: "🌰" },
+        { name: "Feta Cheese", weight: 50, icon: "🧀" },
+        { name: "Cherry Tomatoes", weight: 60, icon: "🍅" }
+    ];
+
+    const dishTypes = [
+        { name: "Vegan Buddha Bowl", type: "cold", ingredients: [0, 2, 3, 5, 7] },
+        { name: "Chicken Power Bowl", type: "hot", ingredients: [1, 3, 4, 2] },
+        { name: "Feta Salad Box", type: "cold", ingredients: [6, 7, 5, 0] },
+        { name: "Clean Lean Chicken", type: "hot", ingredients: [1, 2, 0] },
+        { name: "Curry Rice Special", type: "hot", ingredients: [3, 4, 2] }
+    ];
+
+    const orders = [];
+    const today = new Date().toISOString().split('T')[0];
+
+    // Generate 500 random orders
+    for (let i = 0; i < 500; i++) {
+        const dish = dishTypes[Math.floor(Math.random() * dishTypes.length)];
+        const qty = Math.floor(Math.random() * 5) + 1; // 1-5 per order entry
+
+        // Build recipe strings similar to user format
+        const recipe = dish.ingredients.map(idx => {
+            const ing = ingredientsPool[idx];
+            return `${ing.name} x1 Spoon (${ing.weight}gr)`;
+        });
+
+        orders.push({
+            id: `demo_${Date.now()}_${i}`,
+            name: dish.name,
+            type: dish.type,
+            quantity: qty,
+            deliveryDate: today, // Focus on today for demo
+            status: "processing",
+            readyBy: 600 + Math.floor(Math.random() * 300), // Random time between 10:00 - 15:00
+            recipe: recipe
+        });
+    }
+
+    try {
+        await set(ref(database, `production-orders/${today}`), orders);
+        alert(`Generated ${orders.length} demo orders for ${today}. Production View updated.`);
+        DOMElements.settingsModal.classList.add('hidden');
+        renderProductionView();
+    } catch (e) {
+        alert("Error generating data: " + e.message);
+    } finally {
+        DOMElements.settingsSaveBtn.textContent = "Save Changes";
+        DOMElements.settingsSaveBtn.disabled = false;
     }
 };
 
 DOMElements.tabProdBtn.onclick = () => switchSettingsTab('production');
 DOMElements.tabMenuBtn.onclick = () => switchSettingsTab('menu');
+
+// Inject Button into HTML (since we can't easily edit index.html from here without full re-render, we append it dynamically on load or inside the verify block)
+// Actually better to append it to the tab content now
+document.addEventListener('DOMContentLoaded', () => {
+    const container = document.getElementById('tab-prod-content');
+    if (container) {
+        const btn = document.createElement('button');
+        btn.type = "button";
+        btn.className = "mt-4 w-full py-4 bg-slate-800 hover:bg-slate-700 text-indigo-400 font-black uppercase tracking-widest rounded-2xl border border-indigo-500/30 transition-all";
+        btn.textContent = "⚡ Generate 500 Demo Orders";
+        btn.onclick = window.generateDemoData;
+        container.appendChild(btn);
+    }
+});
 
 DOMElements.settingsSaveBtn.onclick = async () => {
     // 1. Handle Production JSON if present
@@ -921,7 +981,7 @@ DOMElements.settingsSaveBtn.onclick = async () => {
         try {
             const parsed = JSON.parse(prodVal);
             const rawOrders = Array.isArray(parsed) ? parsed : [parsed];
-            
+
             // Group by Delivery Date
             const ordersByDate = {};
             rawOrders.forEach(order => {
@@ -929,14 +989,14 @@ DOMElements.settingsSaveBtn.onclick = async () => {
                 if (!ordersByDate[date]) ordersByDate[date] = [];
                 ordersByDate[date].push(order);
             });
-            
+
             // Save each batch
             const promises = Object.entries(ordersByDate).map(([date, orders]) => {
                 return set(ref(database, `production-orders/${date}`), orders);
             });
-            
+
             await Promise.all(promises);
-            DOMElements.productionJsonInput.value = ''; 
+            DOMElements.productionJsonInput.value = '';
             alert(`Imported ${rawOrders.length} orders across ${Object.keys(ordersByDate).length} dates.`);
         } catch (e) {
             console.error(e);
@@ -946,21 +1006,21 @@ DOMElements.settingsSaveBtn.onclick = async () => {
     }
 
     // 2. Handle Menu Manifest if present
-    const val = DOMElements.jsonInput.value.trim(); 
+    const val = DOMElements.jsonInput.value.trim();
     if (val) {
         try {
             const p = JSON.parse(val);
-            const dishes = p.dishes.filter(d => d.stickerNo && d.stickerNo !== 'addons').map(d => ({ dishLetter: d.stickerNo, dishName: d.variantName, dishImage: d.webUrl, dishType: ['hot', 'cold'].includes(d.type) ? d.type : 'extras', dishIngredients: (d.ingredients || []).map(i => ({name: i.name, weight: i.amount + 'g'})), theoreticalWeight: (d.ingredients || []).reduce((sum, ing) => sum + (parseFloat(ing.amount) || 0), 0) }));
+            const dishes = p.dishes.filter(d => d.stickerNo && d.stickerNo !== 'addons').map(d => ({ dishLetter: d.stickerNo, dishName: d.variantName, dishImage: d.webUrl, dishType: ['hot', 'cold'].includes(d.type) ? d.type : 'extras', dishIngredients: (d.ingredients || []).map(i => ({ name: i.name, weight: i.amount + 'g' })), theoreticalWeight: (d.ingredients || []).reduce((sum, ing) => sum + (parseFloat(ing.amount) || 0), 0) }));
             const menuWeekId = getWeekId(new Date(p.startDate + 'T12:00:00Z'));
             await set(ref(database, `menus/${menuWeekId}`), { dishes, startDate: p.startDate });
-            DOMElements.jsonInput.value = ''; 
+            DOMElements.jsonInput.value = '';
             fetchMenu();
-        } catch (e) { 
+        } catch (e) {
             DOMElements.settingsError.textContent = "Menu Manifest Validation Fault.";
             return;
         }
     }
-    
+
     DOMElements.settingsModal.classList.add('hidden');
     DOMElements.settingsError.textContent = "";
 };
@@ -1021,7 +1081,7 @@ function renderDateSelector() {
 
 function renderDishSelectionGrid() {
     DOMElements.dishGridContainer.innerHTML = '';
-    const sorted = [...(state.menu.dishes || [])].sort((a,b) => a.dishLetter.localeCompare(b.dishLetter));
+    const sorted = [...(state.menu.dishes || [])].sort((a, b) => a.dishLetter.localeCompare(b.dishLetter));
     const groups = { cold: sorted.filter(d => d.dishType === 'cold'), hot: sorted.filter(d => d.dishType === 'hot'), extras: sorted.filter(d => d.dishType !== 'cold' && d.dishType !== 'hot') };
     const themes = { hot: 'bg-red-500', cold: 'bg-blue-500', default: 'bg-indigo-600' };
 
@@ -1047,15 +1107,15 @@ function renderDishSelectionGrid() {
 
 function renderDailySummaryTable() {
     if (!state.menu || !state.menu.dishes) return;
-    const sorted = [...state.menu.dishes].sort((a,b) => a.dishLetter.localeCompare(b.dishLetter));
-    
+    const sorted = [...state.menu.dishes].sort((a, b) => a.dishLetter.localeCompare(b.dishLetter));
+
     const createTableHTML = (list, type) => {
         if (list.length === 0) return '';
         const headerColor = type === 'hot' ? 'bg-red-600/30' : type === 'cold' ? 'bg-blue-600/30' : 'bg-slate-700/50';
-        
+
         const letterColor = type === 'hot' ? 'text-red-400' : type === 'cold' ? 'text-blue-400' : 'text-white';
         const nameColor = type === 'hot' ? 'text-red-400' : type === 'cold' ? 'text-blue-400' : 'text-slate-300';
-        
+
         return `
             <div class="bg-slate-800/40 rounded-[2rem] sm:rounded-[2.5rem] border border-slate-700/50 overflow-hidden shadow-2xl backdrop-blur-xl h-full flex flex-col min-h-[150px]">
                 <div class="px-4 py-3 sm:px-6 sm:py-4 text-[10px] sm:text-[11px] font-black uppercase tracking-[0.3em] text-white border-b border-white/5 ${headerColor}">
@@ -1075,20 +1135,20 @@ function renderDailySummaryTable() {
                         </thead>
                         <tbody class="divide-y divide-slate-800/50">
                             ${list.map(dish => {
-                                const check = state.checkedData[dish.dishLetter];
-                                const temps = (check?.temperatures || []).map(t => parseFloat(t)).filter(t => !isNaN(t));
-                                const avgTemp = temps.length ? (temps.reduce((a,b)=>a+b,0)/temps.length).toFixed(1) + '°' : '-';
-                                const weights = (check?.weights || []).map(w => parseFloat(w)).filter(w => !isNaN(w));
-                                const avgWgt = weights.length ? (weights.reduce((a,b)=>a+b,0)/weights.length).toFixed(0) + 'g' : '-';
-                                let theo = dish.theoreticalWeight;
-                                if (!theo) {
-                                     theo = (dish.dishIngredients || []).reduce((sum, ing) => sum + (parseFloat(ing.amount) || parseFloat(ing.weight) || 0), 0);
-                                }
-                                const theoStr = theo ? theo.toFixed(0) + 'g' : '-';
-                                const ai = check?.aiCheckResult?.score || '-';
-                                const aiClass = check && ai > 7 ? 'text-green-400' : 'text-indigo-400';
+            const check = state.checkedData[dish.dishLetter];
+            const temps = (check?.temperatures || []).map(t => parseFloat(t)).filter(t => !isNaN(t));
+            const avgTemp = temps.length ? (temps.reduce((a, b) => a + b, 0) / temps.length).toFixed(1) + '°' : '-';
+            const weights = (check?.weights || []).map(w => parseFloat(w)).filter(w => !isNaN(w));
+            const avgWgt = weights.length ? (weights.reduce((a, b) => a + b, 0) / weights.length).toFixed(0) + 'g' : '-';
+            let theo = dish.theoreticalWeight;
+            if (!theo) {
+                theo = (dish.dishIngredients || []).reduce((sum, ing) => sum + (parseFloat(ing.amount) || parseFloat(ing.weight) || 0), 0);
+            }
+            const theoStr = theo ? theo.toFixed(0) + 'g' : '-';
+            const ai = check?.aiCheckResult?.score || '-';
+            const aiClass = check && ai > 7 ? 'text-green-400' : 'text-indigo-400';
 
-                                return `
+            return `
                                     <tr class="hover:bg-slate-700/40 cursor-pointer transition-colors ${!check ? 'opacity-30' : ''}" onclick="window.handleSelectDish('${dish.dishLetter}')">
                                         <td class="px-2 py-3 text-center font-black ${letterColor}">${dish.dishLetter}</td>
                                         <td class="px-2 py-3 ${nameColor} font-bold uppercase truncate italic">${dish.dishName}</td>
@@ -1098,7 +1158,7 @@ function renderDailySummaryTable() {
                                         <td class="px-1 py-3 text-center font-black ${aiClass}">${ai}</td>
                                     </tr>
                                 `;
-                            }).join('')}
+        }).join('')}
                         </tbody>
                     </table>
                 </div>
@@ -1112,7 +1172,7 @@ function renderDailySummaryTable() {
     `;
     const extras = sorted.filter(d => d.dishType !== 'cold' && d.dishType !== 'hot');
     if (extras.length > 0) splitHtml += `<div class="full-width-section">${createTableHTML(extras, 'additional')}</div>`;
-    
+
     DOMElements.dailySummaryContainer.innerHTML = splitHtml;
 }
 
@@ -1153,23 +1213,23 @@ function renderDishCard() {
     `;
 
     if (savedData && !savedData.capturedImage) {
-         const imgRef = ref(database, `check-images/${state.selectedDate}/${dish.dishLetter}`);
-         get(imgRef).then((snapshot) => {
-             if (snapshot.exists()) {
-                 const val = snapshot.val();
-                 const preview = document.getElementById('preview-img');
-                 const placeholder = document.getElementById('camera-placeholder');
-                 const previewContainer = document.getElementById('image-preview');
-                 const form = document.getElementById('dish-form');
-                 
-                 if (preview && placeholder && previewContainer && form) {
-                     preview.src = val;
-                     form.dataset.capturedImage = val;
-                     placeholder.classList.add('hidden');
-                     previewContainer.classList.remove('hidden');
-                 }
-             }
-         });
+        const imgRef = ref(database, `check-images/${state.selectedDate}/${dish.dishLetter}`);
+        get(imgRef).then((snapshot) => {
+            if (snapshot.exists()) {
+                const val = snapshot.val();
+                const preview = document.getElementById('preview-img');
+                const placeholder = document.getElementById('camera-placeholder');
+                const previewContainer = document.getElementById('image-preview');
+                const form = document.getElementById('dish-form');
+
+                if (preview && placeholder && previewContainer && form) {
+                    preview.src = val;
+                    form.dataset.capturedImage = val;
+                    placeholder.classList.add('hidden');
+                    previewContainer.classList.remove('hidden');
+                }
+            }
+        });
     }
 
     const form = DOMElements.dishCardContainer.querySelector('#dish-form');
@@ -1190,7 +1250,7 @@ function renderCameraCapture(item, initialImage) {
     container.innerHTML = `<p class="text-[10px] sm:text-[11px] font-black text-slate-400 uppercase tracking-[0.4em] mb-4 sm:mb-5 text-center">Specimen Optic Capture</p><div id="camera-placeholder" class="w-full aspect-square rounded-[2rem] sm:rounded-[4rem] bg-slate-950 border-4 border-dashed border-slate-800 flex flex-col items-center justify-center text-slate-700 cursor-pointer overflow-hidden shadow-inner hover:border-indigo-500/50 transition-all"><svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 sm:h-16 sm:w-16 mb-4 sm:mb-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path></svg><span class="text-[11px] sm:text-[12px] uppercase font-black tracking-widest">Activate Camera</span></div><div id="camera-view" class="w-full aspect-square rounded-[2rem] sm:rounded-[4rem] bg-black hidden relative overflow-hidden"><video id="camera-video" autoplay playsinline class="w-full h-full object-cover"></video><button type="button" id="capture-btn" class="absolute bottom-12 left-1/2 -translate-x-1/2 w-20 h-20 sm:w-24 sm:h-24 rounded-full border-[8px] sm:border-[10px] border-white/20 bg-indigo-600 shadow-2xl active:scale-90 transition-all"></button></div><div id="image-preview" class="w-full aspect-square rounded-[2rem] sm:rounded-[4rem] relative hidden group border-4 border-slate-700 overflow-hidden shadow-2xl"><img id="preview-img" class="w-full h-full object-cover"/><div class="absolute inset-0 bg-slate-950/80 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all backdrop-blur-xl"><button type="button" id="retake-btn" class="px-10 py-4 sm:px-12 sm:py-5 bg-white text-slate-900 rounded-[1.5rem] sm:rounded-[2rem] text-[11px] sm:text-[12px] font-black uppercase tracking-[0.4em] border-b-4 border-slate-300">Recapture</button></div></div>`;
     const videoEl = container.querySelector('#camera-video'); const form = DOMElements.dishCardContainer.querySelector('form'); let stream = null;
     container.querySelector('#camera-placeholder').onclick = async () => { if (form.querySelector('input').disabled) return; try { stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } }); videoEl.srcObject = stream; container.querySelector('#camera-placeholder').classList.add('hidden'); container.querySelector('#camera-view').classList.remove('hidden'); } catch (e) { alert("Camera offline."); } };
-    container.querySelector('#capture-btn').onclick = () => { const canvas = document.createElement('canvas'); canvas.width = 1024; canvas.height = 1024; canvas.getContext('2d').drawImage(videoEl, 0, 0, 1024, 1024); const dataUrl = canvas.toDataURL('image/jpeg', 0.95); container.querySelector('#preview-img').src = dataUrl; form.dataset.capturedImage = dataUrl; if (stream) stream.getTracks().forEach(t => t.stop()); container.querySelector('#camera-view').classList.add('hidden'); container.querySelector('#image-preview').classList.remove('hidden'); if(form.id === 'dish-form') handleAiCheck(state.selectedDish, dataUrl); };
+    container.querySelector('#capture-btn').onclick = () => { const canvas = document.createElement('canvas'); canvas.width = 1024; canvas.height = 1024; canvas.getContext('2d').drawImage(videoEl, 0, 0, 1024, 1024); const dataUrl = canvas.toDataURL('image/jpeg', 0.95); container.querySelector('#preview-img').src = dataUrl; form.dataset.capturedImage = dataUrl; if (stream) stream.getTracks().forEach(t => t.stop()); container.querySelector('#camera-view').classList.add('hidden'); container.querySelector('#image-preview').classList.remove('hidden'); if (form.id === 'dish-form') handleAiCheck(state.selectedDish, dataUrl); };
     container.querySelector('#retake-btn').onclick = () => { if (!form.querySelector('input').disabled) { container.querySelector('#image-preview').classList.add('hidden'); container.querySelector('#camera-placeholder').classList.remove('hidden'); } };
     if (initialImage) { container.querySelector('#preview-img').src = initialImage; form.dataset.capturedImage = initialImage; container.querySelector('#camera-placeholder').classList.add('hidden'); container.querySelector('#image-preview').classList.remove('hidden'); }
 }
@@ -1200,7 +1260,7 @@ async function handleAiCheck(dish, capturedImageDataUrl) {
     feedbackContainer.innerHTML = `<div class="p-10 sm:p-14 border-2 border-indigo-500/30 bg-indigo-900/10 rounded-[2.5rem] sm:rounded-[4rem] flex flex-col items-center justify-center space-y-6 sm:space-y-8 shadow-2xl backdrop-blur-3xl"><div class="relative w-10 h-10 sm:w-12 sm:h-12"><div class="absolute inset-0 border-4 sm:border-8 border-indigo-500/10 rounded-full"></div><div class="absolute inset-0 border-4 sm:border-8 border-indigo-500 border-t-transparent rounded-full animate-spin"></div></div><p class="font-black text-indigo-400 text-[10px] sm:text-[12px] uppercase tracking-[0.6em] animate-pulse italic">Analyzing Visual Compliance</p></div>`;
     try {
         const ai = new GoogleGenAI({ apiKey: process.env.API_KEY }); let refImgPart = null; try { const refRes = await fetch(dish.dishImage); if (refRes.ok) { const blob = await refRes.blob(); const refBase64 = await new Promise(res => { const fr = new FileReader(); fr.onloadend = () => res(fr.result.split(',')[1]); fr.readAsDataURL(blob); }); refImgPart = { inlineData: { mimeType: 'image/jpeg', data: refBase64 } }; } } catch (e) { console.warn("Reference failed."); }
-        const result = await ai.models.generateContent({ model: 'gemini-3-pro-preview', contents: { parts: [ { text: `Audit '${dish.dishName}'. JSON: { "score": 1-10, "positives": string[], "improvements": string[], "overall_comment": string }` }, ...(refImgPart ? [refImgPart] : []), { inlineData: { mimeType: 'image/jpeg', data: capturedImageDataUrl.split(',')[1] } } ] }, config: { responseMimeType: "application/json", temperature: 0.1 } });
+        const result = await ai.models.generateContent({ model: 'gemini-3-pro-preview', contents: { parts: [{ text: `Audit '${dish.dishName}'. JSON: { "score": 1-10, "positives": string[], "improvements": string[], "overall_comment": string }` }, ...(refImgPart ? [refImgPart] : []), { inlineData: { mimeType: 'image/jpeg', data: capturedImageDataUrl.split(',')[1] } }] }, config: { responseMimeType: "application/json", temperature: 0.1 } });
         const feedbackData = JSON.parse(result.text); document.getElementById('dish-form').dataset.aiFeedback = JSON.stringify(feedbackData); renderAiFeedback(feedbackData);
     } catch (e) { feedbackContainer.innerHTML = `<div class="p-8 border border-red-900/40 bg-red-950/30 rounded-[2rem] text-[10px] text-red-400 uppercase font-black text-center shadow-xl">AI Logic Disconnected</div>`; }
 }
@@ -1218,7 +1278,7 @@ async function renderHistoricalIntel(dishName) {
         intelContainer.innerHTML = `<span class="text-slate-500 font-black tracking-widest italic uppercase text-[9px]">Zero Historical Data Points</span>`;
         return;
     }
-    const recent = [...matches].sort((a,b) => (b.timestamp || "").localeCompare(a.timestamp || "")).slice(0, 5);
+    const recent = [...matches].sort((a, b) => (b.timestamp || "").localeCompare(a.timestamp || "")).slice(0, 5);
     const avg = (recent.reduce((sum, c) => sum + (c.aiCheckResult?.score || 0), 0) / recent.length).toFixed(1);
     intelContainer.innerHTML = `
         <div class="flex items-center gap-4 animate-in fade-in duration-700">
@@ -1269,31 +1329,31 @@ function renderAuditDishLibrary() {
         }
         return;
     }
-    
+
     // Clear old charts to prevent memory leaks
     if (window.auditCharts) {
         window.auditCharts.forEach(c => c.destroy());
         window.auditCharts = [];
     }
-    
+
     // 1. Group ALL history by Normalized Name
     const dishStats = {};
     const allDates = new Set();
-    
+
     state.allHistoricalChecks.forEach(check => {
         const key = normalizeName(check.dishName);
-        if(check.pathDate) allDates.add(check.pathDate);
-        
+        if (check.pathDate) allDates.add(check.pathDate);
+
         if (!dishStats[key]) {
-            dishStats[key] = { 
-                name: check.dishName, 
-                checks: [], 
-                scores: [] 
+            dishStats[key] = {
+                name: check.dishName,
+                checks: [],
+                scores: []
             };
         }
         if (check.timestamp && (!dishStats[key].lastTs || check.timestamp > dishStats[key].lastTs)) {
-             dishStats[key].name = check.dishName;
-             dishStats[key].lastTs = check.timestamp;
+            dishStats[key].name = check.dishName;
+            dishStats[key].lastTs = check.timestamp;
         }
         dishStats[key].checks.push(check);
         if (check.aiCheckResult && typeof check.aiCheckResult.score === 'number') {
@@ -1303,9 +1363,9 @@ function renderAuditDishLibrary() {
 
     // --- GLOBAL HEADER ---
     const dateArray = Array.from(allDates).sort();
-    const rangeStart = dateArray.length ? new Date(dateArray[0]).toLocaleDateString(undefined, {month:'short', day:'numeric'}) : 'N/A';
-    const rangeEnd = dateArray.length ? new Date(dateArray[dateArray.length-1]).toLocaleDateString(undefined, {month:'short', day:'numeric'}) : 'N/A';
-    
+    const rangeStart = dateArray.length ? new Date(dateArray[0]).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) : 'N/A';
+    const rangeEnd = dateArray.length ? new Date(dateArray[dateArray.length - 1]).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) : 'N/A';
+
     const headerDiv = document.createElement('div');
     headerDiv.innerHTML = `
         <div class="flex flex-col sm:flex-row justify-between items-end border-b border-indigo-500/30 pb-4 mb-8 gap-4">
@@ -1331,17 +1391,17 @@ function renderAuditDishLibrary() {
     const getTopicFrequency = (items) => {
         const counts = {};
         items.forEach(i => {
-            if(!i) return;
-            const k = i.trim().toLowerCase().replace(/[.,!]/g, ''); 
+            if (!i) return;
+            const k = i.trim().toLowerCase().replace(/[.,!]/g, '');
             if (!counts[k]) counts[k] = { text: i.trim(), count: 0 };
             counts[k].count++;
         });
-        return Object.values(counts).sort((a,b) => b.count - a.count).slice(0, 5);
+        return Object.values(counts).sort((a, b) => b.count - a.count).slice(0, 5);
     };
 
     // --- SPLIT LOGIC: ACTIVE MENU vs ARCHIVE ---
     // Iterate state.menu to ensure ALL current menu items are shown, even if no history exists.
-    
+
     const activeDishes = [];
     const usedStatsKeys = new Set();
 
@@ -1349,7 +1409,7 @@ function renderAuditDishLibrary() {
         state.menu.dishes.forEach(menuDish => {
             const key = normalizeName(menuDish.dishName);
             usedStatsKeys.add(key);
-            
+
             if (dishStats[key]) {
                 activeDishes.push({
                     ...dishStats[key],
@@ -1395,11 +1455,11 @@ function renderAuditDishLibrary() {
         dishes.forEach((dish, i) => {
             const index = startIndex + i;
             const total = dish.checks.length;
-            
+
             // Stats Calculation
             let avgScore = 'N/A';
-            let tier = 'N'; 
-            let tierColor = 'text-slate-500'; 
+            let tier = 'N';
+            let tierColor = 'text-slate-500';
             let tierBg = 'bg-slate-500/10 border-slate-500/20';
             let sortedChecks = [];
             let labels = [];
@@ -1422,18 +1482,18 @@ function renderAuditDishLibrary() {
                 else if (mean >= 8 && stdDev < 2.0) { tier = 'A'; tierColor = 'text-emerald-400'; tierBg = 'bg-emerald-500/10 border-emerald-500/20'; }
                 else if (mean >= 6.5) { tier = 'B'; tierColor = 'text-yellow-400'; tierBg = 'bg-yellow-500/10 border-yellow-500/20'; }
 
-                sortedChecks = dish.checks.sort((a,b) => (a.timestamp || '').localeCompare(b.timestamp || ''));
-                labels = sortedChecks.map(c => c.timestamp ? new Date(c.timestamp).toLocaleDateString(undefined, {month:'numeric', day:'numeric'}) : '-');
+                sortedChecks = dish.checks.sort((a, b) => (a.timestamp || '').localeCompare(b.timestamp || ''));
+                labels = sortedChecks.map(c => c.timestamp ? new Date(c.timestamp).toLocaleDateString(undefined, { month: 'numeric', day: 'numeric' }) : '-');
                 dataPoints = sortedChecks.map(c => c.aiCheckResult?.score || 0);
 
                 const goodChecks = sortedChecks.filter(c => c.aiCheckResult?.score >= 8);
                 const badChecks = sortedChecks.filter(c => c.aiCheckResult?.score <= 6);
-                
+
                 const getInsights = (checks) => checks.map(c => c.aiCheckResult?.overall_comment || "").filter(c => c.length > 5).slice(0, 3);
 
                 goodInsights = getInsights(goodChecks);
                 badInsights = getInsights(badChecks);
-                
+
                 allPositives = getTopicFrequency(sortedChecks.flatMap(c => c.aiCheckResult?.positives || []));
                 allImprovements = getTopicFrequency(sortedChecks.flatMap(c => c.aiCheckResult?.improvements || []));
             }
@@ -1443,8 +1503,8 @@ function renderAuditDishLibrary() {
             const canvasId = `chart-${index}`;
 
             // Conditional HTML content
-            const chartHtml = total > 0 
-                ? `<div class="h-40 w-full relative"><canvas id="${canvasId}"></canvas></div>` 
+            const chartHtml = total > 0
+                ? `<div class="h-40 w-full relative"><canvas id="${canvasId}"></canvas></div>`
                 : `<div class="h-40 w-full flex items-center justify-center border-2 border-dashed border-slate-700/50 rounded-3xl"><p class="text-[10px] font-black text-slate-600 uppercase tracking-[0.3em]">No Trend Data Available</p></div>`;
 
             const deepDiveHtml = total > 0
@@ -1557,9 +1617,9 @@ function renderAuditDishLibrary() {
         DOMElements.auditResultsContainer.insertAdjacentHTML('beforeend', createSectionHeader("Historical Archive", archivedDishes.length, '<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>', 'bg-slate-500'));
         renderDishList(archivedDishes, activeDishes.length);
     }
-    
+
     if (activeDishes.length === 0 && archivedDishes.length === 0) {
-         DOMElements.auditResultsContainer.innerHTML += `<div class="text-center py-20 border-2 border-dashed border-slate-800 rounded-[3rem]"><p class="text-[10px] font-black text-slate-600 uppercase tracking-[0.4em]">No Records Found</p></div>`;
+        DOMElements.auditResultsContainer.innerHTML += `<div class="text-center py-20 border-2 border-dashed border-slate-800 rounded-[3rem]"><p class="text-[10px] font-black text-slate-600 uppercase tracking-[0.4em]">No Records Found</p></div>`;
     }
 }
 
@@ -1568,7 +1628,7 @@ window.renderAuditDishLibrary = renderAuditDishLibrary;
 window.listenToGlobalHistory = listenToGlobalHistory;
 
 // Ignition
-fetchMenu(); 
-fetchCheckData(); 
+fetchMenu();
+fetchCheckData();
 listenToProductionOrders();
 showView('prep');

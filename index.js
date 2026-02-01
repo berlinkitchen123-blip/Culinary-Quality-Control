@@ -1441,14 +1441,22 @@ DOMElements.settingsSaveBtn.onclick = async () => {
     if (prodVal) {
         try {
             const parsed = JSON.parse(prodVal);
-            const rawOrders = Array.isArray(parsed) ? parsed : [parsed];
+            let rawOrders = Array.isArray(parsed) ? parsed : [parsed];
+
+            // Flatten "dishes" if user uploaded that structure directly
+            if (rawOrders.length > 0 && rawOrders.some(d => d.dishes && Array.isArray(d.dishes))) {
+                rawOrders = rawOrders.flatMap(d => d.dishes ? d.dishes : [d]);
+            }
 
             // Group by Delivery Date
             const ordersByDate = {};
+            let totalImported = 0;
+
             rawOrders.forEach(order => {
                 const date = order.deliveryDate || state.selectedDate; // Fallback to selected
                 if (!ordersByDate[date]) ordersByDate[date] = [];
                 ordersByDate[date].push(order);
+                totalImported++;
             });
 
             // Save each batch
@@ -1458,7 +1466,9 @@ DOMElements.settingsSaveBtn.onclick = async () => {
 
             await Promise.all(promises);
             DOMElements.productionJsonInput.value = '';
-            alert(`Imported ${rawOrders.length} orders across ${Object.keys(ordersByDate).length} dates.`);
+
+            const summary = Object.entries(ordersByDate).map(([date, items]) => `\n- ${date}: ${items.length} items`).join('');
+            alert(`Succesfully imported ${totalImported} orders:${summary}`);
         } catch (e) {
             console.error(e);
             DOMElements.settingsError.textContent = "Production JSON Invalid format.";
@@ -1794,10 +1804,11 @@ async function handleAiCheck(dish, capturedImageDataUrl) {
     const feedbackContainer = document.getElementById('ai-feedback-container'); if (!feedbackContainer) return;
     feedbackContainer.innerHTML = `<div class="p-10 sm:p-14 border-2 border-indigo-500/30 bg-indigo-900/10 rounded-[2.5rem] sm:rounded-[4rem] flex flex-col items-center justify-center space-y-6 sm:space-y-8 shadow-2xl backdrop-blur-3xl"><div class="relative w-10 h-10 sm:w-12 sm:h-12"><div class="absolute inset-0 border-4 sm:border-8 border-indigo-500/10 rounded-full"></div><div class="absolute inset-0 border-4 sm:border-8 border-indigo-500 border-t-transparent rounded-full animate-spin"></div></div><p class="font-black text-indigo-400 text-[10px] sm:text-[12px] uppercase tracking-[0.6em] animate-pulse italic">Analyzing Visual Compliance</p></div>`;
     try {
-        const ai = new GoogleGenAI({ apiKey: process.env.API_KEY }); let refImgPart = null; try { const refRes = await fetch(dish.dishImage); if (refRes.ok) { const blob = await refRes.blob(); const refBase64 = await new Promise(res => { const fr = new FileReader(); fr.onloadend = () => res(fr.result.split(',')[1]); fr.readAsDataURL(blob); }); refImgPart = { inlineData: { mimeType: 'image/jpeg', data: refBase64 } }; } } catch (e) { console.warn("Reference failed."); }
-        const result = await ai.models.generateContent({ model: 'gemini-3-pro-preview', contents: { parts: [{ text: `Audit '${dish.dishName}'. JSON: { "score": 1-10, "positives": string[], "improvements": string[], "overall_comment": string }` }, ...(refImgPart ? [refImgPart] : []), { inlineData: { mimeType: 'image/jpeg', data: capturedImageDataUrl.split(',')[1] } }] }, config: { responseMimeType: "application/json", temperature: 0.1 } });
+        const apiKey = process.env.API_KEY || window.API_KEY_FALLBACK;
+        const ai = new GoogleGenAI({ apiKey: apiKey }); let refImgPart = null; try { const refRes = await fetch(dish.dishImage); if (refRes.ok) { const blob = await refRes.blob(); const refBase64 = await new Promise(res => { const fr = new FileReader(); fr.onloadend = () => res(fr.result.split(',')[1]); fr.readAsDataURL(blob); }); refImgPart = { inlineData: { mimeType: 'image/jpeg', data: refBase64 } }; } } catch (e) { console.warn("Reference failed."); }
+        const result = await ai.models.generateContent({ model: 'gemini-1.5-flash', contents: { parts: [{ text: `Audit '${dish.dishName}'. JSON: { "score": 1-10, "positives": string[], "improvements": string[], "overall_comment": string }` }, ...(refImgPart ? [refImgPart] : []), { inlineData: { mimeType: 'image/jpeg', data: capturedImageDataUrl.split(',')[1] } }] }, config: { responseMimeType: "application/json", temperature: 0.1 } });
         const feedbackData = JSON.parse(result.text); document.getElementById('dish-form').dataset.aiFeedback = JSON.stringify(feedbackData); renderAiFeedback(feedbackData);
-    } catch (e) { feedbackContainer.innerHTML = `<div class="p-8 border border-red-900/40 bg-red-950/30 rounded-[2rem] text-[10px] text-red-400 uppercase font-black text-center shadow-xl">AI Logic Disconnected</div>`; }
+    } catch (e) { console.error(e); feedbackContainer.innerHTML = `<div class="p-8 border border-red-900/40 bg-red-950/30 rounded-[2rem] text-[10px] text-red-400 uppercase font-black text-center shadow-xl">AI Logic Disconnected: ${e.message}</div>`; }
 }
 
 function renderAiFeedback(feedbackData) {

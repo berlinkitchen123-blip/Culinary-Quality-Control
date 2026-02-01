@@ -609,7 +609,14 @@ function aggregateProductionData() {
             };
         }
 
-        dishes[key].count += (order.quantity || 1);
+        const qty = parseInt(order.quantity) || 1; // Ensure number
+        dishes[key].count += qty;
+
+        // Try to map dish letter from menu if available
+        if (!dishes[key].dishLetter && state.menu && state.menu.dishes) {
+            const menuDish = state.menu.dishes.find(d => d.dishName === order.name || d.name === order.name);
+            if (menuDish) dishes[key].dishLetter = menuDish.dishLetter;
+        }
 
         if (order.recipe && Array.isArray(order.recipe)) {
             order.recipe.forEach(line => {
@@ -1060,7 +1067,7 @@ function renderPrepView() {
                     div.innerHTML = `
                         <div>
                             <h4 class="text-white font-black uppercase text-sm mb-1">${ing.name}</h4>
-                            <span class="text-xs text-slate-400 font-mono">Total Required: <strong class="text-orange-400">${ing.weight}g</strong></span>
+                            <span class="text-xs text-slate-400 font-mono">Total Required: <strong class="text-orange-400">${ing.weight >= 1000 ? (ing.weight / 1000).toFixed(1) + 'kg' : ing.weight + 'g'}</strong></span>
                         </div>
                         <div class="h-10 w-10 flex items-center justify-center bg-slate-900 rounded-xl border border-slate-800 text-slate-500">
                              <!-- Placeholder for check -->
@@ -1077,7 +1084,18 @@ function renderPrepView() {
                 <div class="bg-slate-900/50 rounded-3xl p-4 border border-slate-800/50">
                     <h3 class="text-xs font-black text-${color}-400 uppercase tracking-widest mb-4 text-center pb-4 border-b border-slate-800/50">${title}</h3>
                     <div class="space-y-3">
-                        ${items.map(d => `<div class="bg-slate-800 p-4 rounded-xl border border-slate-700/50 flex justify-between items-center"><span class="text-xs font-bold text-slate-300">${d.name}</span><span class="bg-slate-900 px-2 py-1 rounded text-[10px] font-mono text-white">${d.count}</span></div>`).join('')}
+                        ${items.map(d => `
+                            <div class="bg-slate-800 p-4 rounded-xl border border-slate-700/50 flex justify-between items-center group hover:bg-slate-700/50 transition-colors">
+                                <div class="flex items-center gap-3">
+                                    ${d.dishLetter ?
+                    `<span class="h-8 w-8 rounded-full bg-${color}-500/20 text-${color}-300 border border-${color}-500/30 flex items-center justify-center text-[10px] font-black shadow-lg">${d.dishLetter}</span>`
+                    : `<span class="h-8 w-8 rounded-full bg-slate-700 text-slate-500 border border-slate-600 flex items-center justify-center text-[10px] font-bold">?</span>`
+                }
+                                    <span class="text-xs font-bold text-slate-300 group-hover:text-white transition-colors line-clamp-2 leading-tight max-w-[120px]">${d.name}</span>
+                                </div>
+                                <span class="bg-slate-900 px-3 py-1.5 rounded-lg text-[10px] font-mono text-white border border-slate-800 shadow-inner font-bold">x${d.count}</span>
+                            </div>
+                        `).join('')}
                     </div>
                 </div>
             `;

@@ -1291,13 +1291,25 @@ DOMElements.settingsSaveBtn.onclick = async () => {
     if (val) {
         try {
             const p = JSON.parse(val);
-            const dishes = p.dishes.filter(d => d.stickerNo && d.stickerNo !== 'addons').map(d => ({ dishLetter: d.stickerNo, dishName: d.variantName, dishImage: d.webUrl, dishType: ['hot', 'cold'].includes(d.type) ? d.type : 'extras', dishIngredients: (d.ingredients || []).map(i => ({ name: i.name, weight: i.amount + 'g' })), theoreticalWeight: (d.ingredients || []).reduce((sum, ing) => sum + (parseFloat(ing.amount) || 0), 0) }));
+            if (!p.dishes || !Array.isArray(p.dishes)) throw new Error("Missing 'dishes' array in JSON");
+            if (!p.startDate) throw new Error("Missing 'startDate' in JSON");
+
+            const dishes = p.dishes.filter(d => d.stickerNo && d.stickerNo !== 'addons').map(d => ({
+                dishLetter: d.stickerNo,
+                dishName: d.variantName,
+                dishImage: d.webUrl,
+                dishType: ['hot', 'cold'].includes(d.type) ? d.type : 'extras',
+                dishIngredients: (d.ingredients || []).map(i => ({ name: i.name, weight: i.amount + 'g' })),
+                theoreticalWeight: (d.ingredients || []).reduce((sum, ing) => sum + (parseFloat(ing.amount) || 0), 0)
+            }));
+
             const menuWeekId = getWeekId(new Date(p.startDate + 'T12:00:00Z'));
             await set(ref(database, `menus/${menuWeekId}`), { dishes, startDate: p.startDate });
             DOMElements.jsonInput.value = '';
             fetchMenu();
         } catch (e) {
-            DOMElements.settingsError.textContent = "Menu Manifest Validation Fault.";
+            console.error(e);
+            DOMElements.settingsError.textContent = `Error: ${e.message}`;
             return;
         }
     }

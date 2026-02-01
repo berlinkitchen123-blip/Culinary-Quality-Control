@@ -274,7 +274,12 @@ function listenToProductionOrders() {
     state.productionRef = ref(database, `production-orders/${date}`);
     state.productionListener = onValue(state.productionRef, (snapshot) => {
         const val = snapshot.val();
-        const data = val ? (Array.isArray(val) ? val : Object.values(val)) : [];
+        let data = val ? (Array.isArray(val) ? val : Object.values(val)) : [];
+
+        // Fix for nested "dishes" arrays (User uploaded wrong format?)
+        if (data.length > 0 && data.some(d => d.dishes && Array.isArray(d.dishes))) {
+            data = data.flatMap(d => d.dishes ? d.dishes : [d]);
+        }
 
         state.isCheckDataLoading = false; // Stop Loader
         renderApp();

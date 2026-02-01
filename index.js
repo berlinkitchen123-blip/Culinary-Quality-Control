@@ -293,7 +293,7 @@ function listenToProductionOrders() {
         if (JSON.stringify(val) !== JSON.stringify(state.productionChecks)) {
             state.productionChecks = val;
             saveToCache(checksKey, val);
-            if (state.currentView === 'production' && state.productionMode === 'kitchen') renderProductionView();
+            if (state.currentView === 'prep' || state.currentView === 'production') renderPrepView();
         }
     });
 }
@@ -1042,7 +1042,8 @@ function renderPrepView() {
             const ingredients = Array.from(ingredientsMap.values());
 
             if (ingredients.length === 0) {
-                DOMElements.prepGridContainer.insertAdjacentHTML('beforeend', `<div class="text-center p-10 py-20 bg-slate-800/30 rounded-3xl border border-dashed border-slate-700/50"><p class="text-slate-500 font-bold uppercase tracking-widest text-xs">No Production Orders Found</p></div>`);
+                const dateStr = state.selectedDate || 'Selected Date';
+                DOMElements.prepGridContainer.insertAdjacentHTML('beforeend', `<div class="text-center p-10 py-20 bg-slate-800/30 rounded-3xl border border-dashed border-slate-700/50"><p class="text-slate-500 font-bold uppercase tracking-widest text-xs">No Production Orders Found for ${dateStr}</p><p class="text-slate-600 text-[10px] mt-2">Try switching dates?</p></div>`);
             } else {
                 ingredients.forEach(ing => {
                     const safeId = 'ck_' + normalizeName(ing.name).replace(/\s+/g, '_');
@@ -1057,7 +1058,7 @@ function renderPrepView() {
                         </div>
                         <div class="h-10 w-10 flex items-center justify-center bg-slate-900 rounded-xl border border-slate-800 text-slate-500">
                              <!-- Placeholder for check -->
-                             <input type="checkbox" onchange="window.toggleKitchenCheck('${safeId}')" class="h-5 w-5 accent-orange-500 bg-slate-800 border-slate-600 rounded">
+                             <input type="checkbox" onchange="window.toggleKitchenCheck('${safeId}')" ${state.productionChecks?.[safeId]?.done ? 'checked' : ''} class="h-5 w-5 accent-orange-500 bg-slate-800 border-slate-600 rounded">
                         </div>
                      `;
                     DOMElements.prepGridContainer.appendChild(div);
@@ -1076,9 +1077,17 @@ function renderPrepView() {
             `;
             const cold = dishes.filter(d => d.type === 'cold');
             const hot = dishes.filter(d => d.type === 'hot');
-            DOMElements.prepGridContainer.className = "grid grid-cols-1 md:grid-cols-2 gap-6 pb-32"; // Override layout
-            DOMElements.prepGridContainer.insertAdjacentHTML('beforeend', col('Cold Station', cold, 'blue'));
-            DOMElements.prepGridContainer.insertAdjacentHTML('beforeend', col('Hot Station', hot, 'red'));
+
+            if (cold.length === 0 && hot.length === 0) {
+                const dateStr = state.selectedDate || 'Selected Date';
+                DOMElements.prepGridContainer.innerHTML = ''; // Clear switcher? No, container.
+                DOMElements.prepGridContainer.appendChild(switchRow); // Re-add switcher
+                DOMElements.prepGridContainer.insertAdjacentHTML('beforeend', `<div class="col-span-1 md:col-span-2 text-center p-10 py-20 bg-slate-800/30 rounded-3xl border border-dashed border-slate-700/50"><p class="text-slate-500 font-bold uppercase tracking-widest text-xs">No Assembly Items for ${dateStr}</p></div>`);
+            } else {
+                DOMElements.prepGridContainer.className = "grid grid-cols-1 md:grid-cols-2 gap-6 pb-32"; // Override layout
+                if (cold.length > 0) DOMElements.prepGridContainer.insertAdjacentHTML('beforeend', col('Cold Station', cold, 'blue'));
+                if (hot.length > 0) DOMElements.prepGridContainer.insertAdjacentHTML('beforeend', col('Hot Station', hot, 'red'));
+            }
         }
     }
 }

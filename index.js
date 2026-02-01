@@ -1347,7 +1347,11 @@ function renderDateSelector() {
         const isSelected = dayString === state.selectedDate;
         const button = document.createElement('button');
         button.className = `flex flex-col items-center justify-center w-12 h-16 sm:w-16 sm:h-20 rounded-[1rem] sm:rounded-[1.25rem] transition-all duration-300 transform active:scale-95 shadow-xl mx-0.5 ${isSelected ? 'bg-indigo-600 text-white shadow-indigo-600/40 ring-2 ring-indigo-400/50 z-10 scale-110' : 'bg-slate-800/80 text-slate-500 border border-slate-700/50 hover:bg-slate-700'}`;
-        button.innerHTML = `<span class="text-[9px] sm:text-[10px] uppercase font-black opacity-70 mb-1">${day.toLocaleDateString('en-US', { weekday: 'short' })}</span><span class="text-base sm:text-lg font-black">${day.getDate()}</span>`;
+        button.innerHTML = `
+            <span class="text-[8px] sm:text-[9px] uppercase font-black opacity-60 leading-none mb-0.5">${day.toLocaleDateString('en-US', { weekday: 'short' })}</span>
+            <span class="text-sm sm:text-base font-black leading-tight">${day.getDate()}</span>
+            <span class="text-[8px] sm:text-[9px] font-bold opacity-60 leading-none uppercase mt-0.5">${day.toLocaleDateString('en-US', { month: 'short' })}</span>
+        `;
         button.onclick = () => {
             state.selectedDate = dayString;
 

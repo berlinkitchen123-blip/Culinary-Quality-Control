@@ -1076,6 +1076,7 @@ function fetchCheckData() {
 
 function fetchMenu() {
     const weekId = getWeekId(new Date(state.selectedDate + 'T12:00:00Z'));
+    state.currentWeekId = weekId; // Track current week to prevent redundant loads
     const key = `menu_${weekId}`;
 
     // 1. Try Cache First (Instant Load)
@@ -1100,29 +1101,32 @@ function fetchMenu() {
         off(state.menuRef, 'value', state.menuListener);
     }
 
-    // Store ref to allow unsubscription later (firebase requires same ref & callback)
+    // Store ref to allow unsubscription later
     state.menuRef = menuRef;
 
     // Create new listener
     state.menuListener = onValue(menuRef, (snapshot) => {
         const val = snapshot.val() || null;
 
+        // Always stop loading once we get a response (even if null/empty)
+        state.isMenuLoading = false;
+
         // Update only if different from cache or if we had no cache
         if (JSON.stringify(val) !== JSON.stringify(state.menu)) {
             state.menu = val;
             saveToCache(key, val);
-            state.isMenuLoading = false;
             renderApp();
 
             // Refresh dependent views
             if (state.currentView === 'prep') renderPrepView();
             if (state.currentView === 'audit') window.renderAuditDishLibrary();
         } else {
-            // Even if data is same, ensure loading state is off (e.g. initial network return)
-            state.isMenuLoading = false;
+            // Even if data is same, ensure loader UI clears
             renderApp();
         }
     });
+
+
 }
 
 DOMElements.navDashboardBtn.onclick = () => showView('dashboard');

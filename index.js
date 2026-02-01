@@ -1005,6 +1005,7 @@ function listenToPrepChecks() {
 }
 
 function refreshActiveViewData() {
+    renderDateSelector(); // Update Header UI
     state.isCheckDataLoading = true;
     stopAllListeners(); // Clean slate first
 
@@ -1070,6 +1071,8 @@ function fetchMenu() {
         state.isMenuLoading = true;
         renderApp();
     }
+
+    renderDateSelector(); // Always ensure header is rendered
 
     // 2. Network Sync
     const menuRef = ref(database, `menus/${weekId}`);
@@ -1303,7 +1306,6 @@ function renderApp() {
         renderWelcomePlaceholder();
         DOMElements.dailySummarySection.classList.add('hidden');
     }
-    renderDateSelector();
 }
 
 function renderDateSelector() {

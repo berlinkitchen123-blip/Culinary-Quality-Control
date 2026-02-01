@@ -1325,7 +1325,13 @@ DOMElements.navDashboardBtn.onclick = () => showView('dashboard');
 DOMElements.navPrepBtn.onclick = () => showView('prep');
 DOMElements.navAuditBtn.onclick = () => showView('audit');
 DOMElements.navProductionBtn.onclick = () => showView('production');
-DOMElements.settingsBtn.onclick = () => DOMElements.settingsModal.classList.remove('hidden');
+DOMElements.settingsBtn.onclick = () => {
+    DOMElements.settingsModal.classList.remove('hidden');
+    const apiKeyInput = document.getElementById('gemini-api-key-input');
+    if (apiKeyInput) {
+        apiKeyInput.value = localStorage.getItem('custom_gemini_api_key') || '';
+    }
+};
 DOMElements.settingsCloseBtn.onclick = () => DOMElements.settingsModal.classList.add('hidden');
 DOMElements.backToMenuBtn.onclick = () => showView(state.currentView === 'detail' && state.selectedPrepItem ? 'prep' : 'dashboard');
 
@@ -1435,7 +1441,14 @@ DOMElements.tabMenuBtn.onclick = () => switchSettingsTab('menu');
 
 DOMElements.settingsSaveBtn.onclick = async () => {
 
-    // 1. Handle Production JSON if present
+    // 0. Save API Key
+    const apiKeyVal = document.getElementById('gemini-api-key-input').value.trim();
+    if (apiKeyVal) {
+        localStorage.setItem('custom_gemini_api_key', apiKeyVal);
+    } else {
+        localStorage.removeItem('custom_gemini_api_key');
+    }
+
     // 1. Handle Production JSON if present
     const prodVal = DOMElements.productionJsonInput.value.trim();
     if (prodVal) {
@@ -1804,7 +1817,7 @@ async function handleAiCheck(dish, capturedImageDataUrl) {
     const feedbackContainer = document.getElementById('ai-feedback-container'); if (!feedbackContainer) return;
     feedbackContainer.innerHTML = `<div class="p-10 sm:p-14 border-2 border-indigo-500/30 bg-indigo-900/10 rounded-[2.5rem] sm:rounded-[4rem] flex flex-col items-center justify-center space-y-6 sm:space-y-8 shadow-2xl backdrop-blur-3xl"><div class="relative w-10 h-10 sm:w-12 sm:h-12"><div class="absolute inset-0 border-4 sm:border-8 border-indigo-500/10 rounded-full"></div><div class="absolute inset-0 border-4 sm:border-8 border-indigo-500 border-t-transparent rounded-full animate-spin"></div></div><p class="font-black text-indigo-400 text-[10px] sm:text-[12px] uppercase tracking-[0.6em] animate-pulse italic">Analyzing Visual Compliance</p></div>`;
     try {
-        const apiKey = process.env.API_KEY || window.API_KEY_FALLBACK;
+        const apiKey = localStorage.getItem('custom_gemini_api_key') || process.env.API_KEY || window.API_KEY_FALLBACK;
         const ai = new GoogleGenAI({ apiKey: apiKey }); let refImgPart = null; try { const refRes = await fetch(dish.dishImage); if (refRes.ok) { const blob = await refRes.blob(); const refBase64 = await new Promise(res => { const fr = new FileReader(); fr.onloadend = () => res(fr.result.split(',')[1]); fr.readAsDataURL(blob); }); refImgPart = { inlineData: { mimeType: 'image/jpeg', data: refBase64 } }; } } catch (e) { console.warn("Reference failed."); }
         const result = await ai.models.generateContent({ model: 'gemini-1.5-flash', contents: { parts: [{ text: `Audit '${dish.dishName}'. JSON: { "score": 1-10, "positives": string[], "improvements": string[], "overall_comment": string }` }, ...(refImgPart ? [refImgPart] : []), { inlineData: { mimeType: 'image/jpeg', data: capturedImageDataUrl.split(',')[1] } }] }, config: { responseMimeType: "application/json", temperature: 0.1 } });
         const feedbackData = JSON.parse(result.text); document.getElementById('dish-form').dataset.aiFeedback = JSON.stringify(feedbackData); renderAiFeedback(feedbackData);

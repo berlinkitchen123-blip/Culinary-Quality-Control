@@ -1105,7 +1105,19 @@ function fetchMenu() {
     state.menuRef = menuRef;
 
     // Create new listener
+
+    // Safety Timeout: Force hide loader if network hangs (5s)
+    if (state.menuTimeout) clearTimeout(state.menuTimeout);
+    state.menuTimeout = setTimeout(() => {
+        if (state.isMenuLoading) {
+            console.warn("Menu load timed out - forcing UI unlock");
+            state.isMenuLoading = false;
+            renderApp();
+        }
+    }, 5000);
+
     state.menuListener = onValue(menuRef, (snapshot) => {
+        clearTimeout(state.menuTimeout); // Clear safety timer
         const val = snapshot.val() || null;
 
         // Always stop loading once we get a response (even if null/empty)

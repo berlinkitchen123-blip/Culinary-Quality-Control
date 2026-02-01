@@ -1056,10 +1056,22 @@ function fetchCheckData() {
 }
 
 function fetchMenu() {
-    state.isMenuLoading = true;
-    renderApp();
-
     const weekId = getWeekId(new Date(state.selectedDate + 'T12:00:00Z'));
+    const key = `menu_${weekId}`;
+
+    // 1. Try Cache First (Instant Load)
+    const cached = loadFromCache(key);
+    if (cached) {
+        state.menu = cached;
+        state.isMenuLoading = false;
+        renderApp();
+    } else {
+        // Only show loader if no cache
+        state.isMenuLoading = true;
+        renderApp();
+    }
+
+    // 2. Network Sync
     const menuRef = ref(database, `menus/${weekId}`);
 
     // Unsubscribe from previous listener if it exists
@@ -1072,13 +1084,23 @@ function fetchMenu() {
 
     // Create new listener
     state.menuListener = onValue(menuRef, (snapshot) => {
-        state.menu = snapshot.val() || null;
-        state.isMenuLoading = false;
-        renderApp();
+        const val = snapshot.val() || null;
 
-        // Refresh dependent views
-        if (state.currentView === 'prep') renderPrepView();
-        if (state.currentView === 'audit') window.renderAuditDishLibrary();
+        // Update only if different from cache or if we had no cache
+        if (JSON.stringify(val) !== JSON.stringify(state.menu)) {
+            state.menu = val;
+            saveToCache(key, val);
+            state.isMenuLoading = false;
+            renderApp();
+
+            // Refresh dependent views
+            if (state.currentView === 'prep') renderPrepView();
+            if (state.currentView === 'audit') window.renderAuditDishLibrary();
+        } else {
+            // Even if data is same, ensure loading state is off (e.g. initial network return)
+            state.isMenuLoading = false;
+            renderApp();
+        }
     });
 }
 

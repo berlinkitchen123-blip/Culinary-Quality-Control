@@ -40,141 +40,142 @@ let state = {
     isHistoryLoading: false,
     currentWeekId: null, // Track currently loaded menu week
     kitchenMode: 'prep' // Default mode for Kitchen Log
+};
 
 // --- Local Caching Helpers ---
 const CACHE_PREFIX = 'CQC_';
 
-    const saveToCache = (key, data) => {
-        try {
-            localStorage.setItem(CACHE_PREFIX + key, JSON.stringify(data));
-        } catch (e) { console.warn('Cache Full', e); }
-    };
+const saveToCache = (key, data) => {
+    try {
+        localStorage.setItem(CACHE_PREFIX + key, JSON.stringify(data));
+    } catch (e) { console.warn('Cache Full', e); }
+};
 
-    const loadFromCache = (key) => {
-        try {
-            const item = localStorage.getItem(CACHE_PREFIX + key);
-            return item ? JSON.parse(item) : null;
-        } catch (e) { return null; }
-    };
+const loadFromCache = (key) => {
+    try {
+        const item = localStorage.getItem(CACHE_PREFIX + key);
+        return item ? JSON.parse(item) : null;
+    } catch (e) { return null; }
+};
 
-    // --- Definitions ---
-    const PREP_STAGES = [
-        { id: 'cooking', label: 'After Cooking', short: 'Cooking', icon: '🔥' },
-        { id: 'pre_assembly', label: 'Before Assembly', short: 'Pre-Asm', icon: '⏳' },
-        { id: 'post_assembly', label: 'After Assembly', short: 'Post-Asm', icon: '📦' }
-    ];
+// --- Definitions ---
+const PREP_STAGES = [
+    { id: 'cooking', label: 'After Cooking', short: 'Cooking', icon: '🔥' },
+    { id: 'pre_assembly', label: 'Before Assembly', short: 'Pre-Asm', icon: '⏳' },
+    { id: 'post_assembly', label: 'After Assembly', short: 'Post-Asm', icon: '📦' }
+];
 
-    // --- Chart Instance Tracker ---
-    window.auditCharts = [];
+// --- Chart Instance Tracker ---
+window.auditCharts = [];
 
-    // --- DOM Element References ---
-    const DOMElements = {
-        loadingIndicator: document.getElementById('loading-indicator'),
-        mainView: document.getElementById('main-view'),
-        prepView: document.getElementById('prep-view'),
-        productionView: document.getElementById('production-view'),
-        aiAgentView: document.getElementById('ai-agent-view'),
-        dishDetailView: document.getElementById('dish-detail-view'),
-        dishGridContainer: document.getElementById('dish-grid-container'),
-        prepGridContainer: document.getElementById('prep-grid-container'),
-        dishCardContainer: document.getElementById('dish-card-container'),
-        dailySummarySection: document.getElementById('daily-summary-section'),
-        dailySummaryContainer: document.getElementById('daily-summary-container'),
-        dateButtonsContainer: document.getElementById('date-buttons-container'),
-        prevWeekBtn: document.getElementById('prev-week-btn'),
-        nextWeekBtn: document.getElementById('next-week-btn'),
-        welcomePlaceholder: document.getElementById('welcome-placeholder'),
-        backToMenuBtn: document.getElementById('back-to-menu-btn'),
-        settingsBtn: document.getElementById('settings-btn'),
-        settingsModal: document.getElementById('settings-modal'),
-        settingsCloseBtn: document.getElementById('settings-close-btn'),
-        settingsCancelBtn: document.getElementById('settings-cancel-btn'),
-        settingsSaveBtn: document.getElementById('settings-save-btn'),
-        jsonInput: document.getElementById('json-input'),
-        productionJsonInput: document.getElementById('production-json-input'),
-        settingsError: document.getElementById('settings-error'),
-        navDashboardBtn: document.getElementById('nav-dashboard-btn'),
-        navPrepBtn: document.getElementById('nav-prep-btn'),
-        navAuditBtn: document.getElementById('nav-audit-btn'),
-        navProductionBtn: document.getElementById('nav-production-btn'),
-        auditResultsContainer: document.getElementById('audit-results-container'),
-        // Settings Tabs
-        tabProdBtn: document.getElementById('tab-prod-btn'),
-        tabMenuBtn: document.getElementById('tab-menu-btn'),
-        tabProdContent: document.getElementById('tab-prod-content'),
-        tabMenuContent: document.getElementById('tab-menu-content'),
-    };
+// --- DOM Element References ---
+const DOMElements = {
+    loadingIndicator: document.getElementById('loading-indicator'),
+    mainView: document.getElementById('main-view'),
+    prepView: document.getElementById('prep-view'),
+    productionView: document.getElementById('production-view'),
+    aiAgentView: document.getElementById('ai-agent-view'),
+    dishDetailView: document.getElementById('dish-detail-view'),
+    dishGridContainer: document.getElementById('dish-grid-container'),
+    prepGridContainer: document.getElementById('prep-grid-container'),
+    dishCardContainer: document.getElementById('dish-card-container'),
+    dailySummarySection: document.getElementById('daily-summary-section'),
+    dailySummaryContainer: document.getElementById('daily-summary-container'),
+    dateButtonsContainer: document.getElementById('date-buttons-container'),
+    prevWeekBtn: document.getElementById('prev-week-btn'),
+    nextWeekBtn: document.getElementById('next-week-btn'),
+    welcomePlaceholder: document.getElementById('welcome-placeholder'),
+    backToMenuBtn: document.getElementById('back-to-menu-btn'),
+    settingsBtn: document.getElementById('settings-btn'),
+    settingsModal: document.getElementById('settings-modal'),
+    settingsCloseBtn: document.getElementById('settings-close-btn'),
+    settingsCancelBtn: document.getElementById('settings-cancel-btn'),
+    settingsSaveBtn: document.getElementById('settings-save-btn'),
+    jsonInput: document.getElementById('json-input'),
+    productionJsonInput: document.getElementById('production-json-input'),
+    settingsError: document.getElementById('settings-error'),
+    navDashboardBtn: document.getElementById('nav-dashboard-btn'),
+    navPrepBtn: document.getElementById('nav-prep-btn'),
+    navAuditBtn: document.getElementById('nav-audit-btn'),
+    navProductionBtn: document.getElementById('nav-production-btn'),
+    auditResultsContainer: document.getElementById('audit-results-container'),
+    // Settings Tabs
+    tabProdBtn: document.getElementById('tab-prod-btn'),
+    tabMenuBtn: document.getElementById('tab-menu-btn'),
+    tabProdContent: document.getElementById('tab-prod-content'),
+    tabMenuContent: document.getElementById('tab-menu-content'),
+};
 
-    // --- Global Intelligence Logic ---
+// --- Global Intelligence Logic ---
 
-    const normalizeName = (name) => {
-        if (!name) return "";
-        return name
-            .toLowerCase()
-            .replace(/&/g, 'and')
-            .replace(/[^\w\s]/gi, '')
-            .replace(/\b(with|rice|chips|salad|side|and|the|of|for|pasta|potato|extra|veg|vege|bb|b&b)\b/g, '')
-            .replace(/\b(fresh|classic|traditional|homemade|chef's|special|spicy|hot|sweet|sour|grilled|fried|roasted|steamed|baked)\b/g, '')
-            .replace(/\s+/g, ' ')
-            .trim();
-    };
+const normalizeName = (name) => {
+    if (!name) return "";
+    return name
+        .toLowerCase()
+        .replace(/&/g, 'and')
+        .replace(/[^\w\s]/gi, '')
+        .replace(/\b(with|rice|chips|salad|side|and|the|of|for|pasta|potato|extra|veg|vege|bb|b&b)\b/g, '')
+        .replace(/\b(fresh|classic|traditional|homemade|chef's|special|spicy|hot|sweet|sour|grilled|fried|roasted|steamed|baked)\b/g, '')
+        .replace(/\s+/g, ' ')
+        .trim();
+};
 
-    const isDishMatch = (name1, name2) => {
-        const n1 = normalizeName(name1);
-        const n2 = normalizeName(name2);
-        if (!n1 || !n2) return false;
-        return n1 === n2 || n1.includes(n2) || n2.includes(n1);
-    };
+const isDishMatch = (name1, name2) => {
+    const n1 = normalizeName(name1);
+    const n2 = normalizeName(name2);
+    if (!n1 || !n2) return false;
+    return n1 === n2 || n1.includes(n2) || n2.includes(n1);
+};
 
-    const getStartOfWeek = (date) => {
-        const d = new Date(date);
-        const day = d.getDay();
-        const diff = d.getDate() - day + (day === 0 ? -6 : 1);
-        return new Date(d.setDate(diff));
-    };
+const getStartOfWeek = (date) => {
+    const d = new Date(date);
+    const day = d.getDay();
+    const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+    return new Date(d.setDate(diff));
+};
 
-    const getWeekId = (date) => {
-        const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
-        d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
-        const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
-        const weekNo = Math.ceil((((d.getTime() - yearStart.getTime()) / 86400000) + 1) / 7);
-        return `${d.getUTCFullYear()}-${String(weekNo).padStart(2, '0')}`;
-    };
+const getWeekId = (date) => {
+    const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+    d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
+    const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+    const weekNo = Math.ceil((((d.getTime() - yearStart.getTime()) / 86400000) + 1) / 7);
+    return `${d.getUTCFullYear()}-${String(weekNo).padStart(2, '0')}`;
+};
 
-    const discoverLogs = (node, found = [], dateContext = null) => {
-        if (!node || typeof node !== 'object') return found;
-        if (node.dishName || node.aiCheckResult || (node.temperatures && node.weights)) {
-            if (node.dishName) {
-                found.push({
-                    ...node,
-                    pathDate: dateContext || node.date || (node.timestamp ? node.timestamp.split('T')[0] : 'Historical')
-                });
-                return found;
-            }
+const discoverLogs = (node, found = [], dateContext = null) => {
+    if (!node || typeof node !== 'object') return found;
+    if (node.dishName || node.aiCheckResult || (node.temperatures && node.weights)) {
+        if (node.dishName) {
+            found.push({
+                ...node,
+                pathDate: dateContext || node.date || (node.timestamp ? node.timestamp.split('T')[0] : 'Historical')
+            });
+            return found;
         }
-        Object.entries(node).forEach(([key, val]) => {
-            const isDateKey = /^\d{4}-\d{2}-\d{2}$/.test(key);
-            discoverLogs(val, found, isDateKey ? key : dateContext);
-        });
-        return found;
-    };
+    }
+    Object.entries(node).forEach(([key, val]) => {
+        const isDateKey = /^\d{4}-\d{2}-\d{2}$/.test(key);
+        discoverLogs(val, found, isDateKey ? key : dateContext);
+    });
+    return found;
+};
 
-    // --- Data Saving Logic ---
+// --- Data Saving Logic ---
 
-    function saveCheckData(data) {
-        const { capturedImage, ...metaData } = data;
-const updates = {};
-const dishKey = data.dishLetter;
+function saveCheckData(data) {
+    const { capturedImage, ...metaData } = data;
+    const updates = {};
+    const dishKey = data.dishLetter;
 
-updates[`quality-checks/${data.date}/${dishKey}`] = metaData;
+    updates[`quality-checks/${data.date}/${dishKey}`] = metaData;
 
-if (capturedImage) {
-    updates[`check-images/${data.date}/${dishKey}`] = capturedImage;
-}
+    if (capturedImage) {
+        updates[`check-images/${data.date}/${dishKey}`] = capturedImage;
+    }
 
-return update(ref(database), updates).then(() => {
-    state.checkedData[dishKey] = { ...metaData, capturedImage };
-});
+    return update(ref(database), updates).then(() => {
+        state.checkedData[dishKey] = { ...metaData, capturedImage };
+    });
 }
 
 // --- Kitchen Logic Helpers ---

@@ -1014,6 +1014,19 @@ function refreshActiveViewData() {
     state.isCheckDataLoading = true;
     stopAllListeners(); // Clean slate first
 
+    // Clear visible data to avoid stale UI while loading (Instant Empty State)
+    if (state.currentView === 'dashboard' || state.currentView === 'detail') state.checkedData = {};
+    if (state.currentView === 'prep') state.prepData = {};
+    if (state.currentView === 'production') {
+        state.productionOrders = [];
+        state.productionChecks = {};
+    }
+
+    // Render immediate empty state (Fast Perception)
+    if (state.currentView === 'dashboard') renderApp();
+    if (state.currentView === 'prep') renderPrepView();
+    if (state.currentView === 'production') renderProductionView();
+
     // Only load what is needed for the current view
     if (state.currentView === 'dashboard' || state.currentView === 'detail') {
         listenToQualityChecks();
@@ -1299,8 +1312,8 @@ function renderWelcomePlaceholder() {
 }
 
 function renderApp() {
-    DOMElements.loadingIndicator.classList.toggle('hidden', !state.isMenuLoading && !state.isCheckDataLoading);
-    DOMElements.mainView.classList.toggle('hidden', state.isMenuLoading || state.isCheckDataLoading || state.currentView !== 'dashboard');
+    DOMElements.loadingIndicator.classList.toggle('hidden', !state.isMenuLoading);
+    DOMElements.mainView.classList.toggle('hidden', state.isMenuLoading || state.currentView !== 'dashboard');
     if (state.menu && state.menu.dishes.length > 0) {
         DOMElements.welcomePlaceholder.classList.add('hidden');
         DOMElements.dishGridContainer.classList.remove('hidden');

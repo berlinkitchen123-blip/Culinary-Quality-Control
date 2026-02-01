@@ -1,7 +1,7 @@
 
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-import { getDatabase, ref, onValue, set, get, update, query, limitToLast, orderByKey } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
+import { getDatabase, ref, onValue, set, get, update, query, limitToLast, orderByKey, off } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
 import { GoogleGenAI } from "https://esm.run/@google/genai";
 
 // --- Firebase Configuration ---

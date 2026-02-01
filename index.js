@@ -601,8 +601,8 @@ function aggregateProductionData() {
         // Let's assume name is unique enough.
         const type = (order.category === 'addons' || order.station === 'addons' || order.isAddon) ? 'addon' : (order.type || 'cold');
 
-        // Fix: Use strict keys to prevent merging differing items if needed
-        const key = order.name;
+        // Fix: Normalize key to prevent duplicates from spacing/casing
+        const key = normalizeName(order.name);
 
         if (!dishes[key]) {
             dishes[key] = {
@@ -1092,9 +1092,12 @@ function renderPrepView() {
 
         } else if (state.kitchenMode === 'assembly') {
             // Render Assembly Columns
-            const col = (title, items, color) => `
-                <div class="bg-slate-900/50 rounded-3xl p-4 border border-slate-800/50">
-                    <h3 class="text-xs font-black text-${color}-400 uppercase tracking-widest mb-4 text-center pb-4 border-b border-slate-800/50">${title}</h3>
+            const col = (title, count, items, color) => `
+                <div class="bg-slate-900/50 rounded-3xl p-4 border border-slate-800/50 h-full">
+                    <div class="flex justify-between items-center px-2 mb-4 pb-4 border-b border-slate-800/50">
+                        <h3 class="text-xs font-black text-${color}-400 uppercase tracking-widest">${title}</h3>
+                        <span class="px-2 py-0.5 rounded-lg bg-${color}-500/10 text-${color}-300 text-[10px] font-bold border border-${color}-500/20">${count} Items</span>
+                    </div>
                     <div class="space-y-3">
                         ${items.map(d => `
                             <div class="bg-slate-800 p-4 rounded-xl border border-slate-700/50 flex justify-between items-center group hover:bg-slate-700/50 transition-colors">
@@ -1115,21 +1118,19 @@ function renderPrepView() {
             const hot = dishes.filter(d => d.type === 'hot');
             const addons = dishes.filter(d => d.type === 'addon');
 
+            // Calculate Totals
+            const totalCold = cold.reduce((sum, d) => sum + d.count, 0);
+            const totalHot = hot.reduce((sum, d) => sum + d.count, 0);
+            const totalAddons = addons.reduce((sum, d) => sum + d.count, 0);
+
             if (cold.length === 0 && hot.length === 0 && addons.length === 0) {
                 const dateStr = state.selectedDate || 'Selected Date';
-                DOMElements.prepGridContainer.innerHTML = ''; // Keep switcher? No, cleared above.
-                DOMElements.prepGridContainer.appendChild(switchRow); // Re-add switcher if cleared? Ah, if I clear innerHTML I lose switcher.
-                // Wait, I cleared innerHTML at the top of the function.
-                // Then appended switcher.
-                // Then this logic runs.
-                // I should NOT clear innerHTML here again without potentially losing the switcher if I don't re-apppend it.
-                // But wait, the switcher is already in prepGridContainer.
-                // If I set innerHTML = '', I lose it. 
-                // Let's just append the empty message.
+                // Switcher is already appended, just show empty state
                 DOMElements.prepGridContainer.insertAdjacentHTML('beforeend', `<div class="col-span-full text-center p-10 py-20 bg-slate-800/30 rounded-3xl border border-dashed border-slate-700/50"><p class="text-slate-500 font-bold uppercase tracking-widest text-xs">No Assembly Items for ${dateStr}</p></div>`);
             } else {
-                // Do NOT reset className here, it was set at top
-                if (hot.length > 0) DOMElements.prepGridContainer.insertAdjacentHTML('beforeend', col('Hot Station', hot, 'red'));
+                if (hot.length > 0) DOMElements.prepGridContainer.insertAdjacentHTML('beforeend', col('Hot Station', totalHot, hot, 'red'));
+                if (cold.length > 0) DOMElements.prepGridContainer.insertAdjacentHTML('beforeend', col('Cold Station', totalCold, cold, 'blue'));
+                if (addons.length > 0) DOMElements.prepGridContainer.insertAdjacentHTML('beforeend', col('Addons', totalAddons, addons, 'emerald'));
                 if (cold.length > 0) DOMElements.prepGridContainer.insertAdjacentHTML('beforeend', col('Cold Station', cold, 'blue'));
                 if (addons.length > 0) DOMElements.prepGridContainer.insertAdjacentHTML('beforeend', col('Addons', addons, 'emerald'));
             }

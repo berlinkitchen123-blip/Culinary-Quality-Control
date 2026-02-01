@@ -275,6 +275,9 @@ function listenToProductionOrders() {
         const val = snapshot.val();
         const data = val ? (Array.isArray(val) ? val : Object.values(val)) : [];
 
+        state.isCheckDataLoading = false; // Stop Loader
+        renderApp();
+
         // Update only if changed (prevents re-render loops if cache matches server)
         if (JSON.stringify(data) !== JSON.stringify(state.productionOrders)) {
             state.productionOrders = data;
@@ -1000,6 +1003,8 @@ function listenToPrepChecks() {
     state.prepCheckRef = prepRef;
     state.prepCheckListener = onValue(prepRef, (snapshot) => {
         state.prepData = snapshot.val() || {};
+        state.isCheckDataLoading = false; // Stop Loader
+        renderApp(); // Ensure loader UI updates
         if (state.currentView === 'prep') renderPrepView();
     });
 }

@@ -61,6 +61,10 @@
             }
         }
     </style>
+    <script>
+        // Polyfill for dependencies expecting Node.js environment variables
+        window.process = { env: { NODE_ENV: 'production' } };
+    </script>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {

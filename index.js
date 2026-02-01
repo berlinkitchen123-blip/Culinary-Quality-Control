@@ -282,7 +282,7 @@ function listenToProductionOrders() {
         if (JSON.stringify(data) !== JSON.stringify(state.productionOrders)) {
             state.productionOrders = data;
             saveToCache(ordersKey, data);
-            if (state.currentView === 'production') renderProductionView();
+            if (state.currentView === 'prep' || state.currentView === 'production') renderPrepView();
         }
     });
 
@@ -925,43 +925,169 @@ function renderAssemblyView(container, dishes) {
 
 function renderPrepView() {
     DOMElements.prepGridContainer.innerHTML = '';
-    const itemsFromMenu = extractPrepItems(state.menu);
-    const items = itemsFromMenu.length > 0 ? itemsFromMenu : [
-        { id: 'prep_rice', name: 'Steamed Basmati Rice', icon: '🍚' },
-        { id: 'prep_sauce_red', name: 'Tomato/Curry Base', icon: '🥫' },
-        { id: 'prep_veg', name: 'Roasted Seasonal Veg', icon: '🥦' }
-    ];
 
-    items.forEach(item => {
-        const savedItem = state.prepData[item.id] || {};
-        const stages = savedItem.stages || {};
-        const completedCount = PREP_STAGES.filter(s => stages[s.id]).length;
-        const isFullyDone = completedCount === 3;
+    // Default mode if undefined
+    if (!state.kitchenMode) state.kitchenMode = 'prep';
 
-        const btn = document.createElement('button');
-        btn.className = `group relative flex flex-col items-center justify-center p-5 bg-slate-800/40 border border-slate-700/50 rounded-[2rem] shadow-xl hover:scale-105 active:scale-95 transition-all backdrop-blur-md`;
-        btn.onclick = () => {
-            state.selectedPrepItem = item;
-            showView('detail');
-            renderPrepCard();
-        };
+    // 1. Render Mode Switcher
+    const switcherHtml = `
+        <div class="flex justify-center mb-8 sticky top-[80px] z-30">
+            <div class="flex bg-slate-900/90 p-1.5 rounded-2xl border border-slate-700/50 backdrop-blur-md shadow-2xl">
+                <button onclick="window.setKitchenMode('prep')" class="px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${state.kitchenMode === 'prep' ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-500 hover:text-slate-300'}">
+                    Prep List
+                </button>
+                <button onclick="window.setKitchenMode('cooking')" class="px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${state.kitchenMode === 'cooking' ? 'bg-orange-600 text-white shadow-lg' : 'text-slate-500 hover:text-slate-300'}">
+                    Cooking
+                </button>
+                 <button onclick="window.setKitchenMode('assembly')" class="px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${state.kitchenMode === 'assembly' ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-500 hover:text-slate-300'}">
+                    Assembly
+                </button>
+            </div>
+        </div>
+    `;
+    // Insert Switcher before grid (Need a wrapper but innerHTML wipes it, so I'll prepend it or append to container)
+    // Actually, prepGridContainer is a GRID. I shouldn't put the switcher inside it effectively.
+    // I should probably render this into the PARENT of prepGridContainer?
+    // "DOMElements.prepView" contains "prepGridContainer".
+    // Let's assume I can put it inside prepView directly.
+    // For now, to keep it simple, I'll inject a wrapper div into prepGridContainer changing its display for this case? 
+    // No, prep-grid-container classes are fixed in HTML (grid-cols-...).
+    // I will modify the layout dynamically.
 
-        let statusBadge = '';
-        if (isFullyDone) {
-            statusBadge = '<div class="absolute -top-1 -right-1 bg-emerald-500 rounded-full p-2 text-white shadow-2xl ring-4 ring-slate-900 z-10"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="5" d="M5 13l4 4L19 7"></path></svg></div>';
-        } else if (completedCount > 0) {
-            statusBadge = `<div class="absolute -top-1 -right-1 bg-yellow-500 rounded-full h-8 w-8 flex items-center justify-center text-[10px] font-black text-slate-900 shadow-2xl ring-4 ring-slate-900 z-10">${completedCount}/3</div>`;
+    const container = document.getElementById('prep-view-content');
+    if (container) {
+        container.innerHTML = switcherHtml + '<div id="kitchen-dynamic-content"></div>';
+    } else {
+        // Fallback if structure is strict, inject into Grid but break layout?
+        // Let's replace the Grid logic below.
+    }
+
+    // Since I can't easily change HTML structure without tool `view_file` on HTML...
+    // I will try to render the content INSIDE prepGridContainer but override its class if needed.
+    // DOMElements.prepGridContainer.className = state.kitchenMode === 'prep' ? "grid grid-cols-3 ..." : "block";
+
+    DOMElements.prepGridContainer.className = state.kitchenMode === 'prep' ?
+        "grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4 lg:gap-6 pb-32" :
+        "flex flex-col gap-6 pb-32 max-w-5xl mx-auto";
+
+    DOMElements.prepGridContainer.innerHTML = ''; // Clear
+
+    // Append Switcher (as a full width row if grid)
+    const switchRow = document.createElement('div');
+    switchRow.className = state.kitchenMode === 'prep' ? "col-span-full flex justify-center mb-4 sticky top-0 z-30 pt-4" : "flex justify-center mb-6 sticky top-0 z-30 pt-4";
+    switchRow.innerHTML = `
+        <div class="flex bg-slate-800/90 p-1.5 rounded-2xl border border-slate-700/50 backdrop-blur-md shadow-2xl">
+            <button onclick="window.setKitchenMode('prep')" class="px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${state.kitchenMode === 'prep' ? 'bg-emerald-600 text-white shadow-lg' : 'text-slate-400 hover:text-white'}">Prep</button>
+            <button onclick="window.setKitchenMode('cooking')" class="px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${state.kitchenMode === 'cooking' ? 'bg-orange-600 text-white shadow-lg' : 'text-slate-400 hover:text-white'}">Cooking</button>
+            <button onclick="window.setKitchenMode('assembly')" class="px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${state.kitchenMode === 'assembly' ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-400 hover:text-white'}">Assembly</button>
+        </div>
+    `;
+    DOMElements.prepGridContainer.appendChild(switchRow);
+
+
+    // 2. Render Content
+    if (state.kitchenMode === 'prep') {
+        const itemsFromMenu = extractPrepItems(state.menu);
+        const items = itemsFromMenu.length > 0 ? itemsFromMenu : [
+            { id: 'prep_rice', name: 'Steamed Basmati Rice', icon: '🍚' },
+            { id: 'prep_sauce_red', name: 'Tomato/Curry Base', icon: '🥫' }
+        ];
+
+        items.forEach(item => {
+            const savedItem = state.prepData[item.id] || {};
+            const stages = savedItem.stages || {};
+            const completedCount = PREP_STAGES.filter(s => stages[s.id]).length;
+            const isFullyDone = completedCount === 3;
+            const btn = document.createElement('button');
+            btn.className = `group relative flex flex-col items-center justify-center p-5 bg-slate-800/40 border border-slate-700/50 rounded-[2rem] shadow-xl hover:scale-105 active:scale-95 transition-all backdrop-blur-md`;
+            btn.onclick = () => {
+                state.selectedPrepItem = item;
+                showView('detail');
+                renderPrepCard();
+            };
+            let statusBadge = '';
+            if (isFullyDone) statusBadge = '<div class="absolute -top-1 -right-1 bg-emerald-500 rounded-full p-2 text-white shadow-2xl ring-4 ring-slate-900 z-10"><svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="5" d="M5 13l4 4L19 7"></path></svg></div>';
+            else if (completedCount > 0) statusBadge = `<div class="absolute -top-1 -right-1 bg-yellow-500 rounded-full h-8 w-8 flex items-center justify-center text-[10px] font-black text-slate-900 shadow-2xl ring-4 ring-slate-900 z-10">${completedCount}/3</div>`;
+
+            btn.innerHTML = `
+                ${statusBadge}
+                <div class="mb-3 h-14 w-14 rounded-2xl flex items-center justify-center text-2xl bg-emerald-600/10 border border-emerald-500/20 shadow-inner group-hover:bg-emerald-600/20 transition-all">${item.icon || '🥘'}</div>
+                <p class="font-black text-[10px] text-slate-200 px-1 text-center line-clamp-2 uppercase h-8 flex items-center group-hover:text-white leading-tight italic tracking-tighter">${item.name}</p>
+                ${isFullyDone ? `<span class="mt-1 text-[9px] font-mono text-emerald-400 font-bold">ALL STAGES DONE</span>` : `<span class="mt-1 text-[8px] font-mono text-slate-600 uppercase font-bold tracking-widest">${completedCount === 0 ? 'Pending' : 'In Progress'}</span>`}
+            `;
+            DOMElements.prepGridContainer.appendChild(btn);
+        });
+
+    } else {
+        // COOKING OR ASSEMBLY (Using Production Logic)
+        const { dishes, summary } = aggregateProductionData();
+        const mode = state.kitchenMode === 'cooking' ? 'kitchen' : 'assembly'; // Align with old constants if necessary
+
+        // We reuse the logic but render into our current container
+        // I will just use the renderProductionView logic customized here to avoid ID conflicts
+
+        // Reuse logic from renderProductionView but return HTML string to append? 
+        // aggregateProductionData gives us dishes.
+        // I'll replicate the card rendering here for simplicity and direct control.
+
+        if (state.kitchenMode === 'cooking') {
+            // Render Ingredients List (Cooking Mode)
+            const ingredientsMap = new Map();
+            dishes.forEach(d => {
+                Object.values(d.ingredients).forEach(ing => {
+                    if (!ingredientsMap.has(ing.name)) ingredientsMap.set(ing.name, { name: ing.name, weight: 0 });
+                    ingredientsMap.get(ing.name).weight += ing.totalWeight;
+                });
+            });
+            const ingredients = Array.from(ingredientsMap.values());
+
+            if (ingredients.length === 0) {
+                DOMElements.prepGridContainer.insertAdjacentHTML('beforeend', `<div class="text-center p-10 py-20 bg-slate-800/30 rounded-3xl border border-dashed border-slate-700/50"><p class="text-slate-500 font-bold uppercase tracking-widest text-xs">No Production Orders Found</p></div>`);
+            } else {
+                ingredients.forEach(ing => {
+                    const safeId = 'ck_' + normalizeName(ing.name).replace(/\s+/g, '_');
+                    // Render functionality similar to ToggleKitchenCheck
+                    // For now, just display
+                    const div = document.createElement('div');
+                    div.className = "bg-slate-800/50 p-6 rounded-2xl border border-slate-700/50 flex justify-between items-center";
+                    div.innerHTML = `
+                        <div>
+                            <h4 class="text-white font-black uppercase text-sm mb-1">${ing.name}</h4>
+                            <span class="text-xs text-slate-400 font-mono">Total Required: <strong class="text-orange-400">${ing.weight}g</strong></span>
+                        </div>
+                        <div class="h-10 w-10 flex items-center justify-center bg-slate-900 rounded-xl border border-slate-800 text-slate-500">
+                             <!-- Placeholder for check -->
+                             <input type="checkbox" onchange="window.toggleKitchenCheck('${safeId}')" class="h-5 w-5 accent-orange-500 bg-slate-800 border-slate-600 rounded">
+                        </div>
+                     `;
+                    DOMElements.prepGridContainer.appendChild(div);
+                });
+            }
+
+        } else if (state.kitchenMode === 'assembly') {
+            // Render Assembly Columns
+            const col = (title, items, color) => `
+                <div class="bg-slate-900/50 rounded-3xl p-4 border border-slate-800/50">
+                    <h3 class="text-xs font-black text-${color}-400 uppercase tracking-widest mb-4 text-center pb-4 border-b border-slate-800/50">${title}</h3>
+                    <div class="space-y-3">
+                        ${items.map(d => `<div class="bg-slate-800 p-4 rounded-xl border border-slate-700/50 flex justify-between items-center"><span class="text-xs font-bold text-slate-300">${d.name}</span><span class="bg-slate-900 px-2 py-1 rounded text-[10px] font-mono text-white">${d.count}</span></div>`).join('')}
+                    </div>
+                </div>
+            `;
+            const cold = dishes.filter(d => d.type === 'cold');
+            const hot = dishes.filter(d => d.type === 'hot');
+            DOMElements.prepGridContainer.className = "grid grid-cols-1 md:grid-cols-2 gap-6 pb-32"; // Override layout
+            DOMElements.prepGridContainer.insertAdjacentHTML('beforeend', col('Cold Station', cold, 'blue'));
+            DOMElements.prepGridContainer.insertAdjacentHTML('beforeend', col('Hot Station', hot, 'red'));
         }
-
-        btn.innerHTML = `
-            ${statusBadge}
-            <div class="mb-3 h-14 w-14 rounded-2xl flex items-center justify-center text-2xl bg-emerald-600/10 border border-emerald-500/20 shadow-inner group-hover:bg-emerald-600/20 transition-all">${item.icon || '🥘'}</div>
-            <p class="font-black text-[10px] text-slate-200 px-1 text-center line-clamp-2 uppercase h-8 flex items-center group-hover:text-white leading-tight italic tracking-tighter">${item.name}</p>
-            ${isFullyDone ? `<span class="mt-1 text-[9px] font-mono text-emerald-400 font-bold">ALL STAGES DONE</span>` : `<span class="mt-1 text-[8px] font-mono text-slate-600 uppercase font-bold tracking-widest">${completedCount === 0 ? 'Pending' : 'In Progress'}</span>`}
-        `;
-        DOMElements.prepGridContainer.appendChild(btn);
-    });
+    }
 }
+
+// Window helper
+window.setKitchenMode = (mode) => {
+    state.kitchenMode = mode;
+    renderPrepView();
+};
 
 // --- View-Based Data Loaders ---
 
@@ -1032,8 +1158,7 @@ function refreshActiveViewData() {
         listenToQualityChecks();
     } else if (state.currentView === 'prep') {
         listenToPrepChecks();
-    } else if (state.currentView === 'production') {
-        listenToProductionOrders();
+        listenToProductionOrders(); // Load Production Data for the merged tab
     }
 }
 
@@ -1058,7 +1183,7 @@ function showView(viewName) {
     DOMElements.navDashboardBtn.className = `px-5 py-2.5 text-[10px] font-black rounded-xl transition-all uppercase ${viewName === 'dashboard' ? active : inactive}`;
     DOMElements.navAuditBtn.className = `px-5 py-2.5 text-[10px] font-black rounded-xl transition-all uppercase ${viewName === 'audit' ? active : inactive}`;
     DOMElements.navPrepBtn.className = `px-5 py-2.5 text-[10px] font-black rounded-xl transition-all uppercase ${viewName === 'prep' ? activePrep : inactive}`;
-    DOMElements.navProductionBtn.className = `px-5 py-2.5 text-[10px] font-black rounded-xl transition-all uppercase ${viewName === 'production' ? activeProd : inactive}`;
+    DOMElements.navProductionBtn.classList.add('hidden'); // Hide Production (Merged into Prep)
 
     // Data Loading Strategy: Download ONLY what is needed
     // If Audit, we call its own loader if needed, but standard Refresh handles it.

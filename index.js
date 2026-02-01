@@ -1820,7 +1820,7 @@ async function handleAiCheck(dish, capturedImageDataUrl) {
         const apiKey = localStorage.getItem('custom_gemini_api_key') || process.env.API_KEY || window.API_KEY_FALLBACK;
         const genAI = new GoogleGenerativeAI(apiKey);
         const model = genAI.getGenerativeModel({
-            model: "gemini-1.5-flash",
+            model: "gemini-1.5-flash-001",
             generationConfig: { responseMimeType: "application/json", temperature: 0.1 }
         });
 

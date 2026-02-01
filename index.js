@@ -601,7 +601,7 @@ function aggregateProductionData() {
         if (!dishes[key]) {
             dishes[key] = {
                 name: order.name,
-                type: order.type || 'cold',
+                type: (order.category === 'addons' || order.station === 'addons' || order.isAddon) ? 'addon' : (order.type || 'cold'),
                 count: 0,
                 ingredients: {},
                 deliveryDate: order.deliveryDate,
@@ -1101,16 +1101,18 @@ function renderPrepView() {
             `;
             const cold = dishes.filter(d => d.type === 'cold');
             const hot = dishes.filter(d => d.type === 'hot');
+            const addons = dishes.filter(d => d.type === 'addon');
 
-            if (cold.length === 0 && hot.length === 0) {
+            if (cold.length === 0 && hot.length === 0 && addons.length === 0) {
                 const dateStr = state.selectedDate || 'Selected Date';
                 DOMElements.prepGridContainer.innerHTML = ''; // Clear switcher? No, container.
                 DOMElements.prepGridContainer.appendChild(switchRow); // Re-add switcher
-                DOMElements.prepGridContainer.insertAdjacentHTML('beforeend', `<div class="col-span-1 md:col-span-2 text-center p-10 py-20 bg-slate-800/30 rounded-3xl border border-dashed border-slate-700/50"><p class="text-slate-500 font-bold uppercase tracking-widest text-xs">No Assembly Items for ${dateStr}</p></div>`);
+                DOMElements.prepGridContainer.insertAdjacentHTML('beforeend', `<div class="col-span-1 md:col-span-3 text-center p-10 py-20 bg-slate-800/30 rounded-3xl border border-dashed border-slate-700/50"><p class="text-slate-500 font-bold uppercase tracking-widest text-xs">No Assembly Items for ${dateStr}</p></div>`);
             } else {
-                DOMElements.prepGridContainer.className = "grid grid-cols-1 md:grid-cols-2 gap-6 pb-32"; // Override layout
-                if (cold.length > 0) DOMElements.prepGridContainer.insertAdjacentHTML('beforeend', col('Cold Station', cold, 'blue'));
+                DOMElements.prepGridContainer.className = "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pb-32"; // Override layout
                 if (hot.length > 0) DOMElements.prepGridContainer.insertAdjacentHTML('beforeend', col('Hot Station', hot, 'red'));
+                if (cold.length > 0) DOMElements.prepGridContainer.insertAdjacentHTML('beforeend', col('Cold Station', cold, 'blue'));
+                if (addons.length > 0) DOMElements.prepGridContainer.insertAdjacentHTML('beforeend', col('Addons', addons, 'emerald'));
             }
         }
     }

@@ -597,11 +597,17 @@ function aggregateProductionData() {
     state.productionOrders.forEach(order => {
         if (!order) return;
 
+        // For addons, we might want to group by station or keep separate?
+        // Let's assume name is unique enough.
+        const type = (order.category === 'addons' || order.station === 'addons' || order.isAddon) ? 'addon' : (order.type || 'cold');
+
+        // Fix: Use strict keys to prevent merging differing items if needed
         const key = order.name;
+
         if (!dishes[key]) {
             dishes[key] = {
                 name: order.name,
-                type: (order.category === 'addons' || order.station === 'addons' || order.isAddon) ? 'addon' : (order.type || 'cold'),
+                type: type,
                 count: 0,
                 ingredients: {},
                 deliveryDate: order.deliveryDate,
@@ -979,20 +985,26 @@ function renderPrepView() {
     // I will try to render the content INSIDE prepGridContainer but override its class if needed.
     // DOMElements.prepGridContainer.className = state.kitchenMode === 'prep' ? "grid grid-cols-3 ..." : "block";
 
-    DOMElements.prepGridContainer.className = state.kitchenMode === 'prep' ?
-        "grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4 lg:gap-6 pb-32" :
-        "flex flex-col gap-6 pb-32 max-w-5xl mx-auto";
+    // Layout Management
+    if (state.kitchenMode === 'prep') {
+        DOMElements.prepGridContainer.className = "grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4 lg:gap-6 pb-32";
+    } else if (state.kitchenMode === 'cooking') {
+        DOMElements.prepGridContainer.className = "grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 pb-32 max-w-7xl mx-auto";
+    } else {
+        // Assembly
+        DOMElements.prepGridContainer.className = "grid grid-cols-1 md:grid-cols-3 gap-8 pb-32 max-w-7xl mx-auto";
+    }
 
     DOMElements.prepGridContainer.innerHTML = ''; // Clear
 
-    // Append Switcher (as a full width row if grid)
+    // Compact Switcher (Spanning Full Width)
     const switchRow = document.createElement('div');
-    switchRow.className = state.kitchenMode === 'prep' ? "col-span-full flex justify-center mb-4 sticky top-0 z-30 pt-4" : "flex justify-center mb-6 sticky top-0 z-30 pt-4";
+    switchRow.className = "col-span-full flex justify-center mb-6 sticky top-0 z-30 pt-4";
     switchRow.innerHTML = `
-        <div class="flex bg-slate-800/90 p-1.5 rounded-2xl border border-slate-700/50 backdrop-blur-md shadow-2xl">
-            <button onclick="window.setKitchenMode('prep')" class="px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${state.kitchenMode === 'prep' ? 'bg-emerald-600 text-white shadow-lg' : 'text-slate-400 hover:text-white'}">Prep</button>
-            <button onclick="window.setKitchenMode('cooking')" class="px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${state.kitchenMode === 'cooking' ? 'bg-orange-600 text-white shadow-lg' : 'text-slate-400 hover:text-white'}">Cooking</button>
-            <button onclick="window.setKitchenMode('assembly')" class="px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${state.kitchenMode === 'assembly' ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-400 hover:text-white'}">Assembly</button>
+        <div class="flex bg-slate-800/90 p-1 rounded-xl border border-slate-700/50 backdrop-blur-md shadow-2xl">
+            <button onclick="window.setKitchenMode('prep')" class="px-5 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${state.kitchenMode === 'prep' ? 'bg-emerald-600 text-white shadow-lg' : 'text-slate-400 hover:text-white'}">Prep</button>
+            <button onclick="window.setKitchenMode('cooking')" class="px-5 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${state.kitchenMode === 'cooking' ? 'bg-orange-600 text-white shadow-lg' : 'text-slate-400 hover:text-white'}">Cooking</button>
+            <button onclick="window.setKitchenMode('assembly')" class="px-5 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${state.kitchenMode === 'assembly' ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-400 hover:text-white'}">Assembly</button>
         </div>
     `;
     DOMElements.prepGridContainer.appendChild(switchRow);
@@ -1105,11 +1117,18 @@ function renderPrepView() {
 
             if (cold.length === 0 && hot.length === 0 && addons.length === 0) {
                 const dateStr = state.selectedDate || 'Selected Date';
-                DOMElements.prepGridContainer.innerHTML = ''; // Clear switcher? No, container.
-                DOMElements.prepGridContainer.appendChild(switchRow); // Re-add switcher
-                DOMElements.prepGridContainer.insertAdjacentHTML('beforeend', `<div class="col-span-1 md:col-span-3 text-center p-10 py-20 bg-slate-800/30 rounded-3xl border border-dashed border-slate-700/50"><p class="text-slate-500 font-bold uppercase tracking-widest text-xs">No Assembly Items for ${dateStr}</p></div>`);
+                DOMElements.prepGridContainer.innerHTML = ''; // Keep switcher? No, cleared above.
+                DOMElements.prepGridContainer.appendChild(switchRow); // Re-add switcher if cleared? Ah, if I clear innerHTML I lose switcher.
+                // Wait, I cleared innerHTML at the top of the function.
+                // Then appended switcher.
+                // Then this logic runs.
+                // I should NOT clear innerHTML here again without potentially losing the switcher if I don't re-apppend it.
+                // But wait, the switcher is already in prepGridContainer.
+                // If I set innerHTML = '', I lose it. 
+                // Let's just append the empty message.
+                DOMElements.prepGridContainer.insertAdjacentHTML('beforeend', `<div class="col-span-full text-center p-10 py-20 bg-slate-800/30 rounded-3xl border border-dashed border-slate-700/50"><p class="text-slate-500 font-bold uppercase tracking-widest text-xs">No Assembly Items for ${dateStr}</p></div>`);
             } else {
-                DOMElements.prepGridContainer.className = "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pb-32"; // Override layout
+                // Do NOT reset className here, it was set at top
                 if (hot.length > 0) DOMElements.prepGridContainer.insertAdjacentHTML('beforeend', col('Hot Station', hot, 'red'));
                 if (cold.length > 0) DOMElements.prepGridContainer.insertAdjacentHTML('beforeend', col('Cold Station', cold, 'blue'));
                 if (addons.length > 0) DOMElements.prepGridContainer.insertAdjacentHTML('beforeend', col('Addons', addons, 'emerald'));

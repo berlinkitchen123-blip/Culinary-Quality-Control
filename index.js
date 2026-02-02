@@ -2318,7 +2318,7 @@ showView('prep'); async function handleAiCheck(dish, capturedImageDataUrl) {
         renderAiFeedback(feedbackData);
 
     } catch (e) {
-        console.error(e);
+        console.error("AI Check Error (v1.5-fix):", e);
         let errorHtml = `<div class="p-8 border border-red-900/40 bg-red-950/30 rounded-[2rem] text-[10px] text-red-400 uppercase font-black text-center shadow-xl">AI Logic Disconnected: ${e.message}</div>`;
 
         if (e.message.includes('leaked')) {

@@ -2217,15 +2217,41 @@ showView('prep'); async function handleAiCheck(dish, capturedImageDataUrl) {
             }
         });
 
-        // Loop through multiple candidates to ensure robustness
-        const candidates = [
-            { version: 'v1', model: 'gemini-1.5-flash' },
-            { version: 'v1beta', model: 'gemini-1.5-flash' },
-            { version: 'v1beta', model: 'gemini-1.5-flash-latest' },
-            { version: 'v1', model: 'gemini-pro' },       // Fallback: Gemini 1.0 Pro
-            { version: 'v1beta', model: 'gemini-pro' },   // Fallback: Gemini 1.0 Pro (Beta)
-            { version: 'v1beta', model: 'gemini-1.5-pro' } // Fallback: Gemini 1.5 Pro
-        ];
+        // --- AUTO-DISCOVERY: Fetch available models first ---
+        let selectedModel = null;
+        let selectedVersion = 'v1beta';
+
+        try {
+            // Try v1beta first as it has the newest models
+            const listRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`);
+            if (listRes.ok) {
+                const data = await listRes.json();
+                const available = data.models || [];
+                // console.log("Available Gemini Models:", available.map(m => m.name));
+
+                // Prioritize models in this order
+                const priority = ['gemini-1.5-flash', 'gemini-1.5-pro', 'gemini-pro', 'gemini-1.0-pro'];
+
+                for (const p of priority) {
+                    const match = available.find(m => m.name.includes(p) && m.supportedGenerationMethods.includes('generateContent'));
+                    if (match) {
+                        selectedModel = match.name.replace('models/', ''); // Extract just the ID
+                        selectedVersion = 'v1beta';
+                        break;
+                    }
+                }
+            }
+        } catch (e) { console.warn("Model Discovery Failed", e); }
+
+        // Fallback candidates if discovery fails
+        const candidates = selectedModel ?
+            [{ version: selectedVersion, model: selectedModel }] : // Use discovered model
+            [
+                { version: 'v1', model: 'gemini-1.5-flash' },
+                { version: 'v1beta', model: 'gemini-1.5-flash' },
+                { version: 'v1beta', model: 'gemini-1.5-pro' },
+                { version: 'v1beta', model: 'gemini-pro' }
+            ];
 
         let response;
         let lastError;
@@ -2233,7 +2259,11 @@ showView('prep'); async function handleAiCheck(dish, capturedImageDataUrl) {
 
         for (const candidate of candidates) {
             try {
-                const url = `https://generativelanguage.googleapis.com/${candidate.version}/models/${candidate.model}:generateContent?key=${apiKey}`;
+                // Ensure model name doesn't have duplicate 'models/' prefix
+                const cleanModel = candidate.model.replace('models/', '');
+                const url = `https://generativelanguage.googleapis.com/${candidate.version}/models/${cleanModel}:generateContent?key=${apiKey}`;
+
+                // console.log(`Attempting: ${candidate.model} (${candidate.version})`);
 
                 const res = await fetch(url, {
                     method: 'POST',
@@ -2243,7 +2273,7 @@ showView('prep'); async function handleAiCheck(dish, capturedImageDataUrl) {
                             role: "user",
                             parts: parts
                         }],
-                        generation_config: {
+                        generationConfig: { // Revert to camelCase as standard
                             temperature: 0.1
                         }
                     })
@@ -2255,11 +2285,10 @@ showView('prep'); async function handleAiCheck(dish, capturedImageDataUrl) {
                     break;
                 }
 
-                // If API returned an error, capture it
                 const errData = await res.json();
                 lastError = `[${candidate.model}] ${errData.error?.message || res.statusText}`;
 
-                // If fatal error, don't retry others
+                // If 403 (Permission) or 400 (Bad Request), break. 404 means try next model.
                 if (res.status === 403 || res.status === 400) break;
 
             } catch (e) {
@@ -2268,15 +2297,14 @@ showView('prep'); async function handleAiCheck(dish, capturedImageDataUrl) {
         }
 
         if (!response || !response.ok) {
-            throw new Error(lastError || "All AI models unreachable");
+            throw new Error(lastError || "All AI models unreachable. Check API Key permissions.");
         }
 
         const result = await response.json();
         const feedbackText = result.candidates[0].content.parts[0].text;
         const feedbackData = JSON.parse(feedbackText);
 
-        // Mark which model was used for debug
-        console.log(`AI Check Success via ${successCandidateModel}`);
+        console.log(`AI Success via: ${successCandidateModel}`);
 
         document.getElementById('dish-form').dataset.aiFeedback = JSON.stringify(feedbackData);
         renderAiFeedback(feedbackData);

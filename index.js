@@ -2238,8 +2238,7 @@ showView('prep'); async function handleAiCheck(dish, capturedImageDataUrl) {
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         contents: [{ parts: parts }],
-                        generation_config: {
-                            response_mime_type: "application/json",
+                        generationConfig: {
                             temperature: 0.1
                         }
                     })

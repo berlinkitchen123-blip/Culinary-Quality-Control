@@ -2311,6 +2311,19 @@ showView('prep'); async function handleAiCheck(dish, capturedImageDataUrl) {
 
     } catch (e) {
         console.error(e);
-        feedbackContainer.innerHTML = `<div class="p-8 border border-red-900/40 bg-red-950/30 rounded-[2rem] text-[10px] text-red-400 uppercase font-black text-center shadow-xl">AI Logic Disconnected: ${e.message}</div>`;
+        let errorHtml = `<div class="p-8 border border-red-900/40 bg-red-950/30 rounded-[2rem] text-[10px] text-red-400 uppercase font-black text-center shadow-xl">AI Logic Disconnected: ${e.message}</div>`;
+
+        if (e.message.includes('leaked')) {
+            errorHtml = `
+                <div class="p-8 border border-red-900/40 bg-red-950/30 rounded-[2rem] flex flex-col items-center text-center shadow-xl animate-pulse">
+                    <p class="text-[10px] text-red-400 uppercase font-black tracking-widest mb-4">Authentication Security Alert</p>
+                    <p class="text-xs text-slate-300 font-medium mb-6 leading-relaxed">The identified API Access Key has been flagged by the Neural Network provider as compromised.</p>
+                    <button onclick="document.getElementById('settings-modal').classList.remove('hidden')" class="px-6 py-3 bg-red-600 hover:bg-red-500 text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-all shadow-lg">
+                        Update Access Key
+                    </button>
+                </div>
+            `;
+        }
+        feedbackContainer.innerHTML = errorHtml;
     }
 }

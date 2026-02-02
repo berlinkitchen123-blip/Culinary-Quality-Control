@@ -1813,72 +1813,6 @@ function renderCameraCapture(item, initialImage) {
     if (initialImage) { container.querySelector('#preview-img').src = initialImage; form.dataset.capturedImage = initialImage; container.querySelector('#camera-placeholder').classList.add('hidden'); container.querySelector('#image-preview').classList.remove('hidden'); }
 }
 
-async function handleAiCheck(dish, capturedImageDataUrl) {
-    const feedbackContainer = document.getElementById('ai-feedback-container'); if (!feedbackContainer) return;
-    feedbackContainer.innerHTML = `<div class="p-10 sm:p-14 border-2 border-indigo-500/30 bg-indigo-900/10 rounded-[2.5rem] sm:rounded-[4rem] flex flex-col items-center justify-center space-y-6 sm:space-y-8 shadow-2xl backdrop-blur-3xl"><div class="relative w-10 h-10 sm:w-12 sm:h-12"><div class="absolute inset-0 border-4 sm:border-8 border-indigo-500/10 rounded-full"></div><div class="absolute inset-0 border-4 sm:border-8 border-indigo-500 border-t-transparent rounded-full animate-spin"></div></div><p class="font-black text-indigo-400 text-[10px] sm:text-[12px] uppercase tracking-[0.6em] animate-pulse italic">Analyzing Visual Compliance</p></div>`;
-    try {
-        const apiKey = localStorage.getItem('custom_gemini_api_key') || process.env.API_KEY || window.API_KEY_FALLBACK;
-
-        let parts = [
-            { text: `Audit '${dish.dishName}'. JSON: { "score": 1-10, "positives": string[], "improvements": string[], "overall_comment": string }` }
-        ];
-
-        // Add Reference Image if exists
-        try {
-            const refRes = await fetch(dish.dishImage);
-            if (refRes.ok) {
-                const blob = await refRes.blob();
-                const refBase64 = await new Promise(res => {
-                    const fr = new FileReader();
-                    fr.onloadend = () => res(fr.result.split(',')[1]);
-                    fr.readAsDataURL(blob);
-                });
-                parts.push({
-                    inlineData: {
-                        mimeType: "image/jpeg",
-                        data: refBase64
-                    }
-                });
-            }
-        } catch (e) { console.warn("Reference load failed", e); }
-
-        // Add Captured Image
-        parts.push({
-            inlineData: {
-                mimeType: "image/jpeg",
-                data: capturedImageDataUrl.split(',')[1]
-            }
-        });
-
-        const response = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                contents: [{ parts: parts }],
-                generationConfig: {
-                    responseMimeType: "application/json",
-                    temperature: 0.1
-                }
-            })
-        });
-
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(`API Error ${response.status}: ${errorData.error?.message || response.statusText}`);
-        }
-
-        const result = await response.json();
-        const feedbackText = result.candidates[0].content.parts[0].text;
-        const feedbackData = JSON.parse(feedbackText);
-
-        document.getElementById('dish-form').dataset.aiFeedback = JSON.stringify(feedbackData);
-        renderAiFeedback(feedbackData);
-
-    } catch (e) {
-        console.error(e);
-        feedbackContainer.innerHTML = `<div class="p-8 border border-red-900/40 bg-red-950/30 rounded-[2rem] text-[10px] text-red-400 uppercase font-black text-center shadow-xl">AI Logic Disconnected: ${e.message}</div>`;
-    }
-}
 
 function renderAiFeedback(feedbackData) {
     const container = document.getElementById('ai-feedback-container'); if (!container || !feedbackData) return;
@@ -2246,4 +2180,105 @@ window.listenToGlobalHistory = listenToGlobalHistory;
 fetchMenu();
 fetchCheckData();
 listenToProductionOrders();
-showView('prep');
+showView('prep');async function handleAiCheck(dish, capturedImageDataUrl) {
+    const feedbackContainer = document.getElementById('ai-feedback-container'); if (!feedbackContainer) return;
+    feedbackContainer.innerHTML = `<div class="p-10 sm:p-14 border-2 border-indigo-500/30 bg-indigo-900/10 rounded-[2.5rem] sm:rounded-[4rem] flex flex-col items-center justify-center space-y-6 sm:space-y-8 shadow-2xl backdrop-blur-3xl"><div class="relative w-10 h-10 sm:w-12 sm:h-12"><div class="absolute inset-0 border-4 sm:border-8 border-indigo-500/10 rounded-full"></div><div class="absolute inset-0 border-4 sm:border-8 border-indigo-500 border-t-transparent rounded-full animate-spin"></div></div><p class="font-black text-indigo-400 text-[10px] sm:text-[12px] uppercase tracking-[0.6em] animate-pulse italic">Analyzing Visual Compliance</p></div>`;
+    try {
+        const apiKey = localStorage.getItem('custom_gemini_api_key') || process.env.API_KEY || window.API_KEY_FALLBACK;
+
+        let parts = [
+            { text: `Audit '${dish.dishName}'. JSON: { "score": 1-10, "positives": string[], "improvements": string[], "overall_comment": string }` }
+        ];
+
+        // Add Reference Image if exists
+        try {
+            const refRes = await fetch(dish.dishImage);
+            if (refRes.ok) {
+                const blob = await refRes.blob();
+                const refBase64 = await new Promise(res => {
+                    const fr = new FileReader();
+                    fr.onloadend = () => res(fr.result.split(',')[1]);
+                    fr.readAsDataURL(blob);
+                });
+                parts.push({
+                    inlineData: {
+                        mimeType: "image/jpeg",
+                        data: refBase64
+                    }
+                });
+            }
+        } catch (e) { console.warn("Reference load failed", e); }
+
+        // Add Captured Image
+        parts.push({
+            inlineData: {
+                mimeType: "image/jpeg",
+                data: capturedImageDataUrl.split(',')[1]
+            }
+        });
+
+        // Loop through multiple candidates to ensure robustness
+        const candidates = [
+            { version: 'v1', model: 'gemini-1.5-flash' },
+            { version: 'v1beta', model: 'gemini-1.5-flash' },
+            { version: 'v1beta', model: 'gemini-1.5-flash-latest' },
+            { version: 'v1beta', model: 'gemini-1.5-flash-001' }
+        ];
+
+        let response;
+        let lastError;
+        let successCandidateModel = '';
+
+        for (const candidate of candidates) {
+            try {
+                const url = `https://generativelanguage.googleapis.com/${candidate.version}/models/${candidate.model}:generateContent?key=${apiKey}`;
+
+                const res = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contents: [{ parts: parts }],
+                        generationConfig: {
+                            responseMimeType: "application/json",
+                            temperature: 0.1
+                        }
+                    })
+                });
+
+                if (res.ok) {
+                    response = res;
+                    successCandidateModel = candidate.model;
+                    break;
+                }
+
+                // If API returned an error, capture it
+                const errData = await res.json();
+                lastError = `[${candidate.model}] ${errData.error?.message || res.statusText}`;
+
+                // If fatal error, don't retry others
+                if (res.status === 403 || res.status === 400) break;
+
+            } catch (e) {
+                lastError = e.message;
+            }
+        }
+
+        if (!response || !response.ok) {
+            throw new Error(lastError || "All AI models unreachable");
+        }
+
+        const result = await response.json();
+        const feedbackText = result.candidates[0].content.parts[0].text;
+        const feedbackData = JSON.parse(feedbackText);
+
+        // Mark which model was used for debug
+        console.log(`AI Check Success via ${successCandidateModel}`);
+
+        document.getElementById('dish-form').dataset.aiFeedback = JSON.stringify(feedbackData);
+        renderAiFeedback(feedbackData);
+
+    } catch (e) {
+        console.error(e);
+        feedbackContainer.innerHTML = `<div class="p-8 border border-red-900/40 bg-red-950/30 rounded-[2rem] text-[10px] text-red-400 uppercase font-black text-center shadow-xl">AI Logic Disconnected: ${e.message}</div>`;
+    }
+}

@@ -2222,7 +2222,9 @@ showView('prep'); async function handleAiCheck(dish, capturedImageDataUrl) {
             { version: 'v1', model: 'gemini-1.5-flash' },
             { version: 'v1beta', model: 'gemini-1.5-flash' },
             { version: 'v1beta', model: 'gemini-1.5-flash-latest' },
-            { version: 'v1beta', model: 'gemini-1.5-flash-001' }
+            { version: 'v1', model: 'gemini-pro' },       // Fallback: Gemini 1.0 Pro
+            { version: 'v1beta', model: 'gemini-pro' },   // Fallback: Gemini 1.0 Pro (Beta)
+            { version: 'v1beta', model: 'gemini-1.5-pro' } // Fallback: Gemini 1.5 Pro
         ];
 
         let response;

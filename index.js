@@ -1818,13 +1818,12 @@ async function handleAiCheck(dish, capturedImageDataUrl) {
     feedbackContainer.innerHTML = `<div class="p-10 sm:p-14 border-2 border-indigo-500/30 bg-indigo-900/10 rounded-[2.5rem] sm:rounded-[4rem] flex flex-col items-center justify-center space-y-6 sm:space-y-8 shadow-2xl backdrop-blur-3xl"><div class="relative w-10 h-10 sm:w-12 sm:h-12"><div class="absolute inset-0 border-4 sm:border-8 border-indigo-500/10 rounded-full"></div><div class="absolute inset-0 border-4 sm:border-8 border-indigo-500 border-t-transparent rounded-full animate-spin"></div></div><p class="font-black text-indigo-400 text-[10px] sm:text-[12px] uppercase tracking-[0.6em] animate-pulse italic">Analyzing Visual Compliance</p></div>`;
     try {
         const apiKey = localStorage.getItem('custom_gemini_api_key') || process.env.API_KEY || window.API_KEY_FALLBACK;
-        const genAI = new GoogleGenerativeAI(apiKey);
-        const model = genAI.getGenerativeModel({
-            model: "gemini-1.5-flash-001",
-            generationConfig: { responseMimeType: "application/json", temperature: 0.1 }
-        });
 
-        let refImgPart = null;
+        let parts = [
+            { text: `Audit '${dish.dishName}'. JSON: { "score": 1-10, "positives": string[], "improvements": string[], "overall_comment": string }` }
+        ];
+
+        // Add Reference Image if exists
         try {
             const refRes = await fetch(dish.dishImage);
             if (refRes.ok) {
@@ -1834,30 +1833,43 @@ async function handleAiCheck(dish, capturedImageDataUrl) {
                     fr.onloadend = () => res(fr.result.split(',')[1]);
                     fr.readAsDataURL(blob);
                 });
-                refImgPart = {
+                parts.push({
                     inlineData: {
-                        data: refBase64,
-                        mimeType: "image/jpeg"
+                        mimeType: "image/jpeg",
+                        data: refBase64
                     }
-                };
+                });
             }
-        } catch (e) {
-            console.warn("Reference load failed", e);
+        } catch (e) { console.warn("Reference load failed", e); }
+
+        // Add Captured Image
+        parts.push({
+            inlineData: {
+                mimeType: "image/jpeg",
+                data: capturedImageDataUrl.split(',')[1]
+            }
+        });
+
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                contents: [{ parts: parts }],
+                generationConfig: {
+                    responseMimeType: "application/json",
+                    temperature: 0.1
+                }
+            })
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(`API Error ${response.status}: ${errorData.error?.message || response.statusText}`);
         }
 
-        const prompt = `Audit '${dish.dishName}'. JSON: { "score": 1-10, "positives": string[], "improvements": string[], "overall_comment": string }`;
-        const imagePart = {
-            inlineData: {
-                data: capturedImageDataUrl.split(',')[1],
-                mimeType: "image/jpeg"
-            }
-        };
-
-        const parts = [prompt, imagePart];
-        if (refImgPart) parts.splice(1, 0, refImgPart); // Insert ref image if exists
-
-        const result = await model.generateContent(parts);
-        const feedbackData = JSON.parse(result.response.text());
+        const result = await response.json();
+        const feedbackText = result.candidates[0].content.parts[0].text;
+        const feedbackData = JSON.parse(feedbackText);
 
         document.getElementById('dish-form').dataset.aiFeedback = JSON.stringify(feedbackData);
         renderAiFeedback(feedbackData);

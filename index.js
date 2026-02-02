@@ -2180,7 +2180,7 @@ window.listenToGlobalHistory = listenToGlobalHistory;
 fetchMenu();
 fetchCheckData();
 listenToProductionOrders();
-showView('prep');async function handleAiCheck(dish, capturedImageDataUrl) {
+showView('prep'); async function handleAiCheck(dish, capturedImageDataUrl) {
     const feedbackContainer = document.getElementById('ai-feedback-container'); if (!feedbackContainer) return;
     feedbackContainer.innerHTML = `<div class="p-10 sm:p-14 border-2 border-indigo-500/30 bg-indigo-900/10 rounded-[2.5rem] sm:rounded-[4rem] flex flex-col items-center justify-center space-y-6 sm:space-y-8 shadow-2xl backdrop-blur-3xl"><div class="relative w-10 h-10 sm:w-12 sm:h-12"><div class="absolute inset-0 border-4 sm:border-8 border-indigo-500/10 rounded-full"></div><div class="absolute inset-0 border-4 sm:border-8 border-indigo-500 border-t-transparent rounded-full animate-spin"></div></div><p class="font-black text-indigo-400 text-[10px] sm:text-[12px] uppercase tracking-[0.6em] animate-pulse italic">Analyzing Visual Compliance</p></div>`;
     try {
@@ -2238,8 +2238,8 @@ showView('prep');async function handleAiCheck(dish, capturedImageDataUrl) {
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         contents: [{ parts: parts }],
-                        generationConfig: {
-                            responseMimeType: "application/json",
+                        generation_config: {
+                            response_mime_type: "application/json",
                             temperature: 0.1
                         }
                     })

@@ -1487,8 +1487,16 @@ DOMElements.settingsSaveBtn.onclick = async () => {
             DOMElements.settingsError.textContent = "Production JSON Invalid format.";
             return;
         }
-    }
+        // 2. Handle Menu Manifest if present
+        // ... functionality exists in other tabs, but we close here.
 
+        DOMElements.settingsModal.classList.add('hidden');
+
+        if (apiKeyVal || prodVal) {
+            alert("Configuration Updated. Connectivity Reset.");
+            location.reload(); // Force reload to apply new API key clean slate
+        }
+    };
     // 2. Handle Menu Manifest if present
     const val = DOMElements.jsonInput.value.trim();
     if (val) {

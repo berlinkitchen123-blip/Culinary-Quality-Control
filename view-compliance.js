@@ -223,32 +223,32 @@ export function renderComplianceReport() {
 
     // Render Heatmap
     const tbody = document.getElementById('heatmap-body');
-    
+
     const renderCellHtml = (val, th, isHot) => {
         if (val === null) return `<td class="p-3 text-center text-slate-400 font-medium">—</td>`;
         const tColor = isHot ? getHotColor(val) : getColdColor(val);
         const isWarn = th && (isHot ? val < 62 : val > 7);
-        return `<td class="p-3 text-center font-bold text-sm border-l border-white" style="background-color: \${getLightColor(val, isHot)}; color: \${tColor}">
-            \${val.toFixed(1)}°C \${isWarn ? '<span class="text-yellow-500">⚠️</span>' : ''}
+        return `<td class="p-3 text-center font-bold text-sm border-l border-white" style="background-color: ${getLightColor(val, isHot)}; color: ${tColor}">
+            ${val.toFixed(1)}°C ${isWarn ? '<span class="text-yellow-500">⚠️</span>' : ''}
         </td>`;
     };
-    
+
     const rowsHtml = [
         ...hotData.map(item => `<tr class="border-b border-slate-100 last:border-0 hover:bg-slate-50">
-            <td class="p-3 text-sm font-bold text-slate-700">\${item.name}</td>
+            <td class="p-3 text-sm font-bold text-slate-700">${item.name}</td>
             <td class="p-3 text-xs font-bold text-center text-orange-500">HOT</td>
-            \${renderCellHtml(item.m, false, true)}
-            \${renderCellHtml(item.t, false, true)}
-            \${renderCellHtml(item.w, false, true)}
-            \${renderCellHtml(item.th, true, true)}
+            ${renderCellHtml(item.m, false, true)}
+            ${renderCellHtml(item.t, false, true)}
+            ${renderCellHtml(item.w, false, true)}
+            ${renderCellHtml(item.th, true, true)}
         </tr>`),
         ...coldData.map(item => `<tr class="border-b border-slate-100 last:border-0 hover:bg-slate-50">
-            <td class="p-3 text-sm font-bold text-slate-700">\${item.name}</td>
+            <td class="p-3 text-sm font-bold text-slate-700">${item.name}</td>
             <td class="p-3 text-xs font-bold text-center text-blue-500">COLD</td>
-            \${renderCellHtml(item.m, false, false)}
-            \${renderCellHtml(item.t, false, false)}
-            \${renderCellHtml(item.w, false, false)}
-            \${renderCellHtml(item.th, true, false)}
+            ${renderCellHtml(item.m, false, false)}
+            ${renderCellHtml(item.t, false, false)}
+            ${renderCellHtml(item.w, false, false)}
+            ${renderCellHtml(item.th, true, false)}
         </tr>`)
     ];
     tbody.innerHTML = rowsHtml.join('');
@@ -279,7 +279,7 @@ export function renderComplianceReport() {
                 }
             }
         };
-        
+
         Chart.register(targetLinePlugin);
 
         if (window.hotReportChart) window.hotReportChart.destroy();
@@ -302,9 +302,9 @@ export function renderComplianceReport() {
                     y: { min: 30, max: 85, title: { display: true, text: 'Temperature (°C)' } },
                     x: { grid: { display: false }, ticks: { font: { size: 10, family: 'sans-serif' } } }
                 },
-                plugins: { 
+                plugins: {
                     legend: { display: false },
-                    targetLine: { value: 65, color: '#16a34a' } 
+                    targetLine: { value: 65, color: '#16a34a' }
                 }
             }
         });
@@ -329,7 +329,7 @@ export function renderComplianceReport() {
                     y: { min: 0, max: 12, title: { display: true, text: 'Temperature (°C)' } },
                     x: { grid: { display: false }, ticks: { font: { size: 10, family: 'sans-serif' } } }
                 },
-                plugins: { 
+                plugins: {
                     legend: { display: false },
                     targetLine: { value: 7, color: '#3b82f6' }
                 }

@@ -57,7 +57,7 @@ export function renderComplianceReport() {
     const container = document.getElementById('compliance-view');
     if (!container) return;
 
-    container.innerHTML = \`
+    container.innerHTML = `
         <div class="min-h-screen bg-slate-50 p-4 sm:p-8 font-sans w-full mx-auto" style="color-scheme: light;">
             <!-- Header -->
             <div class="bg-[#2453c0] text-white p-6 rounded-2xl shadow-lg mb-6 flex flex-col md:flex-row justify-between md:items-center">
@@ -219,37 +219,37 @@ export function renderComplianceReport() {
                 </div>
             </div>
         </div>
-    \`;
+    `;
 
     // Render Heatmap
     const tbody = document.getElementById('heatmap-body');
     
     const renderCellHtml = (val, th, isHot) => {
-        if (val === null) return \`<td class="p-3 text-center text-slate-400 font-medium">—</td>\`;
+        if (val === null) return `<td class="p-3 text-center text-slate-400 font-medium">—</td>`;
         const tColor = isHot ? getHotColor(val) : getColdColor(val);
         const isWarn = th && (isHot ? val < 62 : val > 7);
-        return \`<td class="p-3 text-center font-bold text-sm border-l border-white" style="background-color: \${getLightColor(val, isHot)}; color: \${tColor}">
+        return `<td class="p-3 text-center font-bold text-sm border-l border-white" style="background-color: \${getLightColor(val, isHot)}; color: \${tColor}">
             \${val.toFixed(1)}°C \${isWarn ? '<span class="text-yellow-500">⚠️</span>' : ''}
-        </td>\`;
+        </td>`;
     };
     
     const rowsHtml = [
-        ...hotData.map(item => \`<tr class="border-b border-slate-100 last:border-0 hover:bg-slate-50">
+        ...hotData.map(item => `<tr class="border-b border-slate-100 last:border-0 hover:bg-slate-50">
             <td class="p-3 text-sm font-bold text-slate-700">\${item.name}</td>
             <td class="p-3 text-xs font-bold text-center text-orange-500">HOT</td>
             \${renderCellHtml(item.m, false, true)}
             \${renderCellHtml(item.t, false, true)}
             \${renderCellHtml(item.w, false, true)}
             \${renderCellHtml(item.th, true, true)}
-        </tr>\`),
-        ...coldData.map(item => \`<tr class="border-b border-slate-100 last:border-0 hover:bg-slate-50">
+        </tr>`),
+        ...coldData.map(item => `<tr class="border-b border-slate-100 last:border-0 hover:bg-slate-50">
             <td class="p-3 text-sm font-bold text-slate-700">\${item.name}</td>
             <td class="p-3 text-xs font-bold text-center text-blue-500">COLD</td>
             \${renderCellHtml(item.m, false, false)}
             \${renderCellHtml(item.t, false, false)}
             \${renderCellHtml(item.w, false, false)}
             \${renderCellHtml(item.th, true, false)}
-        </tr>\`)
+        </tr>`)
     ];
     tbody.innerHTML = rowsHtml.join('');
 

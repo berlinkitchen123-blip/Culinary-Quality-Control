@@ -32,7 +32,10 @@ export const DOMElements = {
     navHygieneBtn: document.getElementById('nav-hygiene-btn'),
     navAuditBtn: document.getElementById('nav-audit-btn'),
     navProductionBtn: document.getElementById('nav-production-btn'),
+    navLogisticsBtn: document.getElementById('nav-logistics-btn'),
+    navComplianceBtn: document.getElementById('nav-compliance-btn'),
     auditResultsContainer: document.getElementById('audit-results-container'),
+    logisticsView: document.getElementById('logistics-view'),
     // Settings Tabs
     tabProdBtn: document.getElementById('tab-prod-btn'),
     tabMenuBtn: document.getElementById('tab-menu-btn'),

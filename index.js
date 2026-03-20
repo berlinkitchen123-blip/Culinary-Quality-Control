@@ -9,6 +9,7 @@ import { renderAuditDishLibrary } from "./view-analytics.js";
 import { renderApp } from "./view-dashboard.js";
 import { renderHygieneGrid } from "./view-hygiene.js";
 import { renderComplianceReport } from "./view-compliance.js";
+import { renderLogisticsReport } from "./view-logistics.js";
 
 // Main View Controller
 export function showView(viewName) {
@@ -21,6 +22,8 @@ export function showView(viewName) {
     DOMElements.productionView.classList.toggle('hidden', viewName !== 'production');
     const compView = document.getElementById('compliance-view');
     if (compView) compView.classList.toggle('hidden', viewName !== 'compliance');
+    const logsView = document.getElementById('logistics-view');
+    if (logsView) logsView.classList.toggle('hidden', viewName !== 'logistics');
 
     const active = "bg-indigo-600 text-white shadow-2xl shadow-indigo-600/30";
     const activePrep = "bg-emerald-600 text-white shadow-2xl shadow-emerald-600/30";
@@ -33,6 +36,7 @@ export function showView(viewName) {
     DOMElements.navPrepBtn.className = `px-5 py-2.5 text-[10px] font-black rounded-xl transition-all uppercase ${viewName === 'prep' ? activePrep : inactive}`;
     DOMElements.navHygieneBtn.className = `px-5 py-2.5 text-[10px] font-black rounded-xl transition-all uppercase ${viewName === 'hygiene' ? activeHygiene : inactive}`;
     DOMElements.navProductionBtn.className = `px-5 py-2.5 text-[10px] font-black rounded-xl transition-all uppercase ${viewName === 'production' ? activeProd : inactive}`;
+    DOMElements.navLogisticsBtn.className = `px-5 py-2.5 text-[10px] font-black rounded-xl transition-all uppercase ${viewName === 'logistics' ? active : inactive}`;
 
     const compBtn = document.getElementById('nav-compliance-btn');
     if (compBtn) compBtn.className = `px-5 py-2.5 text-[10px] font-black rounded-xl transition-all uppercase ${viewName === 'compliance' ? active : inactive}`;
@@ -43,6 +47,7 @@ export function showView(viewName) {
     if (viewName === 'production') { renderProductionView(); }
     if (viewName === 'dashboard') renderApp();
     if (viewName === 'compliance') renderComplianceReport();
+    if (viewName === 'logistics') renderLogisticsReport();
 }
 
 function renderDateSelector() {
@@ -80,6 +85,7 @@ subscribe(() => {
     if (state.currentView === 'prep') renderPrepView();
     if (state.currentView === 'hygiene') renderHygieneGrid();
     if (state.currentView === 'production') renderProductionView();
+    if (state.currentView === 'logistics') renderLogisticsReport();
     // other views update on activation or internal listeners
 });
 
@@ -89,6 +95,7 @@ DOMElements.navPrepBtn.onclick = () => showView('prep');
 DOMElements.navHygieneBtn.onclick = () => showView('hygiene');
 DOMElements.navAuditBtn.onclick = () => showView('audit');
 DOMElements.navProductionBtn.onclick = () => showView('production');
+DOMElements.navLogisticsBtn.onclick = () => showView('logistics');
 const complianceBtn = document.getElementById('nav-compliance-btn');
 if (complianceBtn) complianceBtn.onclick = () => showView('compliance');
 DOMElements.settingsBtn.onclick = () => DOMElements.settingsModal.classList.remove('hidden');

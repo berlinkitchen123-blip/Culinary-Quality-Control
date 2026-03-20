@@ -8,6 +8,7 @@ import { renderProductionView } from "./view-production.js";
 import { renderAuditDishLibrary } from "./view-analytics.js";
 import { renderApp } from "./view-dashboard.js";
 import { renderHygieneGrid } from "./view-hygiene.js";
+import { renderComplianceReport } from "./view-compliance.js";
 
 // Main View Controller
 export function showView(viewName) {
@@ -18,7 +19,7 @@ export function showView(viewName) {
     DOMElements.aiAgentView.classList.toggle('hidden', viewName !== 'audit');
     DOMElements.dishDetailView.classList.toggle('hidden', viewName !== 'detail');
     DOMElements.productionView.classList.toggle('hidden', viewName !== 'production');
-    const compView = document.getElementById('react-compliance-root');
+    const compView = document.getElementById('compliance-view');
     if (compView) compView.classList.toggle('hidden', viewName !== 'compliance');
 
     const active = "bg-indigo-600 text-white shadow-2xl shadow-indigo-600/30";
@@ -41,6 +42,7 @@ export function showView(viewName) {
     if (viewName === 'hygiene') { renderHygieneGrid(); }
     if (viewName === 'production') { renderProductionView(); }
     if (viewName === 'dashboard') renderApp();
+    if (viewName === 'compliance') renderComplianceReport();
 }
 
 function renderDateSelector() {

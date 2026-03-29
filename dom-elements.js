@@ -5,7 +5,8 @@ export const DOMElements = {
     prepView: document.getElementById('prep-view'),
     hygieneView: document.getElementById('hygiene-view'),
     productionView: document.getElementById('production-view'),
-    aiAgentView: document.getElementById('ai-agent-view'),
+    complianceView: document.getElementById('compliance-view'),
+    analyticsView: document.getElementById('analytics-view'),
     dishDetailView: document.getElementById('dish-detail-view'),
     
     // Sidebar Buttons
@@ -26,6 +27,9 @@ export const DOMElements = {
     // Header Elements
     pageTitle: document.getElementById('page-title'),
     headerDateDisplay: document.getElementById('header-date-display'),
+    datePickerTrigger: document.getElementById('date-picker-trigger'),
+    toggleDailyBtn: document.getElementById('toggle-daily-btn'),
+    toggleWeeklyBtn: document.getElementById('toggle-weekly-btn'),
     
     // Dashboard (Assignment)
     ingredientsList: document.getElementById('ingredients-list'),

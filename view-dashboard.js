@@ -1,6 +1,7 @@
 
 import { state } from "./state.js";
 import { DOMElements } from "./dom-elements.js";
+import { Notifications } from "./ui-notifications.js";
 
 // Mock Data to match Lovable Prototype
 const MOCK_INGREDIENTS = [
@@ -26,10 +27,10 @@ const MOCK_OPERATORS = [
 ];
 
 export function renderApp() {
-    const ingredientsList = document.getElementById('ingredients-list');
-    const operatorsGrid = document.getElementById('operators-grid');
-    const availableCount = document.getElementById('available-count');
-    const operatorsCount = document.getElementById('operators-count');
+    const ingredientsList = DOMElements.ingredientsList;
+    const operatorsGrid = DOMElements.operatorsGrid;
+    const availableCount = DOMElements.availableCount;
+    const operatorsCount = DOMElements.operatorsCount;
 
     if (!ingredientsList || !operatorsGrid) return;
 
@@ -40,13 +41,15 @@ export function renderApp() {
     // Render Ingredients
     MOCK_INGREDIENTS.forEach(ing => {
         const card = document.createElement('div');
-        card.className = "bg-white border border-slate-200 rounded-lg p-3 flex items-center gap-4 cursor-grab active:cursor-grabbing hover:border-emerald-500 transition-colors shadow-sm group";
+        card.className = "bg-white border border-slate-200 rounded-lg p-3 flex items-center gap-4 cursor-grab active:cursor-grabbing hover:border-emerald-500 transition-colors shadow-sm group select-none";
         card.draggable = true;
         card.ondragstart = (e) => {
             e.dataTransfer.setData("text/plain", JSON.stringify(ing));
-            e.currentTarget.classList.add('opacity-50');
+            e.currentTarget.classList.add('opacity-50', 'border-emerald-500');
         };
-        card.ondragend = (e) => { e.currentTarget.classList.remove('opacity-50'); };
+        card.ondragend = (e) => { 
+            e.currentTarget.classList.remove('opacity-50', 'border-emerald-500'); 
+        };
 
         card.innerHTML = `
             <div class="h-10 w-10 bg-slate-100 rounded-md flex items-center justify-center border border-slate-200 shadow-inner group-hover:bg-emerald-50">
@@ -67,21 +70,25 @@ export function renderApp() {
         
         card.ondragover = (e) => {
             e.preventDefault();
-            card.classList.add('border-emerald-500', 'bg-emerald-50/10');
+            card.classList.add('border-emerald-500', 'bg-emerald-50/10', 'scale-[1.02]');
         };
         card.ondragleave = () => {
-            card.classList.remove('border-emerald-500', 'bg-emerald-50/10');
+            card.classList.remove('border-emerald-500', 'bg-emerald-50/10', 'scale-[1.02]');
         };
         card.ondrop = (e) => {
             e.preventDefault();
-            card.classList.remove('border-emerald-500', 'bg-emerald-50/10');
-            const data = JSON.parse(e.dataTransfer.getData("text/plain"));
-            handleAssign(op.id, data);
+            card.classList.remove('border-emerald-500', 'bg-emerald-50/10', 'scale-[1.02]');
+            try {
+                const data = JSON.parse(e.dataTransfer.getData("text/plain"));
+                handleAssign(op.id, data);
+            } catch (err) {
+                console.error("Drop failed", err);
+            }
         };
 
         card.innerHTML = `
             <div class="bg-[#022c22] p-4 flex items-center gap-3">
-                <div class="h-10 w-10 bg-white/10 rounded-full flex items-center justify-center text-white/80 border border-white/5">
+                <div class="h-10 w-10 bg-white/10 rounded-full flex items-center justify-center text-white/80 border border-white/5 shadow-inner">
                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
                 </div>
                 <div>
@@ -91,12 +98,15 @@ export function renderApp() {
             </div>
             <div class="flex-1 p-6 bg-[#fdf2f8]/30 flex flex-col items-center justify-center gap-3 border-t border-slate-100">
                 ${op.ingredients.length === 0 ? `
-                    <p class="text-[11px] text-slate-400 font-medium italic">Drop ingredients here</p>
+                    <div class="flex flex-col items-center gap-2 opacity-30">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-slate-400"><path d="M12 2v20"/><path d="M2 12h20"/></svg>
+                        <p class="text-[11px] text-slate-400 font-medium italic">Drop ingredients here</p>
+                    </div>
                 ` : `
                     <div class="w-full flex flex-wrap gap-2">
                         ${op.ingredients.map(ing => `
-                            <div class="bg-white border border-slate-200 px-2 py-1 rounded text-[10px] font-bold text-slate-700 shadow-sm flex items-center gap-1.5 animate-in zoom-in-95 duration-200">
-                                <span class="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
+                            <div class="bg-white border border-slate-200 px-2 py-1.5 rounded text-[10px] font-bold text-slate-700 shadow-sm flex items-center gap-2 animate-in zoom-in-95 duration-200">
+                                <span class="h-1.5 w-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]"></span>
                                 ${ing.name}
                             </div>
                         `).join('')}
@@ -107,14 +117,17 @@ export function renderApp() {
         operatorsGrid.appendChild(card);
     });
 
-    if (availableCount) availableCount.innerText = `${MOCK_INGREDIENTS.length} ingredients`;
-    if (operatorsCount) operatorsCount.innerText = `${MOCK_OPERATORS.length} operators`;
+    if (availableCount) availableCount.innerText = `${MOCK_INGREDIENTS.length} items`;
+    if (operatorsCount) operatorsCount.innerText = `${MOCK_OPERATORS.length} operators active`;
 }
 
 function handleAssign(opId, ingredient) {
     const op = MOCK_OPERATORS.find(o => o.id === opId);
     if (!op.ingredients.find(i => i.id === ingredient.id)) {
         op.ingredients.push(ingredient);
+        Notifications.show(`Assigned ${ingredient.name} to ${op.name}`);
         renderApp(); // Re-render for reactivity
+    } else {
+        Notifications.show(`${ingredient.name} is already assigned to ${op.name}`, 'error');
     }
 }

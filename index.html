@@ -208,24 +208,33 @@
 
             <!-- Dashboard View -->
             <div id="main-view" class="space-y-8">
-                <section id="dish-selection-view">
-                    <div class="flex items-center justify-between mb-4 px-2">
-                        <h2 class="text-[11px] font-black text-slate-400 uppercase tracking-[0.3em]">Operational Units
-                        </h2>
-                    </div>
-                    <div id="dish-grid-container"
-                        class="grid grid-cols-2 xs:grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-4">
-                    </div>
-                </section>
-
-                <section id="daily-summary-section" class="hidden">
-                    <div class="flex items-center justify-between mb-5 px-2">
-                        <div class="flex items-center gap-4">
-                            <h2 class="text-[11px] font-black text-slate-400 uppercase tracking-[0.3em]">Split
-                                Intelligence Recap</h2>
+                <section id="kanban-section" class="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
+                    <!-- Processing Column -->
+                    <div class="flex flex-col h-full min-h-[500px] bg-slate-900/40 rounded-[2.5rem] border border-slate-800/50 backdrop-blur-xl shadow-2xl p-6 sm:p-8" ondragover="window.allowDrop(event)" ondrop="window.dropDish(event, 'processing')">
+                        <div class="flex items-center justify-between mb-8 px-4 border-b border-slate-800/50 pb-6">
+                            <h3 class="text-xs sm:text-[10px] font-black text-slate-500 uppercase tracking-[0.4em] italic leading-tight">Processing Unit</h3>
+                            <span id="count-processing" class="bg-slate-800 text-slate-400 text-[10px] font-black px-3 py-1.5 rounded-xl border border-slate-700 shadow-inner">0</span>
                         </div>
+                        <div id="processing-list" class="flex-grow space-y-4 sm:space-y-5 custom-scrollbar overflow-y-auto max-h-[70vh]"></div>
                     </div>
-                    <div id="daily-summary-container"></div>
+ 
+                    <!-- Cooking Column -->
+                    <div class="flex flex-col h-full min-h-[500px] bg-slate-900/40 rounded-[2.5rem] border border-slate-800/50 backdrop-blur-xl shadow-2xl p-6 sm:p-8" ondragover="window.allowDrop(event)" ondrop="window.dropDish(event, 'cooking')">
+                        <div class="flex items-center justify-between mb-8 px-4 border-b border-slate-800/50 pb-6">
+                            <h3 class="text-xs sm:text-[10px] font-black text-orange-400 uppercase tracking-[0.4em] italic leading-tight">Cooking Phase</h3>
+                            <span id="count-cooking" class="bg-orange-600/20 text-orange-400 text-[10px] font-black px-3 py-1.5 rounded-xl border border-orange-500/30 shadow-inner">0</span>
+                        </div>
+                        <div id="cooking-list" class="flex-grow space-y-4 sm:space-y-5 custom-scrollbar overflow-y-auto max-h-[70vh]"></div>
+                    </div>
+ 
+                    <!-- Completed Column -->
+                    <div class="flex flex-col h-full min-h-[500px] bg-slate-900/40 rounded-[2.5rem] border border-slate-800/50 backdrop-blur-xl shadow-2xl p-6 sm:p-8" ondragover="window.allowDrop(event)" ondrop="window.dropDish(event, 'completed')">
+                        <div class="flex items-center justify-between mb-8 px-4 border-b border-slate-800/50 pb-6">
+                            <h3 class="text-xs sm:text-[10px] font-black text-emerald-400 uppercase tracking-[0.4em] italic leading-tight">Log Ready</h3>
+                            <span id="count-completed" class="bg-emerald-600/20 text-emerald-400 text-[10px] font-black px-3 py-1.5 rounded-xl border border-emerald-500/30 shadow-inner">0</span>
+                        </div>
+                        <div id="completed-list" class="flex-grow space-y-4 sm:space-y-5 custom-scrollbar overflow-y-auto max-h-[70vh]"></div>
+                    </div>
                 </section>
 
                 <div id="welcome-placeholder" class="hidden"></div>

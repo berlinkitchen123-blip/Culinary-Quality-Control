@@ -20,18 +20,32 @@ window.handleSelectDish = (dishLetter) => {
     }
 };
 
+// Kanban Drag & Drop Global Handlers
+window.allowDrop = (e) => e.preventDefault();
+window.dropDish = (e, newStatus) => {
+    e.preventDefault();
+    const letter = e.dataTransfer.getData("text/plain");
+    if (!state.menu || !state.menu.dishes) return;
+    const dish = state.menu.dishes.find(d => d.dishLetter === letter);
+    if (!dish) return;
+    
+    const existing = state.checkedData[letter] || { 
+        date: state.selectedDate, 
+        dishLetter: letter,
+        dishName: dish.dishName,
+        dishType: dish.dishType
+    };
+    existing.status = newStatus;
+    saveCheckData(existing);
+};
+
 export function renderApp() {
     DOMElements.loadingIndicator.classList.toggle('hidden', !state.isMenuLoading && !state.isCheckDataLoading);
-    DOMElements.mainView.classList.toggle('hidden', state.isMenuLoading || state.isCheckDataLoading || state.currentView !== 'dashboard');
     if (state.menu && state.menu.dishes.length > 0) {
         DOMElements.welcomePlaceholder.classList.add('hidden');
-        DOMElements.dishGridContainer.classList.remove('hidden');
-        DOMElements.dailySummarySection.classList.remove('hidden');
-        renderDishSelectionGrid();
-        renderDailySummaryTable();
+        renderKanbanBoard();
     } else {
         renderWelcomePlaceholder();
-        DOMElements.dailySummarySection.classList.add('hidden');
     }
 }
 
@@ -44,110 +58,65 @@ function renderWelcomePlaceholder() {
                 </svg>
             </div>
             <h3 class="text-2xl font-black text-white italic uppercase tracking-tight mb-4">Menu Manifest Missing</h3>
-            <p class="text-slate-400 max-w-sm mb-8 text-sm font-medium leading-relaxed">
-                No data structure found for the current week. Initialize the system by importing a JSON menu manifest.
-            </p>
-            <button onclick="document.getElementById('settings-btn').click()" class="px-8 py-4 bg-indigo-600 hover:bg-indigo-500 text-white rounded-2xl font-black text-[10px] uppercase tracking-[0.3em] transition-all shadow-xl shadow-indigo-600/20 active:scale-95 border-b-4 border-indigo-800">
-                Configure System
-            </button>
+            <p class="text-slate-400 max-w-sm mb-8 text-sm font-medium leading-relaxed"> No data found for this week. System requires menu manifest upload. </p>
         </div>
     `;
     DOMElements.welcomePlaceholder.classList.remove('hidden');
-    DOMElements.dishGridContainer.classList.add('hidden');
 }
 
-function renderDishSelectionGrid() {
-    DOMElements.dishGridContainer.innerHTML = '';
-    const sorted = [...(state.menu.dishes || [])].sort((a,b) => a.dishLetter.localeCompare(b.dishLetter));
-    const groups = { cold: sorted.filter(d => d.dishType === 'cold'), hot: sorted.filter(d => d.dishType === 'hot'), extras: sorted.filter(d => d.dishType !== 'cold' && d.dishType !== 'hot') };
-    const themes = { hot: 'bg-red-500', cold: 'bg-blue-500', default: 'bg-indigo-600' };
-
-    Object.keys(groups).forEach(type => {
-        const list = groups[type];
-        if (list.length === 0) return;
-        const h = document.createElement('div'); h.className = 'col-span-full text-[10px] font-black text-slate-500 uppercase tracking-[0.4em] mt-8 mb-3 pl-3 border-l-4 border-indigo-500/30'; h.textContent = `${type} BLOCK`;
-        DOMElements.dishGridContainer.appendChild(h);
-        list.forEach(dish => {
-            const isChecked = !!state.checkedData[dish.dishLetter];
-            const button = document.createElement('button');
-            button.className = `group relative flex flex-col items-center justify-center p-4 sm:p-6 border border-slate-700/50 rounded-[1.75rem] sm:rounded-[2.5rem] bg-slate-800/50 hover:scale-105 active:scale-95 shadow-xl backdrop-blur-md transition-all duration-300`;
-            button.onclick = () => { state.selectedDish = dish; state.selectedPrepItem = null; showView('detail'); renderDishCard(); };
-            button.innerHTML = `
-                ${isChecked ? '<div class="absolute -top-1 -right-1 bg-green-500 rounded-full p-1.5 text-white shadow-2xl ring-4 ring-slate-900 z-10"><svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="5" d="M5 13l4 4L19 7"></path></svg></div>' : ''}
-                <div class="mb-3 sm:mb-4 h-12 w-12 sm:h-14 sm:w-14 rounded-[1.25rem] sm:rounded-[1.5rem] flex items-center justify-center text-lg sm:text-xl font-black shadow-2xl ${themes[dish.dishType] || themes.default} text-white uppercase italic">${dish.dishLetter}</div>
-                <p class="font-black text-[9px] sm:text-[11px] text-slate-300 px-1 text-center line-clamp-2 uppercase h-8 sm:h-10 flex items-center group-hover:text-white leading-tight">${dish.dishName}</p>
-            `;
-            DOMElements.dishGridContainer.appendChild(button);
-        });
-    });
-}
-
-function renderDailySummaryTable() {
+function renderKanbanBoard() {
     if (!state.menu || !state.menu.dishes) return;
-    const sorted = [...state.menu.dishes].sort((a,b) => a.dishLetter.localeCompare(b.dishLetter));
-    
-    const createTableHTML = (list, type) => {
-        if (list.length === 0) return '';
-        const headerColor = type === 'hot' ? 'bg-red-600/30' : type === 'cold' ? 'bg-blue-600/30' : 'bg-slate-700/50';
-        const letterColor = type === 'hot' ? 'text-red-400' : type === 'cold' ? 'text-blue-400' : 'text-white';
-        const nameColor = type === 'hot' ? 'text-red-400' : type === 'cold' ? 'text-blue-400' : 'text-slate-300';
-        
-        return `
-            <div class="bg-slate-800/40 rounded-[2rem] sm:rounded-[2.5rem] border border-slate-700/50 overflow-hidden shadow-2xl backdrop-blur-xl h-full flex flex-col min-h-[150px]">
-                <div class="px-4 py-3 sm:px-6 sm:py-4 text-[10px] sm:text-[11px] font-black uppercase tracking-[0.3em] text-white border-b border-white/5 ${headerColor}">
-                    ${type} Recap
-                </div>
-                <div class="flex-grow">
-                    <table class="w-full divide-y divide-slate-800 text-[9px] sm:text-[10px] table-fixed">
-                        <thead class="bg-slate-950/60 text-slate-500 uppercase font-black">
-                            <tr>
-                                <th class="px-2 py-3 text-center w-[12%]">ID</th>
-                                <th class="px-2 py-3 text-left w-[25%]">Dish</th>
-                                <th class="px-1 py-3 text-center w-[12%]">Temp</th>
-                                <th class="px-1 py-3 text-center w-[12%]">Act.W</th>
-                                <th class="px-1 py-3 text-center w-[12%]">AI</th>
-                                <th class="px-1 py-3 text-left w-[27%]">AI Insight</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-slate-800/50">
-                            ${list.map(dish => {
-                                const check = state.checkedData[dish.dishLetter];
-                                const temps = (check?.temperatures || []).map(t => parseFloat(t)).filter(t => !isNaN(t));
-                                const avgTemp = temps.length ? (temps.reduce((a,b)=>a+b,0)/temps.length).toFixed(1) + '°' : '-';
-                                const weights = (check?.weights || []).map(w => parseFloat(w)).filter(w => !isNaN(w));
-                                const avgWgt = weights.length ? (weights.reduce((a,b)=>a+b,0)/weights.length).toFixed(0) + 'g' : '-';
-                                let theo = dish.theoreticalWeight;
-                                if (!theo) theo = (dish.dishIngredients || []).reduce((sum, ing) => sum + (parseFloat(ing.amount) || parseFloat(ing.weight) || 0), 0);
-                                const ai = check?.aiCheckResult?.score || '-';
-                                const aiClass = check && ai > 7 ? 'text-green-400' : 'text-indigo-400';
-                                const aiInsight = check?.aiCheckResult?.overall_comment || '';
+    const dishes = state.menu.dishes;
 
-                                return `
-                                    <tr class="hover:bg-slate-700/40 cursor-pointer transition-colors ${!check ? 'opacity-30' : ''}" onclick="window.handleSelectDish('${dish.dishLetter}')">
-                                        <td class="px-2 py-3 text-center font-black ${letterColor}">${dish.dishLetter}</td>
-                                        <td class="px-2 py-3 ${nameColor} font-bold uppercase truncate italic">${dish.dishName}</td>
-                                        <td class="px-1 py-3 text-center font-mono text-orange-300">${avgTemp}</td>
-                                        <td class="px-1 py-3 text-center font-mono text-emerald-300">${avgWgt}</td>
-                                        <td class="px-1 py-3 text-center font-black ${aiClass}">${ai}</td>
-                                        <td class="px-1 py-3 text-left text-slate-500 italic truncate text-[8px] tracking-wide max-w-[100px]">${aiInsight}</td>
-                                    </tr>
-                                `;
-                            }).join('')}
-                        </tbody>
-                    </table>
+    DOMElements.processingList.innerHTML = '';
+    DOMElements.cookingList.innerHTML = '';
+    DOMElements.completedList.innerHTML = '';
+
+    let px = 0, ck = 0, cm = 0;
+
+    dishes.forEach(dish => {
+        const check = state.checkedData[dish.dishLetter];
+        const status = check?.status || 'processing';
+        const isChecked = !!check?.aiCheckResult;
+        
+        let targetList;
+        if (status === 'cooking') { targetList = DOMElements.cookingList; ck++; }
+        else if (status === 'completed') { targetList = DOMElements.completedList; cm++; }
+        else { targetList = DOMElements.processingList; px++; }
+
+        const card = document.createElement('div');
+        card.className = "bg-slate-800/50 border border-slate-700/50 rounded-3xl p-4 shadow-xl hover:-translate-y-1 transition-all flex items-center gap-5 cursor-pointer select-none group border-l-[6px]";
+        
+        if(status === 'cooking') card.classList.add('border-l-orange-500', 'bg-orange-500/5');
+        else if(status === 'completed') card.classList.add('border-l-emerald-500', 'bg-emerald-500/5');
+        else card.classList.add('border-l-slate-600');
+
+        card.draggable = true;
+        card.ondragstart = (e) => { e.dataTransfer.setData("text/plain", dish.dishLetter); };
+        card.onclick = () => window.handleSelectDish(dish.dishLetter);
+
+        const colorClass = dish.dishType === 'hot' ? 'bg-red-500 text-white shadow-lg shadow-red-500/20' : 
+                           dish.dishType === 'cold' ? 'bg-blue-500 text-white shadow-lg shadow-blue-500/20' : 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/20';
+
+        card.innerHTML = `
+            <div class="${colorClass} h-12 w-12 rounded-2xl flex shrink-0 items-center justify-center font-black text-lg italic relative">
+                ${dish.dishLetter}
+                ${isChecked ? '<div class="absolute -top-2 -right-2 bg-emerald-500 text-white rounded-full p-1 border-4 border-slate-900 shadow-xl"><svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="4" d="M5 13l4 4L19 7"/></svg></div>' : ''}
+            </div>
+            <div class="flex-1 min-w-0">
+                <p class="font-black text-[11px] text-slate-200 uppercase tracking-tight truncate group-hover:text-white transition-colors">${dish.dishName}</p>
+                <div class="flex items-center gap-2 mt-1.5 opacity-60">
+                   <div class="h-1.5 w-1.5 rounded-full ${dish.dishType === 'hot' ? 'bg-red-400' : 'bg-blue-400'}"></div>
+                   <p class="text-[9px] text-slate-400 font-black uppercase tracking-widest leading-none">${dish.dishType}</p>
                 </div>
             </div>
         `;
-    };
+        targetList.appendChild(card);
+    });
 
-    let splitHtml = `
-        <div id="cold-summary">${createTableHTML(sorted.filter(d => d.dishType === 'cold'), 'cold')}</div>
-        <div id="hot-summary">${createTableHTML(sorted.filter(d => d.dishType === 'hot'), 'hot')}</div>
-    `;
-    const extras = sorted.filter(d => d.dishType !== 'cold' && d.dishType !== 'hot');
-    if (extras.length > 0) splitHtml += `<div class="full-width-section">${createTableHTML(extras, 'additional')}</div>`;
-    
-    DOMElements.dailySummaryContainer.innerHTML = splitHtml;
+    DOMElements.countProcessing.textContent = px;
+    DOMElements.countCooking.textContent = ck;
+    DOMElements.countCompleted.textContent = cm;
 }
 
 export function renderDishCard() {

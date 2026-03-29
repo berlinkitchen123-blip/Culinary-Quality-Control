@@ -41,4 +41,11 @@ export const DOMElements = {
     tabMenuBtn: document.getElementById('tab-menu-btn'),
     tabProdContent: document.getElementById('tab-prod-content'),
     tabMenuContent: document.getElementById('tab-menu-content'),
+    // Kanban Elements
+    processingList: document.getElementById('processing-list'),
+    cookingList: document.getElementById('cooking-list'),
+    completedList: document.getElementById('completed-list'),
+    countProcessing: document.getElementById('count-processing'),
+    countCooking: document.getElementById('count-cooking'),
+    countCompleted: document.getElementById('count-completed'),
 };

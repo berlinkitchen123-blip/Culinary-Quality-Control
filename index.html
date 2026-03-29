@@ -8,8 +8,8 @@
     <title>Culinary Quality Control</title>
     <style>
         html.dark body {
-            background-color: #0f172a;
-            color: #e2e8f0;
+            background-color: hsl(160 30% 8%);
+            color: hsl(0 0% 95%);
             -webkit-tap-highlight-color: transparent;
         }
 
@@ -67,6 +67,48 @@
             darkMode: 'class',
             theme: {
                 extend: {
+                    colors: {
+                        border: "hsl(160 15% 20%)",
+                        input: "hsl(160 15% 20%)",
+                        ring: "hsl(352 95% 79%)",
+                        background: "hsl(160 30% 8%)",
+                        foreground: "hsl(0 0% 95%)",
+                        primary: {
+                            DEFAULT: "hsl(352 95% 79%)",
+                            foreground: "hsl(160 95% 16%)",
+                        },
+                        secondary: {
+                            DEFAULT: "hsl(160 20% 18%)",
+                            foreground: "hsl(0 0% 95%)",
+                        },
+                        destructive: {
+                            DEFAULT: "hsl(0 62% 38%)",
+                            foreground: "hsl(0 0% 100%)",
+                        },
+                        muted: {
+                            DEFAULT: "hsl(160 15% 18%)",
+                            foreground: "hsl(160 10% 60%)",
+                        },
+                        accent: {
+                            DEFAULT: "hsl(352 80% 70%)",
+                            foreground: "hsl(160 95% 16%)",
+                        },
+                        card: {
+                            DEFAULT: "hsl(160 25% 12%)",
+                            foreground: "hsl(0 0% 95%)",
+                        },
+                        kitchen: {
+                            header: "hsl(160 95% 16%)",
+                            processing: "hsl(0 0% 100%)",
+                            cooking: "hsl(352 95% 79%)",
+                            completed: "hsl(160 95% 16%)",
+                        }
+                    },
+                    borderRadius: {
+                        lg: "0.5rem",
+                        md: "0.4rem",
+                        sm: "0.2rem",
+                    },
                     screens: {
                         'xs': '375px',
                     }
@@ -81,22 +123,26 @@
 
 <body class="antialiased font-sans selection:bg-indigo-500/30">
     <div id="app-container" class="min-h-screen flex flex-col">
-        <header class="bg-slate-900/90 backdrop-blur-xl shadow-2xl sticky top-0 z-50 border-b border-slate-800">
+        <header class="bg-[#05291e] backdrop-blur-xl shadow-sm sticky top-0 z-50 border-b border-border/20">
             <div class="max-w-7xl mx-auto px-4">
-                <div class="flex items-center justify-between h-16">
-                    <div class="flex items-center space-x-2 sm:space-x-4">
-                        <div
-                            class="bg-gradient-to-br from-indigo-500 to-indigo-700 p-2 rounded-xl shadow-lg shadow-indigo-500/20">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-white" fill="none"
-                                viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3"
-                                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                            </svg>
+                <div class="flex items-center justify-between h-14">
+                    <div class="flex items-center space-x-6">
+                        <div class="flex items-center gap-3">
+                            <div class="bg-primary p-1.5 rounded-md shadow-lg">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-primary-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                            </div>
+                            <span class="text-xs font-bold text-white uppercase tracking-wider hidden sm:inline">Culinary Control</span>
                         </div>
-                        <nav class="flex bg-slate-800/80 p-1 rounded-xl border border-slate-700">
-                            <button id="nav-production-btn"
-                                class="px-3 sm:px-5 py-2 text-[10px] font-black rounded-lg transition-all uppercase text-slate-400 hover:text-white">Production</button>
-                            <button id="nav-prep-btn"
+                        <nav class="flex h-10 bg-black/20 p-1 rounded-md border border-white/10 overflow-x-auto no-scrollbar">
+                            <button id="nav-dashboard-btn" class="px-4 py-1.5 text-[10px] font-bold rounded-sm transition-all uppercase text-muted-foreground hover:text-white">Live Check</button>
+                            <button id="nav-production-btn" class="px-4 py-1.5 text-[10px] font-bold rounded-sm transition-all uppercase text-muted-foreground hover:text-white">Production</button>
+                            <button id="nav-prep-btn" class="px-4 py-1.5 text-[10px] font-bold rounded-sm transition-all uppercase text-muted-foreground hover:text-white">Kitchen Log</button>
+                            <button id="nav-hygiene-btn" class="px-4 py-1.5 text-[10px] font-bold rounded-sm transition-all uppercase text-muted-foreground hover:text-white">Hygiene</button>
+                            <button id="nav-audit-btn" class="px-4 py-1.5 text-[10px] font-bold rounded-sm transition-all uppercase text-muted-foreground hover:text-white">Analytics</button>
+                        </nav>
+                    </div>
                                 class="px-3 sm:px-5 py-2 text-[10px] font-black rounded-lg transition-all uppercase text-slate-400 hover:text-white">Kitchen
                                 Log</button>
                             <button id="nav-hygiene-btn"
@@ -112,14 +158,11 @@
                                 class="px-3 sm:px-5 py-2 text-[10px] font-black rounded-lg transition-all uppercase text-slate-400 hover:text-white">Logistics</button>
                         </nav>
                     </div>
-                    <div class="flex items-center space-x-3">
-                        <button id="settings-btn"
-                            class="p-2.5 rounded-xl text-slate-400 hover:bg-slate-800 hover:text-white transition-all active:scale-95 border border-transparent hover:border-slate-700">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
-                                stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4">
-                                </path>
+                    <div class="flex items-center gap-3">
+                        <button id="settings-btn" class="p-2 text-muted-foreground hover:text-white hover:bg-white/5 rounded-md transition-all">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
                             </svg>
                         </button>
                     </div>
@@ -206,37 +249,36 @@
                     class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 sm:gap-6"></div>
             </section>
 
-            <!-- Dashboard View -->
-            <div id="main-view" class="space-y-8">
-                <section id="kanban-section" class="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
+            <!-- Dashboard View (Kanban) -->
+            <div id="main-view" class="space-y-8 animate-in fade-in slide-in-from-bottom-6 duration-700">
+                <section id="kanban-section" class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     <!-- Processing Column -->
-                    <div class="flex flex-col h-full min-h-[500px] bg-slate-900/40 rounded-[2.5rem] border border-slate-800/50 backdrop-blur-xl shadow-2xl p-6 sm:p-8" ondragover="window.allowDrop(event)" ondrop="window.dropDish(event, 'processing')">
-                        <div class="flex items-center justify-between mb-8 px-4 border-b border-slate-800/50 pb-6">
-                            <h3 class="text-xs sm:text-[10px] font-black text-slate-500 uppercase tracking-[0.4em] italic leading-tight">Processing Unit</h3>
-                            <span id="count-processing" class="bg-slate-800 text-slate-400 text-[10px] font-black px-3 py-1.5 rounded-xl border border-slate-700 shadow-inner">0</span>
+                    <div class="flex flex-col h-full min-h-[500px] bg-card/60 rounded-lg border border-border shadow-sm p-5" ondragover="window.allowDrop(event)" ondrop="window.dropDish(event, 'processing')">
+                        <div class="flex items-center justify-between mb-6 px-1 border-b border-border/50 pb-4">
+                            <h3 class="text-xs font-semibold text-muted-foreground uppercase tracking-widest">Processing</h3>
+                            <span id="count-processing" class="bg-muted text-muted-foreground text-[10px] font-bold px-2 py-0.5 rounded-full border border-border">0</span>
                         </div>
-                        <div id="processing-list" class="flex-grow space-y-4 sm:space-y-5 custom-scrollbar overflow-y-auto max-h-[70vh]"></div>
+                        <div id="processing-list" class="flex-grow space-y-4 custom-scrollbar overflow-y-auto max-h-[70vh]"></div>
                     </div>
  
                     <!-- Cooking Column -->
-                    <div class="flex flex-col h-full min-h-[500px] bg-slate-900/40 rounded-[2.5rem] border border-slate-800/50 backdrop-blur-xl shadow-2xl p-6 sm:p-8" ondragover="window.allowDrop(event)" ondrop="window.dropDish(event, 'cooking')">
-                        <div class="flex items-center justify-between mb-8 px-4 border-b border-slate-800/50 pb-6">
-                            <h3 class="text-xs sm:text-[10px] font-black text-orange-400 uppercase tracking-[0.4em] italic leading-tight">Cooking Phase</h3>
-                            <span id="count-cooking" class="bg-orange-600/20 text-orange-400 text-[10px] font-black px-3 py-1.5 rounded-xl border border-orange-500/30 shadow-inner">0</span>
+                    <div class="flex flex-col h-full min-h-[500px] bg-card/60 rounded-lg border border-border shadow-sm p-5" ondragover="window.allowDrop(event)" ondrop="window.dropDish(event, 'cooking')">
+                        <div class="flex items-center justify-between mb-6 px-1 border-b border-border/50 pb-4">
+                            <h3 class="text-xs font-semibold text-primary uppercase tracking-widest">Cooking</h3>
+                            <span id="count-cooking" class="bg-primary/20 text-primary text-[10px] font-bold px-2 py-0.5 rounded-full border border-primary/30">0</span>
                         </div>
-                        <div id="cooking-list" class="flex-grow space-y-4 sm:space-y-5 custom-scrollbar overflow-y-auto max-h-[70vh]"></div>
+                        <div id="cooking-list" class="flex-grow space-y-4 custom-scrollbar overflow-y-auto max-h-[70vh]"></div>
                     </div>
  
                     <!-- Completed Column -->
-                    <div class="flex flex-col h-full min-h-[500px] bg-slate-900/40 rounded-[2.5rem] border border-slate-800/50 backdrop-blur-xl shadow-2xl p-6 sm:p-8" ondragover="window.allowDrop(event)" ondrop="window.dropDish(event, 'completed')">
-                        <div class="flex items-center justify-between mb-8 px-4 border-b border-slate-800/50 pb-6">
-                            <h3 class="text-xs sm:text-[10px] font-black text-emerald-400 uppercase tracking-[0.4em] italic leading-tight">Log Ready</h3>
-                            <span id="count-completed" class="bg-emerald-600/20 text-emerald-400 text-[10px] font-black px-3 py-1.5 rounded-xl border border-emerald-500/30 shadow-inner">0</span>
+                    <div class="flex flex-col h-full min-h-[500px] bg-card/60 rounded-lg border border-border shadow-sm p-5" ondragover="window.allowDrop(event)" ondrop="window.dropDish(event, 'completed')">
+                        <div class="flex items-center justify-between mb-6 px-1 border-b border-border/50 pb-4">
+                            <h3 class="text-xs font-semibold text-green-400 uppercase tracking-widest">Completed</h3>
+                            <span id="count-completed" class="bg-green-600/20 text-green-400 text-[10px] font-bold px-2 py-0.5 rounded-full border border-green-500/30">0</span>
                         </div>
-                        <div id="completed-list" class="flex-grow space-y-4 sm:space-y-5 custom-scrollbar overflow-y-auto max-h-[70vh]"></div>
+                        <div id="completed-list" class="flex-grow space-y-4 custom-scrollbar overflow-y-auto max-h-[70vh]"></div>
                     </div>
                 </section>
-
                 <div id="welcome-placeholder" class="hidden"></div>
             </div>
 

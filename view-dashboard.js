@@ -85,29 +85,24 @@ function renderKanbanBoard() {
         else { targetList = DOMElements.processingList; px++; }
 
         const card = document.createElement('div');
-        card.className = "bg-slate-800/50 border border-slate-700/50 rounded-3xl p-4 shadow-xl hover:-translate-y-1 transition-all flex items-center gap-5 cursor-pointer select-none group border-l-[6px]";
+        card.className = "bg-card hover:bg-card/80 border border-border rounded-lg p-3 shadow-sm transition-all cursor-pointer select-none group flex items-start gap-3 relative overflow-hidden";
         
-        if(status === 'cooking') card.classList.add('border-l-orange-500', 'bg-orange-500/5');
-        else if(status === 'completed') card.classList.add('border-l-emerald-500', 'bg-emerald-500/5');
-        else card.classList.add('border-l-slate-600');
-
         card.draggable = true;
         card.ondragstart = (e) => { e.dataTransfer.setData("text/plain", dish.dishLetter); };
         card.onclick = () => window.handleSelectDish(dish.dishLetter);
 
-        const colorClass = dish.dishType === 'hot' ? 'bg-red-500 text-white shadow-lg shadow-red-500/20' : 
-                           dish.dishType === 'cold' ? 'bg-blue-500 text-white shadow-lg shadow-blue-500/20' : 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/20';
+        const statusColor = status === 'cooking' ? 'bg-primary' : status === 'completed' ? 'bg-green-500' : 'bg-muted-foreground/30';
 
         card.innerHTML = `
-            <div class="${colorClass} h-12 w-12 rounded-2xl flex shrink-0 items-center justify-center font-black text-lg italic relative">
+            <div class="h-10 w-10 rounded-md bg-secondary flex shrink-0 items-center justify-center font-bold text-sm text-foreground border border-border/50">
                 ${dish.dishLetter}
-                ${isChecked ? '<div class="absolute -top-2 -right-2 bg-emerald-500 text-white rounded-full p-1 border-4 border-slate-900 shadow-xl"><svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="4" d="M5 13l4 4L19 7"/></svg></div>' : ''}
+                ${isChecked ? '<div class="absolute -top-1 -right-1 bg-green-500 text-white rounded-full p-0.5 shadow-sm border border-background"><svg class="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="4" d="M5 13l4 4L19 7"/></svg></div>' : ''}
             </div>
-            <div class="flex-1 min-w-0">
-                <p class="font-black text-[11px] text-slate-200 uppercase tracking-tight truncate group-hover:text-white transition-colors">${dish.dishName}</p>
-                <div class="flex items-center gap-2 mt-1.5 opacity-60">
-                   <div class="h-1.5 w-1.5 rounded-full ${dish.dishType === 'hot' ? 'bg-red-400' : 'bg-blue-400'}"></div>
-                   <p class="text-[9px] text-slate-400 font-black uppercase tracking-widest leading-none">${dish.dishType}</p>
+            <div class="flex-1 min-w-0 space-y-1">
+                <p class="font-medium text-[11px] text-foreground uppercase tracking-tight truncate leading-tight">${dish.dishName}</p>
+                <div class="flex items-center gap-2">
+                   <div class="h-1.5 w-1.5 rounded-full ${statusColor}"></div>
+                   <p class="text-[9px] text-muted-foreground font-medium uppercase tracking-wider">${dish.dishType}</p>
                 </div>
             </div>
         `;

@@ -25,21 +25,32 @@ export function showView(viewName) {
     const logsView = document.getElementById('logistics-view');
     if (logsView) logsView.classList.toggle('hidden', viewName !== 'logistics');
 
-    const active = "bg-indigo-600 text-white shadow-2xl shadow-indigo-600/30";
-    const activePrep = "bg-emerald-600 text-white shadow-2xl shadow-emerald-600/30";
-    const activeHygiene = "bg-indigo-600 text-white shadow-2xl shadow-indigo-600/30";
-    const activeProd = "bg-orange-600 text-white shadow-2xl shadow-orange-600/30";
-    const inactive = "text-slate-400 hover:text-white";
+    const active = "text-emerald-400 bg-emerald-500/10 shadow-inner";
+    const inactive = "text-emerald-400/50 hover:text-white";
 
-    DOMElements.navDashboardBtn.className = `px-5 py-2.5 text-[10px] font-black rounded-xl transition-all uppercase ${viewName === 'dashboard' ? active : inactive}`;
-    DOMElements.navAuditBtn.className = `px-5 py-2.5 text-[10px] font-black rounded-xl transition-all uppercase ${viewName === 'audit' ? active : inactive}`;
-    DOMElements.navPrepBtn.className = `px-5 py-2.5 text-[10px] font-black rounded-xl transition-all uppercase ${viewName === 'prep' ? activePrep : inactive}`;
-    DOMElements.navHygieneBtn.className = `px-5 py-2.5 text-[10px] font-black rounded-xl transition-all uppercase ${viewName === 'hygiene' ? activeHygiene : inactive}`;
-    DOMElements.navProductionBtn.className = `px-5 py-2.5 text-[10px] font-black rounded-xl transition-all uppercase ${viewName === 'production' ? activeProd : inactive}`;
-    DOMElements.navLogisticsBtn.className = `px-5 py-2.5 text-[10px] font-black rounded-xl transition-all uppercase ${viewName === 'logistics' ? active : inactive}`;
+    if (DOMElements.navDashboardBtn) DOMElements.navDashboardBtn.className = `p-2 rounded-md transition-all ${viewName === 'dashboard' ? active : inactive}`;
+    if (DOMElements.navAuditBtn) DOMElements.navAuditBtn.className = `p-2 rounded-md transition-all ${viewName === 'audit' ? active : inactive}`;
+    if (DOMElements.navPrepBtn) DOMElements.navPrepBtn.className = `p-2 rounded-md transition-all ${viewName === 'prep' ? active : inactive}`;
+    if (DOMElements.navHygieneBtn) DOMElements.navHygieneBtn.className = `p-2 rounded-md transition-all ${viewName === 'hygiene' ? active : inactive}`;
+    if (DOMElements.navProductionBtn) DOMElements.navProductionBtn.className = `p-2 rounded-md transition-all ${viewName === 'production' ? active : inactive}`;
+    if (DOMElements.navLogisticsBtn) DOMElements.navLogisticsBtn.className = `p-2 rounded-md transition-all ${viewName === 'logistics' ? active : inactive}`;
 
     const compBtn = document.getElementById('nav-compliance-btn');
-    if (compBtn) compBtn.className = `px-5 py-2.5 text-[10px] font-black rounded-xl transition-all uppercase ${viewName === 'compliance' ? active : inactive}`;
+    if (compBtn) compBtn.className = `p-2 rounded-md transition-all ${viewName === 'compliance' ? active : inactive}`;
+
+    const pageTitle = document.getElementById('page-title');
+    if (pageTitle) {
+        const titles = {
+            'dashboard': 'Live Check',
+            'prep': 'Kitchen Log',
+            'hygiene': 'Hygiene Audit',
+            'production': 'Production Line',
+            'audit': 'Analytics',
+            'compliance': 'Compliance Report',
+            'logistics': 'Logistics Planning'
+        };
+        pageTitle.innerText = titles[viewName] || 'Command Center';
+    }
 
     if (viewName === 'audit') { renderAuditDishLibrary(); }
     if (viewName === 'prep') { renderPrepView(); }
@@ -60,8 +71,8 @@ function renderDateSelector() {
         const dayString = day.toISOString().split('T')[0];
         const isSelected = dayString === state.selectedDate;
         const button = document.createElement('button');
-        button.className = `flex flex-col items-center justify-center w-12 h-16 sm:w-16 sm:h-20 rounded-[1.25rem] sm:rounded-[1.5rem] transition-all duration-300 transform active:scale-90 shadow-xl ${isSelected ? 'bg-indigo-600 text-white shadow-indigo-600/40 ring-4 ring-indigo-400/20' : 'bg-slate-800/80 text-slate-500 border border-slate-700/50'}`;
-        button.innerHTML = `<span class="text-[9px] sm:text-[10px] uppercase font-black opacity-70 mb-1">${day.toLocaleDateString('en-US', { weekday: 'short' })}</span><span class="text-base sm:text-lg font-black">${day.getDate()}</span>`;
+        button.className = `flex flex-col items-center justify-center w-14 h-14 rounded-lg transition-all border ${isSelected ? 'bg-white border-emerald-500 shadow-sm text-[#022c22]' : 'bg-transparent border-slate-200 text-slate-400 hover:border-slate-300'}`;
+        button.innerHTML = `<span class="text-[8px] uppercase font-bold tracking-widest mb-1">${day.toLocaleDateString('en-US', { weekday: 'short' })}</span><span class="text-sm font-bold">${day.getDate()}</span>`;
         button.onclick = () => {
             state.selectedDate = dayString;
             renderDateSelector(); // Re-render to update active state

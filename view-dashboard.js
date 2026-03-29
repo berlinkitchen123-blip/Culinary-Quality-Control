@@ -85,25 +85,28 @@ function renderKanbanBoard() {
         else { targetList = DOMElements.processingList; px++; }
 
         const card = document.createElement('div');
-        card.className = "bg-card hover:bg-muted/50 border border-border rounded-md p-3 transition-colors cursor-pointer select-none flex items-start gap-3 relative overflow-hidden";
+        card.className = "bg-white hover:bg-slate-50 border border-slate-200 rounded-md p-3 shadow-sm transition-all cursor-pointer select-none flex items-center gap-4 relative";
         
         card.draggable = true;
         card.ondragstart = (e) => { e.dataTransfer.setData("text/plain", dish.dishLetter); };
         card.onclick = () => window.handleSelectDish(dish.dishLetter);
 
-        const statusColor = status === 'cooking' ? 'bg-primary' : status === 'completed' ? 'bg-green-500' : 'bg-muted-foreground/30';
+        const badgeColor = status === 'cooking' ? 'bg-[#022c22] text-white shadow-emerald-500/10' : 
+                          status === 'completed' ? 'bg-emerald-600/10 text-emerald-700' : 'bg-slate-100 text-slate-500';
 
         card.innerHTML = `
-            <div class="h-9 w-9 rounded bg-secondary flex shrink-0 items-center justify-center font-bold text-xs text-foreground border border-border/50">
+            <div class="${badgeColor} h-10 w-10 rounded-md flex shrink-0 items-center justify-center font-bold text-sm border border-black/5 relative">
                 ${dish.dishLetter}
-                ${isChecked ? '<div class="absolute -top-1 -right-1 bg-green-500 text-white rounded-full p-0.5 shadow-sm border border-background"><svg class="w-2 h-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="4" d="M5 13l4 4L19 7"/></svg></div>' : ''}
+                ${isChecked ? '<div class="absolute -top-1 -right-1 bg-emerald-500 text-white rounded-full p-0.5 shadow-sm border-2 border-white"><svg class="w-2 h-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="4" d="M5 13l4 4L19 7"/></svg></div>' : ''}
             </div>
             <div class="flex-1 min-w-0">
-                <p class="font-semibold text-[11px] text-foreground uppercase tracking-tight truncate leading-tight mb-1">${dish.dishName}</p>
+                <p class="font-bold text-[12px] text-slate-800 tracking-tight truncate leading-tight mb-0.5">${dish.dishName}</p>
                 <div class="flex items-center gap-1.5">
-                   <div class="h-1.5 w-1.5 rounded-full ${statusColor}"></div>
-                   <p class="text-[9px] text-muted-foreground font-medium uppercase tracking-wider">${dish.dishType}</p>
+                   <p class="text-[9px] text-slate-400 font-bold uppercase tracking-wider">${dish.dishType}</p>
                 </div>
+            </div>
+            <div class="p-1 text-slate-300 group-hover:text-slate-400 transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
             </div>
         `;
         targetList.appendChild(card);

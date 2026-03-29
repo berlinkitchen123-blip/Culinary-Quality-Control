@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" class="dark">
+<html lang="en">
 
 <head>
     <meta charset="UTF-8" />
@@ -7,58 +7,27 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <title>Culinary Quality Control</title>
     <style>
-        html.dark body {
-            background-color: hsl(160 30% 8%);
-            color: hsl(0 0% 95%);
+        body {
+            background-color: #f7f7f7;
+            color: #022c22;
             -webkit-tap-highlight-color: transparent;
         }
 
-        .overflow-x-auto {
-            -webkit-overflow-scrolling: touch;
-        }
-
-        ::-webkit-scrollbar {
+        .custom-scrollbar::-webkit-scrollbar {
             width: 4px;
-            height: 4px;
         }
 
-        ::-webkit-scrollbar-track {
-            background: #1e293b;
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.05);
         }
 
-        ::-webkit-scrollbar-thumb {
-            background: #334155;
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: rgba(2, 44, 34, 0.1);
             border-radius: 10px;
         }
 
-        ::-webkit-scrollbar-thumb:hover {
-            background: #475569;
-        }
-
-        button,
-        .nav-btn {
-            user-select: none;
-            touch-action: manipulation;
-        }
-
-        .custom-scrollbar::-webkit-scrollbar {
-            width: 6px;
-        }
-
-        #daily-summary-container {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 2rem;
-        }
-
-        @media (min-width: 1024px) {
-            #daily-summary-container {
-                grid-template-columns: 1fr 1fr;
-            }
-
-            .full-width-section {
-                grid-column: span 2;
-            }
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
         }
     </style>
     <script src="https://cdn.tailwindcss.com"></script>
@@ -68,49 +37,31 @@
             theme: {
                 extend: {
                     colors: {
-                        border: "hsl(160 15% 20%)",
-                        input: "hsl(160 15% 20%)",
-                        ring: "hsl(352 95% 79%)",
-                        background: "hsl(160 30% 8%)",
-                        foreground: "hsl(0 0% 95%)",
+                        border: "hsl(214.3 31.8% 91.4%)",
+                        input: "hsl(214.3 31.8% 91.4%)",
+                        ring: "hsl(160 84% 19%)",
+                        background: "hsl(0 0% 100%)",
+                        foreground: "hsl(222.2 84% 4.9%)",
                         primary: {
-                            DEFAULT: "hsl(352 95% 79%)",
-                            foreground: "hsl(160 95% 16%)",
-                        },
-                        secondary: {
-                            DEFAULT: "hsl(160 20% 18%)",
-                            foreground: "hsl(0 0% 95%)",
-                        },
-                        destructive: {
-                            DEFAULT: "hsl(0 62% 38%)",
+                            DEFAULT: "hsl(160 84% 19%)",
                             foreground: "hsl(0 0% 100%)",
                         },
+                        secondary: {
+                            DEFAULT: "hsl(210 40% 96.1%)",
+                            foreground: "hsl(222.2 47.4% 11.2%)",
+                        },
                         muted: {
-                            DEFAULT: "hsl(160 15% 18%)",
-                            foreground: "hsl(160 10% 60%)",
+                            DEFAULT: "hsl(210 40% 96.1%)",
+                            foreground: "hsl(215.4 16.3% 46.9%)",
                         },
                         accent: {
-                            DEFAULT: "hsl(352 80% 70%)",
-                            foreground: "hsl(160 95% 16%)",
+                            DEFAULT: "hsl(210 40% 96.1%)",
+                            foreground: "hsl(222.2 47.4% 11.2%)",
                         },
                         card: {
-                            DEFAULT: "hsl(160 25% 12%)",
-                            foreground: "hsl(0 0% 95%)",
-                        },
-                        kitchen: {
-                            header: "hsl(160 95% 16%)",
-                            processing: "hsl(0 0% 100%)",
-                            cooking: "hsl(352 95% 79%)",
-                            completed: "hsl(160 95% 16%)",
+                            DEFAULT: "hsl(0 0% 100%)",
+                            foreground: "hsl(222.2 84% 4.9%)",
                         }
-                    },
-                    borderRadius: {
-                        lg: "0.5rem",
-                        md: "0.4rem",
-                        sm: "0.2rem",
-                    },
-                    screens: {
-                        'xs': '375px',
                     }
                 }
             }
@@ -121,276 +72,123 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 
-<body class="antialiased font-sans selection:bg-indigo-500/30">
-    <div id="app-container" class="min-h-screen flex flex-col">
-        <header class="bg-[#05291e] backdrop-blur-xl shadow-sm sticky top-0 z-50 border-b border-border/20">
-            <div class="max-w-7xl mx-auto px-4">
-                <div class="flex items-center justify-between h-14">
-                    <div class="flex items-center space-x-6">
-                        <div class="flex items-center gap-3">
-                            <div class="bg-primary p-1.5 rounded-md shadow-lg">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-primary-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                </svg>
+<body class="antialiased font-sans h-screen overflow-hidden bg-[#f7f7f7] text-slate-900 selection:bg-emerald-500/30">
+    <div id="app-container" class="flex h-full w-full">
+        <!-- Global Vertical Sidebar -->
+        <nav class="w-16 flex-shrink-0 bg-[#022c22] flex flex-col items-center py-6 gap-6 z-50">
+            <div class="p-2 bg-emerald-500/10 rounded-lg mb-4 text-emerald-400">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            </div>
+            
+            <button id="nav-dashboard-btn" class="p-2 rounded-md text-emerald-400 font-bold transition-all relative group" title="Live Check">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>
+                <span class="absolute left-14 bg-[#022c22] text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none border border-white/10 shadow-xl">Live Check</span>
+            </button>
+            <button id="nav-production-btn" class="p-2 rounded-md text-emerald-400/50 hover:text-white transition-all group relative" title="Production">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 16V8"/><path d="M11 16V12"/><path d="M15 16V5"/><path d="M19 16V10"/></svg>
+                <span class="absolute left-14 bg-[#022c22] text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none border border-white/10 shadow-xl">Production</span>
+            </button>
+            <button id="nav-prep-btn" class="p-2 rounded-md text-emerald-400/50 hover:text-white transition-all group relative" title="Kitchen Log">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/><path d="M8 7h6"/><path d="M8 11h8"/><path d="M8 15h6"/></svg>
+                <span class="absolute left-14 bg-[#022c22] text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none border border-white/10 shadow-xl">Kitchen Log</span>
+            </button>
+            <button id="nav-hygiene-btn" class="p-2 rounded-md text-emerald-400/50 hover:text-white transition-all group relative" title="Hygiene">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 20a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z"/><path d="M7 2v4"/><path d="M17 2v4"/><path d="M2 10h20"/><path d="M8 15h2"/><path d="M14 15h2"/></svg>
+                <span class="absolute left-14 bg-[#022c22] text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none border border-white/10 shadow-xl">Hygiene</span>
+            </button>
+            <button id="nav-audit-btn" class="p-2 rounded-md text-emerald-400/50 hover:text-white transition-all group relative" title="Analytics">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/></svg>
+                <span class="absolute left-14 bg-[#022c22] text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none border border-white/10 shadow-xl">Analytics</span>
+            </button>
+            
+            <div class="mt-auto flex flex-col gap-4">
+                <button id="settings-btn" class="p-2 text-emerald-400/50 hover:text-white transition-all">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+                </button>
+            </div>
+        </nav>
+
+        <!-- Main Content Area -->
+        <div class="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
+            <!-- White Header -->
+            <header class="h-16 flex-shrink-0 flex items-center justify-between px-8 bg-white border-b border-slate-200">
+                <div class="flex items-center gap-6">
+                    <h1 id="page-title" class="text-lg font-bold text-[#022c22] tracking-tight">Assign Line Preparation</h1>
+                    <div class="flex items-center bg-slate-100 p-1 rounded-md text-[10px] font-bold">
+                        <button class="px-4 py-1.5 bg-white shadow-sm rounded text-slate-800">DAILY</button>
+                        <button class="px-4 py-1.5 text-slate-500 hover:text-slate-700">WEEKLY</button>
+                    </div>
+                </div>
+                <div class="flex items-center gap-4">
+                    <div class="flex items-center gap-2 bg-slate-50 border border-slate-200 px-4 py-2 rounded-md text-xs cursor-pointer hover:bg-slate-100 transition-colors">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                        <span id="header-date-display" class="font-bold">29 MAR 2026</span>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Page Scrollable Area -->
+            <main class="flex-1 overflow-y-auto p-8 custom-scrollbar">
+                <!-- Dashboard View (Kanban) -->
+                <div id="main-view" class="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-500">
+                    <section id="kanban-section" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                        <!-- Column 1: Processing -->
+                        <div class="flex flex-col h-full min-h-[600px] border border-slate-200 rounded-lg overflow-hidden bg-white shadow-sm" ondragover="window.allowDrop(event)" ondrop="window.dropDish(event, 'processing')">
+                            <div class="bg-[#022c22] p-4 flex items-center justify-between">
+                                <h3 class="text-[10px] font-bold text-white uppercase tracking-[0.1em]">Processing Unit</h3>
+                                <div class="flex items-center gap-2">
+                                    <span id="count-processing" class="bg-emerald-500/20 text-emerald-400 text-[9px] font-bold px-1.5 py-0.5 rounded">0</span>
+                                </div>
                             </div>
-                            <span class="text-xs font-bold text-white uppercase tracking-wider hidden sm:inline">Culinary Control</span>
+                            <div id="processing-list" class="flex-1 p-4 bg-slate-50/50 space-y-3 custom-scrollbar overflow-y-auto"></div>
                         </div>
-                        <nav class="flex h-10 bg-black/20 p-1 rounded-md border border-white/10 overflow-x-auto no-scrollbar">
-                            <button id="nav-dashboard-btn" class="px-4 py-1.5 text-[10px] font-bold rounded-sm transition-all uppercase text-muted-foreground hover:text-white">Live Check</button>
-                            <button id="nav-production-btn" class="px-4 py-1.5 text-[10px] font-bold rounded-sm transition-all uppercase text-muted-foreground hover:text-white">Production</button>
-                            <button id="nav-prep-btn" class="px-4 py-1.5 text-[10px] font-bold rounded-sm transition-all uppercase text-muted-foreground hover:text-white">Kitchen Log</button>
-                            <button id="nav-hygiene-btn" class="px-4 py-1.5 text-[10px] font-bold rounded-sm transition-all uppercase text-muted-foreground hover:text-white">Hygiene</button>
-                            <button id="nav-audit-btn" class="px-4 py-1.5 text-[10px] font-bold rounded-sm transition-all uppercase text-muted-foreground hover:text-white">Analytics</button>
-                        </nav>
-                    </div>
-                                class="px-3 sm:px-5 py-2 text-[10px] font-black rounded-lg transition-all uppercase text-slate-400 hover:text-white">Kitchen
-                                Log</button>
-                            <button id="nav-hygiene-btn"
-                                class="px-3 sm:px-5 py-2 text-[10px] font-black rounded-lg transition-all uppercase text-slate-400 hover:text-white">Hygiene</button>
-                            <button id="nav-dashboard-btn"
-                                class="px-3 sm:px-5 py-2 text-[10px] font-black rounded-lg transition-all uppercase text-slate-400 hover:text-white">Live
-                                Check</button>
-                            <button id="nav-audit-btn"
-                                class="px-3 sm:px-5 py-2 text-[10px] font-black rounded-lg transition-all uppercase text-slate-400 hover:text-white">Analytics</button>
-                            <button id="nav-compliance-btn"
-                                class="px-3 sm:px-5 py-2 text-[10px] font-black rounded-lg transition-all uppercase text-slate-400 hover:text-white">Report</button>
-                            <button id="nav-logistics-btn"
-                                class="px-3 sm:px-5 py-2 text-[10px] font-black rounded-lg transition-all uppercase text-slate-400 hover:text-white">Logistics</button>
-                        </nav>
-                    </div>
-                    <div class="flex items-center gap-3">
-                        <button id="settings-btn" class="p-2 text-muted-foreground hover:text-white hover:bg-white/5 rounded-md transition-all">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                            </svg>
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </header>
 
-        <main class="flex-grow p-4 sm:p-8 max-w-7xl mx-auto w-full overflow-x-hidden">
-            <!-- Global Date Selector -->
-            <div id="date-selector-container"
-                class="flex items-center justify-between bg-slate-800/40 p-3 rounded-3xl border border-slate-700/50 shadow-2xl backdrop-blur-sm mb-8 animate-in slide-in-from-top-4 duration-500">
-                <button id="prev-week-btn"
-                    class="p-4 rounded-2xl hover:bg-slate-700/50 text-slate-400 transition-all active:scale-90">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
-                        stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M15 19l-7-7 7-7">
-                        </path>
-                    </svg>
-                </button>
-                <div id="date-buttons-container"
-                    class="flex items-center space-x-3 overflow-x-auto pb-1 sm:pb-0 scrollbar-hide"></div>
-                <button id="next-week-btn"
-                    class="p-4 rounded-2xl hover:bg-slate-700/50 text-slate-400 transition-all active:scale-90">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
-                        stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M9 5l7 7-7 7"></path>
-                    </svg>
-                </button>
-            </div>
-
-            <div id="loading-indicator" class="flex flex-col items-center justify-center py-32 hidden">
-                <div class="relative w-16 h-16">
-                    <div class="absolute inset-0 border-4 border-indigo-500/10 rounded-full"></div>
-                    <div
-                        class="absolute inset-0 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin">
-                    </div>
-                </div>
-                <p class="mt-6 text-[10px] text-slate-500 font-black uppercase tracking-[0.4em] animate-pulse">Loading
-                    System Data</p>
-            </div>
-
-            <!-- Production Screen View -->
-            <section id="production-view" class="hidden space-y-8 animate-in fade-in slide-in-from-left-6 duration-500">
-                <div id="production-header"
-                    class="flex flex-col sm:flex-row items-start sm:items-center justify-between px-2 gap-4">
-                    <div>
-                        <h2 class="text-3xl font-black text-white italic tracking-tighter uppercase">Production Line
-                        </h2>
-                        <p class="text-[10px] font-black text-orange-400 uppercase tracking-[0.4em] mt-2">Order
-                            Aggregation System</p>
-                    </div>
-                    <div id="production-stats" class="flex gap-4">
-                        <!-- Stats injected via JS -->
-                    </div>
-                </div>
-                <div id="production-content-container" class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                    <!-- Columns injected via JS -->
-                </div>
-            </section>
-
-            <!-- Kitchen Log View -->
-            <section id="prep-view" class="hidden space-y-8 animate-in fade-in slide-in-from-left-6 duration-500">
-                <div class="flex items-center justify-between px-2">
-                    <div>
-                        <h2 class="text-3xl font-black text-white italic tracking-tighter uppercase">Kitchen Log</h2>
-                        <p class="text-[10px] font-black text-emerald-400 uppercase tracking-[0.4em] mt-2">Process &
-                            Thermal Validation</p>
-                    </div>
-                </div>
-                <div id="prep-grid-container"
-                    class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 sm:gap-6"></div>
-            </section>
-
-            <!-- Hygiene View -->
-            <section id="hygiene-view" class="hidden space-y-8 animate-in fade-in slide-in-from-left-6 duration-500">
-                <div class="flex items-center justify-between px-2">
-                    <div>
-                        <h2 class="text-3xl font-black text-white italic tracking-tighter uppercase">Hygiene Log</h2>
-                        <p class="text-[10px] font-black text-indigo-400 uppercase tracking-[0.4em] mt-2">Sanitation &
-                            Cleaning Audit</p>
-                    </div>
-                </div>
-                <div id="hygiene-grid-container"
-                    class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 sm:gap-6"></div>
-            </section>
-
-            <!-- Dashboard View (Kanban) -->
-            <div id="main-view" class="space-y-8 animate-in fade-in slide-in-from-bottom-6 duration-700">
-                <section id="kanban-section" class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    <!-- Processing Column -->
-                    <div class="flex flex-col h-full min-h-[500px] bg-card/20 rounded-md border border-border shadow-none p-4" ondragover="window.allowDrop(event)" ondrop="window.dropDish(event, 'processing')">
-                        <div class="flex items-center justify-between mb-4 border-b border-border/10 pb-3">
-                            <h3 class="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em]">Processing</h3>
-                            <span id="count-processing" class="bg-secondary text-muted-foreground text-[10px] font-medium px-2 py-0.5 rounded-sm border border-border">0</span>
+                        <!-- Column 2: Cooking -->
+                        <div class="flex flex-col h-full min-h-[600px] border border-slate-200 rounded-lg overflow-hidden bg-white shadow-sm" ondragover="window.allowDrop(event)" ondrop="window.dropDish(event, 'cooking')">
+                            <div class="bg-[#022c22] p-4 flex items-center justify-between">
+                                <h3 class="text-[10px] font-bold text-white uppercase tracking-[0.1em]">Cooking Phase</h3>
+                                <div class="flex items-center gap-2">
+                                    <span id="count-cooking" class="bg-emerald-500/20 text-emerald-400 text-[9px] font-bold px-1.5 py-0.5 rounded">0</span>
+                                </div>
+                            </div>
+                            <div id="cooking-list" class="flex-1 p-4 bg-slate-50/50 space-y-3 custom-scrollbar overflow-y-auto"></div>
                         </div>
-                        <div id="processing-list" class="flex-grow space-y-2 custom-scrollbar overflow-y-auto max-h-[70vh]"></div>
-                    </div>
- 
-                    <!-- Cooking Column -->
-                    <div class="flex flex-col h-full min-h-[500px] bg-card/20 rounded-md border border-border shadow-none p-4" ondragover="window.allowDrop(event)" ondrop="window.dropDish(event, 'cooking')">
-                        <div class="flex items-center justify-between mb-4 border-b border-border/10 pb-3">
-                            <h3 class="text-[10px] font-bold text-primary uppercase tracking-[0.2em]">Cooking</h3>
-                            <span id="count-cooking" class="bg-primary/10 text-primary text-[10px] font-medium px-2 py-0.5 rounded-sm border border-primary/20">0</span>
+
+                        <!-- Column 3: Completed -->
+                        <div class="flex flex-col h-full min-h-[600px] border border-slate-200 rounded-lg overflow-hidden bg-white shadow-sm" ondragover="window.allowDrop(event)" ondrop="window.dropDish(event, 'completed')">
+                            <div class="bg-[#022c22] p-4 flex items-center justify-between">
+                                <h3 class="text-[10px] font-bold text-white uppercase tracking-[0.1em]">Log Ready</h3>
+                                <div class="flex items-center gap-2">
+                                    <span id="count-completed" class="bg-emerald-500/20 text-emerald-400 text-[9px] font-bold px-1.5 py-0.5 rounded">0</span>
+                                </div>
+                            </div>
+                            <div id="completed-list" class="flex-1 p-4 bg-slate-50/50 space-y-3 custom-scrollbar overflow-y-auto"></div>
                         </div>
-                        <div id="cooking-list" class="flex-grow space-y-2 custom-scrollbar overflow-y-auto max-h-[70vh]"></div>
-                    </div>
- 
-                    <!-- Completed Column -->
-                    <div class="flex flex-col h-full min-h-[500px] bg-card/20 rounded-md border border-border shadow-none p-4" ondragover="window.allowDrop(event)" ondrop="window.dropDish(event, 'completed')">
-                        <div class="flex items-center justify-between mb-4 border-b border-border/10 pb-3">
-                            <h3 class="text-[10px] font-bold text-green-500 uppercase tracking-[0.2em]">Completed</h3>
-                            <span id="count-completed" class="bg-green-500/10 text-green-500 text-[10px] font-medium px-2 py-0.5 rounded-sm border border-green-500/20">0</span>
-                        </div>
-                        <div id="completed-list" class="flex-grow space-y-2 custom-scrollbar overflow-y-auto max-h-[70vh]"></div>
-                    </div>
-                </section>
+                    </section>
+                </div>
+
+                <!-- Hidden sections for navigation -->
+                <section id="production-view" class="hidden"></section>
+                <section id="prep-view" class="hidden"></section>
+                <section id="hygiene-view" class="hidden"></section>
                 <div id="welcome-placeholder" class="hidden"></div>
-            </div>
-
-            <!-- Analytics View -->
-            <section id="ai-agent-view"
-                class="hidden max-w-6xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-6 duration-700">
-                <div
-                    class="bg-gradient-to-r from-indigo-600 to-indigo-800 rounded-[3rem] p-10 text-white shadow-2xl relative overflow-hidden group">
-                    <div class="relative z-10">
-                        <h2 class="text-3xl font-black tracking-tighter italic">Analytical Audit Core</h2>
-                        <p class="text-indigo-100 text-[10px] font-black uppercase tracking-[0.5em] mt-2 opacity-80">
-                            Historical Performance Matrix</p>
-                    </div>
-                </div>
-                <div id="audit-results-container" class="space-y-10 pb-20"></div>
-            </section>
-
-            <!-- Detail View -->
-            <section id="compliance-view"
-                class="hidden w-full max-w-full -mx-4 sm:mx-0 sm:px-0 animate-in fade-in slide-in-from-bottom-6 duration-700 h-full overflow-auto">
-            </section>
-            <section id="logistics-view" class="hidden h-full overflow-auto"></section>
-
-            <section id="dish-detail-view" class="hidden animate-in fade-in slide-in-from-right-12 duration-500">
-                <button id="back-to-menu-btn"
-                    class="flex items-center gap-3 px-6 py-4 mb-8 text-[11px] font-black rounded-[1.5rem] bg-slate-800 text-slate-300 border border-slate-700 hover:text-white transition-all active:scale-95 shadow-2xl">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
-                        stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3"
-                            d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
-                    </svg>
-                    RETURN TO DASHBOARD
-                </button>
-                <div id="dish-card-container" class="max-w-3xl mx-auto"></div>
-            </section>
-        </main>
-
-        <div id="settings-modal"
-            class="fixed inset-0 bg-slate-950/95 flex items-center justify-center z-[100] p-6 hidden backdrop-blur-3xl">
-            <div
-                class="bg-slate-900 rounded-[3rem] shadow-2xl w-full max-w-2xl max-h-[85vh] overflow-hidden border border-slate-800 flex flex-col scale-in">
-                <div class="p-8 border-b border-slate-800 flex justify-between items-center bg-slate-900/50">
-                    <div>
-                        <h2
-                            class="text-2xl font-black text-white uppercase tracking-tighter italic underline decoration-indigo-500 decoration-4 underline-offset-8">
-                            Neural Setup</h2>
-                        <p class="text-[10px] text-slate-500 font-black uppercase tracking-[0.3em] mt-3">System
-                            Synchronization</p>
-                    </div>
-                    <button id="settings-close-btn"
-                        class="p-3 text-slate-500 hover:text-white hover:bg-slate-800 rounded-2xl transition-all">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24"
-                            stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M6 18L18 6M6 6l12 12"></path>
-                        </svg>
-                    </button>
-                </div>
-
-                <!-- Tab Header -->
-                <div class="flex border-b border-slate-800">
-                    <button id="tab-prod-btn"
-                        class="flex-1 py-4 text-[10px] sm:text-xs font-black uppercase tracking-widest text-orange-400 border-b-2 border-orange-500 bg-slate-800/30 transition-all hover:bg-slate-800/60">Production
-                        Import</button>
-                    <button id="tab-menu-btn"
-                        class="flex-1 py-4 text-[10px] sm:text-xs font-black uppercase tracking-widest text-slate-500 border-b-2 border-transparent hover:text-indigo-400 hover:bg-slate-800/30 transition-all">Menu
-                        Manifest</button>
-                </div>
-
-                <div class="p-8 overflow-y-auto flex-grow custom-scrollbar">
-                    <!-- Production Tab Content -->
-                    <div id="tab-prod-content" class="space-y-4 animate-in fade-in duration-300">
-                        <div class="space-y-3">
-                            <label for="production-json-input"
-                                class="block text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] px-2 flex justify-between">
-                                <span>Production Orders (JSON)</span>
-                                <span class="text-orange-500">KDS DATA SOURCE</span>
-                            </label>
-                            <textarea id="production-json-input" rows="8"
-                                class="w-full p-6 border rounded-[2rem] bg-slate-950 border-slate-800 text-orange-400 font-mono text-[12px] focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 outline-none transition-all placeholder:text-slate-800 leading-relaxed shadow-inner"
-                                placeholder='Paste order array: [{"name": "Dish...", "recipe": ["Item x1 (100g)"], "readyBy": 600, "deliveryDate": "2023-10-25" ...}]'></textarea>
-                        </div>
-                    </div>
-
-                    <!-- Menu Tab Content -->
-                    <div id="tab-menu-content" class="space-y-4 hidden animate-in fade-in duration-300">
-                        <div class="space-y-3">
-                            <label for="json-input"
-                                class="block text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] px-2 flex justify-between">
-                                <span>Menu Manifest (JSON)</span>
-                                <span class="text-indigo-500">AUDIT BLUEPRINTS</span>
-                            </label>
-                            <textarea id="json-input" rows="8"
-                                class="w-full p-6 border rounded-[2rem] bg-slate-950 border-slate-800 text-indigo-400 font-mono text-[12px] focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all placeholder:text-slate-800 leading-relaxed shadow-inner"
-                                placeholder="Paste menu structure for quality checking..."></textarea>
-                        </div>
-                    </div>
-
-                    <p id="settings-error"
-                        class="text-red-500 text-[11px] font-black px-2 uppercase tracking-tight mt-4 text-center"></p>
-                </div>
-                <div class="p-8 bg-slate-900/80 border-t border-slate-800 flex justify-end gap-4">
-                    <button id="settings-cancel-btn"
-                        class="px-8 py-3.5 text-xs font-black rounded-2xl bg-slate-800 text-slate-400 hover:text-white transition-all active:scale-95 border border-slate-700">Abort</button>
-                    <button id="settings-save-btn"
-                        class="px-12 py-3.5 text-xs font-black text-white bg-indigo-600 rounded-2xl hover:bg-indigo-700 shadow-2xl shadow-indigo-600/30 transition-all active:scale-95 border-b-4 border-indigo-800">Commit
-                        Changes</button>
-                </div>
-            </div>
+            </main>
         </div>
     </div>
 
+    <!-- Modals & Containers -->
+    <div id="modal-container" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[100] hidden items-center justify-center p-4"></div>
+    <div id="notification-container" class="fixed top-20 right-4 z-[200] w-full max-w-sm pointer-events-none space-y-2"></div>
+
+    <script src="config.js"></script>
+    <script src="dom-elements.js"></script>
+    <script src="utils.js"></script>
+    <script src="firebase-service.js" type="module"></script>
+    <script src="ui-notifications.js"></script>
+    <script src="view-production.js"></script>
+    <script src="view-prep.js"></script>
+    <script src="view-hygiene.js"></script>
+    <script src="view-dashboard.js"></script>
     <script src="index.js" type="module"></script>
 </body>
 

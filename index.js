@@ -9,6 +9,10 @@ import { renderAuditDishLibrary } from "./view-analytics.js";
 import { renderComplianceReport } from "./view-compliance.js";
 import { renderLogisticsReport } from "./view-logistics.js";
 import { renderDishAssignView } from "./view-dish-assign.js";
+import { renderIngredientQtyView } from "./view-ingredient-qty.js";
+import { renderKitchenOverview } from "./view-kitchen-overview.js";
+import { renderThermalView } from "./view-thermal.js";
+import { renderForecastView } from "./view-forecast.js";
 
 // =============================================
 // VIEW CONTROLLER
@@ -16,7 +20,6 @@ import { renderDishAssignView } from "./view-dish-assign.js";
 export function showView(viewName) {
     state.currentView = viewName;
 
-    // All view containers mapped by route name
     const views = {
         'dashboard': DOMElements.mainView,
         'production': DOMElements.productionView,
@@ -33,7 +36,6 @@ export function showView(viewName) {
         'thermal': DOMElements.thermalView,
     };
 
-    // Hide all, show the target
     Object.entries(views).forEach(([key, el]) => {
         if (el) el.classList.toggle('hidden', viewName !== key);
     });
@@ -60,16 +62,19 @@ export function showView(viewName) {
         if (btn) btn.className = `p-2 rounded-md transition-all ${viewName === name ? activeClass : inactiveClass}`;
     });
 
-    // Render the appropriate view
+    // Render view
     switch (viewName) {
         case 'dashboard': renderApp(); break;
-        case 'prep': renderPrepView(); break;
-        case 'hygiene': renderHygieneGrid(); break;
-        case 'production': renderProductionView(); break;
-        case 'audit': renderAuditDishLibrary(); break;
-        case 'compliance': renderComplianceReport(); break;
-        case 'logistics': renderLogisticsReport(); break;
+        case 'ingredient': renderIngredientQtyView(); break;
+        case 'kitchen': renderKitchenOverview(); break;
         case 'dish': renderDishAssignView(); break;
+        case 'forecast': renderForecastView(); break;
+        case 'production': renderProductionView(); break;
+        case 'prep': renderPrepView(); break;
+        case 'thermal': renderThermalView(); break;
+        case 'hygiene': renderHygieneGrid(); break;
+        case 'compliance': renderComplianceReport(); break;
+        case 'audit': renderAuditDishLibrary(); break;
     }
 
     // Page Title
@@ -90,13 +95,12 @@ export function showView(viewName) {
     if (DOMElements.pageTitle) DOMElements.pageTitle.innerText = titles[viewName] || 'Command Center';
 }
 
-// Expose globally so view modules can call it without circular import
 window.showView = showView;
 
 // =============================================
 // SIDEBAR EVENT LISTENERS
 // =============================================
-const sidebarBindings = [
+[
     ['navDashboardBtn', 'dashboard'],
     ['navIngredientBtn', 'ingredient'],
     ['navKitchenBtn', 'kitchen'],
@@ -108,9 +112,7 @@ const sidebarBindings = [
     ['navHygieneBtn', 'hygiene'],
     ['navComplianceBtn', 'compliance'],
     ['navAuditBtn', 'audit'],
-];
-
-sidebarBindings.forEach(([key, view]) => {
+].forEach(([key, view]) => {
     if (DOMElements[key]) DOMElements[key].onclick = () => showView(view);
 });
 
@@ -144,8 +146,7 @@ if (DOMElements.detailBackBtn) {
 // =============================================
 showView('dashboard');
 if (DOMElements.headerDateDisplay) {
-    const now = new Date();
-    DOMElements.headerDateDisplay.innerText = now.toLocaleDateString('en-GB', {
+    DOMElements.headerDateDisplay.innerText = new Date().toLocaleDateString('en-GB', {
         day: '2-digit', month: 'short', year: 'numeric'
     }).toUpperCase();
 }

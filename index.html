@@ -75,35 +75,48 @@
 <body class="antialiased font-sans h-screen overflow-hidden bg-[#f7f7f7] text-slate-900 selection:bg-emerald-500/30">
     <div id="app-container" class="flex h-full w-full">
         <!-- Global Vertical Sidebar -->
-        <nav class="w-16 flex-shrink-0 bg-[#022c22] flex flex-col items-center py-6 gap-6 z-50">
-            <div class="p-2 bg-emerald-500/10 rounded-lg mb-4 text-emerald-400">
+        <nav class="w-16 flex-shrink-0 bg-[#022c22] flex flex-col items-center py-6 gap-5 z-50 overflow-y-auto no-scrollbar">
+            <div class="p-2 bg-emerald-500/10 rounded-lg mb-2 text-emerald-400">
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
             </div>
             
-            <button id="nav-dashboard-btn" class="p-2 rounded-md text-emerald-400 font-bold transition-all relative group" title="Live Check">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>
-                <span class="absolute left-14 bg-[#022c22] text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none border border-white/10 shadow-xl">Live Check</span>
+            <button id="nav-dashboard-btn" class="p-2 rounded-md transition-all relative group" title="Assign Prep">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/></svg>
             </button>
-            <button id="nav-production-btn" class="p-2 rounded-md text-emerald-400/50 hover:text-white transition-all group relative" title="Production">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 16V8"/><path d="M11 16V12"/><path d="M15 16V5"/><path d="M19 16V10"/></svg>
-                <span class="absolute left-14 bg-[#022c22] text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none border border-white/10 shadow-xl">Production</span>
+            <button id="nav-ingredient-btn" class="p-2 rounded-md text-white/50 hover:text-white transition-all group relative" title="Ingredient Qty">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.256 1.189-3.103.551-.617.911-1.167 1.311-1.897z"/></svg>
             </button>
-            <button id="nav-prep-btn" class="p-2 rounded-md text-emerald-400/50 hover:text-white transition-all group relative" title="Kitchen Log">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/><path d="M8 7h6"/><path d="M8 11h8"/><path d="M8 15h6"/></svg>
-                <span class="absolute left-14 bg-[#022c22] text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none border border-white/10 shadow-xl">Kitchen Log</span>
+            <button id="nav-kitchen-btn" class="p-2 rounded-md text-white/50 hover:text-white transition-all group relative" title="Kitchen">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 18V2"/><path d="m18 12 1.41 2.82a2 2 0 0 1-1.79 2.89H12"/><path d="m6 12-1.41 2.82A2 2 0 0 0 6.38 17.71h1.79l1.41 2.82A2 2 0 0 0 11.37 21.71h1.26a2 2 0 0 0 1.79-1.18l1.41-2.82h1.79a2 2 0 0 1 1.79 2.89L21 21"/><path d="M21 12V2"/><path d="M3 12h18"/><path d="M3 12V2"/></svg>
             </button>
-            <button id="nav-hygiene-btn" class="p-2 rounded-md text-emerald-400/50 hover:text-white transition-all group relative" title="Hygiene">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 20a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z"/><path d="M7 2v4"/><path d="M17 2v4"/><path d="M2 10h20"/><path d="M8 15h2"/><path d="M14 15h2"/></svg>
-                <span class="absolute left-14 bg-[#022c22] text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none border border-white/10 shadow-xl">Hygiene</span>
+            <button id="nav-dish-btn" class="p-2 rounded-md text-white/50 hover:text-white transition-all group relative" title="Dish Assign">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
             </button>
-            <button id="nav-audit-btn" class="p-2 rounded-md text-emerald-400/50 hover:text-white transition-all group relative" title="Analytics">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/></svg>
-                <span class="absolute left-14 bg-[#022c22] text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none border border-white/10 shadow-xl">Analytics</span>
+            <button id="nav-forecast-btn" class="p-2 rounded-md text-white/50 hover:text-white transition-all group relative" title="Order Forecast">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>
+            </button>
+            <button id="nav-production-btn" class="p-2 rounded-md text-white/50 hover:text-white transition-all group relative" title="Production Line">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M8 13h8"/><path d="M8 17h8"/><path d="M10 9h1"/></svg>
+            </button>
+            <button id="nav-prep-btn" class="p-2 rounded-md text-white/50 hover:text-white transition-all group relative" title="Kitchen Log">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/><path d="M8 7h6"/><path d="M8 11h8"/><path d="M8 15h6"/></svg>
+            </button>
+            <button id="nav-thermal-btn" class="p-2 rounded-md text-white/50 hover:text-white transition-all group relative" title="Thermal Validation">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4v10.54a4 4 0 1 1-4 0V4a2 2 0 0 1 4 0Z"/></svg>
+            </button>
+            <button id="nav-hygiene-btn" class="p-2 rounded-md text-white/50 hover:text-white transition-all group relative" title="Hygiene Audit">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>
+            </button>
+            <button id="nav-compliance-btn" class="p-2 rounded-md text-white/50 hover:text-white transition-all group relative" title="Compliance">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/></svg>
+            </button>
+            <button id="nav-audit-btn" class="p-2 rounded-md text-white/50 hover:text-white transition-all group relative" title="Analytics">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 12V2"/><path d="M12 12l9 2.5"/></svg>
             </button>
             
             <div class="mt-auto flex flex-col gap-4">
-                <button id="settings-btn" class="p-2 text-emerald-400/50 hover:text-white transition-all">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+                <button id="settings-btn" class="p-2 text-white/30 hover:text-white transition-all">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
                 </button>
             </div>
         </nav>
@@ -127,50 +140,40 @@
                 </div>
             </header>
 
-            <!-- Page Scrollable Area -->
-            <main class="flex-1 overflow-y-auto p-8 custom-scrollbar">
-                <!-- Dashboard View (Kanban) -->
-                <div id="main-view" class="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-500">
-                    <section id="kanban-section" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                        <!-- Column 1: Processing -->
-                        <div class="flex flex-col h-full min-h-[600px] border border-slate-200 rounded-lg overflow-hidden bg-white shadow-sm" ondragover="window.allowDrop(event)" ondrop="window.dropDish(event, 'processing')">
-                            <div class="bg-[#022c22] p-4 flex items-center justify-between">
-                                <h3 class="text-[10px] font-bold text-white uppercase tracking-[0.1em]">Processing Unit</h3>
-                                <div class="flex items-center gap-2">
-                                    <span id="count-processing" class="bg-emerald-500/20 text-emerald-400 text-[9px] font-bold px-1.5 py-0.5 rounded">0</span>
-                                </div>
-                            </div>
-                            <div id="processing-list" class="flex-1 p-4 bg-slate-50/50 space-y-3 custom-scrollbar overflow-y-auto"></div>
+            <!-- Page Content -->
+            <main class="flex-1 overflow-hidden flex">
+                <!-- Dashboard View (Split Assignment) -->
+                <div id="main-view" class="flex flex-1 overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-500">
+                    <!-- Left panel: Available Ingredients -->
+                    <aside class="w-80 flex-shrink-0 bg-white border-r border-slate-200 flex flex-col overflow-hidden">
+                        <div class="p-6 border-b border-slate-100 bg-slate-50/30">
+                            <h2 class="text-sm font-bold text-slate-800 mb-1">Available Ingredients</h2>
+                            <p id="available-count" class="text-[10px] text-slate-400 font-medium tracking-tight">0 ingredients</p>
                         </div>
-
-                        <!-- Column 2: Cooking -->
-                        <div class="flex flex-col h-full min-h-[600px] border border-slate-200 rounded-lg overflow-hidden bg-white shadow-sm" ondragover="window.allowDrop(event)" ondrop="window.dropDish(event, 'cooking')">
-                            <div class="bg-[#022c22] p-4 flex items-center justify-between">
-                                <h3 class="text-[10px] font-bold text-white uppercase tracking-[0.1em]">Cooking Phase</h3>
-                                <div class="flex items-center gap-2">
-                                    <span id="count-cooking" class="bg-emerald-500/20 text-emerald-400 text-[9px] font-bold px-1.5 py-0.5 rounded">0</span>
-                                </div>
-                            </div>
-                            <div id="cooking-list" class="flex-1 p-4 bg-slate-50/50 space-y-3 custom-scrollbar overflow-y-auto"></div>
+                        <div id="ingredients-list" class="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar">
+                            <!-- Ingredient cards injected here -->
                         </div>
+                    </aside>
 
-                        <!-- Column 3: Completed -->
-                        <div class="flex flex-col h-full min-h-[600px] border border-slate-200 rounded-lg overflow-hidden bg-white shadow-sm" ondragover="window.allowDrop(event)" ondrop="window.dropDish(event, 'completed')">
-                            <div class="bg-[#022c22] p-4 flex items-center justify-between">
-                                <h3 class="text-[10px] font-bold text-white uppercase tracking-[0.1em]">Log Ready</h3>
-                                <div class="flex items-center gap-2">
-                                    <span id="count-completed" class="bg-emerald-500/20 text-emerald-400 text-[9px] font-bold px-1.5 py-0.5 rounded">0</span>
-                                </div>
+                    <!-- Right grid: Kitchen Operators -->
+                    <section class="flex-1 bg-slate-50/30 overflow-y-auto p-8 custom-scrollbar">
+                        <div class="flex items-center justify-between mb-8">
+                            <div>
+                                <h2 class="text-sm font-bold text-slate-800">Kitchen Operators</h2>
+                                <p id="operators-count" class="text-[10px] text-slate-400 font-medium tracking-tight">0 operators</p>
                             </div>
-                            <div id="completed-list" class="flex-1 p-4 bg-slate-50/50 space-y-3 custom-scrollbar overflow-y-auto"></div>
+                        </div>
+                        
+                        <div id="operators-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                            <!-- Operator cards injected here -->
                         </div>
                     </section>
                 </div>
 
                 <!-- Hidden sections for navigation -->
-                <section id="production-view" class="hidden"></section>
-                <section id="prep-view" class="hidden"></section>
-                <section id="hygiene-view" class="hidden"></section>
+                <section id="production-view" class="hidden h-full overflow-y-auto p-8"></section>
+                <section id="prep-view" class="hidden h-full overflow-y-auto p-8"></section>
+                <section id="hygiene-view" class="hidden h-full overflow-y-auto p-8"></section>
                 <div id="welcome-placeholder" class="hidden"></div>
             </main>
         </div>

@@ -3,7 +3,7 @@ import { ref, update, onValue } from "https://www.gstatic.com/firebasejs/9.23.0/
 import { database } from "./firebase-config.js";
 import { state, HYGIENE_TASKS } from "./state.js";
 import { DOMElements } from "./dom-elements.js";
-import { showView } from "./index.js";
+// showView is available as window.showView (set by index.js) to avoid circular imports
 
 // Helper for Camera
 function renderHygieneCamera(containerId, initialImage, onCapture) {
@@ -175,7 +175,7 @@ export function renderHygieneGrid() {
             state.selectedHygieneItem = item;
             state.selectedDish = null;
             state.selectedPrepItem = null;
-            showView('detail');
+            window.showView('detail');
             renderHygieneDetail();
         };
         

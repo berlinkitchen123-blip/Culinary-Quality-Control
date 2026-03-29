@@ -6,29 +6,34 @@ import { renderPrepView } from "./view-prep.js";
 import { renderProductionView } from "./view-production.js";
 import { renderHygieneGrid } from "./view-hygiene.js";
 
-// Page initialization
+// =============================================
+// VIEW CONTROLLER
+// =============================================
 export function showView(viewName) {
     state.currentView = viewName;
-    
-    // Toggle View Containers
-    const visibilityMap = {
+
+    // All view containers
+    const views = {
         'dashboard': DOMElements.mainView,
         'production': DOMElements.productionView,
         'prep': DOMElements.prepView,
         'hygiene': DOMElements.hygieneView,
+        'detail': DOMElements.dishDetailView,
+        'audit': DOMElements.aiAgentView,
         'compliance': DOMElements.complianceView,
-        'audit': DOMElements.analyticsView,
+        'logistics': DOMElements.logisticsView,
     };
 
-    Object.entries(visibilityMap).forEach(([key, container]) => {
-        if (container) container.classList.toggle('hidden', viewName !== key);
+    // Hide all, show the target
+    Object.entries(views).forEach(([key, el]) => {
+        if (el) el.classList.toggle('hidden', viewName !== key);
     });
 
-    // Sidebar State
+    // Sidebar highlighting
     const activeClass = "text-emerald-400 bg-emerald-500/10 shadow-inner";
     const inactiveClass = "text-white/40 hover:text-white";
 
-    const navButtons = {
+    const navMap = {
         'dashboard': DOMElements.navDashboardBtn,
         'ingredient': DOMElements.navIngredientBtn,
         'kitchen': DOMElements.navKitchenBtn,
@@ -39,73 +44,94 @@ export function showView(viewName) {
         'thermal': DOMElements.navThermalBtn,
         'hygiene': DOMElements.navHygieneBtn,
         'compliance': DOMElements.navComplianceBtn,
-        'audit': DOMElements.navAuditBtn
+        'audit': DOMElements.navAuditBtn,
     };
 
-    Object.entries(navButtons).forEach(([name, btn]) => {
+    Object.entries(navMap).forEach(([name, btn]) => {
         if (btn) btn.className = `p-2 rounded-md transition-all ${viewName === name ? activeClass : inactiveClass}`;
     });
 
-    // Sub-view rendering
+    // Render the appropriate view
     if (viewName === 'dashboard') renderApp();
     if (viewName === 'prep') renderPrepView();
     if (viewName === 'hygiene') renderHygieneGrid();
     if (viewName === 'production') renderProductionView();
 
-    // Titles
+    // Page Title
     const titles = {
         'dashboard': 'Assign Line Preparation',
         'ingredient': 'Ingredient Inventory',
         'kitchen': 'Kitchen Command Center',
-        'dish': 'Dish Assignment Logic',
+        'dish': 'Dish Assignment',
         'forecast': 'Forecast Analysis',
         'production': 'Production Management',
-        'prep': 'Kitchen Operation Log',
-        'thermal': 'Thermal Validation Grid',
-        'hygiene': 'Hygiene Compliance',
+        'prep': 'Kitchen Log',
+        'thermal': 'Thermal Validation',
+        'hygiene': 'Hygiene Audit',
         'compliance': 'Quality Compliance',
-        'audit': 'Audit & Metrics'
+        'audit': 'Analytics Center',
+        'detail': 'Item Detail',
     };
     if (DOMElements.pageTitle) DOMElements.pageTitle.innerText = titles[viewName] || 'Command Center';
 }
 
-// Attach Event Listeners Safely
-const navMap = [
-    { btn: DOMElements.navDashboardBtn, view: 'dashboard' },
-    { btn: DOMElements.navIngredientBtn, view: 'ingredient' },
-    { btn: DOMElements.navKitchenBtn, view: 'kitchen' },
-    { btn: DOMElements.navDishBtn, view: 'dish' },
-    { btn: DOMElements.navForecastBtn, view: 'forecast' },
-    { btn: DOMElements.navProductionBtn, view: 'production' },
-    { btn: DOMElements.navPrepBtn, view: 'prep' },
-    { btn: DOMElements.navThermalBtn, view: 'thermal' },
-    { btn: DOMElements.navHygieneBtn, view: 'hygiene' },
-    { btn: DOMElements.navComplianceBtn, view: 'compliance' },
-    { btn: DOMElements.navAuditBtn, view: 'audit' }
+// Expose globally so view modules can call it without circular import
+window.showView = showView;
+
+// =============================================
+// SIDEBAR EVENT LISTENERS
+// =============================================
+const sidebarBindings = [
+    ['navDashboardBtn', 'dashboard'],
+    ['navIngredientBtn', 'ingredient'],
+    ['navKitchenBtn', 'kitchen'],
+    ['navDishBtn', 'dish'],
+    ['navForecastBtn', 'forecast'],
+    ['navProductionBtn', 'production'],
+    ['navPrepBtn', 'prep'],
+    ['navThermalBtn', 'thermal'],
+    ['navHygieneBtn', 'hygiene'],
+    ['navComplianceBtn', 'compliance'],
+    ['navAuditBtn', 'audit'],
 ];
 
-navMap.forEach(item => {
-    if (item.btn) item.btn.onclick = () => showView(item.view);
+sidebarBindings.forEach(([key, view]) => {
+    if (DOMElements[key]) DOMElements[key].onclick = () => showView(view);
 });
 
-// Toggles
-if (DOMElements.toggleDailyBtn) {
+// =============================================
+// DAILY / WEEKLY TOGGLE
+// =============================================
+if (DOMElements.toggleDailyBtn && DOMElements.toggleWeeklyBtn) {
     DOMElements.toggleDailyBtn.onclick = () => {
-        DOMElements.toggleDailyBtn.classList.replace('text-slate-500', 'bg-white');
-        DOMElements.toggleWeeklyBtn.classList.replace('bg-white', 'text-slate-500');
+        DOMElements.toggleDailyBtn.className = "px-4 py-1.5 bg-white shadow-sm rounded text-slate-800";
+        DOMElements.toggleWeeklyBtn.className = "px-4 py-1.5 text-slate-500 hover:text-slate-700";
     };
-}
-if (DOMElements.toggleWeeklyBtn) {
     DOMElements.toggleWeeklyBtn.onclick = () => {
-        DOMElements.toggleWeeklyBtn.classList.replace('text-slate-500', 'bg-white');
-        DOMElements.toggleDailyBtn.classList.replace('bg-white', 'text-slate-500');
+        DOMElements.toggleWeeklyBtn.className = "px-4 py-1.5 bg-white shadow-sm rounded text-slate-800";
+        DOMElements.toggleDailyBtn.className = "px-4 py-1.5 text-slate-500 hover:text-slate-700";
     };
 }
 
-// Ready
-document.addEventListener('DOMContentLoaded', () => {
-    showView('dashboard');
-    if (DOMElements.headerDateDisplay) {
-        DOMElements.headerDateDisplay.innerText = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
-    }
-});
+// =============================================
+// DETAIL BACK BUTTON
+// =============================================
+if (DOMElements.detailBackBtn) {
+    DOMElements.detailBackBtn.onclick = () => {
+        // Go back to the view that was active before detail
+        if (state.selectedPrepItem) showView('prep');
+        else if (state.selectedHygieneItem) showView('hygiene');
+        else showView('dashboard');
+    };
+}
+
+// =============================================
+// INIT
+// =============================================
+showView('dashboard');
+if (DOMElements.headerDateDisplay) {
+    const now = new Date();
+    DOMElements.headerDateDisplay.innerText = now.toLocaleDateString('en-GB', {
+        day: '2-digit', month: 'short', year: 'numeric'
+    }).toUpperCase();
+}

@@ -12,7 +12,6 @@
             color: #022c22;
             -webkit-tap-highlight-color: transparent;
         }
-
         .custom-scrollbar::-webkit-scrollbar { width: 4px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.05); }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(2, 44, 34, 0.1); border-radius: 10px; }
@@ -30,26 +29,11 @@
                         ring: "hsl(160 84% 19%)",
                         background: "hsl(0 0% 100%)",
                         foreground: "hsl(222.2 84% 4.9%)",
-                        primary: {
-                            DEFAULT: "hsl(160 84% 19%)",
-                            foreground: "hsl(0 0% 100%)",
-                        },
-                        secondary: {
-                            DEFAULT: "hsl(210 40% 96.1%)",
-                            foreground: "hsl(222.2 47.4% 11.2%)",
-                        },
-                        muted: {
-                            DEFAULT: "hsl(210 40% 96.1%)",
-                            foreground: "hsl(215.4 16.3% 46.9%)",
-                        },
-                        accent: {
-                            DEFAULT: "hsl(210 40% 96.1%)",
-                            foreground: "hsl(222.2 47.4% 11.2%)",
-                        },
-                        card: {
-                            DEFAULT: "hsl(0 0% 100%)",
-                            foreground: "hsl(222.2 84% 4.9%)",
-                        }
+                        primary: { DEFAULT: "hsl(160 84% 19%)", foreground: "hsl(0 0% 100%)" },
+                        secondary: { DEFAULT: "hsl(210 40% 96.1%)", foreground: "hsl(222.2 47.4% 11.2%)" },
+                        muted: { DEFAULT: "hsl(210 40% 96.1%)", foreground: "hsl(215.4 16.3% 46.9%)" },
+                        accent: { DEFAULT: "hsl(210 40% 96.1%)", foreground: "hsl(222.2 47.4% 11.2%)" },
+                        card: { DEFAULT: "hsl(0 0% 100%)", foreground: "hsl(222.2 84% 4.9%)" }
                     }
                 }
             }
@@ -60,12 +44,12 @@
 
 <body class="antialiased font-sans h-screen overflow-hidden bg-[#f7f7f7] text-slate-900 selection:bg-emerald-500/30">
     <div id="app-container" class="flex h-full w-full">
-        <!-- Global Vertical Sidebar -->
+
+        <!-- ========== SIDEBAR ========== -->
         <nav class="w-16 flex-shrink-0 bg-[#022c22] flex flex-col items-center py-6 gap-5 z-50 overflow-y-auto no-scrollbar">
             <div class="p-2 bg-emerald-500/10 rounded-lg mb-2 text-emerald-400">
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
             </div>
-            
             <button id="nav-dashboard-btn" class="p-2 rounded-md transition-all relative group" title="Assign Prep">
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/></svg>
             </button>
@@ -73,7 +57,7 @@
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.256 1.189-3.103.551-.617.911-1.167 1.311-1.897z"/></svg>
             </button>
             <button id="nav-kitchen-btn" class="p-2 rounded-md text-white/40 hover:text-white transition-all group relative" title="Kitchen">
-                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 18V2"/><path d="m18 12 1.41 2.82a2 2 0 0 1-1.79 2.89H12"/><path d="m6 12-1.41 2.82A2 2 0 0 0 6.38 17.71h1.79l1.41 2.82A2 2 0 0 0 11.37 21.71h1.26a2 2 0 0 0 1.79-1.18l1.41-2.82h1.79a2 2 0 0 1 1.79 2.89L21 21"/><path d="M21 12V2"/><path d="M3 12h18"/><path d="M3 12V2"/></svg>
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 13.87A4 4 0 0 1 7.41 6a5.11 5.11 0 0 1 1.05-1.54 5 5 0 0 1 7.08 0A5.11 5.11 0 0 1 16.59 6 4 4 0 0 1 18 13.87V21H6Z"/><line x1="6" x2="18" y1="17" y2="17"/></svg>
             </button>
             <button id="nav-dish-btn" class="p-2 rounded-md text-white/40 hover:text-white transition-all group relative" title="Dish Assign">
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
@@ -99,7 +83,6 @@
             <button id="nav-audit-btn" class="p-2 rounded-md text-white/40 hover:text-white transition-all group relative" title="Analytics">
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 12V2"/><path d="M12 12l9 2.5"/></svg>
             </button>
-            
             <div class="mt-auto flex flex-col gap-4">
                 <button id="settings-btn" class="p-2 text-white/20 hover:text-white transition-all">
                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
@@ -107,8 +90,9 @@
             </div>
         </nav>
 
-        <!-- Main Content Area -->
+        <!-- ========== MAIN CONTENT AREA ========== -->
         <div class="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
+
             <!-- White Header -->
             <header class="h-16 flex-shrink-0 flex items-center justify-between px-8 bg-white border-b border-slate-200">
                 <div class="flex items-center gap-6">
@@ -126,10 +110,11 @@
                 </div>
             </header>
 
-            <!-- Page Content -->
+            <!-- ========== VIEW CONTAINERS ========== -->
             <main class="flex-1 overflow-hidden flex">
-                <!-- Dashboard View (Split Assignment) -->
-                <div id="main-view" class="flex flex-1 overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-500">
+
+                <!-- VIEW: Dashboard / Assign -->
+                <div id="main-view" class="flex flex-1 overflow-hidden">
                     <aside class="w-80 flex-shrink-0 bg-white border-r border-slate-200 flex flex-col overflow-hidden">
                         <div class="p-6 border-b border-slate-100 bg-slate-50/30">
                             <h2 class="text-sm font-bold text-slate-800 mb-1">Available Ingredients</h2>
@@ -137,7 +122,6 @@
                         </div>
                         <div id="ingredients-list" class="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar"></div>
                     </aside>
-
                     <section class="flex-1 bg-slate-50/30 overflow-y-auto p-8 custom-scrollbar">
                         <div class="flex items-center justify-between mb-8">
                             <div>
@@ -149,23 +133,79 @@
                     </section>
                 </div>
 
-                <!-- Section View Containers -->
-                <section id="production-view" class="hidden flex-1 h-full overflow-y-auto p-8 bg-slate-50"></section>
-                <section id="prep-view" class="hidden flex-1 h-full overflow-y-auto p-8 bg-slate-50"></section>
-                <section id="hygiene-view" class="hidden flex-1 h-full overflow-y-auto p-8 bg-slate-50"></section>
-                <section id="compliance-view" class="hidden flex-1 h-full overflow-y-auto p-8 bg-slate-50"></section>
-                <section id="analytics-view" class="hidden flex-1 h-full overflow-y-auto p-8 bg-slate-50"></section>
+                <!-- VIEW: Production -->
+                <section id="production-view" class="hidden flex-1 h-full overflow-y-auto bg-slate-50 custom-scrollbar">
+                    <div class="p-8">
+                        <div class="flex items-center justify-between mb-6">
+                            <h2 class="text-sm font-bold text-slate-800">Production Orders</h2>
+                            <div id="production-stats" class="flex items-center gap-3"></div>
+                        </div>
+                        <div id="production-content-container" class="grid grid-cols-1 lg:grid-cols-2 gap-6"></div>
+                    </div>
+                </section>
+
+                <!-- VIEW: Prep / Kitchen Log -->
+                <section id="prep-view" class="hidden flex-1 h-full overflow-y-auto bg-slate-50 custom-scrollbar">
+                    <div class="p-8">
+                        <h2 class="text-sm font-bold text-slate-800 mb-6">Kitchen Log</h2>
+                        <div id="prep-grid-container" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4"></div>
+                    </div>
+                </section>
+
+                <!-- VIEW: Hygiene -->
+                <section id="hygiene-view" class="hidden flex-1 h-full overflow-y-auto bg-slate-50 custom-scrollbar">
+                    <div class="p-8">
+                        <h2 class="text-sm font-bold text-slate-800 mb-6">Hygiene Audit</h2>
+                        <div id="hygiene-grid-container" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4"></div>
+                    </div>
+                </section>
+
+                <!-- VIEW: Detail (prep/hygiene item detail) -->
+                <section id="dish-detail-view" class="hidden flex-1 h-full overflow-y-auto bg-slate-50 custom-scrollbar">
+                    <div class="p-8">
+                        <button id="detail-back-btn" class="mb-6 flex items-center gap-2 text-xs font-bold text-slate-400 hover:text-slate-700 transition-colors">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>
+                            Back
+                        </button>
+                        <div id="dish-card-container"></div>
+                    </div>
+                </section>
+
+                <!-- VIEW: AI / Audit / Analytics -->
+                <section id="ai-agent-view" class="hidden flex-1 h-full overflow-y-auto bg-slate-50 custom-scrollbar">
+                    <div class="p-8">
+                        <h2 class="text-sm font-bold text-slate-800 mb-6">Analytics Center</h2>
+                        <div id="audit-content" class="space-y-6"></div>
+                    </div>
+                </section>
+
+                <!-- VIEW: Compliance -->
+                <section id="compliance-view" class="hidden flex-1 h-full overflow-y-auto bg-slate-50 custom-scrollbar">
+                    <div class="p-8">
+                        <h2 class="text-sm font-bold text-slate-800 mb-6">Compliance Control</h2>
+                        <div id="compliance-content"></div>
+                    </div>
+                </section>
+
+                <!-- VIEW: Logistics -->
+                <section id="logistics-view" class="hidden flex-1 h-full overflow-y-auto bg-slate-50 custom-scrollbar">
+                    <div class="p-8">
+                        <h2 class="text-sm font-bold text-slate-800 mb-6">Logistics Planning</h2>
+                        <div id="logistics-content"></div>
+                    </div>
+                </section>
+
                 <div id="welcome-placeholder" class="hidden"></div>
             </main>
         </div>
     </div>
 
-    <!-- Core App Logic -->
-    <script src="index.js" type="module"></script>
-    
-    <!-- Shared Modal/Notification containers -->
+    <!-- Modals & Notifications -->
     <div id="modal-container" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[100] hidden items-center justify-center p-4"></div>
     <div id="notification-container" class="fixed top-20 right-4 z-[200] w-full max-w-sm pointer-events-none space-y-2"></div>
+
+    <!-- Single Entry Point -->
+    <script src="index.js" type="module"></script>
 </body>
 
 </html>

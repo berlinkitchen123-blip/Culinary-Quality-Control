@@ -4,7 +4,7 @@ import { database } from "./firebase-config.js";
 import { state, PREP_STAGES } from "./state.js";
 import { DOMElements } from "./dom-elements.js";
 import { extractPrepItems } from "./utils.js";
-import { showView } from "./index.js"; // Circular import handled by module loading usually, but prefer callbacks. We will export a setter if needed, or better, just import showView from index.js as it is the controller.
+// showView is available as window.showView (set by index.js) to avoid circular imports
 
 // Helper for Camera
 function renderIndependentCamera(containerId, initialImage) {
@@ -209,7 +209,7 @@ export function renderPrepView() {
         btn.className = `group relative flex flex-col items-center justify-center p-5 bg-slate-800/40 border border-slate-700/50 rounded-[2rem] shadow-xl hover:scale-105 active:scale-95 transition-all backdrop-blur-md`;
         btn.onclick = () => { 
             state.selectedPrepItem = item; 
-            showView('detail'); 
+            window.showView('detail'); 
             renderPrepCard(); 
         };
         

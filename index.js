@@ -6,19 +6,27 @@ import { renderPrepView } from "./view-prep.js";
 import { renderProductionView } from "./view-production.js";
 import { renderHygieneGrid } from "./view-hygiene.js";
 
-// Main View Controller
+// Page initialization
 export function showView(viewName) {
     state.currentView = viewName;
     
-    // Toggle Section visibility
-    DOMElements.mainView.classList.toggle('hidden', viewName !== 'dashboard');
-    if (DOMElements.productionView) DOMElements.productionView.classList.toggle('hidden', viewName !== 'production');
-    if (DOMElements.prepView) DOMElements.prepView.classList.toggle('hidden', viewName !== 'prep');
-    if (DOMElements.hygieneView) DOMElements.hygieneView.classList.toggle('hidden', viewName !== 'hygiene');
+    // Toggle View Containers
+    const visibilityMap = {
+        'dashboard': DOMElements.mainView,
+        'production': DOMElements.productionView,
+        'prep': DOMElements.prepView,
+        'hygiene': DOMElements.hygieneView,
+        'compliance': DOMElements.complianceView,
+        'audit': DOMElements.analyticsView,
+    };
 
-    // Sidebar Icon Highlighting
-    const active = "text-emerald-400 bg-emerald-500/10 shadow-inner";
-    const inactive = "text-white/40 hover:text-white";
+    Object.entries(visibilityMap).forEach(([key, container]) => {
+        if (container) container.classList.toggle('hidden', viewName !== key);
+    });
+
+    // Sidebar State
+    const activeClass = "text-emerald-400 bg-emerald-500/10 shadow-inner";
+    const inactiveClass = "text-white/40 hover:text-white";
 
     const navButtons = {
         'dashboard': DOMElements.navDashboardBtn,
@@ -35,46 +43,66 @@ export function showView(viewName) {
     };
 
     Object.entries(navButtons).forEach(([name, btn]) => {
-        if (btn) btn.className = `p-2 rounded-md transition-all ${viewName === name ? active : inactive}`;
+        if (btn) btn.className = `p-2 rounded-md transition-all ${viewName === name ? activeClass : inactiveClass}`;
     });
 
-    // Content Loading based on view
+    // Sub-view rendering
     if (viewName === 'dashboard') renderApp();
     if (viewName === 'prep') renderPrepView();
     if (viewName === 'hygiene') renderHygieneGrid();
     if (viewName === 'production') renderProductionView();
-    
-    // Update Page Title
+
+    // Titles
     const titles = {
         'dashboard': 'Assign Line Preparation',
-        'ingredient': 'Ingredient Quantities',
-        'kitchen': 'Kitchen Overview',
-        'dish': 'Dish Assignment',
-        'forecast': 'Order Forecast',
-        'production': 'Production Line',
-        'prep': 'Kitchen Log',
-        'thermal': 'Thermal Validation',
-        'hygiene': 'Hygiene Audit',
-        'compliance': 'Compliance Control',
-        'audit': 'Analytics Center'
+        'ingredient': 'Ingredient Inventory',
+        'kitchen': 'Kitchen Command Center',
+        'dish': 'Dish Assignment Logic',
+        'forecast': 'Forecast Analysis',
+        'production': 'Production Management',
+        'prep': 'Kitchen Operation Log',
+        'thermal': 'Thermal Validation Grid',
+        'hygiene': 'Hygiene Compliance',
+        'compliance': 'Quality Compliance',
+        'audit': 'Audit & Metrics'
     };
     if (DOMElements.pageTitle) DOMElements.pageTitle.innerText = titles[viewName] || 'Command Center';
 }
 
-// Global Event Listeners for Nav
-DOMElements.navDashboardBtn.onclick = () => showView('dashboard');
-DOMElements.navIngredientBtn.onclick = () => showView('ingredient');
-DOMElements.navKitchenBtn.onclick = () => showView('kitchen');
-DOMElements.navDishBtn.onclick = () => showView('dish');
-DOMElements.navForecastBtn.onclick = () => showView('forecast');
-DOMElements.navProductionBtn.onclick = () => showView('production');
-DOMElements.navPrepBtn.onclick = () => showView('prep');
-DOMElements.navThermalBtn.onclick = () => showView('thermal');
-DOMElements.navHygieneBtn.onclick = () => showView('hygiene');
-DOMElements.navComplianceBtn.onclick = () => showView('compliance');
-DOMElements.navAuditBtn.onclick = () => showView('audit');
+// Attach Event Listeners Safely
+const navMap = [
+    { btn: DOMElements.navDashboardBtn, view: 'dashboard' },
+    { btn: DOMElements.navIngredientBtn, view: 'ingredient' },
+    { btn: DOMElements.navKitchenBtn, view: 'kitchen' },
+    { btn: DOMElements.navDishBtn, view: 'dish' },
+    { btn: DOMElements.navForecastBtn, view: 'forecast' },
+    { btn: DOMElements.navProductionBtn, view: 'production' },
+    { btn: DOMElements.navPrepBtn, view: 'prep' },
+    { btn: DOMElements.navThermalBtn, view: 'thermal' },
+    { btn: DOMElements.navHygieneBtn, view: 'hygiene' },
+    { btn: DOMElements.navComplianceBtn, view: 'compliance' },
+    { btn: DOMElements.navAuditBtn, view: 'audit' }
+];
 
-// Initialize
+navMap.forEach(item => {
+    if (item.btn) item.btn.onclick = () => showView(item.view);
+});
+
+// Toggles
+if (DOMElements.toggleDailyBtn) {
+    DOMElements.toggleDailyBtn.onclick = () => {
+        DOMElements.toggleDailyBtn.classList.replace('text-slate-500', 'bg-white');
+        DOMElements.toggleWeeklyBtn.classList.replace('bg-white', 'text-slate-500');
+    };
+}
+if (DOMElements.toggleWeeklyBtn) {
+    DOMElements.toggleWeeklyBtn.onclick = () => {
+        DOMElements.toggleWeeklyBtn.classList.replace('text-slate-500', 'bg-white');
+        DOMElements.toggleDailyBtn.classList.replace('bg-white', 'text-slate-500');
+    };
+}
+
+// Ready
 document.addEventListener('DOMContentLoaded', () => {
     showView('dashboard');
     if (DOMElements.headerDateDisplay) {

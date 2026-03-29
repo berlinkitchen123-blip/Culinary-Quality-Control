@@ -1,15 +1,14 @@
 
 export const DOMElements = {
-    loadingIndicator: document.getElementById('loading-indicator'),
+    appContainer: document.getElementById('app-container'),
     mainView: document.getElementById('main-view'),
+    productionView: document.getElementById('production-view'),
     prepView: document.getElementById('prep-view'),
     hygieneView: document.getElementById('hygiene-view'),
-    productionView: document.getElementById('production-view'),
     complianceView: document.getElementById('compliance-view'),
     analyticsView: document.getElementById('analytics-view'),
-    dishDetailView: document.getElementById('dish-detail-view'),
     
-    // Sidebar Buttons
+    // Sidebar
     navDashboardBtn: document.getElementById('nav-dashboard-btn'),
     navIngredientBtn: document.getElementById('nav-ingredient-btn'),
     navKitchenBtn: document.getElementById('nav-kitchen-btn'),
@@ -24,16 +23,15 @@ export const DOMElements = {
     
     settingsBtn: document.getElementById('settings-btn'),
     
-    // Header Elements
+    // Header
     pageTitle: document.getElementById('page-title'),
     headerDateDisplay: document.getElementById('header-date-display'),
-    datePickerTrigger: document.getElementById('date-picker-trigger'),
     toggleDailyBtn: document.getElementById('toggle-daily-btn'),
     toggleWeeklyBtn: document.getElementById('toggle-weekly-btn'),
     
-    // Dashboard (Assignment)
+    // Dashboard Specific
     ingredientsList: document.getElementById('ingredients-list'),
     operatorsGrid: document.getElementById('operators-grid'),
     availableCount: document.getElementById('available-count'),
-    operatorsCount: document.getElementById('operators-count'),
+    operatorsCount: document.getElementById('operators-count')
 };

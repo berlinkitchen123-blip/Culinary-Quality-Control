@@ -5,6 +5,10 @@ import { renderApp } from "./view-dashboard.js";
 import { renderPrepView } from "./view-prep.js";
 import { renderProductionView } from "./view-production.js";
 import { renderHygieneGrid } from "./view-hygiene.js";
+import { renderAuditDishLibrary } from "./view-analytics.js";
+import { renderComplianceReport } from "./view-compliance.js";
+import { renderLogisticsReport } from "./view-logistics.js";
+import { renderDishAssignView } from "./view-dish-assign.js";
 
 // =============================================
 // VIEW CONTROLLER
@@ -12,7 +16,7 @@ import { renderHygieneGrid } from "./view-hygiene.js";
 export function showView(viewName) {
     state.currentView = viewName;
 
-    // All view containers
+    // All view containers mapped by route name
     const views = {
         'dashboard': DOMElements.mainView,
         'production': DOMElements.productionView,
@@ -22,6 +26,11 @@ export function showView(viewName) {
         'audit': DOMElements.aiAgentView,
         'compliance': DOMElements.complianceView,
         'logistics': DOMElements.logisticsView,
+        'ingredient': DOMElements.ingredientView,
+        'kitchen': DOMElements.kitchenView,
+        'dish': DOMElements.dishAssignView,
+        'forecast': DOMElements.forecastView,
+        'thermal': DOMElements.thermalView,
     };
 
     // Hide all, show the target
@@ -52,24 +61,30 @@ export function showView(viewName) {
     });
 
     // Render the appropriate view
-    if (viewName === 'dashboard') renderApp();
-    if (viewName === 'prep') renderPrepView();
-    if (viewName === 'hygiene') renderHygieneGrid();
-    if (viewName === 'production') renderProductionView();
+    switch (viewName) {
+        case 'dashboard': renderApp(); break;
+        case 'prep': renderPrepView(); break;
+        case 'hygiene': renderHygieneGrid(); break;
+        case 'production': renderProductionView(); break;
+        case 'audit': renderAuditDishLibrary(); break;
+        case 'compliance': renderComplianceReport(); break;
+        case 'logistics': renderLogisticsReport(); break;
+        case 'dish': renderDishAssignView(); break;
+    }
 
     // Page Title
     const titles = {
         'dashboard': 'Assign Line Preparation',
-        'ingredient': 'Ingredient Inventory',
+        'ingredient': 'Ingredient Quantities',
         'kitchen': 'Kitchen Command Center',
         'dish': 'Dish Assignment',
-        'forecast': 'Forecast Analysis',
+        'forecast': 'Order Forecast & Cutoff',
         'production': 'Production Management',
-        'prep': 'Kitchen Log',
+        'prep': 'Kitchen Log (HACCP)',
         'thermal': 'Thermal Validation',
         'hygiene': 'Hygiene Audit',
-        'compliance': 'Quality Compliance',
-        'audit': 'Analytics Center',
+        'compliance': 'Temperature Compliance',
+        'audit': 'Quality Analytics',
         'detail': 'Item Detail',
     };
     if (DOMElements.pageTitle) DOMElements.pageTitle.innerText = titles[viewName] || 'Command Center';
@@ -118,7 +133,6 @@ if (DOMElements.toggleDailyBtn && DOMElements.toggleWeeklyBtn) {
 // =============================================
 if (DOMElements.detailBackBtn) {
     DOMElements.detailBackBtn.onclick = () => {
-        // Go back to the view that was active before detail
         if (state.selectedPrepItem) showView('prep');
         else if (state.selectedHygieneItem) showView('hygiene');
         else showView('dashboard');

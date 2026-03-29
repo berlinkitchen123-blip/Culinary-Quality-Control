@@ -11,6 +11,11 @@ export const DOMElements = {
     aiAgentView: document.getElementById('ai-agent-view'),
     complianceView: document.getElementById('compliance-view'),
     logisticsView: document.getElementById('logistics-view'),
+    ingredientView: document.getElementById('ingredient-view'),
+    kitchenView: document.getElementById('kitchen-view'),
+    dishAssignView: document.getElementById('dish-assign-view'),
+    forecastView: document.getElementById('forecast-view'),
+    thermalView: document.getElementById('thermal-view'),
     
     // Sidebar Navigation
     navDashboardBtn: document.getElementById('nav-dashboard-btn'),
@@ -32,7 +37,7 @@ export const DOMElements = {
     toggleDailyBtn: document.getElementById('toggle-daily-btn'),
     toggleWeeklyBtn: document.getElementById('toggle-weekly-btn'),
     
-    // Dashboard (Assign)
+    // Dashboard (Assign Ingredients)
     ingredientsList: document.getElementById('ingredients-list'),
     operatorsGrid: document.getElementById('operators-grid'),
     availableCount: document.getElementById('available-count'),
@@ -47,4 +52,7 @@ export const DOMElements = {
     // Detail View
     dishCardContainer: document.getElementById('dish-card-container'),
     detailBackBtn: document.getElementById('detail-back-btn'),
+    
+    // Analytics (existing QC — DO NOT CHANGE)
+    auditResultsContainer: document.getElementById('audit-results-container'),
 };

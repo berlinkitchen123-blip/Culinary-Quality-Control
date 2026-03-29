@@ -253,30 +253,30 @@
             <div id="main-view" class="space-y-8 animate-in fade-in slide-in-from-bottom-6 duration-700">
                 <section id="kanban-section" class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     <!-- Processing Column -->
-                    <div class="flex flex-col h-full min-h-[500px] bg-card/60 rounded-lg border border-border shadow-sm p-5" ondragover="window.allowDrop(event)" ondrop="window.dropDish(event, 'processing')">
-                        <div class="flex items-center justify-between mb-6 px-1 border-b border-border/50 pb-4">
-                            <h3 class="text-xs font-semibold text-muted-foreground uppercase tracking-widest">Processing</h3>
-                            <span id="count-processing" class="bg-muted text-muted-foreground text-[10px] font-bold px-2 py-0.5 rounded-full border border-border">0</span>
+                    <div class="flex flex-col h-full min-h-[500px] bg-card/20 rounded-md border border-border shadow-none p-4" ondragover="window.allowDrop(event)" ondrop="window.dropDish(event, 'processing')">
+                        <div class="flex items-center justify-between mb-4 border-b border-border/10 pb-3">
+                            <h3 class="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em]">Processing</h3>
+                            <span id="count-processing" class="bg-secondary text-muted-foreground text-[10px] font-medium px-2 py-0.5 rounded-sm border border-border">0</span>
                         </div>
-                        <div id="processing-list" class="flex-grow space-y-4 custom-scrollbar overflow-y-auto max-h-[70vh]"></div>
+                        <div id="processing-list" class="flex-grow space-y-2 custom-scrollbar overflow-y-auto max-h-[70vh]"></div>
                     </div>
  
                     <!-- Cooking Column -->
-                    <div class="flex flex-col h-full min-h-[500px] bg-card/60 rounded-lg border border-border shadow-sm p-5" ondragover="window.allowDrop(event)" ondrop="window.dropDish(event, 'cooking')">
-                        <div class="flex items-center justify-between mb-6 px-1 border-b border-border/50 pb-4">
-                            <h3 class="text-xs font-semibold text-primary uppercase tracking-widest">Cooking</h3>
-                            <span id="count-cooking" class="bg-primary/20 text-primary text-[10px] font-bold px-2 py-0.5 rounded-full border border-primary/30">0</span>
+                    <div class="flex flex-col h-full min-h-[500px] bg-card/20 rounded-md border border-border shadow-none p-4" ondragover="window.allowDrop(event)" ondrop="window.dropDish(event, 'cooking')">
+                        <div class="flex items-center justify-between mb-4 border-b border-border/10 pb-3">
+                            <h3 class="text-[10px] font-bold text-primary uppercase tracking-[0.2em]">Cooking</h3>
+                            <span id="count-cooking" class="bg-primary/10 text-primary text-[10px] font-medium px-2 py-0.5 rounded-sm border border-primary/20">0</span>
                         </div>
-                        <div id="cooking-list" class="flex-grow space-y-4 custom-scrollbar overflow-y-auto max-h-[70vh]"></div>
+                        <div id="cooking-list" class="flex-grow space-y-2 custom-scrollbar overflow-y-auto max-h-[70vh]"></div>
                     </div>
  
                     <!-- Completed Column -->
-                    <div class="flex flex-col h-full min-h-[500px] bg-card/60 rounded-lg border border-border shadow-sm p-5" ondragover="window.allowDrop(event)" ondrop="window.dropDish(event, 'completed')">
-                        <div class="flex items-center justify-between mb-6 px-1 border-b border-border/50 pb-4">
-                            <h3 class="text-xs font-semibold text-green-400 uppercase tracking-widest">Completed</h3>
-                            <span id="count-completed" class="bg-green-600/20 text-green-400 text-[10px] font-bold px-2 py-0.5 rounded-full border border-green-500/30">0</span>
+                    <div class="flex flex-col h-full min-h-[500px] bg-card/20 rounded-md border border-border shadow-none p-4" ondragover="window.allowDrop(event)" ondrop="window.dropDish(event, 'completed')">
+                        <div class="flex items-center justify-between mb-4 border-b border-border/10 pb-3">
+                            <h3 class="text-[10px] font-bold text-green-500 uppercase tracking-[0.2em]">Completed</h3>
+                            <span id="count-completed" class="bg-green-500/10 text-green-500 text-[10px] font-medium px-2 py-0.5 rounded-sm border border-green-500/20">0</span>
                         </div>
-                        <div id="completed-list" class="flex-grow space-y-4 custom-scrollbar overflow-y-auto max-h-[70vh]"></div>
+                        <div id="completed-list" class="flex-grow space-y-2 custom-scrollbar overflow-y-auto max-h-[70vh]"></div>
                     </div>
                 </section>
                 <div id="welcome-placeholder" class="hidden"></div>

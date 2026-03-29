@@ -85,7 +85,7 @@ function renderKanbanBoard() {
         else { targetList = DOMElements.processingList; px++; }
 
         const card = document.createElement('div');
-        card.className = "bg-card hover:bg-card/80 border border-border rounded-lg p-3 shadow-sm transition-all cursor-pointer select-none group flex items-start gap-3 relative overflow-hidden";
+        card.className = "bg-card hover:bg-muted/50 border border-border rounded-md p-3 transition-colors cursor-pointer select-none flex items-start gap-3 relative overflow-hidden";
         
         card.draggable = true;
         card.ondragstart = (e) => { e.dataTransfer.setData("text/plain", dish.dishLetter); };
@@ -94,13 +94,13 @@ function renderKanbanBoard() {
         const statusColor = status === 'cooking' ? 'bg-primary' : status === 'completed' ? 'bg-green-500' : 'bg-muted-foreground/30';
 
         card.innerHTML = `
-            <div class="h-10 w-10 rounded-md bg-secondary flex shrink-0 items-center justify-center font-bold text-sm text-foreground border border-border/50">
+            <div class="h-9 w-9 rounded bg-secondary flex shrink-0 items-center justify-center font-bold text-xs text-foreground border border-border/50">
                 ${dish.dishLetter}
-                ${isChecked ? '<div class="absolute -top-1 -right-1 bg-green-500 text-white rounded-full p-0.5 shadow-sm border border-background"><svg class="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="4" d="M5 13l4 4L19 7"/></svg></div>' : ''}
+                ${isChecked ? '<div class="absolute -top-1 -right-1 bg-green-500 text-white rounded-full p-0.5 shadow-sm border border-background"><svg class="w-2 h-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="4" d="M5 13l4 4L19 7"/></svg></div>' : ''}
             </div>
-            <div class="flex-1 min-w-0 space-y-1">
-                <p class="font-medium text-[11px] text-foreground uppercase tracking-tight truncate leading-tight">${dish.dishName}</p>
-                <div class="flex items-center gap-2">
+            <div class="flex-1 min-w-0">
+                <p class="font-semibold text-[11px] text-foreground uppercase tracking-tight truncate leading-tight mb-1">${dish.dishName}</p>
+                <div class="flex items-center gap-1.5">
                    <div class="h-1.5 w-1.5 rounded-full ${statusColor}"></div>
                    <p class="text-[9px] text-muted-foreground font-medium uppercase tracking-wider">${dish.dishType}</p>
                 </div>

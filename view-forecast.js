@@ -6,24 +6,29 @@
 const CUTOFF_TIME = '14:00'; // 2 PM daily cutoff
 
 const WEEKLY_MENU = [
-    { letter: 'A', name: 'Chicken Balsamic Salad', type: 'cold', forecast: 90, ordered: 85, unsold: 0 },
-    { letter: 'B', name: 'Tuna Deopbap Bowl', type: 'cold', forecast: 70, ordered: 62, unsold: 0 },
-    { letter: 'C', name: 'Moroccan Barley Bowl', type: 'cold', forecast: 55, ordered: 45, unsold: 0 },
-    { letter: 'D', name: 'Herbed Quinoa Salad', type: 'cold', forecast: 50, ordered: 38, unsold: 0 },
-    { letter: 'N', name: 'Thai CC Chicken', type: 'hot', forecast: 80, ordered: 72, unsold: 0 },
-    { letter: 'O', name: 'Schnitzel Plate', type: 'hot', forecast: 65, ordered: 58, unsold: 0 },
-    { letter: 'P', name: 'Pumpkin Curry', type: 'hot', forecast: 50, ordered: 40, unsold: 0 },
-    { letter: 'R', name: 'Butter Chicken', type: 'hot', forecast: 100, ordered: 95, unsold: 0 },
-    { letter: 'D1', name: 'Chocolate Mousse', type: 'cold', forecast: 130, ordered: 120, unsold: 0 },
-    { letter: 'D2', name: 'Fruit Salad Cup', type: 'cold', forecast: 90, ordered: 80, unsold: 0 },
+    { letter: 'A', name: 'Avocado Egg Sandwich', type: 'hot', forecast: 197, ordered: 187, unsold: 0 },
+    { letter: 'B', name: 'B&B Butter Chicken with Rice & Naan', type: 'hot', forecast: 10064, ordered: 10054, unsold: 0 },
+    { letter: 'C', name: 'B&B Butter Tofu', type: 'hot', forecast: 4386, ordered: 4376, unsold: 0 },
+    { letter: 'D', name: 'Chicken in champignon sauce with Spatzle', type: 'hot', forecast: 5598, ordered: 5588, unsold: 0 },
+    { letter: 'E', name: 'Cordon Bleu with Green Beans', type: 'hot', forecast: 11265, ordered: 11255, unsold: 0 },
+    { letter: 'F', name: 'Frijoles Chicken Boost', type: 'hot', forecast: 3960, ordered: 3950, unsold: 0 },
+    { letter: 'G', name: 'Garden Green Salad with Chicken', type: 'cold', forecast: 2959, ordered: 2949, unsold: 0 },
+    { letter: 'H', name: 'Heat to Eat: Chicken breast with coconut curry', type: 'hot', forecast: 54, ordered: 44, unsold: 0 },
+    { letter: 'I', name: 'Heat to Eat: Chili sin Carne', type: 'hot', forecast: 21, ordered: 11, unsold: 0 },
+    { letter: 'J', name: 'Japanese inspired vegan noodles bowl', type: 'hot', forecast: 4386, ordered: 4376, unsold: 0 },
+    { letter: 'K', name: 'Korean BBQ Pulled Pork Burger', type: 'hot', forecast: 3060, ordered: 3050, unsold: 0 },
+    { letter: 'L', name: 'Lasagna Bolognese with Seasonal Veggies', type: 'hot', forecast: 3128, ordered: 3118, unsold: 0 },
+    { letter: 'M', name: 'Low Carb Döner-Teller', type: 'hot', forecast: 6450, ordered: 6440, unsold: 0 },
+    { letter: 'N', name: 'Mediterranean Cruise', type: 'hot', forecast: 241, ordered: 231, unsold: 0 },
+    { letter: 'O', name: 'Osaka Gyoza Bowl', type: 'hot', forecast: 296, ordered: 286, unsold: 0 },
 ];
 
 // Historical data for forecasting
 const WEEKLY_HISTORY = [
-    { week: 'W09', dishes: { A: 78, B: 65, C: 42, N: 75, O: 60, P: 35, R: 88 }},
-    { week: 'W10', dishes: { A: 82, B: 59, C: 48, N: 71, O: 55, P: 42, R: 92 }},
-    { week: 'W11', dishes: { A: 85, B: 62, C: 45, N: 72, O: 58, P: 40, R: 95 }},
-    { week: 'W12', dishes: { A: 85, B: 62, C: 45, N: 72, O: 58, P: 40, R: 95 }}, // current
+    { week: 'W09', dishes: { A: 189, B: 10046, C: 4383, D: 5589, E: 11261, F: 3959, G: 2952, H: 42, I: 6, J: 4375, K: 3058, L: 3117, M: 6443, N: 228, O: 279, }},
+    { week: 'W10', dishes: { A: 181, B: 10059, C: 4373, D: 5590, E: 11264, F: 3951, G: 2941, H: 52, I: 9, J: 4379, K: 3051, L: 3125, M: 6437, N: 221, O: 276, }},
+    { week: 'W11', dishes: { A: 193, B: 10063, C: 4375, D: 5595, E: 11261, F: 3942, G: 2954, H: 35, I: 3, J: 4380, K: 3044, L: 3123, M: 6449, N: 224, O: 283, }},
+    { week: 'W12', dishes: { A: 187, B: 10054, C: 4376, D: 5588, E: 11255, F: 3950, G: 2949, H: 44, I: 11, J: 4376, K: 3050, L: 3118, M: 6440, N: 231, O: 286, }},
 ];
 
 export function renderForecastView() {

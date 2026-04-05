@@ -9,86 +9,235 @@ import { Notifications } from "./ui-notifications.js";
 
 // Dish menu with letters, ingredient details, process info
 const DISH_MENU = [
-    { letter: 'A', name: 'Chicken Balsamic Salad', type: 'cold', category: 'main-dishes', qty: 85,
-      ingredients: [
-          { name: 'Grilled Chicken Breast', weight: 120 },
-          { name: 'Mixed Salad Greens', weight: 80 },
-          { name: 'Balsamic Dressing', weight: 30 },
-          { name: 'Cherry Tomatoes', weight: 40 },
-          { name: 'Parmesan Shavings', weight: 15 }
-      ],
-      process: 'Slice grilled chicken. Layer salad greens, top with chicken, tomatoes, parmesan. Drizzle balsamic.',
+    { 
+      letter: 'CO0', name: 'Cordon Bleu with Green Beans', type: 'hot', category: 'main-dishes', qty: 11255,
+      ingredients: [{ name: 'Base Element', weight: 200 }],
+      process: 'Assemble according to standard spec for Cordon Bleu with Green Beans',
     },
-    { letter: 'B', name: 'Tuna Deopbap Bowl', type: 'cold', category: 'main-dishes', qty: 62,
-      ingredients: [
-          { name: 'Sushi Rice', weight: 180 },
-          { name: 'Seared Tuna', weight: 100 },
-          { name: 'Sesame Soy Dressing', weight: 25 },
-          { name: 'Edamame', weight: 40 },
-          { name: 'Pickled Ginger', weight: 10 }
-      ],
-      process: 'Base sushi rice, fan-cool. Top with sliced tuna, edamame, ginger. Dress at service.',
+    { 
+      letter: 'B&1', name: 'B&B Butter Chicken with Rice & Naan', type: 'hot', category: 'main-dishes', qty: 10054,
+      ingredients: [{ name: 'Base Element', weight: 200 }],
+      process: 'Assemble according to standard spec for B&B Butter Chicken with Rice & Naan',
     },
-    { letter: 'C', name: 'Moroccan Barley Bowl', type: 'cold', category: 'main-dishes', qty: 45,
-      ingredients: [
-          { name: 'Pearl Barley', weight: 160 },
-          { name: 'Roasted Chickpeas', weight: 60 },
-          { name: 'Harissa Yoghurt', weight: 35 },
-          { name: 'Roasted Vegetables', weight: 80 }
-      ],
-      process: 'Cook barley al dente. Mix with roasted veg and chickpeas. Top with harissa yoghurt.',
+    { 
+      letter: 'PH2', name: 'Phanaeng Chicken curry', type: 'hot', category: 'main-dishes', qty: 8247,
+      ingredients: [{ name: 'Base Element', weight: 200 }],
+      process: 'Assemble according to standard spec for Phanaeng Chicken curry',
     },
-    { letter: 'N', name: 'Thai CC Chicken', type: 'hot', category: 'main-dishes', qty: 72,
-      ingredients: [
-          { name: 'Steamed Basmati Rice', weight: 200 },
-          { name: 'Coconut Curry Sauce', weight: 150 },
-          { name: 'Chicken Thigh Pieces', weight: 120 },
-          { name: 'Thai Basil', weight: 5 }
-      ],
-      process: 'Base rice, ladle curry over. Place chicken pieces on top. Garnish with thai basil.',
+    { 
+      letter: 'LO3', name: 'Low Carb Döner-Teller', type: 'hot', category: 'main-dishes', qty: 6440,
+      ingredients: [{ name: 'Base Element', weight: 200 }],
+      process: 'Assemble according to standard spec for Low Carb Döner-Teller',
     },
-    { letter: 'O', name: 'Schnitzel Plate', type: 'hot', category: 'main-dishes', qty: 58,
-      ingredients: [
-          { name: 'Breaded Schnitzel', weight: 180 },
-          { name: 'Mashed Potatoes', weight: 150 },
-          { name: 'Gravy', weight: 40 },
-          { name: 'Lemon Wedge', weight: 15 }
-      ],
-      process: 'Place schnitzel on plate. Scoop mash alongside. Gravy in ramekin. Lemon wedge.',
+    { 
+      letter: 'SP4', name: 'Spinach Ricotta Tortellini with cream tomato sauce', type: 'hot', category: 'main-dishes', qty: 6003,
+      ingredients: [{ name: 'Base Element', weight: 200 }],
+      process: 'Assemble according to standard spec for Spinach Ricotta Tortellini with cream tomato sauce',
     },
-    { letter: 'P', name: 'Pumpkin Curry', type: 'hot', category: 'main-dishes', qty: 40,
-      ingredients: [
-          { name: 'Steamed Basmati Rice', weight: 200 },
-          { name: 'Pumpkin Curry Sauce', weight: 160 },
-          { name: 'Roasted Pumpkin Pieces', weight: 80 },
-          { name: 'Coconut Flakes', weight: 10 }
-      ],
-      process: 'Base rice. Ladle pumpkin curry. Arrange pumpkin pieces. Sprinkle coconut.',
+    { 
+      letter: 'CH5', name: 'Chicken in champignon sauce with Spatzle', type: 'hot', category: 'main-dishes', qty: 5588,
+      ingredients: [{ name: 'Base Element', weight: 200 }],
+      process: 'Assemble according to standard spec for Chicken in champignon sauce with Spatzle',
     },
-    { letter: 'R', name: 'Butter Chicken', type: 'hot', category: 'main-dishes', qty: 95,
-      ingredients: [
-          { name: 'Steamed Basmati Rice', weight: 200 },
-          { name: 'Butter Chicken Sauce', weight: 160 },
-          { name: 'Chicken Tikka Pieces', weight: 120 },
-          { name: 'Fresh Coriander', weight: 5 }
-      ],
-      process: 'Base rice. Ladle butter chicken sauce. Place tikka pieces. Garnish coriander.',
+    { 
+      letter: 'VE6', name: 'Vegan Madras Kofta', type: 'hot', category: 'main-dishes', qty: 4993,
+      ingredients: [{ name: 'Base Element', weight: 200 }],
+      process: 'Assemble according to standard spec for Vegan Madras Kofta',
     },
-    { letter: 'D1', name: 'Chocolate Mousse', type: 'cold', category: 'add-ons', qty: 120,
-      ingredients: [
-          { name: 'Dark Chocolate Mousse', weight: 100 },
-          { name: 'Whipped Cream', weight: 20 },
-          { name: 'Cocoa Powder', weight: 2 }
-      ],
-      process: 'Pipe mousse into cup. Top with whipped cream. Dust cocoa.',
+    { 
+      letter: 'B&7', name: 'B&B Butter Tofu', type: 'hot', category: 'main-dishes', qty: 4376,
+      ingredients: [{ name: 'Base Element', weight: 200 }],
+      process: 'Assemble according to standard spec for B&B Butter Tofu',
     },
-    { letter: 'D2', name: 'Fruit Salad Cup', type: 'cold', category: 'add-ons', qty: 80,
-      ingredients: [
-          { name: 'Mixed Seasonal Fruit', weight: 150 },
-          { name: 'Mint Leaves', weight: 2 },
-          { name: 'Honey Drizzle', weight: 10 }
-      ],
-      process: 'Dice fruit into cup. Garnish mint. Drizzle honey at service.',
+    { 
+      letter: 'JA8', name: 'Japanese inspired vegan noodles bowl', type: 'hot', category: 'main-dishes', qty: 4376,
+      ingredients: [{ name: 'Base Element', weight: 200 }],
+      process: 'Assemble according to standard spec for Japanese inspired vegan noodles bowl',
+    },
+    { 
+      letter: 'TE9', name: 'Test&Tell: High-Protien Thai Peanut Bowl with Chickpea & Tofu', type: 'hot', category: 'main-dishes', qty: 4286,
+      ingredients: [{ name: 'Base Element', weight: 200 }],
+      process: 'Assemble according to standard spec for Test&Tell: High-Protien Thai Peanut Bowl with Chickpea & Tofu',
+    },
+    { 
+      letter: 'TH10', name: 'The Ultimate Vegan Bowl', type: 'hot', category: 'main-dishes', qty: 4264,
+      ingredients: [{ name: 'Base Element', weight: 200 }],
+      process: 'Assemble according to standard spec for The Ultimate Vegan Bowl',
+    },
+    { 
+      letter: 'FR11', name: 'Frijoles Chicken Boost', type: 'hot', category: 'main-dishes', qty: 3950,
+      ingredients: [{ name: 'Base Element', weight: 200 }],
+      process: 'Assemble according to standard spec for Frijoles Chicken Boost',
+    },
+    { 
+      letter: 'SP12', name: 'Spicy Tuna Poke Bowl', type: 'hot', category: 'main-dishes', qty: 3948,
+      ingredients: [{ name: 'Base Element', weight: 200 }],
+      process: 'Assemble according to standard spec for Spicy Tuna Poke Bowl',
+    },
+    { 
+      letter: 'LA13', name: 'Lasagna Bolognese with Seasonal Veggies', type: 'hot', category: 'main-dishes', qty: 3118,
+      ingredients: [{ name: 'Base Element', weight: 200 }],
+      process: 'Assemble according to standard spec for Lasagna Bolognese with Seasonal Veggies',
+    },
+    { 
+      letter: 'KO14', name: 'Korean BBQ Pulled Pork Burger', type: 'hot', category: 'main-dishes', qty: 3050,
+      ingredients: [{ name: 'Base Element', weight: 200 }],
+      process: 'Assemble according to standard spec for Korean BBQ Pulled Pork Burger',
+    },
+    { 
+      letter: 'TH15', name: 'Thai chicken salad', type: 'cold', category: 'main-dishes', qty: 3050,
+      ingredients: [{ name: 'Base Element', weight: 200 }],
+      process: 'Assemble according to standard spec for Thai chicken salad',
+    },
+    { 
+      letter: 'GA16', name: 'Garden Green Salad with Chicken', type: 'cold', category: 'main-dishes', qty: 2949,
+      ingredients: [{ name: 'Base Element', weight: 200 }],
+      process: 'Assemble according to standard spec for Garden Green Salad with Chicken',
+    },
+    { 
+      letter: 'TH17', name: 'Thai Coconut curry with Vegan Chicken', type: 'hot', category: 'main-dishes', qty: 2264,
+      ingredients: [{ name: 'Base Element', weight: 200 }],
+      process: 'Assemble according to standard spec for Thai Coconut curry with Vegan Chicken',
+    },
+    { 
+      letter: 'CH18', name: 'Chicken', type: 'hot', category: 'main-dishes', qty: 1838,
+      ingredients: [{ name: 'Base Element', weight: 200 }],
+      process: 'Assemble according to standard spec for Chicken',
+    },
+    { 
+      letter: 'SM19', name: 'Smashed Medjool Date', type: 'hot', category: 'main-dishes', qty: 1278,
+      ingredients: [{ name: 'Base Element', weight: 200 }],
+      process: 'Assemble according to standard spec for Smashed Medjool Date',
+    },
+    { 
+      letter: 'SO20', name: 'Soleil de Saumon', type: 'hot', category: 'main-dishes', qty: 1186,
+      ingredients: [{ name: 'Base Element', weight: 200 }],
+      process: 'Assemble according to standard spec for Soleil de Saumon',
+    },
+    { 
+      letter: 'SP21', name: 'Spicy Chicken Pizza Sandwich', type: 'hot', category: 'main-dishes', qty: 1087,
+      ingredients: [{ name: 'Base Element', weight: 200 }],
+      process: 'Assemble according to standard spec for Spicy Chicken Pizza Sandwich',
+    },
+    { 
+      letter: 'OS22', name: 'Osaka Gyoza Bowl', type: 'hot', category: 'main-dishes', qty: 286,
+      ingredients: [{ name: 'Base Element', weight: 200 }],
+      process: 'Assemble according to standard spec for Osaka Gyoza Bowl',
+    },
+    { 
+      letter: 'ME23', name: 'Mediterranean Cruise', type: 'hot', category: 'main-dishes', qty: 231,
+      ingredients: [{ name: 'Base Element', weight: 200 }],
+      process: 'Assemble according to standard spec for Mediterranean Cruise',
+    },
+    { 
+      letter: 'PE24', name: 'Peaches Omelette Salad', type: 'cold', category: 'main-dishes', qty: 231,
+      ingredients: [{ name: 'Base Element', weight: 200 }],
+      process: 'Assemble according to standard spec for Peaches Omelette Salad',
+    },
+    { 
+      letter: 'ZU25', name: 'Zucchini Falafel Wrap', type: 'hot', category: 'main-dishes', qty: 220,
+      ingredients: [{ name: 'Base Element', weight: 200 }],
+      process: 'Assemble according to standard spec for Zucchini Falafel Wrap',
+    },
+    { 
+      letter: 'AV26', name: 'Avocado Egg Sandwich', type: 'hot', category: 'main-dishes', qty: 187,
+      ingredients: [{ name: 'Base Element', weight: 200 }],
+      process: 'Assemble according to standard spec for Avocado Egg Sandwich',
+    },
+    { 
+      letter: 'VE27', name: 'Vegetables Tikka Masala', type: 'hot', category: 'main-dishes', qty: 187,
+      ingredients: [{ name: 'Base Element', weight: 200 }],
+      process: 'Assemble according to standard spec for Vegetables Tikka Masala',
+    },
+    { 
+      letter: 'CR28', name: 'Crème a l\'orange', type: 'hot', category: 'main-dishes', qty: 88,
+      ingredients: [{ name: 'Base Element', weight: 200 }],
+      process: 'Assemble according to standard spec for Crème a l\'orange',
+    },
+    { 
+      letter: 'RO29', name: 'Roasted Vegetables', type: 'hot', category: 'main-dishes', qty: 77,
+      ingredients: [{ name: 'Base Element', weight: 200 }],
+      process: 'Assemble according to standard spec for Roasted Vegetables',
+    },
+    { 
+      letter: 'TA30', name: 'Tanzania Kokoa Kamili', type: 'hot', category: 'main-dishes', qty: 77,
+      ingredients: [{ name: 'Base Element', weight: 200 }],
+      process: 'Assemble according to standard spec for Tanzania Kokoa Kamili',
+    },
+    { 
+      letter: 'MI31', name: 'Minestrone Soup', type: 'hot', category: 'main-dishes', qty: 66,
+      ingredients: [{ name: 'Base Element', weight: 200 }],
+      process: 'Assemble according to standard spec for Minestrone Soup',
+    },
+    { 
+      letter: 'PO32', name: 'Potato soup with sausages', type: 'hot', category: 'main-dishes', qty: 66,
+      ingredients: [{ name: 'Base Element', weight: 200 }],
+      process: 'Assemble according to standard spec for Potato soup with sausages',
+    },
+    { 
+      letter: 'BE33', name: 'Be-Kind Protein Dark chocolate nut', type: 'hot', category: 'main-dishes', qty: 55,
+      ingredients: [{ name: 'Base Element', weight: 200 }],
+      process: 'Assemble according to standard spec for Be-Kind Protein Dark chocolate nut',
+    },
+    { 
+      letter: 'HE34', name: 'Heat to Eat: Chicken breast with coconut curry', type: 'hot', category: 'main-dishes', qty: 44,
+      ingredients: [{ name: 'Base Element', weight: 200 }],
+      process: 'Assemble according to standard spec for Heat to Eat: Chicken breast with coconut curry',
+    },
+    { 
+      letter: 'BE35', name: 'Be-kind Honey Roasted Nuts & Sea Salt', type: 'hot', category: 'main-dishes', qty: 44,
+      ingredients: [{ name: 'Base Element', weight: 200 }],
+      process: 'Assemble according to standard spec for Be-kind Honey Roasted Nuts & Sea Salt',
+    },
+    { 
+      letter: 'CH36', name: 'Chocolate Mousse', type: 'cold', category: 'main-dishes', qty: 44,
+      ingredients: [{ name: 'Base Element', weight: 200 }],
+      process: 'Assemble according to standard spec for Chocolate Mousse',
+    },
+    { 
+      letter: 'RI37', name: 'Rice', type: 'hot', category: 'main-dishes', qty: 44,
+      ingredients: [{ name: 'Base Element', weight: 200 }],
+      process: 'Assemble according to standard spec for Rice',
+    },
+    { 
+      letter: 'BA38', name: 'Baba Ghanoush', type: 'hot', category: 'main-dishes', qty: 33,
+      ingredients: [{ name: 'Base Element', weight: 200 }],
+      process: 'Assemble according to standard spec for Baba Ghanoush',
+    },
+    { 
+      letter: 'BA39', name: 'Basil Tomato Soup', type: 'hot', category: 'main-dishes', qty: 33,
+      ingredients: [{ name: 'Base Element', weight: 200 }],
+      process: 'Assemble according to standard spec for Basil Tomato Soup',
+    },
+    { 
+      letter: 'BE40', name: 'Be-Kind Protein crunchy peanut butter', type: 'hot', category: 'main-dishes', qty: 22,
+      ingredients: [{ name: 'Base Element', weight: 200 }],
+      process: 'Assemble according to standard spec for Be-Kind Protein crunchy peanut butter',
+    },
+    { 
+      letter: 'JA41', name: 'Jardin Fire', type: 'hot', category: 'main-dishes', qty: 22,
+      ingredients: [{ name: 'Base Element', weight: 200 }],
+      process: 'Assemble according to standard spec for Jardin Fire',
+    },
+    { 
+      letter: 'HE42', name: 'Heat to Eat: Chili sin Carne', type: 'hot', category: 'main-dishes', qty: 11,
+      ingredients: [{ name: 'Base Element', weight: 200 }],
+      process: 'Assemble according to standard spec for Heat to Eat: Chili sin Carne',
+    },
+    { 
+      letter: 'BE43', name: 'Be-kind Almond & Mixed Fruits', type: 'hot', category: 'main-dishes', qty: 11,
+      ingredients: [{ name: 'Base Element', weight: 200 }],
+      process: 'Assemble according to standard spec for Be-kind Almond & Mixed Fruits',
+    },
+    { 
+      letter: 'BE44', name: 'Be-kind Caramel Almond & Sea Salt', type: 'hot', category: 'main-dishes', qty: 11,
+      ingredients: [{ name: 'Base Element', weight: 200 }],
+      process: 'Assemble according to standard spec for Be-kind Caramel Almond & Sea Salt',
+    },
+    { 
+      letter: 'FR45', name: 'Fruit Salad Mojito', type: 'cold', category: 'main-dishes', qty: 11,
+      ingredients: [{ name: 'Base Element', weight: 200 }],
+      process: 'Assemble according to standard spec for Fruit Salad Mojito',
     },
 ];
 

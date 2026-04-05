@@ -1,0 +1,1292 @@
+[
+  {
+    "name": "Avocado Egg Sandwich",
+    "stock": 37,
+    "forecast": 0,
+    "itemNumber": "1742295519745",
+    "dailyLunch": 0,
+    "dinner": 0,
+    "orders": {
+      "mon": 0,
+      "tue": 33,
+      "wed": 66,
+      "thu": 44,
+      "fri": 44
+    }
+  },
+  {
+    "name": "B&B Butter Chicken with Rice & Naan",
+    "stock": 425,
+    "forecast": 0,
+    "itemNumber": "1744619694505",
+    "dailyLunch": 0,
+    "dinner": 0,
+    "orders": {
+      "mon": 0,
+      "tue": 3333,
+      "wed": 3535,
+      "thu": 3131,
+      "fri": 55
+    }
+  },
+  {
+    "name": "B&B Butter Tofu",
+    "stock": 114,
+    "forecast": 0,
+    "itemNumber": "1728559463169",
+    "dailyLunch": 0,
+    "dinner": 0,
+    "orders": {
+      "mon": 0,
+      "tue": 2020,
+      "wed": 1010,
+      "thu": 1313,
+      "fri": 33
+    }
+  },
+  {
+    "name": "Chicken in champignon sauce with Spatzle",
+    "stock": 127,
+    "forecast": 0,
+    "itemNumber": "1664467887344",
+    "dailyLunch": 0,
+    "dinner": 0,
+    "orders": {
+      "mon": 0,
+      "tue": 2424,
+      "wed": 1313,
+      "thu": 1818,
+      "fri": 33
+    }
+  },
+  {
+    "name": "Cordon Bleu with Green Beans",
+    "stock": 162,
+    "forecast": 0,
+    "itemNumber": "1678020854059",
+    "dailyLunch": 0,
+    "dinner": 0,
+    "orders": {
+      "mon": 0,
+      "tue": 6262,
+      "wed": 2222,
+      "thu": 2727,
+      "fri": 44
+    }
+  },
+  {
+    "name": "Frijoles Chicken Boost",
+    "stock": 40,
+    "forecast": 0,
+    "itemNumber": "HT710921",
+    "dailyLunch": 0,
+    "dinner": 0,
+    "orders": {
+      "mon": 0,
+      "tue": 1616,
+      "wed": 1313,
+      "thu": 1010,
+      "fri": 11
+    }
+  },
+  {
+    "name": "Garden Green Salad with Chicken",
+    "stock": 693,
+    "forecast": 0,
+    "itemNumber": "1682337393812",
+    "dailyLunch": 0,
+    "dinner": 0,
+    "orders": {
+      "mon": 0,
+      "tue": 99,
+      "wed": 1111,
+      "thu": 1717,
+      "fri": 22
+    }
+  },
+  {
+    "name": "Heat to Eat: Chicken breast with coconut curry",
+    "stock": 56,
+    "forecast": 0,
+    "itemNumber": "1774259270478",
+    "dailyLunch": 0,
+    "dinner": 0,
+    "orders": {
+      "mon": 0,
+      "tue": 0,
+      "wed": 22,
+      "thu": 22,
+      "fri": 0
+    }
+  },
+  {
+    "name": "Heat to Eat: Chili sin Carne",
+    "stock": 59,
+    "forecast": 0,
+    "itemNumber": "1774254394390",
+    "dailyLunch": 0,
+    "dinner": 0,
+    "orders": {
+      "mon": 0,
+      "tue": 0,
+      "wed": 0,
+      "thu": 0,
+      "fri": 11
+    }
+  },
+  {
+    "name": "Heat to Eat: Penne with Cheese sauce",
+    "stock": -10,
+    "forecast": 0,
+    "itemNumber": "1774258515011",
+    "dailyLunch": 0,
+    "dinner": 0,
+    "orders": {
+      "mon": 0,
+      "tue": 0,
+      "wed": 0,
+      "thu": 0,
+      "fri": 0
+    }
+  },
+  {
+    "name": "Japanese inspired vegan noodles bowl",
+    "stock": 76,
+    "forecast": 0,
+    "itemNumber": "1665402299564",
+    "dailyLunch": 0,
+    "dinner": 0,
+    "orders": {
+      "mon": 0,
+      "tue": 1717,
+      "wed": 1414,
+      "thu": 1212,
+      "fri": 33
+    }
+  },
+  {
+    "name": "Korean BBQ Pulled Pork Burger",
+    "stock": 60,
+    "forecast": 0,
+    "itemNumber": "1749032793214",
+    "dailyLunch": 0,
+    "dinner": 0,
+    "orders": {
+      "mon": 0,
+      "tue": 1616,
+      "wed": 99,
+      "thu": 1313,
+      "fri": 22
+    }
+  },
+  {
+    "name": "Lasagna Bolognese with Seasonal Veggies",
+    "stock": 153,
+    "forecast": 0,
+    "itemNumber": "TC910921",
+    "dailyLunch": 0,
+    "dinner": 0,
+    "orders": {
+      "mon": 0,
+      "tue": 66,
+      "wed": 1313,
+      "thu": 1717,
+      "fri": 22
+    }
+  },
+  {
+    "name": "Low Carb Döner-Teller",
+    "stock": 85,
+    "forecast": 0,
+    "itemNumber": "1747143458331",
+    "dailyLunch": 0,
+    "dinner": 0,
+    "orders": {
+      "mon": 0,
+      "tue": 2121,
+      "wed": 1515,
+      "thu": 2727,
+      "fri": 77
+    }
+  },
+  {
+    "name": "Mediterranean Cruise",
+    "stock": 126,
+    "forecast": 0,
+    "itemNumber": "HT320821",
+    "dailyLunch": 0,
+    "dinner": 0,
+    "orders": {
+      "mon": 0,
+      "tue": 99,
+      "wed": 22,
+      "thu": 88,
+      "fri": 22
+    }
+  },
+  {
+    "name": "Osaka Gyoza Bowl",
+    "stock": 81,
+    "forecast": 0,
+    "itemNumber": "1674684362340",
+    "dailyLunch": 0,
+    "dinner": 0,
+    "orders": {
+      "mon": 0,
+      "tue": 66,
+      "wed": 99,
+      "thu": 77,
+      "fri": 44
+    }
+  },
+  {
+    "name": "Peaches Omelette Salad",
+    "stock": 39,
+    "forecast": 0,
+    "itemNumber": "SB130921",
+    "dailyLunch": 0,
+    "dinner": 0,
+    "orders": {
+      "mon": 0,
+      "tue": 88,
+      "wed": 55,
+      "thu": 77,
+      "fri": 11
+    }
+  },
+  {
+    "name": "Phanaeng Chicken curry",
+    "stock": 214,
+    "forecast": 0,
+    "itemNumber": "1716376982162",
+    "dailyLunch": 0,
+    "dinner": 0,
+    "orders": {
+      "mon": 0,
+      "tue": 3939,
+      "wed": 1616,
+      "thu": 2626,
+      "fri": 66
+    }
+  },
+  {
+    "name": "Soleil de Saumon",
+    "stock": 44,
+    "forecast": 0,
+    "itemNumber": "1751203131841",
+    "dailyLunch": 0,
+    "dinner": 0,
+    "orders": {
+      "mon": 0,
+      "tue": 88,
+      "wed": 55,
+      "thu": 1010,
+      "fri": 33
+    }
+  },
+  {
+    "name": "Spicy Chicken Pizza Sandwich",
+    "stock": 184,
+    "forecast": 0,
+    "itemNumber": "1763542527847",
+    "dailyLunch": 0,
+    "dinner": 0,
+    "orders": {
+      "mon": 0,
+      "tue": 1010,
+      "wed": 33,
+      "thu": 33,
+      "fri": 11
+    }
+  },
+  {
+    "name": "Spicy Tuna Poke Bowl",
+    "stock": 83,
+    "forecast": 0,
+    "itemNumber": "1715768505168",
+    "dailyLunch": 0,
+    "dinner": 0,
+    "orders": {
+      "mon": 0,
+      "tue": 2323,
+      "wed": 99,
+      "thu": 1515,
+      "fri": 11
+    }
+  },
+  {
+    "name": "Spinach Ricotta Tortellini with cream tomato sauce",
+    "stock": 138,
+    "forecast": 0,
+    "itemNumber": "1756291841225",
+    "dailyLunch": 0,
+    "dinner": 0,
+    "orders": {
+      "mon": 0,
+      "tue": 2727,
+      "wed": 1717,
+      "thu": 1515,
+      "fri": 44
+    }
+  },
+  {
+    "name": "Test&Tell: High-Protien Thai Peanut Bowl with Chickpea & Tofu",
+    "stock": 9953,
+    "forecast": 0,
+    "itemNumber": "1772632658954",
+    "dailyLunch": 0,
+    "dinner": 0,
+    "orders": {
+      "mon": 0,
+      "tue": 1414,
+      "wed": 1212,
+      "thu": 1616,
+      "fri": 44
+    }
+  },
+  {
+    "name": "Thai chicken salad",
+    "stock": 101,
+    "forecast": 0,
+    "itemNumber": "1666710660786",
+    "dailyLunch": 0,
+    "dinner": 0,
+    "orders": {
+      "mon": 0,
+      "tue": 1313,
+      "wed": 88,
+      "thu": 1616,
+      "fri": 33
+    }
+  },
+  {
+    "name": "Thai Coconut curry with Vegan Chicken",
+    "stock": 768,
+    "forecast": 0,
+    "itemNumber": "1729676387253",
+    "dailyLunch": 0,
+    "dinner": 0,
+    "orders": {
+      "mon": 0,
+      "tue": 1010,
+      "wed": 1111,
+      "thu": 88,
+      "fri": 55
+    }
+  },
+  {
+    "name": "The Ultimate Vegan Bowl",
+    "stock": 88,
+    "forecast": 0,
+    "itemNumber": "1639397603696",
+    "dailyLunch": 0,
+    "dinner": 0,
+    "orders": {
+      "mon": 0,
+      "tue": 1313,
+      "wed": 1616,
+      "thu": 1313,
+      "fri": 22
+    }
+  },
+  {
+    "name": "Vegan Madras Kofta",
+    "stock": 90,
+    "forecast": 0,
+    "itemNumber": "1702633233975",
+    "dailyLunch": 0,
+    "dinner": 0,
+    "orders": {
+      "mon": 0,
+      "tue": 1919,
+      "wed": 1111,
+      "thu": 1919,
+      "fri": 44
+    }
+  },
+  {
+    "name": "Vegetables Tikka Masala",
+    "stock": 123,
+    "forecast": 0,
+    "itemNumber": "1644846724885",
+    "dailyLunch": 0,
+    "dinner": 0,
+    "orders": {
+      "mon": 0,
+      "tue": 44,
+      "wed": 77,
+      "thu": 44,
+      "fri": 22
+    }
+  },
+  {
+    "name": "Zucchini Falafel Wrap",
+    "stock": 82,
+    "forecast": 0,
+    "itemNumber": "W740721",
+    "dailyLunch": 0,
+    "dinner": 0,
+    "orders": {
+      "mon": 0,
+      "tue": 44,
+      "wed": 66,
+      "thu": 77,
+      "fri": 33
+    }
+  },
+  {
+    "name": "Minestrone Soup",
+    "stock": 5,
+    "forecast": 0,
+    "itemNumber": "1726654391859",
+    "dailyLunch": 0,
+    "dinner": 0,
+    "orders": {
+      "mon": 0,
+      "tue": 0,
+      "wed": 11,
+      "thu": 33,
+      "fri": 22
+    }
+  },
+  {
+    "name": "Baba Ghanoush",
+    "stock": 99,
+    "forecast": 0,
+    "itemNumber": "1731231794229",
+    "dailyLunch": 0,
+    "dinner": 0,
+    "orders": {
+      "mon": 0,
+      "tue": 0,
+      "wed": 0,
+      "thu": 33,
+      "fri": 0
+    }
+  },
+  {
+    "name": "Balisto Korn Kernel",
+    "stock": 24,
+    "forecast": 0,
+    "itemNumber": "1676029972467",
+    "dailyLunch": 0,
+    "dinner": 0,
+    "orders": {
+      "mon": 0,
+      "tue": 0,
+      "wed": 0,
+      "thu": 0,
+      "fri": 0
+    }
+  },
+  {
+    "name": "Balisto yogurt berries",
+    "stock": 10,
+    "forecast": 0,
+    "itemNumber": "1676028688498",
+    "dailyLunch": 0,
+    "dinner": 0,
+    "orders": {
+      "mon": 0,
+      "tue": 0,
+      "wed": 0,
+      "thu": 0,
+      "fri": 0
+    }
+  },
+  {
+    "name": "Ballisto Muesli-Mix",
+    "stock": 31,
+    "forecast": 0,
+    "itemNumber": "1676030432689",
+    "dailyLunch": 0,
+    "dinner": 0,
+    "orders": {
+      "mon": 0,
+      "tue": 0,
+      "wed": 0,
+      "thu": 0,
+      "fri": 0
+    }
+  },
+  {
+    "name": "Basil Tomato Soup",
+    "stock": 8,
+    "forecast": 0,
+    "itemNumber": "1635503612739",
+    "dailyLunch": 0,
+    "dinner": 0,
+    "orders": {
+      "mon": 0,
+      "tue": 11,
+      "wed": 0,
+      "thu": 11,
+      "fri": 11
+    }
+  },
+  {
+    "name": "Be-kind Almond & Mixed Fruits",
+    "stock": 23,
+    "forecast": 0,
+    "itemNumber": "1743147791627",
+    "dailyLunch": 0,
+    "dinner": 0,
+    "orders": {
+      "mon": 0,
+      "tue": 0,
+      "wed": 0,
+      "thu": 11,
+      "fri": 0
+    }
+  },
+  {
+    "name": "Be-kind Caramel Almond & Sea Salt",
+    "stock": 23,
+    "forecast": 0,
+    "itemNumber": "AD010921",
+    "dailyLunch": 0,
+    "dinner": 0,
+    "orders": {
+      "mon": 0,
+      "tue": 11,
+      "wed": 0,
+      "thu": 0,
+      "fri": 0
+    }
+  },
+  {
+    "name": "Be-kind Honey Roasted Nuts & Sea Salt",
+    "stock": 19,
+    "forecast": 0,
+    "itemNumber": "AD010821",
+    "dailyLunch": 0,
+    "dinner": 0,
+    "orders": {
+      "mon": 0,
+      "tue": 22,
+      "wed": 11,
+      "thu": 11,
+      "fri": 0
+    }
+  },
+  {
+    "name": "Be-Kind Protein crunchy peanut butter",
+    "stock": 70,
+    "forecast": 0,
+    "itemNumber": "1739356870385",
+    "dailyLunch": 0,
+    "dinner": 0,
+    "orders": {
+      "mon": 0,
+      "tue": 11,
+      "wed": 11,
+      "thu": 0,
+      "fri": 0
+    }
+  },
+  {
+    "name": "Be-Kind Protein Dark chocolate nut",
+    "stock": 67,
+    "forecast": 0,
+    "itemNumber": "1739355819198",
+    "dailyLunch": 0,
+    "dinner": 0,
+    "orders": {
+      "mon": 0,
+      "tue": 11,
+      "wed": 0,
+      "thu": 44,
+      "fri": 0
+    }
+  },
+  {
+    "name": "Bouche Earlybird Kombucha",
+    "stock": 18,
+    "forecast": 0,
+    "itemNumber": "1758864730619",
+    "dailyLunch": 0,
+    "dinner": 0,
+    "orders": {
+      "mon": 0,
+      "tue": 0,
+      "wed": 0,
+      "thu": 0,
+      "fri": 0
+    }
+  },
+  {
+    "name": "Bouche Kombucha Hibiskus",
+    "stock": 18,
+    "forecast": 0,
+    "itemNumber": "1758864862461",
+    "dailyLunch": 0,
+    "dinner": 0,
+    "orders": {
+      "mon": 0,
+      "tue": 0,
+      "wed": 0,
+      "thu": 0,
+      "fri": 0
+    }
+  },
+  {
+    "name": "Chari Tea black",
+    "stock": 21,
+    "forecast": 0,
+    "itemNumber": "1675064299685",
+    "dailyLunch": 0,
+    "dinner": 0,
+    "orders": {
+      "mon": 0,
+      "tue": 0,
+      "wed": 0,
+      "thu": 0,
+      "fri": 0
+    }
+  },
+  {
+    "name": "Chari Tea Red",
+    "stock": 0,
+    "forecast": 0,
+    "itemNumber": "1747302348649",
+    "dailyLunch": 0,
+    "dinner": 0,
+    "orders": {
+      "mon": 0,
+      "tue": 0,
+      "wed": 0,
+      "thu": 0,
+      "fri": 0
+    }
+  },
+  {
+    "name": "ChariTea Green",
+    "stock": 5,
+    "forecast": 0,
+    "itemNumber": "1747116928702",
+    "dailyLunch": 0,
+    "dinner": 0,
+    "orders": {
+      "mon": 0,
+      "tue": 0,
+      "wed": 0,
+      "thu": 0,
+      "fri": 0
+    }
+  },
+  {
+    "name": "ChariTea Organic",
+    "stock": 23,
+    "forecast": 0,
+    "itemNumber": "1747117595590",
+    "dailyLunch": 0,
+    "dinner": 0,
+    "orders": {
+      "mon": 0,
+      "tue": 0,
+      "wed": 0,
+      "thu": 0,
+      "fri": 0
+    }
+  },
+  {
+    "name": "Chicken",
+    "stock": 18329,
+    "forecast": 0,
+    "itemNumber": "1729848875989",
+    "dailyLunch": 0,
+    "dinner": 0,
+    "orders": {
+      "mon": 0,
+      "tue": 55,
+      "wed": 22,
+      "thu": 1717,
+      "fri": 44
+    }
+  },
+  {
+    "name": "Chocolate Mousse",
+    "stock": 4883,
+    "forecast": 0,
+    "itemNumber": "1708329460525",
+    "dailyLunch": 0,
+    "dinner": 0,
+    "orders": {
+      "mon": 0,
+      "tue": 11,
+      "wed": 11,
+      "thu": 22,
+      "fri": 0
+    }
+  },
+  {
+    "name": "Corny Chocolate",
+    "stock": 63,
+    "forecast": 0,
+    "itemNumber": "1721303146947",
+    "dailyLunch": 0,
+    "dinner": 0,
+    "orders": {
+      "mon": 0,
+      "tue": 0,
+      "wed": 0,
+      "thu": 0,
+      "fri": 0
+    }
+  },
+  {
+    "name": "Corny Chocolate Banana",
+    "stock": 39,
+    "forecast": 0,
+    "itemNumber": "1721305681286",
+    "dailyLunch": 0,
+    "dinner": 0,
+    "orders": {
+      "mon": 0,
+      "tue": 0,
+      "wed": 0,
+      "thu": 0,
+      "fri": 0
+    }
+  },
+  {
+    "name": "Corny Strawberry Yogurt",
+    "stock": 0,
+    "forecast": 0,
+    "itemNumber": "1721306413976",
+    "dailyLunch": 0,
+    "dinner": 0,
+    "orders": {
+      "mon": 0,
+      "tue": 0,
+      "wed": 0,
+      "thu": 0,
+      "fri": 0
+    }
+  },
+  {
+    "name": "Crème a l'orange",
+    "stock": 990,
+    "forecast": 0,
+    "itemNumber": "1716468258769",
+    "dailyLunch": 0,
+    "dinner": 0,
+    "orders": {
+      "mon": 0,
+      "tue": 22,
+      "wed": 0,
+      "thu": 66,
+      "fri": 0
+    }
+  },
+  {
+    "name": "FJ Rauch Iced Tea Peach",
+    "stock": 32,
+    "forecast": 0,
+    "itemNumber": "1761899402545",
+    "dailyLunch": 0,
+    "dinner": 0,
+    "orders": {
+      "mon": 0,
+      "tue": 0,
+      "wed": 0,
+      "thu": 0,
+      "fri": 0
+    }
+  },
+  {
+    "name": "FJ Rauch Iced Tea Pomegranate",
+    "stock": 13,
+    "forecast": 0,
+    "itemNumber": "1761820835788",
+    "dailyLunch": 0,
+    "dinner": 0,
+    "orders": {
+      "mon": 0,
+      "tue": 0,
+      "wed": 0,
+      "thu": 0,
+      "fri": 0
+    }
+  },
+  {
+    "name": "FJ Rauch Icetea Green",
+    "stock": 33,
+    "forecast": 0,
+    "itemNumber": "1761898711191",
+    "dailyLunch": 0,
+    "dinner": 0,
+    "orders": {
+      "mon": 0,
+      "tue": 0,
+      "wed": 0,
+      "thu": 0,
+      "fri": 0
+    }
+  },
+  {
+    "name": "FJ Rauch Strawberry Juice",
+    "stock": 12,
+    "forecast": 0,
+    "itemNumber": "1761901126831",
+    "dailyLunch": 0,
+    "dinner": 0,
+    "orders": {
+      "mon": 0,
+      "tue": 0,
+      "wed": 0,
+      "thu": 0,
+      "fri": 0
+    }
+  },
+  {
+    "name": "Franz Josef Rauch Bio Cranberry Lemonade",
+    "stock": 38,
+    "forecast": 0,
+    "itemNumber": "1760350774872",
+    "dailyLunch": 0,
+    "dinner": 0,
+    "orders": {
+      "mon": 0,
+      "tue": 0,
+      "wed": 0,
+      "thu": 0,
+      "fri": 0
+    }
+  },
+  {
+    "name": "Franz Josef Rauch Bio Maracuja Schorle",
+    "stock": 0,
+    "forecast": 0,
+    "itemNumber": "1761748065752",
+    "dailyLunch": 0,
+    "dinner": 0,
+    "orders": {
+      "mon": 0,
+      "tue": 0,
+      "wed": 0,
+      "thu": 0,
+      "fri": 0
+    }
+  },
+  {
+    "name": "Franz Josef Rauch Cocos Pineapple Fruit Juice Drink",
+    "stock": 23,
+    "forecast": 0,
+    "itemNumber": "1761819948742",
+    "dailyLunch": 0,
+    "dinner": 0,
+    "orders": {
+      "mon": 0,
+      "tue": 0,
+      "wed": 0,
+      "thu": 0,
+      "fri": 0
+    }
+  },
+  {
+    "name": "Franz Josef Rauch FJR Organic Apple Spritzer naturally cloudy",
+    "stock": 16,
+    "forecast": 0,
+    "itemNumber": "1760361033363",
+    "dailyLunch": 0,
+    "dinner": 0,
+    "orders": {
+      "mon": 0,
+      "tue": 0,
+      "wed": 0,
+      "thu": 0,
+      "fri": 0
+    }
+  },
+  {
+    "name": "Franz Josef Rauch Orange Juice",
+    "stock": 18,
+    "forecast": 0,
+    "itemNumber": "1761900257702",
+    "dailyLunch": 0,
+    "dinner": 0,
+    "orders": {
+      "mon": 0,
+      "tue": 0,
+      "wed": 0,
+      "thu": 0,
+      "fri": 0
+    }
+  },
+  {
+    "name": "Fruit Salad Mojito",
+    "stock": 66,
+    "forecast": 0,
+    "itemNumber": "1655912601619",
+    "dailyLunch": 0,
+    "dinner": 0,
+    "orders": {
+      "mon": 0,
+      "tue": 0,
+      "wed": 0,
+      "thu": 11,
+      "fri": 0
+    }
+  },
+  {
+    "name": "Hanuta",
+    "stock": 176,
+    "forecast": 0,
+    "itemNumber": "1676030723636",
+    "dailyLunch": 0,
+    "dinner": 0,
+    "orders": {
+      "mon": 0,
+      "tue": 0,
+      "wed": 0,
+      "thu": 0,
+      "fri": 0
+    }
+  },
+  {
+    "name": "Jardin Fire",
+    "stock": 67,
+    "forecast": 0,
+    "itemNumber": "1751207098147",
+    "dailyLunch": 0,
+    "dinner": 0,
+    "orders": {
+      "mon": 0,
+      "tue": 0,
+      "wed": 0,
+      "thu": 22,
+      "fri": 0
+    }
+  },
+  {
+    "name": "Jarritos Grapefruit",
+    "stock": 0,
+    "forecast": 0,
+    "itemNumber": "1748065980948",
+    "dailyLunch": 0,
+    "dinner": 0,
+    "orders": {
+      "mon": 0,
+      "tue": 0,
+      "wed": 0,
+      "thu": 0,
+      "fri": 0
+    }
+  },
+  {
+    "name": "Jarritos Guava",
+    "stock": 22,
+    "forecast": 0,
+    "itemNumber": "1743059747344",
+    "dailyLunch": 0,
+    "dinner": 0,
+    "orders": {
+      "mon": 0,
+      "tue": 0,
+      "wed": 0,
+      "thu": 0,
+      "fri": 0
+    }
+  },
+  {
+    "name": "Jarritos Lime",
+    "stock": 14,
+    "forecast": 0,
+    "itemNumber": "1743058508598",
+    "dailyLunch": 0,
+    "dinner": 0,
+    "orders": {
+      "mon": 0,
+      "tue": 0,
+      "wed": 0,
+      "thu": 0,
+      "fri": 0
+    }
+  },
+  {
+    "name": "Jarritos Mandarine",
+    "stock": 0,
+    "forecast": 0,
+    "itemNumber": "1773391215742",
+    "dailyLunch": 0,
+    "dinner": 0,
+    "orders": {
+      "mon": 0,
+      "tue": 0,
+      "wed": 0,
+      "thu": 0,
+      "fri": 0
+    }
+  },
+  {
+    "name": "Jarritos Mango",
+    "stock": 7,
+    "forecast": 0,
+    "itemNumber": "1746372883155",
+    "dailyLunch": 0,
+    "dinner": 0,
+    "orders": {
+      "mon": 0,
+      "tue": 0,
+      "wed": 0,
+      "thu": 0,
+      "fri": 0
+    }
+  },
+  {
+    "name": "Jarritos Mexican Cola",
+    "stock": 16,
+    "forecast": 0,
+    "itemNumber": "1748065841748",
+    "dailyLunch": 0,
+    "dinner": 0,
+    "orders": {
+      "mon": 0,
+      "tue": 0,
+      "wed": 0,
+      "thu": 0,
+      "fri": 0
+    }
+  },
+  {
+    "name": "Jarritos Pineapple",
+    "stock": 20,
+    "forecast": 0,
+    "itemNumber": "1743058866759",
+    "dailyLunch": 0,
+    "dinner": 0,
+    "orders": {
+      "mon": 0,
+      "tue": 0,
+      "wed": 0,
+      "thu": 0,
+      "fri": 0
+    }
+  },
+  {
+    "name": "Jarritos Strawberry",
+    "stock": 17,
+    "forecast": 0,
+    "itemNumber": "1746372405869",
+    "dailyLunch": 0,
+    "dinner": 0,
+    "orders": {
+      "mon": 0,
+      "tue": 0,
+      "wed": 0,
+      "thu": 0,
+      "fri": 0
+    }
+  },
+  {
+    "name": "Knoppers",
+    "stock": 0,
+    "forecast": 0,
+    "itemNumber": "1676031961301",
+    "dailyLunch": 0,
+    "dinner": 0,
+    "orders": {
+      "mon": 0,
+      "tue": 0,
+      "wed": 0,
+      "thu": 0,
+      "fri": 0
+    }
+  },
+  {
+    "name": "Kombucha Carpe Diem",
+    "stock": 14,
+    "forecast": 0,
+    "itemNumber": "1742468985716",
+    "dailyLunch": 0,
+    "dinner": 0,
+    "orders": {
+      "mon": 0,
+      "tue": 0,
+      "wed": 0,
+      "thu": 0,
+      "fri": 0
+    }
+  },
+  {
+    "name": "Labneh Mezze",
+    "stock": 13,
+    "forecast": 0,
+    "itemNumber": "1753186255546",
+    "dailyLunch": 0,
+    "dinner": 0,
+    "orders": {
+      "mon": 0,
+      "tue": 0,
+      "wed": 0,
+      "thu": 0,
+      "fri": 0
+    }
+  },
+  {
+    "name": "Potato soup with sausages",
+    "stock": 21,
+    "forecast": 0,
+    "itemNumber": "1665773046317",
+    "dailyLunch": 0,
+    "dinner": 0,
+    "orders": {
+      "mon": 0,
+      "tue": 11,
+      "wed": 0,
+      "thu": 44,
+      "fri": 11
+    }
+  },
+  {
+    "name": "Rice",
+    "stock": 597,
+    "forecast": 0,
+    "itemNumber": "1729071034347",
+    "dailyLunch": 0,
+    "dinner": 0,
+    "orders": {
+      "mon": 0,
+      "tue": 0,
+      "wed": 11,
+      "thu": 33,
+      "fri": 0
+    }
+  },
+  {
+    "name": "Roasted Vegetables",
+    "stock": 812,
+    "forecast": 0,
+    "itemNumber": "1729071866523",
+    "dailyLunch": 0,
+    "dinner": 0,
+    "orders": {
+      "mon": 0,
+      "tue": 11,
+      "wed": 11,
+      "thu": 33,
+      "fri": 22
+    }
+  },
+  {
+    "name": "Smashed Medjool Date",
+    "stock": 119,
+    "forecast": 0,
+    "itemNumber": "1749730283199",
+    "dailyLunch": 0,
+    "dinner": 0,
+    "orders": {
+      "mon": 0,
+      "tue": 22,
+      "wed": 44,
+      "thu": 1212,
+      "fri": 0
+    }
+  },
+  {
+    "name": "Sultana’s Garden",
+    "stock": 33,
+    "forecast": 0,
+    "itemNumber": "1762897415466",
+    "dailyLunch": 0,
+    "dinner": 0,
+    "orders": {
+      "mon": 0,
+      "tue": 0,
+      "wed": 0,
+      "thu": 0,
+      "fri": 0
+    }
+  },
+  {
+    "name": "Tanzania Kokoa Kamili",
+    "stock": 77,
+    "forecast": 0,
+    "itemNumber": "1773400014218",
+    "dailyLunch": 0,
+    "dinner": 0,
+    "orders": {
+      "mon": 0,
+      "tue": 0,
+      "wed": 33,
+      "thu": 44,
+      "fri": 0
+    }
+  },
+  {
+    "name": "YFood Drink Classic Chocolate",
+    "stock": 47,
+    "forecast": 0,
+    "itemNumber": "1685372443322",
+    "dailyLunch": 0,
+    "dinner": 0,
+    "orders": {
+      "mon": 0,
+      "tue": 0,
+      "wed": 0,
+      "thu": 0,
+      "fri": 0
+    }
+  },
+  {
+    "name": "YFood Drink Cold Brew Coffee",
+    "stock": 51,
+    "forecast": 0,
+    "itemNumber": "1685372004749",
+    "dailyLunch": 0,
+    "dinner": 0,
+    "orders": {
+      "mon": 0,
+      "tue": 0,
+      "wed": 0,
+      "thu": 0,
+      "fri": 0
+    }
+  },
+  {
+    "name": "YFood Drink Fresh Berry",
+    "stock": 56,
+    "forecast": 0,
+    "itemNumber": "1685372284151",
+    "dailyLunch": 0,
+    "dinner": 0,
+    "orders": {
+      "mon": 0,
+      "tue": 0,
+      "wed": 0,
+      "thu": 0,
+      "fri": 0
+    }
+  },
+  {
+    "name": "YFood Drink Funky Peanuts",
+    "stock": 65,
+    "forecast": 0,
+    "itemNumber": "1754312346788",
+    "dailyLunch": 0,
+    "dinner": 0,
+    "orders": {
+      "mon": 0,
+      "tue": 0,
+      "wed": 0,
+      "thu": 0,
+      "fri": 0
+    }
+  },
+  {
+    "name": "YFood Drink Salted Caramel",
+    "stock": 62,
+    "forecast": 0,
+    "itemNumber": "1754311834754",
+    "dailyLunch": 0,
+    "dinner": 0,
+    "orders": {
+      "mon": 0,
+      "tue": 0,
+      "wed": 0,
+      "thu": 0,
+      "fri": 0
+    }
+  }
+]

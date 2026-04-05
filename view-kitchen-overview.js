@@ -3,13 +3,9 @@
 // KITCHEN OVERVIEW — Live status of all operations
 // =============================================
 
-const KITCHEN_STATIONS = [
-    { id: 'st1', name: 'Hot Station A', operator: 'Marco Rossi', type: 'hot', tasks: [ { ingredient: 'Cordon Bleu with Green Beans', targetKg: 2813.8, status: 'cooking', startTime: '06:30', estFinish: '08:15' }, { ingredient: 'B&B Butter Chicken with Rice & Naan', targetKg: 2513.5, status: 'cooking', startTime: '06:30', estFinish: '08:15' }, { ingredient: 'Phanaeng Chicken curry', targetKg: 2061.8, status: 'cooking', startTime: '06:30', estFinish: '08:15' }, { ingredient: 'Low Carb Döner-Teller', targetKg: 1610.0, status: 'cooking', startTime: '06:30', estFinish: '08:15' } ] },
-    { id: 'st3', name: 'Rice & Grain Station', operator: 'Anna Verdi', type: 'grain', tasks: [  ] },
-    { id: 'st4', name: 'Cold Prep Station', operator: 'Elena Weber', type: 'cold', tasks: [  ] },
-];
-
 export function renderKitchenOverview() {
+    if (!window._BossData) return;
+    const KITCHEN_STATIONS = window._BossData.kitchenStations;
     const container = document.getElementById('kitchen-view');
     if (!container) return;
 

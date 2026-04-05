@@ -11,7 +11,7 @@ window.toggleProductionDetails = (safeId) => {
 
 export function renderProductionView() {
     // Filter production orders by the selected date
-    const dateFilteredOrders = state.productionOrders.filter(order => order.deliveryDate === state.selectedDate);
+    const dateFilteredOrders = window._BossData ? window._BossData.productionLine : [];
 
     const { dishes, summary } = aggregateProductionData(dateFilteredOrders);
     const container = document.getElementById('production-content-container');

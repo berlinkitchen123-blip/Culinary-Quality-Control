@@ -13,6 +13,7 @@ import { renderIngredientQtyView } from "./view-ingredient-qty.js";
 import { renderKitchenOverview } from "./view-kitchen-overview.js";
 import { renderThermalView } from "./view-thermal.js";
 import { renderForecastView } from "./view-forecast.js";
+import { BossEngine } from "./boss-engine.js";
 
 // =============================================
 // VIEW CONTROLLER
@@ -142,11 +143,30 @@ if (DOMElements.detailBackBtn) {
 }
 
 // =============================================
+// DAY SELECTOR (AGENT DRIVEN)
+// =============================================
+const dayTabs = document.querySelectorAll('.day-tab');
+dayTabs.forEach(tab => {
+    tab.addEventListener('click', (e) => {
+        const selectedDay = e.target.getAttribute('data-day'); // 'mon', 'tue', etc.
+        
+        // Visual toggle
+        dayTabs.forEach(t => t.className = "day-tab px-3 py-1.5 text-[10px] font-bold rounded text-slate-500 hover:text-slate-700");
+        e.target.className = "day-tab px-3 py-1.5 text-[10px] font-bold rounded shadow-sm bg-white text-slate-800";
+        if (DOMElements.headerDateDisplay) {
+            DOMElements.headerDateDisplay.innerText = selectedDay.toUpperCase() + ", 29 MAR 2026";
+        }
+
+        // AGENT PROCESSING
+        BossEngine.processDay(selectedDay);
+    });
+});
+
+// =============================================
 // INIT
 // =============================================
+BossEngine.init(); // Boot the agent logic first
 showView('dashboard');
 if (DOMElements.headerDateDisplay) {
-    DOMElements.headerDateDisplay.innerText = new Date().toLocaleDateString('en-GB', {
-        day: '2-digit', month: 'short', year: 'numeric'
-    }).toUpperCase();
+    DOMElements.headerDateDisplay.innerText = "TUE, 29 MAR 2026"; // Default active day where orders start
 }

@@ -4,45 +4,9 @@
 // =============================================
 
 const KITCHEN_STATIONS = [
-    {
-        id: 'st1', name: 'Hot Station A', operator: 'Marco Rossi', type: 'hot',
-        tasks: [
-            { ingredient: 'Butter Chicken Sauce', targetKg: 15.2, status: 'cooking', startTime: '06:30', estFinish: '08:15' },
-            { ingredient: 'Coconut Curry Sauce', targetKg: 10.8, status: 'waiting', startTime: null, estFinish: null },
-        ]
-    },
-    {
-        id: 'st2', name: 'Hot Station B', operator: 'Giuseppe Neri', type: 'hot',
-        tasks: [
-            { ingredient: 'Chicken Thigh Pieces', targetKg: 8.6, status: 'done', startTime: '05:45', estFinish: '07:30', actualFinish: '07:25', temp: 78.5 },
-            { ingredient: 'Chicken Tikka Pieces', targetKg: 11.4, status: 'cooking', startTime: '07:00', estFinish: '09:00' },
-            { ingredient: 'Breaded Schnitzel', targetKg: 10.4, status: 'waiting', startTime: null, estFinish: null },
-        ]
-    },
-    {
-        id: 'st3', name: 'Rice & Grain Station', operator: 'Anna Verdi', type: 'grain',
-        tasks: [
-            { ingredient: 'Steamed Basmati Rice', targetKg: 41.4, status: 'cooking', startTime: '06:00', estFinish: '07:45' },
-            { ingredient: 'Pearl Barley', targetKg: 7.2, status: 'waiting', startTime: null, estFinish: null },
-            { ingredient: 'Sushi Rice', targetKg: 11.2, status: 'waiting', startTime: null, estFinish: null },
-        ]
-    },
-    {
-        id: 'st4', name: 'Cold Prep Station', operator: 'Elena Weber', type: 'cold',
-        tasks: [
-            { ingredient: 'Mixed Salad Greens', targetKg: 6.8, status: 'done', startTime: '05:30', estFinish: '06:00', actualFinish: '05:55', temp: 4.2 },
-            { ingredient: 'Grilled Chicken Breast', targetKg: 10.2, status: 'done', startTime: '06:00', estFinish: '07:30', actualFinish: '07:20', temp: 74.1 },
-            { ingredient: 'Seared Tuna', targetKg: 6.2, status: 'cooking', startTime: '07:15', estFinish: '08:00' },
-        ]
-    },
-    {
-        id: 'st5', name: 'Sauce & Sides', operator: 'Maria Conti', type: 'hot',
-        tasks: [
-            { ingredient: 'Mashed Potatoes', targetKg: 8.7, status: 'done', startTime: '06:00', estFinish: '07:00', actualFinish: '06:50', temp: 72.0 },
-            { ingredient: 'Pumpkin Curry Sauce', targetKg: 6.4, status: 'cooking', startTime: '07:00', estFinish: '08:30' },
-            { ingredient: 'Gravy', targetKg: 2.3, status: 'waiting', startTime: null, estFinish: null },
-        ]
-    },
+    { id: 'st1', name: 'Hot Station A', operator: 'Marco Rossi', type: 'hot', tasks: [ { ingredient: 'Cordon Bleu with Green Beans', targetKg: 2813.8, status: 'cooking', startTime: '06:30', estFinish: '08:15' }, { ingredient: 'B&B Butter Chicken with Rice & Naan', targetKg: 2513.5, status: 'cooking', startTime: '06:30', estFinish: '08:15' }, { ingredient: 'Phanaeng Chicken curry', targetKg: 2061.8, status: 'cooking', startTime: '06:30', estFinish: '08:15' }, { ingredient: 'Low Carb Döner-Teller', targetKg: 1610.0, status: 'cooking', startTime: '06:30', estFinish: '08:15' } ] },
+    { id: 'st3', name: 'Rice & Grain Station', operator: 'Anna Verdi', type: 'grain', tasks: [  ] },
+    { id: 'st4', name: 'Cold Prep Station', operator: 'Elena Weber', type: 'cold', tasks: [  ] },
 ];
 
 export function renderKitchenOverview() {

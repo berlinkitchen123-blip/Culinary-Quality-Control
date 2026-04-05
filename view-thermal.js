@@ -5,22 +5,16 @@
 // =============================================
 
 const THERMAL_RECORDS = [
-    // Cooking stage temps
-    { id: 't1', stage: 'Cooking', ingredient: 'Chicken Thigh Pieces', operator: 'Giuseppe Neri', temp: 78.5, target: 75, type: 'hot', time: '07:25', status: 'pass', hasPhoto: true },
-    { id: 't2', stage: 'Cooking', ingredient: 'Grilled Chicken Breast', operator: 'Elena Weber', temp: 74.1, target: 75, type: 'hot', time: '07:20', status: 'fail', hasPhoto: true },
-    { id: 't3', stage: 'Cooking', ingredient: 'Mashed Potatoes', operator: 'Maria Conti', temp: 72.0, target: 65, type: 'hot', time: '06:50', status: 'pass', hasPhoto: true },
-    { id: 't4', stage: 'Cooking', ingredient: 'Mixed Salad Greens', operator: 'Elena Weber', temp: 4.2, target: 7, type: 'cold', time: '05:55', status: 'pass', hasPhoto: true },
-    { id: 't5', stage: 'Cooking', ingredient: 'Steamed Basmati Rice', operator: 'Anna Verdi', temp: 82.3, target: 75, type: 'hot', time: '07:45', status: 'pass', hasPhoto: false },
-    { id: 't6', stage: 'Cooking', ingredient: 'Pearl Barley', operator: 'Anna Verdi', temp: 76.1, target: 75, type: 'hot', time: '08:10', status: 'pass', hasPhoto: true },
-    { id: 't7', stage: 'Cooking', ingredient: 'Butter Chicken Sauce', operator: 'Marco Rossi', temp: 88.5, target: 75, type: 'hot', time: '08:15', status: 'pass', hasPhoto: true },
-    { id: 't8', stage: 'Cooking', ingredient: 'Seared Tuna', operator: 'Elena Weber', temp: 63.0, target: 63, type: 'hot', time: '07:55', status: 'pass', hasPhoto: true },
-
-    // Assembly stage temps
-    { id: 't9', stage: 'Assembly', ingredient: 'Dish A — Chicken Balsamic', operator: 'Stefan Koch', temp: 5.1, target: 7, type: 'cold', time: '09:15', status: 'pass', hasPhoto: true },
-    { id: 't10', stage: 'Assembly', ingredient: 'Dish R — Butter Chicken', operator: 'Elena Weber', temp: 68.2, target: 65, type: 'hot', time: '09:30', status: 'pass', hasPhoto: true },
-    { id: 't11', stage: 'Assembly', ingredient: 'Dish O — Schnitzel Plate', operator: 'Amir Yilmaz', temp: 62.5, target: 65, type: 'hot', time: '09:45', status: 'fail', hasPhoto: true },
-    { id: 't12', stage: 'Assembly', ingredient: 'Dish N — Thai CC Chicken', operator: 'Stefan Koch', temp: 71.0, target: 65, type: 'hot', time: '10:00', status: 'pass', hasPhoto: false },
-    { id: 't13', stage: 'Assembly', ingredient: 'Dish B — Tuna Deopbap', operator: 'Amir Yilmaz', temp: 3.8, target: 7, type: 'cold', time: '10:15', status: 'pass', hasPhoto: true },
+    { id: 't0', stage: 'Assembly', ingredient: 'Cordon Bleu with Green Beans', operator: 'Stefan Koch', temp: 72.5, target: 65, type: 'hot', time: '10:00', status: 'pass', hasPhoto: true },
+    { id: 't1', stage: 'Assembly', ingredient: 'B&B Butter Chicken with Rice & Naan', operator: 'Stefan Koch', temp: 73.5, target: 65, type: 'hot', time: '10:00', status: 'pass', hasPhoto: true },
+    { id: 't2', stage: 'Assembly', ingredient: 'Phanaeng Chicken curry', operator: 'Stefan Koch', temp: 74.5, target: 65, type: 'hot', time: '10:00', status: 'pass', hasPhoto: true },
+    { id: 't3', stage: 'Assembly', ingredient: 'Low Carb Döner-Teller', operator: 'Stefan Koch', temp: 75.5, target: 65, type: 'hot', time: '10:00', status: 'pass', hasPhoto: true },
+    { id: 't4', stage: 'Assembly', ingredient: 'Spinach Ricotta Tortellini with cream tomato sauce', operator: 'Stefan Koch', temp: 76.5, target: 65, type: 'hot', time: '10:00', status: 'pass', hasPhoto: true },
+    { id: 't5', stage: 'Assembly', ingredient: 'Chicken in champignon sauce with Spatzle', operator: 'Stefan Koch', temp: 77.5, target: 65, type: 'hot', time: '10:00', status: 'pass', hasPhoto: true },
+    { id: 't6', stage: 'Assembly', ingredient: 'Vegan Madras Kofta', operator: 'Stefan Koch', temp: 78.5, target: 65, type: 'hot', time: '10:00', status: 'pass', hasPhoto: true },
+    { id: 't7', stage: 'Assembly', ingredient: 'B&B Butter Tofu', operator: 'Stefan Koch', temp: 79.5, target: 65, type: 'hot', time: '10:00', status: 'pass', hasPhoto: true },
+    { id: 't8', stage: 'Assembly', ingredient: 'Japanese inspired vegan noodles bowl', operator: 'Stefan Koch', temp: 80.5, target: 65, type: 'hot', time: '10:00', status: 'pass', hasPhoto: true },
+    { id: 't9', stage: 'Assembly', ingredient: 'Test&Tell: High-Protien Thai Peanut Bowl with Chickpea & Tofu', operator: 'Stefan Koch', temp: 81.5, target: 65, type: 'hot', time: '10:00', status: 'pass', hasPhoto: true },
 ];
 
 export function renderThermalView() {

@@ -20,21 +20,34 @@ export const BossEngine = {
         let totalItemsToPrep = 0;
 
         RAW_DATA.forEach(item => {
-            // "chek number of dish order on monday, same number of dish have to prepare whol week for everyday"
             // Find the base required quantity from the first actively scheduled day (typically Tue since Mon is 0 in exports)
-            let requiredQty = 0;
+            let rawOrderedQty = 0;
             if (item.orders) {
-                requiredQty = item.orders.mon || item.orders.tue || item.orders.wed || item.orders.thu || item.orders.fri || 0;
+                rawOrderedQty = item.orders.mon || item.orders.tue || item.orders.wed || item.orders.thu || item.orders.fri || 0;
             }
 
-            if (requiredQty > 0) {
+            if (rawOrderedQty > 0) {
+                const stock = item.stock || 0;
+                // Buffer for +5 dish, subtract leftover stock so next day they will not cook unnecessary
+                let prepTarget = Math.max(0, rawOrderedQty + 5 - stock);
+                
                 dailyActiveDishes.push({
                     name: item.name,
-                    qty: requiredQty,
+                    ordered: rawOrderedQty,
+                    stock: stock,
+                    qty: prepTarget, // The exact number kitchen needs to prepare
                     type: (!item.name.toLowerCase().includes('salad') && !item.name.toLowerCase().includes('mousse')) ? 'hot' : 'cold',
-                    letter: item.name.substring(0,2).toUpperCase() + Math.floor(Math.random() * 100)
+                    letter: item.name.substring(0,2).toUpperCase() + Math.floor(Math.random() * 100),
+                    image: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400&q=80',
+                    comments: ['Portion size was a bit small', 'Customer requested extra sauce', 'Perfectly cooked last time'],
+                    ingredientsList: [
+                        { name: 'Core Protein', weight: 150 },
+                        { name: 'Base Grain', weight: 100 },
+                        { name: 'Sauce/Dressing', weight: 50 },
+                        { name: 'Garnish', weight: 10 }
+                    ]
                 });
-                totalItemsToPrep += requiredQty;
+                totalItemsToPrep += prepTarget;
             }
         });
 

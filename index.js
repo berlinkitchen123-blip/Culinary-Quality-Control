@@ -90,7 +90,7 @@ export function showView(viewName) {
         'thermal': 'Thermal Validation',
         'hygiene': 'Hygiene Audit',
         'compliance': 'Temperature Compliance',
-        'audit': 'Quality Analytics',
+        'audit': 'Quality Control',
         'detail': 'Item Detail',
     };
     if (DOMElements.pageTitle) DOMElements.pageTitle.innerText = titles[viewName] || 'Command Center';
@@ -170,3 +170,63 @@ showView('dashboard');
 if (DOMElements.headerDateDisplay) {
     DOMElements.headerDateDisplay.innerText = "TUE, 29 MAR 2026"; // Default active day where orders start
 }
+
+// =============================================
+// GLOBAL DISH MODAL
+// =============================================
+window.showDishModal = (letterCode) => {
+    if (!window._BossData || !window._BossData.activeDishes) return;
+    const dish = window._BossData.activeDishes.find(d => d.letter === letterCode);
+    if (!dish) return;
+
+    const modal = document.getElementById('modal-container');
+    if (!modal) return;
+
+    modal.innerHTML = `
+        <div class="bg-white rounded-2xl w-full max-w-md overflow-hidden shadow-2xl scale-100 transition-transform flex flex-col max-h-[90vh]">
+            <div class="relative h-48 w-full bg-slate-100 flex-shrink-0">
+                <img src="${dish.image}" class="w-full h-full object-cover" alt="Dish image" />
+                <div class="absolute inset-0 bg-gradient-to-t from-slate-900/80 to-transparent flex items-end p-4">
+                    <h3 class="text-xl font-black text-white leading-tight">${dish.name}</h3>
+                </div>
+                <button onclick="document.getElementById('modal-container').classList.add('hidden')" class="absolute top-4 right-4 h-8 w-8 bg-slate-900/50 backdrop-blur rounded-full flex items-center justify-center text-white hover:bg-slate-900/80 transition-colors">
+                    ✕
+                </button>
+            </div>
+            
+            <div class="p-6 space-y-6 flex-1 overflow-y-auto">
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="bg-emerald-50 rounded-xl p-3 border border-emerald-100 flex flex-col items-center">
+                        <span class="text-[9px] font-black text-emerald-600 uppercase tracking-widest mb-1">Target to Prepare</span>
+                        <span class="text-3xl font-black text-emerald-700">${dish.qty}</span>
+                    </div>
+                    <div class="bg-blue-50 rounded-xl p-3 border border-blue-100 flex flex-col items-center">
+                        <span class="text-[9px] font-black text-blue-600 uppercase tracking-widest mb-1">Leftover Stock</span>
+                        <span class="text-3xl font-black text-blue-700">${dish.stock}</span>
+                    </div>
+                </div>
+
+                <div>
+                    <h4 class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 border-b border-slate-100 pb-2">Recent Feedback</h4>
+                    <ul class="space-y-2">
+                        ${dish.comments.map(c => `<li class="text-xs text-slate-600 bg-slate-50 p-2 rounded border border-slate-100 flex gap-2"><span>💬</span> ${c}</li>`).join('')}
+                    </ul>
+                </div>
+
+                <div>
+                    <h4 class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 border-b border-slate-100 pb-2">Bill of Materials</h4>
+                    <ul class="space-y-2">
+                        ${dish.ingredientsList.map(i => `
+                            <li class="flex justify-between items-center text-xs border-b border-slate-50 pb-1">
+                                <span class="font-bold text-slate-700">${i.name}</span>
+                                <span class="font-mono text-slate-500">${(i.weight * dish.qty).toLocaleString()}g</span>
+                            </li>
+                        `).join('')}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    `;
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+};

@@ -129,47 +129,54 @@ export function renderForecastView() {
                 <div class="overflow-x-auto">
                     <table class="w-full text-left border-collapse">
                         <thead>
-                            <tr class="border-b border-slate-200 text-[10px] font-bold text-slate-500 uppercase tracking-wider">
-                                <th class="p-3 pl-5 w-12">Letter</th>
-                                <th class="p-3">Dish</th>
-                                <th class="p-3 text-center">Type</th>
-                                <th class="p-3 text-center">Forecast</th>
-                                <th class="p-3 text-center">Ordered</th>
-                                <th class="p-3 text-center">Unsold</th>
-                                <th class="p-3">Fill Rate</th>
+                            <tr class="bg-slate-50/80 border-b border-slate-200">
+                                <th class="px-6 py-3 text-[10px] font-black text-slate-500 uppercase tracking-widest w-2/5">Menu Item</th>
+                                <th class="px-6 py-3 text-[10px] font-black text-slate-500 uppercase tracking-widest">Ordered</th>
+                                <th class="px-6 py-3 text-[10px] font-black text-slate-500 uppercase tracking-widest">Stock/Leftover</th>
+                                <th class="px-6 py-3 text-[10px] font-black text-slate-500 uppercase tracking-widest">Buffer</th>
+                                <th class="px-6 py-3 text-[10px] font-black text-slate-500 uppercase tracking-widest">Prep Target</th>
                             </tr>
                         </thead>
                         <tbody>
-                            ${WEEKLY_MENU.map(d => {
-                                const fillRate = Math.round((d.ordered / d.forecast) * 100);
-                                const fillColor = fillRate >= 90 ? 'bg-emerald-500' : fillRate >= 70 ? 'bg-amber-500' : 'bg-red-500';
-                                const typeTag = d.type === 'hot'
-                                    ? '<span class="px-1.5 py-0.5 text-[8px] font-bold bg-orange-100 text-orange-700 border border-orange-200 rounded">HOT</span>'
-                                    : '<span class="px-1.5 py-0.5 text-[8px] font-bold bg-blue-100 text-blue-700 border border-blue-200 rounded">COLD</span>';
-
-                                return `
-                                    <tr class="border-b border-slate-100 hover:bg-slate-50 transition-colors">
-                                        <td class="p-3 pl-5">
-                                            <div class="h-8 w-8 bg-[#022c22] rounded flex items-center justify-center">
-                                                <span class="text-[10px] font-bold text-white">${d.letter}</span>
-                                            </div>
-                                        </td>
-                                        <td class="p-3 text-[11px] font-bold text-slate-800">${d.name}</td>
-                                        <td class="p-3 text-center">${typeTag}</td>
-                                        <td class="p-3 text-center text-[11px] font-mono text-slate-600">${d.forecast}</td>
-                                        <td class="p-3 text-center text-[11px] font-mono font-bold text-slate-800">${d.ordered}</td>
-                                        <td class="p-3 text-center text-[11px] font-mono ${d.unsold > 0 ? 'text-amber-600 font-bold' : 'text-slate-300'}">${d.unsold > 0 ? d.unsold : '—'}</td>
-                                        <td class="p-3">
-                                            <div class="flex items-center gap-2">
-                                                <div class="flex-1 h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                                                    <div class="h-full ${fillColor} rounded-full" style="width: ${Math.min(fillRate, 100)}%"></div>
-                                                </div>
-                                                <span class="text-[10px] font-bold text-slate-600 w-8 text-right">${fillRate}%</span>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                `;
-                            }).join('')}
+                            ${(() => {
+                                const activeDishes = WEEKLY_MENU.map(d => ({ ...d, stock: d.unsold, qty: d.ordered }));
+                                const tableRows = activeDishes.map((dish, i) => `
+        <tr class="group hover:bg-slate-50 transition-colors border-b border-slate-100 last:border-0 cursor-pointer" onclick="window.showDishModal('${dish.letter}')">
+            <td class="px-6 py-4">
+                <div class="flex items-center gap-3">
+                    <div class="h-8 w-8 rounded bg-[#022c22] flex items-center justify-center flex-shrink-0">
+                        <span class="text-[10px] font-bold text-white">${dish.letter}</span>
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <p class="text-xs font-bold text-slate-800 group-hover:text-emerald-700 transition-colors line-clamp-1">${dish.name}</p>
+                            <span class="text-[10px] bg-slate-100 text-slate-500 rounded px-1.5 py-0.5 hover:bg-slate-200" title="View details">ℹ️</span>
+                        </div>
+                        <span class="text-[9px] font-bold px-1.5 py-0.5 rounded border ${dish.type === 'hot' ? 'bg-orange-100 text-orange-600 border-orange-200' : 'bg-blue-100 text-blue-600 border-blue-200'}">${dish.type === 'hot' ? 'HOT' : 'COLD'}</span>
+                    </div>
+                </div>
+            </td>
+            <td class="px-6 py-4">
+                 <span class="text-xs font-bold text-slate-800">${dish.ordered.toLocaleString()}</span>
+            </td>
+            <td class="px-6 py-4">
+                <span class="text-xs font-bold text-red-600">-${dish.stock.toLocaleString()}</span>
+            </td>
+            <td class="px-6 py-4">
+                <span class="text-xs font-bold text-blue-600">+5</span>
+            </td>
+            <td class="px-6 py-4">
+                <div class="flex items-center gap-2">
+                    <div class="h-1.5 w-16 bg-slate-100 rounded-full overflow-hidden">
+                         <div class="h-full bg-emerald-500 rounded-full" style="width: 100%"></div>
+                    </div>
+                    <span class="text-xs font-bold text-emerald-600">${dish.qty.toLocaleString()}</span>
+                </div>
+            </td>
+        </tr>
+    `).join('');
+                                return tableRows;
+                            })()}
                         </tbody>
                     </table>
                 </div>

@@ -152,13 +152,27 @@ export function renderIngredientQtyView() {
     const container = document.getElementById('ingredient-view');
     if (!container) return;
 
+    // Dynamically compute requirements from BossData (which already has buffer+stock logic)
+    let requirements = TODAYS_REQUIREMENTS;
+    if (window._BossData && window._BossData.activeDishes) {
+        requirements = window._BossData.activeDishes.map(d => ({
+            name: d.name,
+            requiredG: d.ordered,   // raw ordered qty
+            buffer: 5,
+            stockAvail: d.stock,
+            prepTarget: d.qty,      // ordered + 5 buffer - stock
+            dishes: [`${d.name} (x${d.qty})`]
+        }));
+    }
+
     // Calculate statuses
-    const tableRows = TODAYS_REQUIREMENTS.map(req => {
+    const tableRows = requirements.map(req => {
         const stock = EPICBASE_STOCK[req.name] || { stock: 0, unit: 'g', reorderLevel: 0, supplier: 'Unknown' };
-        const remaining = stock.stock - req.requiredG;
+        const prepTarget = req.prepTarget || req.requiredG;
+        const remaining = stock.stock - prepTarget;
         const used = kitchenUsageLog[req.name] || 0;
         const actualRemaining = stock.stock - used;
-        const pctUsed = req.requiredG > 0 ? Math.round((used / req.requiredG) * 100) : 0;
+        const pctUsed = prepTarget > 0 ? Math.round((used / prepTarget) * 100) : 0;
 
         let status, statusColor, statusBg;
         if (stock.stock < req.requiredG) {
@@ -243,12 +257,12 @@ export function renderIngredientQtyView() {
                         <thead>
                             <tr class="bg-slate-50 border-b border-slate-200 text-[10px] font-bold text-slate-500 uppercase tracking-wider">
                                 <th class="p-3 pl-5">Ingredient</th>
-                                <th class="p-3 text-center">Required Today</th>
-                                <th class="p-3 text-center">Epicbase Stock</th>
-                                <th class="p-3 text-center">After Production</th>
-                                <th class="p-3 text-center">Kitchen Used</th>
+                                <th class="p-3 text-center">Ordered</th>
+                                <th class="p-3 text-center">Buffer</th>
+                                <th class="p-3 text-center">Stock</th>
+                                <th class="p-3 text-center">Prep Target</th>
+                                <th class="p-3 text-center">After Prod</th>
                                 <th class="p-3 text-center">Status</th>
-                                <th class="p-3 text-center">Used By</th>
                                 <th class="p-3 text-center">Action</th>
                             </tr>
                         </thead>
@@ -259,24 +273,15 @@ export function renderIngredientQtyView() {
                                         <p class="text-[11px] font-bold text-slate-800">${row.name}</p>
                                         <p class="text-[9px] text-slate-400">${row.stock.supplier}</p>
                                     </td>
-                                    <td class="p-3 text-center text-[11px] font-mono font-bold text-slate-700">${(row.requiredG / 1000).toFixed(1)}kg</td>
-                                    <td class="p-3 text-center text-[11px] font-mono font-bold text-slate-700">${(row.stock.stock / 1000).toFixed(1)}kg</td>
-                                    <td class="p-3 text-center text-[11px] font-mono font-bold ${row.remaining < 0 ? 'text-red-600' : 'text-slate-700'}">${(row.remaining / 1000).toFixed(1)}kg</td>
+                                    <td class="p-3 text-center text-[11px] font-mono font-bold text-slate-700">${row.requiredG}</td>
+                                    <td class="p-3 text-center text-[11px] font-mono font-bold text-blue-600">+5</td>
+                                    <td class="p-3 text-center text-[11px] font-mono font-bold text-slate-500">${row.stock.stock}</td>
                                     <td class="p-3 text-center">
-                                        <div class="flex flex-col items-center gap-1">
-                                            <span class="text-[11px] font-mono font-bold text-slate-600">${(row.used / 1000).toFixed(1)}kg</span>
-                                            <div class="w-16 h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                                                <div class="h-full bg-emerald-500 rounded-full transition-all" style="width: ${Math.min(row.pctUsed, 100)}%"></div>
-                                            </div>
-                                        </div>
+                                        <span class="text-[11px] font-mono font-black text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">${row.prepTarget || row.requiredG}</span>
                                     </td>
+                                    <td class="p-3 text-center text-[11px] font-mono font-bold ${row.remaining < 0 ? 'text-red-600' : 'text-slate-700'}">${row.remaining}</td>
                                     <td class="p-3 text-center">
                                         <span class="px-2 py-1 text-[9px] font-bold rounded border ${row.statusBg} ${row.statusColor}">${row.status}</span>
-                                    </td>
-                                    <td class="p-3">
-                                        <div class="flex flex-wrap gap-1 justify-center">
-                                            ${row.dishes.map(d => `<span class="text-[8px] bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded font-medium">${d.split(' ')[0]}</span>`).join('')}
-                                        </div>
                                     </td>
                                     <td class="p-3 text-center">
                                         <button onclick="window.logIngredientUsage('${row.name}', ${row.requiredG})" class="px-2 py-1 text-[9px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 rounded hover:bg-emerald-100 transition-colors">

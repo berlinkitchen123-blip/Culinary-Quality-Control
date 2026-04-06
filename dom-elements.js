@@ -53,6 +53,6 @@ export const DOMElements = {
     dishCardContainer: document.getElementById('dish-card-container'),
     detailBackBtn: document.getElementById('detail-back-btn'),
     
-    // Analytics (existing QC — DO NOT CHANGE)
-    auditResultsContainer: document.getElementById('audit-results-container'),
+    // Quality Control
+    auditContentContainer: document.getElementById('audit-content-container'),
 };

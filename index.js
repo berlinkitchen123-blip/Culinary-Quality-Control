@@ -145,6 +145,26 @@ if (DOMElements.detailBackBtn) {
 // =============================================
 // DAY SELECTOR (AGENT DRIVEN)
 // =============================================
+function getWeekdayDate(dayCode) {
+    const dayMap = { mon: 1, tue: 2, wed: 3, thu: 4, fri: 5 };
+    const today = new Date();
+    const currentDayOfWeek = today.getDay(); // 0=Sun, 1=Mon...
+    const targetDay = dayMap[dayCode];
+    const diff = targetDay - currentDayOfWeek;
+    const targetDate = new Date(today);
+    targetDate.setDate(today.getDate() + diff);
+    return targetDate;
+}
+
+function formatDateDisplay(dayCode) {
+    const date = getWeekdayDate(dayCode);
+    const label = dayCode.toUpperCase();
+    const formatted = date.toLocaleDateString('en-GB', {
+        day: '2-digit', month: 'short', year: 'numeric'
+    }).toUpperCase();
+    return `${label}, ${formatted}`;
+}
+
 const dayTabs = document.querySelectorAll('.day-tab');
 dayTabs.forEach(tab => {
     tab.addEventListener('click', (e) => {
@@ -154,7 +174,7 @@ dayTabs.forEach(tab => {
         dayTabs.forEach(t => t.className = "day-tab px-3 py-1.5 text-[10px] font-bold rounded text-slate-500 hover:text-slate-700");
         e.target.className = "day-tab px-3 py-1.5 text-[10px] font-bold rounded shadow-sm bg-white text-slate-800";
         if (DOMElements.headerDateDisplay) {
-            DOMElements.headerDateDisplay.innerText = selectedDay.toUpperCase() + ", 29 MAR 2026";
+            DOMElements.headerDateDisplay.innerText = formatDateDisplay(selectedDay);
         }
 
         // AGENT PROCESSING
@@ -165,10 +185,24 @@ dayTabs.forEach(tab => {
 // =============================================
 // INIT
 // =============================================
-BossEngine.init(); // Boot the agent logic first
+// Determine today's weekday and auto-select the correct tab
+const todayDayIndex = new Date().getDay(); // 0=Sun...6=Sat
+const dayCodeMap = { 1: 'mon', 2: 'tue', 3: 'wed', 4: 'thu', 5: 'fri' };
+const todayCode = dayCodeMap[todayDayIndex] || 'mon'; // fallback to mon on weekends
+
+BossEngine.processDay(todayCode); // Boot with today's data
 showView('dashboard');
+
+// Highlight today's tab and show today's real date
+dayTabs.forEach(t => {
+    if (t.getAttribute('data-day') === todayCode) {
+        t.className = "day-tab px-3 py-1.5 text-[10px] font-bold rounded shadow-sm bg-white text-slate-800";
+    } else {
+        t.className = "day-tab px-3 py-1.5 text-[10px] font-bold rounded text-slate-500 hover:text-slate-700";
+    }
+});
 if (DOMElements.headerDateDisplay) {
-    DOMElements.headerDateDisplay.innerText = "TUE, 29 MAR 2026"; // Default active day where orders start
+    DOMElements.headerDateDisplay.innerText = formatDateDisplay(todayCode);
 }
 
 // =============================================

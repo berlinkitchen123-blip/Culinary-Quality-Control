@@ -27,8 +27,8 @@ export function renderDishAssignView() {
                         </div>
                     </div>
                     <div class="flex gap-1 bg-slate-100 p-1 rounded-md">
-                        <button id="dish-tab-main" class="flex-1 px-3 py-1.5 text-[10px] font-bold rounded bg-white shadow-sm text-slate-800">MAIN DISHES</button>
-                        <button id="dish-tab-addons" class="flex-1 px-3 py-1.5 text-[10px] font-bold rounded text-slate-500 hover:text-slate-700">ADD-ONS</button>
+                        <button id="dish-tab-cooking" class="flex-1 px-3 py-1.5 text-[10px] font-bold rounded bg-white shadow-sm text-slate-800">MAIN DISHES (COOKING)</button>
+                        <button id="dish-tab-addons" class="flex-1 px-3 py-1.5 text-[10px] font-bold rounded text-slate-500 hover:text-slate-700">ADD-ONS / CATERING</button>
                     </div>
                 </div>
                 <div id="dish-letter-list" class="flex-1 overflow-y-auto p-4 space-y-2 custom-scrollbar"></div>
@@ -47,12 +47,17 @@ export function renderDishAssignView() {
         </div>
     `;
 
-    let activeTab = 'main-dishes';
+    let activeTab = 'cooking';
 
     const renderDishList = () => {
         const list = document.getElementById('dish-letter-list');
+        if (!list) return;
         list.innerHTML = '';
-        const filtered = DISH_MENU.filter(d => d.category === activeTab);
+        
+        const filtered = DISH_MENU.filter(d => {
+            if (activeTab === 'cooking') return d.category === 'Hot' || d.category === 'Cold';
+            return d.category === 'Add-ons' || d.category === 'Catering';
+        });
 
         filtered.forEach(dish => {
             const isAssigned = ASSEMBLY_OPERATORS.some(op => op.assignedDishes.find(d => d.letter === dish.letter));
@@ -74,13 +79,13 @@ export function renderDishAssignView() {
                     </div>
                     <div class="flex-1 min-w-0">
                         <div class="flex items-center gap-2 mb-0.5">
-                            <p class="text-[11px] font-bold text-slate-800 truncate">${dish.name}</p>
-                            <span class="text-[8px] font-bold px-1.5 py-0.5 rounded border ${typeColor} flex-shrink-0">${dish.type.toUpperCase()}</span>
+                            <p class="text-[11px] font-bold text-slate-800 truncate leading-tight">${dish.name}</p>
+                            <span class="text-[8px] font-bold px-1.5 py-0.5 rounded border ${typeColor} flex-shrink-0">${dish.category.toUpperCase()}</span>
                         </div>
                         <div class="flex items-center gap-3">
                             <span class="text-[9px] text-slate-400 font-medium">${dish.qty} portions</span>
                             <span class="text-[9px] text-slate-400">•</span>
-                            <span class="text-[9px] text-slate-400 font-medium">${dish.ingredients.length} ingredients</span>
+                            <span class="text-[9px] text-slate-400 font-medium">${dish.ingredientsList ? dish.ingredientsList.length : 0} ingredients</span>
                         </div>
                     </div>
                     ${isAssigned ? '<span class="h-2 w-2 rounded-full bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.5)] flex-shrink-0"></span>' : ''}
@@ -92,6 +97,25 @@ export function renderDishAssignView() {
             list.appendChild(card);
         });
     };
+
+    // Replace the old tab logic at the end of the file
+    if (document.getElementById('dish-tab-cooking')) {
+        document.getElementById('dish-tab-cooking').onclick = () => {
+            activeTab = 'cooking';
+            document.getElementById('dish-tab-cooking').className = "flex-1 px-3 py-1.5 text-[10px] font-bold rounded bg-white shadow-sm text-slate-800";
+            document.getElementById('dish-tab-addons').className = "flex-1 px-3 py-1.5 text-[10px] font-bold rounded text-slate-500 hover:text-slate-700";
+            renderDishList();
+        };
+    }
+    if (document.getElementById('dish-tab-addons')) {
+        document.getElementById('dish-tab-addons').onclick = () => {
+            activeTab = 'addons';
+            document.getElementById('dish-tab-addons').className = "flex-1 px-3 py-1.5 text-[10px] font-bold rounded bg-white shadow-sm text-slate-800";
+            document.getElementById('dish-tab-cooking').className = "flex-1 px-3 py-1.5 text-[10px] font-bold rounded text-slate-500 hover:text-slate-700";
+            renderDishList();
+        };
+    }
+
 
     const renderOperators = () => {
         const grid = document.getElementById('assembly-operators-grid');
@@ -228,20 +252,6 @@ export function renderDishAssignView() {
                 modal.classList.remove('flex');
             }
         };
-    };
-
-    // Tab Logic
-    document.getElementById('dish-tab-main').onclick = () => {
-        activeTab = 'main-dishes';
-        document.getElementById('dish-tab-main').className = "flex-1 px-3 py-1.5 text-[10px] font-bold rounded bg-white shadow-sm text-slate-800";
-        document.getElementById('dish-tab-addons').className = "flex-1 px-3 py-1.5 text-[10px] font-bold rounded text-slate-500 hover:text-slate-700";
-        renderDishList();
-    };
-    document.getElementById('dish-tab-addons').onclick = () => {
-        activeTab = 'add-ons';
-        document.getElementById('dish-tab-addons').className = "flex-1 px-3 py-1.5 text-[10px] font-bold rounded bg-white shadow-sm text-slate-800";
-        document.getElementById('dish-tab-main').className = "flex-1 px-3 py-1.5 text-[10px] font-bold rounded text-slate-500 hover:text-slate-700";
-        renderDishList();
     };
 
     renderDishList();

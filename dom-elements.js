@@ -15,6 +15,7 @@ export const DOMElements = {
     kitchenView: document.getElementById('kitchen-view'),
     dishAssignView: document.getElementById('dish-assign-view'),
     forecastView: document.getElementById('forecast-view'),
+    assemblerView: document.getElementById('assembler-view'),
     thermalView: document.getElementById('thermal-view'),
     
     // Sidebar Navigation
@@ -23,6 +24,7 @@ export const DOMElements = {
     navKitchenBtn: document.getElementById('nav-kitchen-btn'),
     navDishBtn: document.getElementById('nav-dish-btn'),
     navForecastBtn: document.getElementById('nav-forecast-btn'),
+    navAssemblerBtn: document.getElementById('nav-assembler-btn'),
     navProductionBtn: document.getElementById('nav-production-btn'),
     navPrepBtn: document.getElementById('nav-prep-btn'),
     navThermalBtn: document.getElementById('nav-thermal-btn'),

@@ -13,6 +13,7 @@ import { renderIngredientQtyView } from "./view-ingredient-qty.js";
 import { renderKitchenOverview } from "./view-kitchen-overview.js";
 import { renderThermalView } from "./view-thermal.js";
 import { renderForecastView } from "./view-forecast.js";
+import { renderAssemblerView } from "./view-assembler.js";
 import { BossEngine } from "./boss-engine.js";
 
 // =============================================
@@ -47,50 +48,52 @@ export function showView(viewName) {
 
     const navMap = {
         'dashboard': DOMElements.navDashboardBtn,
+        'forecast': DOMElements.navForecastBtn,
         'ingredient': DOMElements.navIngredientBtn,
         'kitchen': DOMElements.navKitchenBtn,
-        'dish': DOMElements.navDishBtn,
-        'forecast': DOMElements.navForecastBtn,
-        'production': DOMElements.navProductionBtn,
-        'prep': DOMElements.navPrepBtn,
         'thermal': DOMElements.navThermalBtn,
+        'dish': DOMElements.navDishBtn,
+        'assembler': DOMElements.navAssemblerBtn,
+        'audit': DOMElements.navAuditBtn,
+        'prep': DOMElements.navPrepBtn,
         'hygiene': DOMElements.navHygieneBtn,
         'compliance': DOMElements.navComplianceBtn,
-        'audit': DOMElements.navAuditBtn,
     };
 
     Object.entries(navMap).forEach(([name, btn]) => {
-        if (btn) btn.className = `p-2 rounded-md transition-all ${viewName === name ? activeClass : inactiveClass}`;
+        if (btn) {
+            btn.className = `p-2 rounded-md transition-all ${viewName === name ? activeClass : inactiveClass}`;
+        }
     });
 
     // Render view
     switch (viewName) {
         case 'dashboard': renderApp(); break;
+        case 'forecast': renderForecastView(); break;
         case 'ingredient': renderIngredientQtyView(); break;
         case 'kitchen': renderKitchenOverview(); break;
-        case 'dish': renderDishAssignView(); break;
-        case 'forecast': renderForecastView(); break;
-        case 'production': renderProductionView(); break;
-        case 'prep': renderPrepView(); break;
         case 'thermal': renderThermalView(); break;
+        case 'dish': renderDishAssignView(); break;
+        case 'assembler': renderAssemblerView(); break; // New view
+        case 'audit': renderAuditDishLibrary(); break;
+        case 'prep': renderPrepView(); break;
         case 'hygiene': renderHygieneGrid(); break;
         case 'compliance': renderComplianceReport(); break;
-        case 'audit': renderAuditDishLibrary(); break;
     }
 
     // Page Title
     const titles = {
         'dashboard': 'Assign Line Preparation',
-        'ingredient': 'Ingredient Quantities',
-        'kitchen': 'Kitchen Command Center',
-        'dish': 'Dish Assignment',
         'forecast': 'Order Forecast & Cutoff',
-        'production': 'Production Management',
-        'prep': 'Kitchen Log (HACCP)',
-        'thermal': 'Thermal Validation',
+        'ingredient': 'Ingredient Quantities',
+        'kitchen': 'Kitchen Assign',
+        'thermal': 'Thermal & Weight Log',
+        'dish': 'Manager: Assign Dishes',
+        'assembler': 'Assembler Personal View',
+        'audit': 'Quality Control',
+        'prep': 'HACCP Log',
         'hygiene': 'Hygiene Audit',
         'compliance': 'Temperature Compliance',
-        'audit': 'Quality Control',
         'detail': 'Item Detail',
     };
     if (DOMElements.pageTitle) DOMElements.pageTitle.innerText = titles[viewName] || 'Command Center';

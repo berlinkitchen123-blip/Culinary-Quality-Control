@@ -31,12 +31,24 @@ export const BossEngine = {
                 // Buffer for +5 dish, subtract leftover stock so next day they will not cook unnecessary
                 let prepTarget = Math.max(0, rawOrderedQty + 5 - stock);
                 
+                // Categorization Logic
+                let category = 'Hot';
+                const lowerName = item.name.toLowerCase();
+                if (lowerName.includes('salad') || lowerName.includes('mousse') || lowerName.includes('poke')) {
+                    category = 'Cold';
+                } else if (lowerName.includes('sauce') || lowerName.includes('dressing') || lowerName.includes('bread') || lowerName.includes('rice')) {
+                    category = 'Add-ons';
+                } else if (prepTarget > 5000) { // High volume items marked as Catering for demo
+                    category = 'Catering';
+                }
+
                 dailyActiveDishes.push({
                     name: item.name,
                     ordered: rawOrderedQty,
                     stock: stock,
                     qty: prepTarget, // The exact number kitchen needs to prepare
-                    type: (!item.name.toLowerCase().includes('salad') && !item.name.toLowerCase().includes('mousse')) ? 'hot' : 'cold',
+                    category: category,
+                    type: (category === 'Cold') ? 'cold' : 'hot',
                     letter: item.name.substring(0,2).toUpperCase() + Math.floor(Math.random() * 100),
                     image: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400&q=80',
                     comments: ['Portion size was a bit small', 'Customer requested extra sauce', 'Perfectly cooked last time'],

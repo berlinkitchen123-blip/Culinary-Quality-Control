@@ -5,16 +5,11 @@
 // =============================================
 
 const THERMAL_RECORDS = [
-    { id: 't0', stage: 'Assembly', ingredient: 'Cordon Bleu with Green Beans', operator: 'Stefan Koch', temp: 72.5, target: 65, type: 'hot', time: '10:00', status: 'pass', hasPhoto: true },
-    { id: 't1', stage: 'Assembly', ingredient: 'B&B Butter Chicken with Rice & Naan', operator: 'Stefan Koch', temp: 73.5, target: 65, type: 'hot', time: '10:00', status: 'pass', hasPhoto: true },
-    { id: 't2', stage: 'Assembly', ingredient: 'Phanaeng Chicken curry', operator: 'Stefan Koch', temp: 74.5, target: 65, type: 'hot', time: '10:00', status: 'pass', hasPhoto: true },
-    { id: 't3', stage: 'Assembly', ingredient: 'Low Carb Döner-Teller', operator: 'Stefan Koch', temp: 75.5, target: 65, type: 'hot', time: '10:00', status: 'pass', hasPhoto: true },
-    { id: 't4', stage: 'Assembly', ingredient: 'Spinach Ricotta Tortellini with cream tomato sauce', operator: 'Stefan Koch', temp: 76.5, target: 65, type: 'hot', time: '10:00', status: 'pass', hasPhoto: true },
-    { id: 't5', stage: 'Assembly', ingredient: 'Chicken in champignon sauce with Spatzle', operator: 'Stefan Koch', temp: 77.5, target: 65, type: 'hot', time: '10:00', status: 'pass', hasPhoto: true },
-    { id: 't6', stage: 'Assembly', ingredient: 'Vegan Madras Kofta', operator: 'Stefan Koch', temp: 78.5, target: 65, type: 'hot', time: '10:00', status: 'pass', hasPhoto: true },
-    { id: 't7', stage: 'Assembly', ingredient: 'B&B Butter Tofu', operator: 'Stefan Koch', temp: 79.5, target: 65, type: 'hot', time: '10:00', status: 'pass', hasPhoto: true },
-    { id: 't8', stage: 'Assembly', ingredient: 'Japanese inspired vegan noodles bowl', operator: 'Stefan Koch', temp: 80.5, target: 65, type: 'hot', time: '10:00', status: 'pass', hasPhoto: true },
-    { id: 't9', stage: 'Assembly', ingredient: 'Test&Tell: High-Protien Thai Peanut Bowl with Chickpea & Tofu', operator: 'Stefan Koch', temp: 81.5, target: 65, type: 'hot', time: '10:00', status: 'pass', hasPhoto: true },
+    { id: 't0', stage: 'Cooking', ingredient: 'High-Volume Hot (Chicken)', operator: 'Marco Rossi', temp: 85.5, target: 75, weight: 12500, type: 'hot', time: '08:00', status: 'pass', hasPhoto: true },
+    { id: 't1', stage: 'Cooking', ingredient: 'Secondary Hot (Rice)', operator: 'Anna Verdi', temp: 78.5, target: 72, weight: 8000, type: 'hot', time: '09:00', status: 'pass', hasPhoto: true },
+    { id: 't2', stage: 'Assembly', ingredient: 'Cordon Bleu with Green Beans', operator: 'Stefan Koch', temp: 72.5, target: 65, weight: 315, type: 'hot', time: '10:00', status: 'pass', hasPhoto: true },
+    { id: 't3', stage: 'Assembly', ingredient: 'B&B Butter Chicken with Rice & Naan', operator: 'Stefan Koch', temp: 73.5, target: 65, weight: 420, type: 'hot', time: '10:00', status: 'pass', hasPhoto: true },
+    { id: 't4', stage: 'Assembly', ingredient: 'Phanaeng Chicken curry', operator: 'Stefan Koch', temp: 74.5, target: 65, weight: 380, type: 'hot', time: '10:00', status: 'pass', hasPhoto: true },
 ];
 
 export function renderThermalView() {
@@ -88,7 +83,8 @@ function renderThermalTable(records) {
                         <th class="p-3 pl-5">Time</th>
                         <th class="p-3">Item</th>
                         <th class="p-3">Operator</th>
-                        <th class="p-3 text-center">Measured</th>
+                        <th class="p-3 text-center">Temp (°C)</th>
+                        <th class="p-3 text-center">Weight (g)</th>
                         <th class="p-3 text-center">Target</th>
                         <th class="p-3 text-center">Type</th>
                         <th class="p-3 text-center">Result</th>
@@ -112,8 +108,9 @@ function renderThermalTable(records) {
                                 <td class="p-3 pl-5 text-[11px] font-mono font-bold text-slate-600">${r.time}</td>
                                 <td class="p-3 text-[11px] font-bold text-slate-800">${r.ingredient}</td>
                                 <td class="p-3 text-[11px] text-slate-600">${r.operator}</td>
-                                <td class="p-3 text-center text-[12px] font-mono font-bold ${tempColor}">${r.temp}°C</td>
-                                <td class="p-3 text-center text-[11px] font-mono text-slate-400">${r.type === 'hot' ? '≥' : '≤'} ${r.target}°C</td>
+                                <td class="p-3 text-center text-[12px] font-mono font-bold ${tempColor}">${r.temp}°</td>
+                                <td class="p-3 text-center text-[11px] font-mono font-bold text-slate-700">${r.weight >= 1000 ? (r.weight/1000).toFixed(1)+'kg' : r.weight+'g'}</td>
+                                <td class="p-3 text-center text-[11px] font-mono text-slate-400">${r.type === 'hot' ? '≥' : '≤'} ${r.target}°</td>
                                 <td class="p-3 text-center">${typeTag}</td>
                                 <td class="p-3 text-center">${resultTag}</td>
                                 <td class="p-3 text-center">${r.hasPhoto ? '<span class="text-emerald-500 text-[10px]">📸</span>' : '<span class="text-slate-300 text-[10px]">—</span>'}</td>

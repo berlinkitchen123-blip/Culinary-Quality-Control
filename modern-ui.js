@@ -1,12 +1,18 @@
-/**
- * 100% Match UI Logic for Culinary QC
- */
+import { renderLifecycleView } from './view-lifecycle.js';
+import { renderWarmerView } from './view-warmers.js';
 
 const mockData = [
-    { id: '1', name: 'Zucchini Gratin', type: 'vegetarian', letter: 'A', status: 'ok', temp: '75.2', stock: '12', weight: '340/320', feedbacks: ['Excellent texture', 'Standard batch'] },
-    { id: '2', name: 'Chicken Tikka', type: 'meat', letter: 'B', status: 'warning', temp: '71.5', stock: '5', weight: '210/200', feedbacks: ['Slightly dry', 'Check marinade'] },
-    { id: '3', name: 'Red Thai Curry', type: 'spicy', letter: 'C', status: 'error', temp: '68.9', stock: '0', weight: '450/440', feedbacks: ['Temperature below spec', 'Batch discarded'] },
-    { id: '4', name: 'Herb Roasted Pork', type: 'heavy', letter: 'D', status: 'ok', temp: '76.0', stock: '24', weight: '250/250', feedbacks: ['Perfect'] }
+    { id: '1', name: 'Indian Butter Chicken', type: 'meat', letter: 'A', status: 'ok', temp: '71.0', stock: '12', weight: '340/320', feedbacks: ['Excellent texture'] },
+    { id: '2', name: 'Golden Tofu Coconut Curry', type: 'vegetarian', letter: 'B', status: 'fail', temp: '44.7', stock: '5', weight: '555/495', feedbacks: ['Check marinade'] },
+    { id: '3', name: 'Egg Channa Masala', type: 'vegetarian', letter: 'C', status: 'warn', temp: '60.0', stock: '0', weight: '454/520', feedbacks: ['Temperature below spec'] },
+    { id: '4', name: 'Murgh Cholay', type: 'meat', letter: 'D', status: 'warn', temp: '62.7', stock: '24', weight: '531/501', feedbacks: ['Standard batch'] }
+];
+
+const scorecardData = [
+    { label: 'Hot dishes temp', rate: '70%', pass: '7/10 pass', status: 'WARN', color: 'text-amber-400', border: 'border-amber-400/30' },
+    { label: 'Cold dishes temp', rate: '93%', pass: '13/14 pass', status: 'OK', color: 'text-emerald-400', border: 'border-emerald-400/30' },
+    { label: 'RTE items', rate: '100%', pass: '3/3 pass', status: 'OK', color: 'text-emerald-400', border: 'border-emerald-400/30' },
+    { label: 'Weight checks', rate: '71%', pass: 'OK band', status: 'WARN', color: 'text-amber-400', border: 'border-amber-400/30' }
 ];
 
 const statusStyles = {
@@ -15,40 +21,86 @@ const statusStyles = {
     error: { bg: 'bg-rose-500/10', border: 'border-rose-500/20', text: 'text-rose-400', glow: 'shadow-rose-500/20' }
 };
 
+function showView(viewName) {
+    // Reset layout
+    const grid = document.getElementById('hot-dish-grid');
+    const parentContainer = grid.parentElement;
+    parentContainer.classList.remove('flex', 'flex-col', 'grid-cols-1', 'lg:grid-cols-2', 'xl:grid-cols-3');
+    parentContainer.classList.add('grid', 'grid-cols-2', 'lg:grid-cols-4');
+    
+    // Clear Scorecard from non-dashboard views
+    const existingScorecard = document.getElementById('compliance-scorecard');
+    if (existingScorecard) existingScorecard.remove();
+
+    switch(viewName) {
+        case 'dashboard': renderDashboard(); break;
+        case 'lifecycle': renderLifecycleView(); break;
+        case 'warmers': renderWarmerView(); break;
+    }
+
+    // Sidebar highlight
+    document.querySelectorAll('nav button').forEach(b => {
+        b.classList.remove('text-emerald-400', 'bg-emerald-500/10');
+        b.classList.add('text-slate-500');
+    });
+    const active = document.getElementById(`nav-${viewName}`);
+    if(active) {
+        active.classList.add('text-emerald-400', 'bg-emerald-500/10');
+        active.classList.remove('text-slate-500');
+    }
+}
+
+document.getElementById('nav-dashboard').onclick = () => showView('dashboard');
+document.getElementById('nav-lifecycle').onclick = () => showView('lifecycle');
+document.getElementById('nav-warmers').onclick = () => showView('warmers');
+
 function renderDashboard() {
     const grid = document.getElementById('hot-dish-grid');
     const table = document.getElementById('summary-table-body');
     if (!grid || !table) return;
 
-    // Render Hot Dish Cards (100% Match)
+    // Inject Scorecard (Sheet 1)
+    const container = grid.parentElement.parentElement;
+    const scorecardHtml = `
+        <div id="compliance-scorecard" class="mb-12">
+            <h3 class="text-xs font-black text-slate-600 uppercase tracking-widest italic mb-6">1. COMPLIANCE SCORECARD — Pass rate by category</h3>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                ${scorecardData.map(s => `
+                    <div class="pro-card p-6 border ${s.border} text-center flex flex-col items-center">
+                        <span class="text-[3rem] font-black ${s.color} leading-none tracking-tighter italic">${s.rate}</span>
+                        <span class="text-[10px] font-bold text-white uppercase mt-2">${s.label}</span>
+                        <span class="text-[8px] font-bold text-slate-500 mt-1">${s.pass}</span>
+                        <span class="mt-4 px-3 py-1 rounded-md bg-white/5 border border-white/10 text-[8px] font-black ${s.color}">${s.status}</span>
+                    </div>
+                `).join('')}
+            </div>
+        </div>
+    `;
+    if (!document.getElementById('compliance-scorecard')) {
+        grid.parentElement.insertAdjacentHTML('beforebegin', scorecardHtml);
+    }
+
+    // Render Hot Dish Cards (Sheet 1 Grid)
     grid.innerHTML = mockData.map(dish => {
-        const s = statusStyles[dish.status];
+        const s = statusStyles[dish.status === 'warn' ? 'warning' : dish.status === 'fail' ? 'error' : 'ok'];
         return `
-            <div onclick="showDetail('${dish.id}')" class="pro-card p-5 cursor-pointer hover:scale-[1.02] active:scale-95 transition-all group overflow-hidden relative">
-                <div class="absolute top-0 right-0 p-3">
-                    <span class="${s.bg} ${s.text} ${s.border} border px-2 py-1 rounded-md text-[8px] font-black tracking-widest">${dish.status.toUpperCase()}</span>
+            <div onclick="showDetail('${dish.id}')" class="pro-card p-6 border ${s.border} ${s.bg} cursor-pointer hover:scale-[1.02] transition-all">
+                <div class="flex items-center gap-3 mb-6">
+                    <div class="h-8 w-8 bg-black/40 border border-white/10 rounded-lg flex items-center justify-center font-black text-xs text-white">${dish.letter}</div>
+                    <span class="text-[9px] font-bold text-white uppercase tracking-tight">${dish.name}</span>
                 </div>
-                <div class="h-12 w-12 bg-white/5 border border-white/5 rounded-xl flex items-center justify-center font-black text-xl text-white italic shadow-inner mb-4 transition-all group-hover:bg-white/10">
-                    ${dish.letter}
-                </div>
-                <h4 class="text-sm font-bold text-white tracking-tight leading-tight mb-2">${dish.name}</h4>
-                <div class="flex items-center gap-3 mt-4 pt-4 border-t border-white/5">
-                    <div class="flex flex-col">
-                        <span class="text-[8px] font-black text-slate-500 uppercase tracking-widest">Temperature</span>
-                        <span class="text-xs font-mono font-bold ${s.text}">${dish.temp}°C</span>
-                    </div>
-                    <div class="flex flex-col border-l border-white/5 pl-3">
-                        <span class="text-[8px] font-black text-slate-500 uppercase tracking-widest">Stock</span>
-                        <span class="text-xs font-mono font-bold text-slate-300">${dish.stock}</span>
-                    </div>
+                <div class="text-center">
+                    <div class="text-4xl font-black ${s.text} italic tracking-tighter leading-none">${dish.temp}°C</div>
+                    <div class="text-[9px] font-bold text-slate-500 opacity-60 mt-2">75° 67° 71°</div>
+                    <div class="text-[8px] font-black text-slate-500 uppercase mt-4">Warmer #0${dish.id}</div>
                 </div>
             </div>
         `;
     }).join('');
 
-    // Render Table Rows (100% Match)
-    table.innerHTML = mockData.map(dish => {
-        const s = statusStyles[dish.status];
+    // Table view matching
+    const tableRows = mockData.map(dish => {
+        const s = statusStyles[dish.status === 'warn' ? 'warning' : dish.status === 'fail' ? 'error' : 'ok'];
         return `
             <tr class="border-b border-white/5 hover:bg-white/[0.02] transition-colors group cursor-pointer">
                 <td class="px-6 py-5">
@@ -56,12 +108,11 @@ function renderDashboard() {
                         <div class="h-8 w-8 bg-black/40 border border-white/10 rounded flex items-center justify-center font-black text-xs text-slate-400 italic">${dish.letter}</div>
                         <div class="flex flex-col">
                             <span class="text-xs font-bold text-white">${dish.name}</span>
-                            <span class="text-[9px] font-black text-slate-600 uppercase tracking-widest mt-1">${dish.type}</span>
                         </div>
                     </div>
                 </td>
                 <td class="px-6 py-5 border-l border-white/5">
-                    <span class="status-pill ${s.bg} ${s.text} border ${s.border}">${dish.status}</span>
+                    <span class="status-pill ${s.bg} ${s.text} border ${s.border}">${dish.status.toUpperCase()}</span>
                 </td>
                 <td class="px-6 py-5 border-l border-white/5">
                     <div class="flex flex-col">
@@ -75,7 +126,11 @@ function renderDashboard() {
             </tr>
         `;
     }).join('');
+    table.innerHTML = tableRows;
 }
+
+// Initial Render
+showView('dashboard');
 
 window.showDetail = (id) => {
     const dish = mockData.find(d => d.id === id);

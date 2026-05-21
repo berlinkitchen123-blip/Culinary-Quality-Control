@@ -1,20 +1,35 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
+# Culinary Quality Control · Bella & Bona
 
-# Run and deploy your AI Studio app
+The daily QC instrument for the Bella & Bona kitchen — temperatures, weights, and dispatch logs measured against the recipe, recorded against the day, and surfaced the moment something drifts.
 
-This contains everything you need to run your app locally.
+**Live:** https://berlinkitchen123-blip.github.io/Culinary-Quality-Control/
 
-View your app in AI Studio: https://ai.studio/apps/12e62ece-b657-4179-a098-3cfadf8fe17c
+## Stack
 
-## Run Locally
+- Vanilla HTML / CSS / ES modules — no build step required for the dashboard.
+- Editorial design system in `brand.css` (Fraunces serif + Inter sans + JetBrains Mono).
+- Optional Firebase Realtime Database hook in `firebase-config.js`.
 
-**Prerequisites:**  Node.js
+## Files
 
+| File | Role |
+|---|---|
+| `index.html` | Main dashboard shell |
+| `brand.css` | Editorial design system (typography, palette, components) |
+| `modern-ui.js` | Dashboard controller — renders cards, table, modals |
+| `view-lifecycle.js` | Lifecycle (stage tracking) view |
+| `view-warmers.js` | Warmer slot grid view |
+| `Kitchen.html`, `Dispatcher.html`, `Menu.html`, etc. | Saved snapshots of the live kitchen.bellabona.com React app |
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+## Run locally
+
+No build required — just open `index.html` in a browser, or serve with any static server:
+
+```bash
+python3 -m http.server 8000
+# then open http://localhost:8000
+```
+
+## Deploy
+
+GitHub Pages serves from the `main` branch. Pushes deploy automatically.

@@ -1,151 +1,213 @@
 <!DOCTYPE html>
-<html lang="en" class="dark">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Culinary Quality Control | Bella & Bona</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --bg-deep: #050505;
-            --bg-panel: #0f0f0f;
-            --bg-card: #171717;
-            --accent-green: #10b981;
-            --accent-red: #ef4444;
-        }
-        body {
-            background-color: var(--bg-deep);
-            color: #d4d4d4;
-            font-family: 'Inter', sans-serif;
-        }
-        .pro-sidebar {
-            background-color: #0d0d0d;
-            border-right: 1px solid rgba(255,255,255,0.05);
-        }
-        .pro-card {
-            background-color: var(--bg-card);
-            border: 1px solid rgba(255,255,255,0.03);
-            border-radius: 1rem;
-        }
-        .status-pill {
-            padding: 2px 8px;
-            font-size: 10px;
-            font-weight: 900;
-            text-transform: uppercase;
-            border-radius: 9999px;
-        }
-        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: #333; border-radius: 2px; }
-    </style>
-</head>
-<body class="h-screen flex overflow-hidden">
+    <title>Culinary Quality Control · Bella &amp; Bona</title>
+    <meta name="description" content="The daily quality control instrument for the Bella &amp; Bona kitchen — temperatures, weights, and dispatch logs, in one editorial dashboard.">
 
-    <!-- SIDEBAR -->
-    <aside class="w-64 pro-sidebar flex flex-col hidden md:flex">
-        <div class="p-8">
-            <h1 class="text-xl font-black italic tracking-tighter text-white">BELLA & BONA</h1>
-            <p class="text-[9px] font-black text-emerald-500 tracking-[0.3em] uppercase mt-1">Culinary Intelligence</p>
+    <!-- Type -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,300;1,9..144,400;1,9..144,500&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+    <!-- Brand system -->
+    <link rel="stylesheet" href="brand.css">
+
+    <!-- Favicon (simple gold B&B) -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230f0d0a'/%3E%3Ctext x='16' y='22' text-anchor='middle' font-family='Georgia,serif' font-style='italic' font-size='18' fill='%23d4a574'%3EB%26B%3C/text%3E%3C/svg%3E">
+</head>
+<body>
+
+<div class="shell">
+
+    <!-- =============================================
+         SIDEBAR
+         ============================================= -->
+    <aside class="sidebar" aria-label="Primary">
+        <div class="sidebar-mark">
+            <span class="name">Bella<span class="amp">&amp;</span>Bona</span>
+            <span class="sub">Culinary Quality Control</span>
         </div>
-        <nav class="flex-1 px-4 space-y-2">
-            <button id="nav-dashboard" class="w-full flex items-center gap-3 px-4 py-3 text-emerald-400 bg-emerald-500/10 rounded-xl font-bold text-xs">
-                <span>📊</span> QC Dashboard
-            </button>
-            <button id="nav-lifecycle" class="w-full flex items-center gap-3 px-4 py-3 text-slate-500 hover:text-white transition-all font-bold text-xs group text-left">
-                <span class="opacity-50 group-hover:opacity-100">🔄</span> Lifecycle Tracking
-            </button>
-            <button id="nav-warmers" class="w-full flex items-center gap-3 px-4 py-3 text-slate-500 hover:text-white transition-all font-bold text-xs group text-left">
-                <span class="opacity-50 group-hover:opacity-100">🌡️</span> Warmer Management
-            </button>
-            <div class="pt-8 px-4">
-                <p class="text-[9px] font-black text-slate-600 uppercase tracking-widest mb-4 italic">Configuration</p>
-                <button id="nav-settings" class="w-full flex items-center gap-3 px-4 py-2 bg-white/5 border border-white/5 rounded-xl text-slate-400 hover:text-white transition-all font-bold text-xs group">
-                    <span class="opacity-50 group-hover:opacity-100">⚙️</span> Master Settings
-                </button>
-            </div>
-        </nav>
-        <div class="p-6 border-t border-white/5 text-[9px] font-black text-slate-800 tracking-[0.3em] text-center uppercase">
-            B&B CULINARY OPS
+
+        <div class="sidebar-section">Operations</div>
+        <button id="nav-dashboard" class="nav-link is-active" type="button">
+            <span class="label"><span class="glyph">i</span>QC Dashboard</span>
+        </button>
+        <button id="nav-lifecycle" class="nav-link" type="button">
+            <span class="label"><span class="glyph">ii</span>Lifecycle</span>
+        </button>
+        <button id="nav-warmers" class="nav-link" type="button">
+            <span class="label"><span class="glyph">iii</span>Warmers</span>
+        </button>
+
+        <div class="sidebar-section">Kitchen</div>
+        <a class="nav-link" href="Kitchen.html">
+            <span class="label"><span class="glyph">·</span>Kitchen Console</span>
+        </a>
+        <a class="nav-link" href="Dispatcher.html">
+            <span class="label"><span class="glyph">·</span>Dispatcher</span>
+        </a>
+        <a class="nav-link" href="Menu.html">
+            <span class="label"><span class="glyph">·</span>Menu</span>
+        </a>
+        <a class="nav-link" href="Order forecast.html">
+            <span class="label"><span class="glyph">·</span>Order Forecast</span>
+        </a>
+        <a class="nav-link" href="weekly forecast.html">
+            <span class="label"><span class="glyph">·</span>Weekly Forecast</span>
+        </a>
+        <a class="nav-link" href="confirm orders for now.html">
+            <span class="label"><span class="glyph">·</span>Confirm Orders</span>
+        </a>
+
+        <div class="sidebar-section">Configuration</div>
+        <button id="nav-settings" class="nav-link" type="button">
+            <span class="label"><span class="glyph">⚙</span>Master Settings</span>
+        </button>
+
+        <div class="sidebar-footer">
+            <span><span class="dot"></span>&nbsp;&nbsp;Live</span>
+            <span>Vol. 01</span>
         </div>
     </aside>
 
-    <!-- MAIN VIEW -->
-    <main class="flex-1 flex flex-col min-w-0 overflow-hidden relative">
-        <!-- GLOBAL LOADER (Mimicking reference site behavior) -->
-        <div id="loading-overlay" class="absolute inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center hidden">
-            <div class="w-12 h-12 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
+    <!-- =============================================
+         MAIN
+         ============================================= -->
+    <main class="shell-main">
+
+        <!-- Loader -->
+        <div id="loading-overlay" class="loading-overlay hidden">
+            <div class="spinner" aria-label="Loading"></div>
         </div>
 
-        <!-- HEADER -->
-        <header class="h-20 flex-shrink-0 flex items-center justify-between px-6 sm:px-10 bg-black/40 border-b border-white/5 backdrop-blur-md">
-            <div class="flex items-center gap-4 sm:gap-10">
-                <div class="flex flex-col">
-                    <h1 id="page-title" class="text-[9px] font-black text-slate-500 tracking-[0.4em] uppercase">BB DAILY QC DASHBOARD</h1>
-                    <span id="date-display" class="text-lg sm:text-xl font-black text-white italic tracking-tighter uppercase leading-none mt-1">19 May 2026</span>
+        <!-- Header -->
+        <header class="page-header">
+            <div class="page-header-inner">
+                <div>
+                    <div class="crumb" id="page-title">QC Dashboard · Daily</div>
+                    <div class="title"><span id="date-display">19 May 2026</span><span class="accent">.</span></div>
                 </div>
-            </div>
-            <div class="flex items-center gap-3 sm:gap-6">
-                <!-- Claude / Team Export -->
-                <button id="export-team-btn" class="flex items-center gap-2 px-4 py-2 bg-indigo-600/20 border border-indigo-500/30 text-indigo-400 rounded-xl hover:bg-indigo-600/40 transition-all text-[10px] font-black uppercase tracking-widest hidden sm:flex">
-                    <span>✨</span> Export for Claude
-                </button>
-                <button class="p-3 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 transition-all group">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" class="text-slate-400 group-hover:text-white transition-colors" stroke="currentColor" stroke-width="2"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
-                </button>
+                <div style="display:flex; gap:10px; align-items:center;">
+                    <button id="export-team-btn" class="btn btn-outline-gold" type="button">
+                        Export Report
+                    </button>
+                    <button class="btn btn-ghost btn-icon" type="button" aria-label="Refresh" onclick="location.reload()">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 15.5-6.4L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-15.5 6.4L3 16"/><path d="M3 21v-5h5"/></svg>
+                    </button>
+                </div>
             </div>
         </header>
 
-        <!-- DASHBOARD SCROLL AREA -->
-        <div class="flex-1 overflow-y-auto custom-scrollbar p-10 space-y-12">
-            
-            <!-- HOT DISH ALERTS (GRID-COLS-4) -->
-            <section>
-                <div class="flex items-center justify-between mb-6">
-                    <h3 class="text-xs font-black text-slate-600 uppercase tracking-widest italic">Live Hot Dish Pipeline</h3>
-                    <span class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Severity: Low to High</span>
-                </div>
-                <div id="hot-dish-grid" class="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                    <!-- Cards will be injected by modern-ui.js -->
-                </div>
-            </section>
+        <!-- Content -->
+        <div class="container" style="padding-top: var(--r-7); padding-bottom: var(--r-9); flex: 1;">
 
-            <!-- DAILY SUMMARY TABLE -->
-            <section>
-                <div class="flex items-center justify-between mb-6">
-                    <h3 class="text-xs font-black text-slate-600 uppercase tracking-widest italic">Quality Control Summary</h3>
-                    <div class="flex items-center gap-4">
-                        <div class="flex items-center gap-2">
-                            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                            <span class="text-[10px] font-bold text-emerald-500">All Systems Nominal</span>
+            <!-- HERO / INTRODUCTION -->
+            <section class="section" style="padding-top: 0;">
+                <div style="display:grid; grid-template-columns: 1.6fr 1fr; gap: var(--r-7); align-items: end;">
+                    <div>
+                        <div class="eyebrow eyebrow-gold">№ 01 — The Pass Sheet</div>
+                        <h2 class="display-l" style="margin: 14px 0 18px 0;">
+                            Every dish, <em>read</em> twice<br/>before it ever leaves the line.
+                        </h2>
+                        <p class="lede" style="max-width: 56ch;">
+                            A daily instrument for the Bella &amp; Bona kitchen — temperatures, weights, and dispatch logs measured against the recipe, recorded against the day, and surfaced the moment something drifts.
+                        </p>
+                    </div>
+                    <div class="card card-padded">
+                        <div class="eyebrow">Today's read</div>
+                        <div style="display:flex; align-items:end; gap: var(--r-3); margin-top: 6px;">
+                            <span class="num-display" style="font-size: 76px; line-height: 0.9;">42</span>
+                            <span class="caption" style="margin-bottom: 10px;">dishes on the pass</span>
+                        </div>
+                        <hr class="rule" style="margin: 18px 0;"/>
+                        <div style="display:flex; justify-content:space-between; gap: var(--r-3); flex-wrap: wrap;">
+                            <div>
+                                <div class="eyebrow">Hot</div>
+                                <div class="num" style="font-size: 18px; color: var(--cream); margin-top: 4px;">70% pass</div>
+                            </div>
+                            <div>
+                                <div class="eyebrow">Cold</div>
+                                <div class="num" style="font-size: 18px; color: var(--cream); margin-top: 4px;">93% pass</div>
+                            </div>
+                            <div>
+                                <div class="eyebrow">RTE</div>
+                                <div class="num" style="font-size: 18px; color: var(--cream); margin-top: 4px;">100%</div>
+                            </div>
                         </div>
                     </div>
                 </div>
-                
-                <div class="pro-card overflow-hidden">
-                    <table class="w-full text-left border-collapse">
+            </section>
+
+            <hr class="rule"/>
+
+            <!-- HOT DISH GRID + DASHBOARD CONTENT (rendered by JS) -->
+            <section class="section">
+                <div class="section-head">
+                    <div class="lhs">
+                        <span class="index">№ 02</span>
+                        <h3 class="section-title">Live Hot Dish Pipeline</h3>
+                    </div>
+                    <div class="meta">
+                        <span class="chip is-info"><span class="dot"></span>Severity · low → high</span>
+                    </div>
+                </div>
+
+                <!-- The compliance scorecard is injected by modern-ui.js with id="compliance-scorecard" -->
+                <!-- The hot dish cards are injected by modern-ui.js into #hot-dish-grid -->
+                <div id="hot-dish-grid" class="grid cols-4 gap-4">
+                    <!-- Cards injected -->
+                </div>
+            </section>
+
+            <!-- QC SUMMARY TABLE -->
+            <section class="section">
+                <div class="section-head">
+                    <div class="lhs">
+                        <span class="index">№ 03</span>
+                        <h3 class="section-title">Quality Control Summary</h3>
+                    </div>
+                    <div class="meta">
+                        <span class="chip is-ok"><span class="dot"></span>All Systems Nominal</span>
+                    </div>
+                </div>
+
+                <div class="card pro-card" style="overflow:hidden;">
+                    <table class="editorial-table">
                         <thead>
-                            <tr class="bg-black/50 border-b border-white/5">
-                                <th class="px-6 py-4 text-[10px] font-black text-slate-500 tracking-widest uppercase italic">Dish Identity</th>
-                                <th class="px-6 py-4 text-[10px] font-black text-slate-500 tracking-widest uppercase italic border-l border-white/5">Status</th>
-                                <th class="px-6 py-4 text-[10px] font-black text-slate-500 tracking-widest uppercase italic border-l border-white/5">Compliance (Temp)</th>
-                                <th class="px-6 py-4 text-[10px] font-black text-slate-500 tracking-widest uppercase italic border-l border-white/5">Chef Notes</th>
+                            <tr>
+                                <th>Dish Identity</th>
+                                <th>Status</th>
+                                <th>Compliance (Temp)</th>
+                                <th>Chef Notes</th>
                             </tr>
                         </thead>
                         <tbody id="summary-table-body">
-                            <!-- Rows injected by modern-ui.js -->
+                            <!-- Rows injected -->
                         </tbody>
                     </table>
                 </div>
             </section>
+
+            <!-- COLOPHON -->
+            <footer class="colophon">
+                <div class="row">
+                    <div>
+                        Set in <em>Fraunces</em> &amp; <em>Inter</em>. Numbers in <em>JetBrains Mono</em>.<br/>
+                        A Bella &amp; Bona instrument, recorded daily.
+                    </div>
+                    <div class="label">© 2026 · Bella &amp; Bona Culinary Ops</div>
+                </div>
+            </footer>
+
         </div>
     </main>
+</div>
 
-    <!-- MODAL CONTAINER (GLASS) -->
-    <div id="modal-container" class="fixed inset-0 z-[60] flex items-center justify-center p-6 bg-black/80 backdrop-blur-sm hidden animate-in fade-in duration-300">
-        <!-- Content injected dynamically -->
-    </div>
+<!-- MODAL CONTAINER -->
+<div id="modal-container" class="modal-overlay hidden"></div>
 
-    <!-- MAIN LOGIC -->
-    <script type="module" src="modern-ui.js"></script>
+<script type="module" src="modern-ui.js"></script>
 </body>
 </html>

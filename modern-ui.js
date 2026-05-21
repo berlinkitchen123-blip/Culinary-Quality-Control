@@ -1,74 +1,113 @@
+/* =====================================================================
+   Culinary Quality Control — UI controller
+   Editorial redesign
+   ===================================================================== */
+
 import { renderLifecycleView } from './view-lifecycle.js';
 import { renderWarmerView } from './view-warmers.js';
-import { database } from './firebase-config.js';
-import { ref, onValue, set } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
+
+/* --------------------------- Data --------------------------- */
 
 let mockData = JSON.parse(localStorage.getItem('qc_master_dishes')) || [
-    { id: '1', name: 'Indian Butter Chicken', type: 'meat', letter: 'A', status: 'ok', temp: '71.0', stock: '12', weight: '340/320', feedbacks: ['Excellent texture'] },
-    { id: '2', name: 'Golden Tofu Coconut Curry', type: 'vegetarian', letter: 'B', status: 'fail', temp: '44.7', stock: '5', weight: '555/495', feedbacks: ['Check marinade'] },
-    { id: '3', name: 'Egg Channa Masala', type: 'vegetarian', letter: 'C', status: 'warn', temp: '60.0', stock: '0', weight: '454/520', feedbacks: ['Temperature below spec'] },
-    { id: '4', name: 'Murgh Cholay', type: 'meat', letter: 'D', status: 'warn', temp: '62.7', stock: '24', weight: '531/501', feedbacks: ['Standard batch'] }
+    { id: '1', name: 'Indian Butter Chicken',     type: 'meat',       letter: 'A', status: 'ok',   temp: '71.0', stock: '12', weight: '340/320', feedbacks: ['Excellent texture, sauce balanced.'] },
+    { id: '2', name: 'Golden Tofu Coconut Curry', type: 'vegetarian', letter: 'B', status: 'fail', temp: '44.7', stock: '5',  weight: '555/495', feedbacks: ['Below temperature spec — check marinade and warmer set point.'] },
+    { id: '3', name: 'Egg Channa Masala',         type: 'vegetarian', letter: 'C', status: 'warn', temp: '60.0', stock: '0',  weight: '454/520', feedbacks: ['Temperature in lower band; portion light.'] },
+    { id: '4', name: 'Murgh Cholay',              type: 'meat',       letter: 'D', status: 'warn', temp: '62.7', stock: '24', weight: '531/501', feedbacks: ['Standard batch, monitor.'] }
 ];
 
 const scorecardData = [
-    { label: 'Hot dishes temp', rate: '70%', pass: '7/10 pass', status: 'WARN', color: 'text-amber-400', border: 'border-amber-400/30' },
-    { label: 'Cold dishes temp', rate: '93%', pass: '13/14 pass', status: 'OK', color: 'text-emerald-400', border: 'border-emerald-400/30' },
-    { label: 'RTE items', rate: '100%', pass: '3/3 pass', status: 'OK', color: 'text-emerald-400', border: 'border-emerald-400/30' },
-    { label: 'Weight checks', rate: '71%', pass: 'OK band', status: 'WARN', color: 'text-amber-400', border: 'border-amber-400/30' }
+    { label: 'Hot dishes — temp',  rate: '70%',  pass: '7 of 10 pass', tone: 'warn',  status: 'WARN' },
+    { label: 'Cold dishes — temp', rate: '93%',  pass: '13 of 14 pass', tone: 'ok',    status: 'OK'   },
+    { label: 'Ready-to-eat',       rate: '100%', pass: '3 of 3 pass',  tone: 'ok',    status: 'OK'   },
+    { label: 'Weight checks',      rate: '71%',  pass: 'within band',  tone: 'warn',  status: 'WARN' }
 ];
 
-const statusStyles = {
-    ok: { bg: 'bg-emerald-500/10', border: 'border-emerald-500/20', text: 'text-emerald-400', glow: 'shadow-emerald-500/20' },
-    warning: { bg: 'bg-amber-500/10', border: 'border-amber-500/20', text: 'text-amber-400', glow: 'shadow-amber-500/20' },
-    error: { bg: 'bg-rose-500/10', border: 'border-rose-500/20', text: 'text-rose-400', glow: 'shadow-rose-500/20' }
+const toneClass = {
+    ok:   'is-ok',
+    warn: 'is-warn',
+    fail: 'is-fail',
+    info: 'is-info'
 };
 
+const dishToneFromStatus = (s) => s === 'warn' ? 'warn' : s === 'fail' ? 'fail' : 'ok';
+const statusLabel = (s) => s === 'warn' ? 'Watch' : s === 'fail' ? 'Hold' : 'Pass';
+
+/* --------------------------- View routing --------------------------- */
+
+function setActiveNav(viewName) {
+    document.querySelectorAll('.sidebar .nav-link').forEach(b => b.classList.remove('is-active'));
+    const active = document.getElementById(`nav-${viewName}`);
+    if (active) active.classList.add('is-active');
+}
+
+function setPageTitle(text) {
+    const el = document.getElementById('page-title');
+    if (el) el.textContent = text;
+}
+
 function showView(viewName) {
-    // Reset layout
+    // Reset grid container to a sane default before each view renders.
     const grid = document.getElementById('hot-dish-grid');
-    const parentContainer = grid.parentElement;
-    parentContainer.classList.remove('flex', 'flex-col', 'grid-cols-1', 'lg:grid-cols-2', 'xl:grid-cols-3');
-    parentContainer.classList.add('grid', 'grid-cols-2', 'lg:grid-cols-4');
-    
-    // Clear Scorecard from non-dashboard views
+    if (grid) {
+        const parent = grid.parentElement;
+        parent.classList.remove('flex', 'flex-col');
+        parent.classList.add('grid');
+        grid.className = 'grid cols-4 gap-4';
+        grid.innerHTML = '';
+    }
+
+    // Remove scorecard if previous view was dashboard.
     const existingScorecard = document.getElementById('compliance-scorecard');
     if (existingScorecard) existingScorecard.remove();
 
-    switch(viewName) {
-        case 'dashboard': renderDashboard(); break;
-        case 'lifecycle': renderLifecycleView(); break;
-        case 'warmers': renderWarmerView(); break;
+    switch (viewName) {
+        case 'dashboard':
+            setPageTitle('QC Dashboard · Daily');
+            renderDashboard();
+            break;
+        case 'lifecycle':
+            setPageTitle('Lifecycle · Dish Tracking');
+            renderLifecycleView();
+            break;
+        case 'warmers':
+            setPageTitle('Warmer Management · Live');
+            renderWarmerView();
+            break;
     }
 
-    // Sidebar highlight
-    document.querySelectorAll('nav button').forEach(b => {
-        b.classList.remove('text-emerald-400', 'bg-emerald-500/10');
-        b.classList.add('text-slate-500');
-    });
-    const active = document.getElementById(`nav-${viewName}`);
-    if(active) {
-        active.classList.add('text-emerald-400', 'bg-emerald-500/10');
-        active.classList.remove('text-slate-500');
-    }
+    setActiveNav(viewName);
 }
 
-document.getElementById('nav-dashboard').onclick = () => showView('dashboard');
-document.getElementById('nav-lifecycle').onclick = () => showView('lifecycle');
-document.getElementById('nav-warmers').onclick = () => showView('warmers');
+document.getElementById('nav-dashboard').onclick  = () => showView('dashboard');
+document.getElementById('nav-lifecycle').onclick  = () => showView('lifecycle');
+document.getElementById('nav-warmers').onclick    = () => showView('warmers');
 if (document.getElementById('nav-settings')) {
     document.getElementById('nav-settings').onclick = () => showSettingsModal();
 }
 
+/* --------------------------- Settings modal --------------------------- */
+
 function showSettingsModal() {
     const modal = document.getElementById('modal-container');
     modal.innerHTML = `
-        <div class="pro-card w-full max-w-xl p-8 bg-slate-900 border border-white/10 shadow-2xl animate-in zoom-in-95 duration-200">
-            <h3 class="text-xl font-black text-white italic tracking-tighter uppercase mb-2">Master Configuration</h3>
-            <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-6">Paste dish JSON to update the dashboard</p>
-            <textarea id="settings-json-input" class="w-full h-64 bg-black/50 border border-white/10 rounded-2xl p-4 font-mono text-xs text-emerald-400 focus:ring-1 focus:ring-emerald-500 outline-none" placeholder='[{"name": "Dish Name", "letter": "A", ...}]'>${JSON.stringify(mockData, null, 2)}</textarea>
-            <div class="flex gap-4 mt-8">
-                <button onclick="document.getElementById('modal-container').classList.add('hidden')" class="flex-1 py-4 bg-white/5 text-slate-400 font-black text-xs uppercase tracking-widest rounded-xl hover:bg-white/10">Cancel</button>
-                <button id="save-settings-btn" class="flex-1 py-4 bg-emerald-600 text-white font-black text-xs uppercase tracking-widest rounded-xl hover:bg-emerald-500 shadow-xl shadow-emerald-500/20">Apply Changes</button>
+        <div class="modal-panel animate-in" role="dialog" aria-labelledby="settings-title">
+            <div class="modal-cover">
+                <div class="eyebrow eyebrow-gold">Configuration</div>
+                <h3 id="settings-title" class="display-m display-italic" style="margin-top: 8px;">Master settings</h3>
+                <p class="lede" style="margin: 12px 0 0 0;">
+                    Paste a dish manifest as JSON. The dashboard will refresh against the new pass sheet.
+                </p>
+                <button class="modal-close" aria-label="Close" onclick="document.getElementById('modal-container').classList.add('hidden')">×</button>
+            </div>
+            <div style="padding: var(--r-5);">
+                <label class="eyebrow" style="display:block; margin-bottom: 10px;">Dish manifest (JSON)</label>
+                <textarea id="settings-json-input"
+                          spellcheck="false"
+                          style="width:100%; height:260px; background: var(--ink-deep); border:1px solid var(--hairline); border-radius: var(--radius-sm); padding: 14px; font-family: var(--font-mono); font-size: 12px; color: var(--gold); line-height: 1.55; resize: vertical; outline: none;">${escapeHtml(JSON.stringify(mockData, null, 2))}</textarea>
+                <div style="display:flex; gap: 10px; margin-top: var(--r-5);">
+                    <button class="btn btn-ghost" style="flex:1;" onclick="document.getElementById('modal-container').classList.add('hidden')">Cancel</button>
+                    <button id="save-settings-btn" class="btn btn-solid-gold" style="flex:1; justify-content:center;">Apply Changes</button>
+                </div>
             </div>
         </div>
     `;
@@ -78,157 +117,199 @@ function showSettingsModal() {
             const newDishes = JSON.parse(document.getElementById('settings-json-input').value);
             mockData = newDishes;
             localStorage.setItem('qc_master_dishes', JSON.stringify(newDishes));
-            alert("Settings applied successfully!");
             modal.classList.add('hidden');
             showView('dashboard');
-        } catch(e) {
-            alert("Invalid JSON format. Please check your data.");
+        } catch (e) {
+            alert('Invalid JSON format. Please check the manifest.');
         }
     };
 }
 
+/* --------------------------- Export to clipboard --------------------------- */
+
 if (document.getElementById('export-team-btn')) {
     document.getElementById('export-team-btn').onclick = () => {
-        const report = `
-# BB DAILY QC REPORT | ${new Date().toLocaleDateString()}
-## SUMMARY
-- Hot Pass Rate: 70%
-- Cold Pass Rate: 93%
-- Total Dishes Tracked: ${mockData.length}
+        const report = `# BB Daily QC Report — ${new Date().toLocaleDateString()}
 
-## DISH LOGS
-${mockData.map(d => `- [${d.letter}] ${d.name}: ${d.temp}°C (${d.status.toUpperCase()})`).join('\n')}
+Hot pass rate: 70%
+Cold pass rate: 93%
+Dishes tracked: ${mockData.length}
 
-Generated for Claude Cowork Sync.
-        `;
+## Dish logs
+${mockData.map(d => `- [${d.letter}] ${d.name} — ${d.temp}°C (${d.status.toUpperCase()})`).join('\n')}
+`;
         navigator.clipboard.writeText(report).then(() => {
-            alert("Report copied to clipboard! Share it with Claude or your team.");
+            alert('Report copied to clipboard.');
         });
     };
 }
 
+/* --------------------------- Dashboard --------------------------- */
+
 function renderDashboard() {
-    const grid = document.getElementById('hot-dish-grid');
+    const grid  = document.getElementById('hot-dish-grid');
     const table = document.getElementById('summary-table-body');
     if (!grid || !table) return;
 
-    // Inject Scorecard (Sheet 1)
-    const container = grid.parentElement.parentElement;
+    // Scorecard injected before the grid's section.
     const scorecardHtml = `
-        <div id="compliance-scorecard" class="mb-12">
-            <h3 class="text-xs font-black text-slate-600 uppercase tracking-widest italic mb-6">1. COMPLIANCE SCORECARD — Pass rate by category</h3>
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <section id="compliance-scorecard" class="section">
+            <div class="section-head">
+                <div class="lhs">
+                    <span class="index">№ 01·b</span>
+                    <h3 class="section-title">Compliance Scorecard</h3>
+                </div>
+                <div class="meta">Pass rate by category</div>
+            </div>
+            <div class="grid cols-4 gap-4">
                 ${scorecardData.map(s => `
-                    <div class="pro-card p-6 border ${s.border} text-center flex flex-col items-center">
-                        <span class="text-[3rem] font-black ${s.color} leading-none tracking-tighter italic">${s.rate}</span>
-                        <span class="text-[10px] font-bold text-white uppercase mt-2">${s.label}</span>
-                        <span class="text-[8px] font-bold text-slate-500 mt-1">${s.pass}</span>
-                        <span class="mt-4 px-3 py-1 rounded-md bg-white/5 border border-white/10 text-[8px] font-black ${s.color}">${s.status}</span>
+                    <div class="card-stat stat-${s.tone === 'ok' ? 'ok' : 'warn'}">
+                        <div class="stat-figure num-display">${s.rate}</div>
+                        <div class="stat-label">${s.label}</div>
+                        <div class="stat-meta">
+                            <span class="status-pill ${toneClass[s.tone]}">${s.status}</span>
+                            <span class="caption">${s.pass}</span>
+                        </div>
                     </div>
                 `).join('')}
             </div>
-        </div>
+        </section>
     `;
+
     if (!document.getElementById('compliance-scorecard')) {
-        grid.parentElement.insertAdjacentHTML('beforebegin', scorecardHtml);
+        // Insert before the grid's <section>
+        const gridSection = grid.closest('.section');
+        if (gridSection) {
+            gridSection.insertAdjacentHTML('beforebegin', scorecardHtml);
+        } else {
+            grid.parentElement.insertAdjacentHTML('beforebegin', scorecardHtml);
+        }
     }
 
-    // Render Hot Dish Cards (Sheet 1 Grid)
+    /* Hot dish cards */
+    grid.className = 'grid cols-4 gap-4';
     grid.innerHTML = mockData.map(dish => {
-        const s = statusStyles[dish.status === 'warn' ? 'warning' : dish.status === 'fail' ? 'error' : 'ok'];
+        const tone = dishToneFromStatus(dish.status);
         return `
-            <div onclick="showDetail('${dish.id}')" class="pro-card p-6 border ${s.border} ${s.bg} cursor-pointer hover:scale-[1.02] transition-all">
-                <div class="flex items-center gap-3 mb-6">
-                    <div class="h-8 w-8 bg-black/40 border border-white/10 rounded-lg flex items-center justify-center font-black text-xs text-white">${dish.letter}</div>
-                    <span class="text-[9px] font-bold text-white uppercase tracking-tight">${dish.name}</span>
+            <article class="dish-card is-${tone}" onclick="showDetail('${dish.id}')" role="button" tabindex="0">
+                <header style="display:flex; align-items:center; justify-content:space-between; gap: 8px;">
+                    <div style="display:flex; align-items:center; gap: 10px;">
+                        <span class="dish-letter">${dish.letter}</span>
+                        <span class="dish-name">${escapeHtml(dish.name)}</span>
+                    </div>
+                    <span class="status-pill ${toneClass[tone]}">${statusLabel(dish.status)}</span>
+                </header>
+                <div>
+                    <div class="dish-temp num-display">${dish.temp}<span style="font-family: var(--font-sans); font-weight: 500; font-size: 18px; letter-spacing: 0; color: var(--mute); margin-left: 4px;">°C</span></div>
+                    <div class="caption num" style="margin-top: 4px;">${escapeHtml(dish.weight)} g · stock ${dish.stock}</div>
                 </div>
-                <div class="text-center">
-                    <div class="text-4xl font-black ${s.text} italic tracking-tighter leading-none">${dish.temp}°C</div>
-                    <div class="text-[9px] font-bold text-slate-500 opacity-60 mt-2">75° 67° 71°</div>
-                    <div class="text-[8px] font-black text-slate-500 uppercase mt-4">Warmer #0${dish.id}</div>
+                <div class="dish-meta">
+                    <span>Warmer · 0${dish.id}</span>
+                    <span>${dish.type === 'meat' ? 'Meat' : 'Veg'}</span>
                 </div>
-            </div>
+            </article>
         `;
     }).join('');
 
-    // Table view matching
-    const tableRows = mockData.map(dish => {
-        const s = statusStyles[dish.status === 'warn' ? 'warning' : dish.status === 'fail' ? 'error' : 'ok'];
+    /* Summary table */
+    table.innerHTML = mockData.map(dish => {
+        const tone = dishToneFromStatus(dish.status);
         return `
-            <tr class="border-b border-white/5 hover:bg-white/[0.02] transition-colors group cursor-pointer">
-                <td class="px-6 py-5">
-                    <div class="flex items-center gap-4">
-                        <div class="h-8 w-8 bg-black/40 border border-white/10 rounded flex items-center justify-center font-black text-xs text-slate-400 italic">${dish.letter}</div>
-                        <div class="flex flex-col">
-                            <span class="text-xs font-bold text-white">${dish.name}</span>
-                        </div>
+            <tr onclick="showDetail('${dish.id}')" style="cursor:pointer;">
+                <td>
+                    <div style="display:flex; align-items:center; gap: 12px;">
+                        <span class="col-letter">${dish.letter}</span>
+                        <span class="col-dish">${escapeHtml(dish.name)}</span>
                     </div>
                 </td>
-                <td class="px-6 py-5 border-l border-white/5">
-                    <span class="status-pill ${s.bg} ${s.text} border ${s.border}">${dish.status.toUpperCase()}</span>
+                <td><span class="status-pill ${toneClass[tone]}">${statusLabel(dish.status)}</span></td>
+                <td>
+                    <span class="col-numeric">${dish.temp}°C</span>
+                    <div class="caption num" style="margin-top: 2px;">${escapeHtml(dish.weight)} g</div>
                 </td>
-                <td class="px-6 py-5 border-l border-white/5">
-                    <div class="flex flex-col">
-                        <span class="text-xs font-mono font-bold text-white">${dish.temp}°C</span>
-                        <span class="text-[9px] font-black text-slate-600 tracking-widest mt-0.5">${dish.weight}g</span>
-                    </div>
-                </td>
-                <td class="px-6 py-5 border-l border-white/5 max-w-xs">
-                    <p class="text-xs text-slate-400 italic line-clamp-1">${dish.feedbacks[0] || 'No comments'}</p>
-                </td>
+                <td class="col-note">${escapeHtml(dish.feedbacks[0] || '—')}</td>
             </tr>
         `;
     }).join('');
-    table.innerHTML = tableRows;
 }
 
-// Initial Render
-showView('dashboard');
+/* --------------------------- Detail modal --------------------------- */
 
 window.showDetail = (id) => {
     const dish = mockData.find(d => d.id === id);
     if (!dish) return;
-    const s = statusStyles[dish.status];
+    const tone = dishToneFromStatus(dish.status);
     const modal = document.getElementById('modal-container');
-    
+
     modal.innerHTML = `
-        <div class="pro-card w-full max-w-lg overflow-hidden flex flex-col shadow-[0_0_100px_rgba(0,0,0,1)] border border-white/10 animate-in zoom-in-95 duration-200">
-            <div class="h-48 bg-black relative flex items-center justify-center border-b border-white/5 overflow-hidden">
-                <div class="absolute inset-0 bg-gradient-to-t from-black to-transparent z-10"></div>
-                <span class="text-9xl font-black text-white/5 absolute -bottom-10 -right-5 italic tracking-tighter">${dish.letter}</span>
-                <div class="z-20 text-center">
-                    <h3 class="text-3xl font-black text-white italic tracking-tighter uppercase">${dish.name}</h3>
-                    <p class="text-[10px] font-black text-emerald-500 uppercase tracking-[0.4em] mt-2">Quality Control File</p>
+        <div class="modal-panel animate-in" role="dialog" aria-labelledby="detail-title">
+            <div class="modal-cover">
+                <span class="cover-letter">${dish.letter}</span>
+                <div class="eyebrow eyebrow-gold">Quality control file</div>
+                <h3 id="detail-title" class="display-l display-italic" style="margin-top: 8px;">${escapeHtml(dish.name)}</h3>
+                <div style="display:flex; gap: 8px; margin-top: 16px;">
+                    <span class="status-pill ${toneClass[tone]}">${statusLabel(dish.status)}</span>
+                    <span class="chip"><span class="dot"></span>Warmer 0${dish.id}</span>
+                    <span class="chip"><span class="dot"></span>${dish.type === 'meat' ? 'Meat' : 'Vegetarian'}</span>
                 </div>
-                <button onclick="document.getElementById('modal-container').classList.add('hidden')" class="absolute top-6 right-6 h-10 w-10 bg-black/50 border border-white/10 rounded-full flex items-center justify-center text-white hover:bg-white/10 transition-all z-30">✕</button>
+                <button class="modal-close" aria-label="Close" onclick="document.getElementById('modal-container').classList.add('hidden')">×</button>
             </div>
-            <div class="p-8 space-y-8">
-                <div class="grid grid-cols-2 gap-4">
-                    <div class="bg-black/40 border border-white/5 rounded-2xl p-5">
-                        <span class="text-[9px] font-black text-slate-500 uppercase tracking-widest block mb-1">Measured Temp</span>
-                        <span class="text-2xl font-mono font-bold ${s.text}">${dish.temp}°C</span>
+
+            <div style="padding: var(--r-6) var(--r-5);">
+                <div class="grid cols-2 gap-4">
+                    <div class="card card-padded">
+                        <div class="eyebrow">Measured temperature</div>
+                        <div class="num-display ${tone === 'ok' ? '' : ''}" style="font-size: 44px; margin-top: 6px; color: var(--${tone === 'ok' ? 'sage' : tone === 'warn' ? 'mustard' : 'terracotta'});">${dish.temp}<span style="font-family: var(--font-sans); font-weight: 500; font-size: 18px; color: var(--mute); margin-left: 4px;">°C</span></div>
                     </div>
-                    <div class="bg-black/40 border border-white/5 rounded-2xl p-5">
-                        <span class="text-[9px] font-black text-slate-500 uppercase tracking-widest block mb-1">Total Weight</span>
-                        <span class="text-2xl font-mono font-bold text-white">${dish.weight}g</span>
-                    </div>
-                </div>
-                <div>
-                    <h5 class="text-[10px] font-black text-slate-600 uppercase tracking-[0.2em] mb-4 italic">Latest Feedback Logs</h5>
-                    <div class="space-y-3">
-                        ${dish.feedbacks.map(f => `
-                            <div class="p-4 bg-white/5 rounded-xl border border-white/5 text-xs text-slate-300 italic flex gap-3 italic">
-                                <span class="text-emerald-500">◆</span> ${f}
-                            </div>
-                        `).join('')}
+                    <div class="card card-padded">
+                        <div class="eyebrow">Weight · actual vs recipe</div>
+                        <div class="num-display" style="font-size: 32px; margin-top: 6px;">${escapeHtml(dish.weight)}<span style="font-family: var(--font-sans); font-weight: 500; font-size: 16px; color: var(--mute); margin-left: 4px;">g</span></div>
+                        <div class="caption" style="margin-top: 6px;">stock on hand: ${dish.stock}</div>
                     </div>
                 </div>
-                <button class="w-full py-4 bg-emerald-600 text-white font-black text-xs uppercase tracking-[0.3em] rounded-xl hover:bg-emerald-500 transition-all shadow-xl shadow-emerald-600/20">VALIDATE & ARCHIVE</button>
+
+                <hr class="rule" style="margin: var(--r-5) 0;"/>
+
+                <div class="eyebrow">Feedback log</div>
+                <div style="display:flex; flex-direction:column; gap: 10px; margin-top: 12px;">
+                    ${dish.feedbacks.map(f => `
+                        <div style="display:flex; gap: 12px; padding: 14px; background: var(--surface-2); border: 1px solid var(--hairline); border-radius: var(--radius-sm);">
+                            <span style="color: var(--gold); font-family: var(--font-serif); font-style: italic;">¶</span>
+                            <p style="margin: 0; font-family: var(--font-serif); font-style: italic; font-size: 14px; color: var(--cream-dim); line-height: 1.5;">${escapeHtml(f)}</p>
+                        </div>
+                    `).join('')}
+                </div>
+
+                <button class="btn btn-solid-gold" style="margin-top: var(--r-5); width: 100%; justify-content: center; padding: 14px;">
+                    Validate &amp; archive
+                </button>
             </div>
         </div>
     `;
     modal.classList.remove('hidden');
 };
 
-// Initial Render
-renderDashboard();
+/* --------------------------- Helpers --------------------------- */
+
+function escapeHtml(str) {
+    if (typeof str !== 'string') return str;
+    return str
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
+/* --------------------------- Boot --------------------------- */
+
+// Date display
+(function setDate() {
+    const el = document.getElementById('date-display');
+    if (!el) return;
+    const d = new Date();
+    const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+    el.textContent = `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
+})();
+
+showView('dashboard');

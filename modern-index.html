@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Culinary QC Dashboard | Modern</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="modern-style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="bg-slate-950 text-slate-100 antialiased">
+    <!-- Header -->
+    <header class="sticky top-0 z-40 w-full border-b border-slate-800 bg-slate-950/80 backdrop-blur-md">
+        <div class="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center gap-4">
+                <div class="h-8 w-8 rounded-lg bg-blue-600 flex items-center justify-center font-bold">B</div>
+                <h1 class="text-xl font-bold tracking-tight">Culinary QC</h1>
+            </div>
+            <div class="flex items-center gap-3">
+                <button id="btnDetails" class="inline-flex items-center gap-2 rounded-md bg-slate-800 px-3 py-2 text-sm font-semibold hover:bg-slate-700">
+                    Details
+                </button>
+                <button id="btnSummary" class="inline-flex items-center gap-2 rounded-md bg-slate-800 px-3 py-2 text-sm font-semibold hover:bg-slate-700">
+                    Summary
+                </button>
+                <button id="btnSettings" class="inline-flex items-center gap-2 rounded-md bg-slate-800 px-3 py-2 text-sm font-semibold hover:bg-slate-700">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M9.405 1.05c-.413-.957-1.712-.957-2.125 0l-.307.712c-.115.263-.391.411-.663.352l-.744-.162c-.993-.217-1.854.766-1.543 1.705l.232.704c.085.258-.008.544-.222.709l-.588.455c-.792.613-.792 1.838 0 2.451l.588.455c.214.165.307.451.222.71l-.232.704c-.31.939.55 1.922 1.543 1.705l.744-.162c.272-.06.548.089.663.353l.307.71c.413.958 1.712.958 2.125 0l.307-.71c.115-.264.391-.412.663-.353l.744.162c.993.217 1.854-.766 1.543-1.705l-.232-.704c-.085-.258.008-.544.222-.71l.588-.455c.792-.613.792-1.838 0-2.451l-.588-.455c-.214-.165-.307-.451-.222-.71l.232-.704c.31-.939-.55-1.922-1.543-1.705l-.744.162c-.272.06-.548-.089-.663-.353l-.307-.71ZM8 10a2 2 0 1 1 0-4 2 2 0 0 1 0 4Z"/></svg>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+        <!-- Hot Dish Alerts -->
+        <section class="mb-8">
+            <h2 class="mb-4 text-sm font-medium text-slate-400">Hot Dish Status Grid</h2>
+            <div id="hotAlertsGrid" class="grid grid-cols-2 gap-4 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8">
+                <!-- Dynamic Content -->
+            </div>
+        </section>
+
+        <!-- Summary Table -->
+        <section>
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-sm font-medium text-slate-400">Daily Summary Table</h2>
+                <div class="flex gap-2">
+                    <span class="inline-flex items-center rounded-full bg-blue-400/10 px-2 py-1 text-xs font-medium text-blue-400 ring-1 ring-inset ring-blue-400/30">Total: 42</span>
+                    <span class="inline-flex items-center rounded-full bg-green-400/10 px-2 py-1 text-xs font-medium text-green-400 ring-1 ring-inset ring-green-400/30">OK: 38</span>
+                    <span class="inline-flex items-center rounded-full bg-red-400/10 px-2 py-1 text-xs font-medium text-red-400 ring-1 ring-inset ring-red-400/30">Alert: 4</span>
+                </div>
+            </div>
+            
+            <div class="glass-card overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="qc-table no-wrap">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Dish Name</th>
+                                <th>Avg Temp (°C)</th>
+                                <th>Avg/Theo Weight (g)</th>
+                                <th>AI Status</th>
+                                <th>Comments</th>
+                            </tr>
+                        </thead>
+                        <tbody id="qcTableBody">
+                            <!-- Dynamic Content -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Modals (Hidden by default) -->
+    <div id="modalContainer" class="hidden fixed inset-0 z-50">
+        <div class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm"></div>
+        <div class="fixed inset-0 flex items-center justify-center p-4">
+            <div class="w-full max-w-md glass-card p-6 shadow-2xl">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 id="modalTitle" class="text-lg font-bold">Settings</h3>
+                    <button id="closeModal" class="text-slate-400 hover:text-slate-100">
+                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                    </button>
+                </div>
+                <div id="modalBody" class="space-y-4 text-slate-300">
+                    <!-- Form content injected here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="modern-ui.js"></script>
+</body>
+</html>

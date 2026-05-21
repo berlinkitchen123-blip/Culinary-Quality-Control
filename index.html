@@ -1,49 +1,12 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="dark">
 
 <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>Culinary Quality Control</title>
-    <style>
-        body {
-            background-color: #f7f7f7;
-            color: #022c22;
-            -webkit-tap-highlight-color: transparent;
-        }
-        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.05); }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(2, 44, 34, 0.1); border-radius: 10px; }
-        .no-scrollbar::-webkit-scrollbar { display: none; }
-
-        /* ===== RESPONSIVE ===== */
-        @media (max-width: 768px) {
-            #app-container { flex-direction: column; }
-            #app-container > nav { 
-                width: 100%; height: auto; flex-direction: row; 
-                padding: 8px 12px; gap: 4px; overflow-x: auto;
-                position: fixed; bottom: 0; left: 0; z-index: 999;
-            }
-            #app-container > nav .mt-auto { display: none; }
-            #app-container > nav > div:first-child { display: none; } /* hide logo on mobile nav */
-            #app-container > div { padding-bottom: 60px; } /* space for bottom nav */
-            header { padding-left: 16px !important; padding-right: 16px !important; flex-wrap: wrap; gap: 8px !important; height: auto !important; padding-top: 8px !important; padding-bottom: 8px !important; }
-            header h1 { font-size: 14px !important; }
-            #day-picker { order: 10; width: 100%; justify-content: space-between; }
-            #date-picker-trigger { display: none; }
-            .day-tab { flex: 1; text-align: center; }
-            #main-view { flex-direction: column !important; }
-            #main-view aside { width: 100% !important; max-height: 200px; }
-            #operators-grid { grid-template-columns: 1fr !important; }
-            #production-content-container { grid-template-columns: 1fr !important; }
-            #toggle-daily-btn, #toggle-weekly-btn { display: none; }
-        }
-        @media (min-width: 769px) and (max-width: 1024px) {
-            #main-view aside { width: 240px !important; }
-            #operators-grid { grid-template-columns: repeat(2, 1fr) !important; }
-        }
-    </style>
+    <title>Culinary Quality Control | Premium</title>
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -51,217 +14,197 @@
             theme: {
                 extend: {
                     colors: {
-                        border: "hsl(214.3 31.8% 91.4%)",
-                        input: "hsl(214.3 31.8% 91.4%)",
-                        ring: "hsl(160 84% 19%)",
-                        background: "hsl(0 0% 100%)",
-                        foreground: "hsl(222.2 84% 4.9%)",
-                        primary: { DEFAULT: "hsl(160 84% 19%)", foreground: "hsl(0 0% 100%)" },
-                        secondary: { DEFAULT: "hsl(210 40% 96.1%)", foreground: "hsl(222.2 47.4% 11.2%)" },
-                        muted: { DEFAULT: "hsl(210 40% 96.1%)", foreground: "hsl(215.4 16.3% 46.9%)" },
-                        accent: { DEFAULT: "hsl(210 40% 96.1%)", foreground: "hsl(222.2 47.4% 11.2%)" },
-                        card: { DEFAULT: "hsl(0 0% 100%)", foreground: "hsl(222.2 84% 4.9%)" }
+                        slate: {
+                            950: "#020617"
+                        },
+                        emerald: {
+                            500: "#10b981",
+                            600: "#059669"
+                        }
                     }
                 }
             }
         }
     </script>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            background-color: #020617;
+            color: #f8fafc;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        .glass-panel {
+            background: rgba(15, 23, 42, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .custom-scrollbar::-webkit-scrollbar { width: 5px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: 10px; }
+        
+        .nav-btn-active {
+            background-color: rgba(16, 185, 129, 0.15);
+            color: #10b981 !important;
+            border-right: 2px solid #10b981;
+        }
+
+        .qc-table th {
+            background: #0f172a;
+            color: #94a3b8;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            padding: 12px 16px;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        .qc-table td {
+            padding: 12px 16px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+            font-size: 0.85rem;
+        }
+
+        @media (max-width: 768px) {
+            #app-container { flex-direction: column; }
+            nav { 
+                width: 100% !important; height: 60px !important; flex-direction: row !important; 
+                padding: 0 16px !important; position: fixed; bottom: 0; left: 0; z-index: 999;
+                border-top: 1px solid rgba(255, 255, 255, 0.1);
+            }
+            main { padding-bottom: 70px; }
+            header { height: auto !important; padding: 12px 16px !important; flex-direction: column; align-items: flex-start !important; gap: 12px !important; }
+        }
+    </style>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 
-<body class="antialiased font-sans h-screen overflow-hidden bg-[#f7f7f7] text-slate-900 selection:bg-emerald-500/30">
+<body class="antialiased h-screen overflow-hidden selection:bg-emerald-500/30">
     <div id="app-container" class="flex h-full w-full">
 
-        <!-- ========== SIDEBAR ========== -->
-        <nav class="w-16 flex-shrink-0 bg-[#022c22] flex flex-col items-center py-6 gap-1 z-50 overflow-y-auto no-scrollbar">
-            <div class="p-2 bg-emerald-500/10 rounded-lg mb-3 text-emerald-400">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+        <!-- ========== PREMIUM SIDEBAR ========== -->
+        <nav class="w-16 flex-shrink-0 bg-slate-950 border-r border-white/5 flex flex-col items-center py-6 gap-2 z-50 overflow-y-auto custom-scrollbar">
+            <div class="p-2 mb-4">
+                <div class="h-8 w-8 rounded-lg bg-emerald-600 flex items-center justify-center font-bold text-white shadow-lg shadow-emerald-600/20">B</div>
             </div>
-            <span class="text-[7px] text-emerald-500/60 font-bold uppercase tracking-widest mb-1">Cook</span>
-            <button id="nav-forecast-btn" class="p-2 rounded-md text-white/40 hover:text-white transition-all" title="Order Forecast">
-                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>
+            
+            <button id="nav-forecast-btn" class="p-3 rounded-xl text-slate-500 hover:text-emerald-400 hover:bg-emerald-500/5 transition-all" title="Order Forecast">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>
             </button>
-            <button id="nav-ingredient-btn" class="p-2 rounded-md text-white/40 hover:text-white transition-all" title="Ingredient Qty">
-                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.256 1.189-3.103.551-.617.911-1.167 1.311-1.897z"/></svg>
+            <button id="nav-ingredient-btn" class="p-3 rounded-xl text-slate-500 hover:text-emerald-400 hover:bg-emerald-500/5 transition-all" title="Ingredient Qty">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.256 1.189-3.103.551-.617.911-1.167 1.311-1.897z"/></svg>
             </button>
-            <button id="nav-kitchen-btn" class="p-2 rounded-md text-white/40 hover:text-white transition-all" title="Kitchen Assign">
-                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 13.87A4 4 0 0 1 7.41 6a5.11 5.11 0 0 1 1.05-1.54 5 5 0 0 1 7.08 0A5.11 5.11 0 0 1 16.59 6 4 4 0 0 1 18 13.87V21H6Z"/><line x1="6" x2="18" y1="17" y2="17"/></svg>
+            <button id="nav-kitchen-btn" class="p-3 rounded-xl text-slate-500 hover:text-emerald-400 hover:bg-emerald-500/5 transition-all" title="Kitchen Assign">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M6 13.87A4 4 0 0 1 7.41 6a5.11 5.11 0 0 1 1.05-1.54 5 5 0 0 1 7.08 0A5.11 5.11 0 0 1 16.59 6 4 4 0 0 1 18 13.87V21H6Z"/><line x1="6" x2="18" y1="17" y2="17"/></svg>
             </button>
-            <button id="nav-thermal-btn" class="p-2 rounded-md text-white/40 hover:text-white transition-all" title="Thermal & Weight Log">
-                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4v10.54a4 4 0 1 1-4 0V4a2 2 0 0 1 4 0Z"/></svg>
+            <button id="nav-thermal-btn" class="p-3 rounded-xl text-slate-500 hover:text-emerald-400 hover:bg-emerald-500/5 transition-all" title="Thermal & Weight Log">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M14 4v10.54a4 4 0 1 1-4 0V4a2 2 0 0 1 4 0Z"/></svg>
             </button>
-            <div class="w-8 border-t border-emerald-500/20 my-2"></div>
-            <span class="text-[7px] text-amber-500/60 font-bold uppercase tracking-widest mb-1">Prep</span>
-            <button id="nav-dish-btn" class="p-2 rounded-md text-white/40 hover:text-white transition-all" title="Manager: Assign Dishes">
-                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
+            
+            <div class="w-8 h-px bg-white/5 my-2"></div>
+            
+            <button id="nav-dish-btn" class="p-3 rounded-xl text-slate-500 hover:text-emerald-400 hover:bg-emerald-500/5 transition-all" title="Manager: Assign Dishes">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
             </button>
-            <button id="nav-assembler-btn" class="p-2 rounded-md text-white/40 hover:text-white transition-all" title="Assembler View">
-                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            <button id="nav-assembler-btn" class="p-3 rounded-xl text-slate-500 hover:text-emerald-400 hover:bg-emerald-500/5 transition-all" title="Assembler View">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
             </button>
-            <div class="w-8 border-t border-emerald-500/20 my-2"></div>
-            <span class="text-[7px] text-indigo-400/60 font-bold uppercase tracking-widest mb-1">QC</span>
-            <button id="nav-audit-btn" class="p-2 rounded-md text-white/40 hover:text-white transition-all" title="Quality Control">
-                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+            
+            <div class="w-8 h-px bg-white/5 my-2"></div>
+            
+            <button id="nav-audit-btn" class="p-3 rounded-xl text-slate-500 hover:text-emerald-400 hover:bg-emerald-500/5 transition-all" title="Quality Control">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
             </button>
-            <button id="nav-prep-btn" class="p-2 rounded-md text-white/40 hover:text-white transition-all" title="HACCP Log">
-                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/><path d="M8 7h6"/><path d="M8 11h8"/><path d="M8 15h6"/></svg>
+            
+            <button id="settings-btn" class="mt-auto p-3 text-slate-600 hover:text-white transition-all">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
             </button>
-            <button id="nav-hygiene-btn" class="p-2 rounded-md text-white/40 hover:text-white transition-all" title="Hygiene Audit">
-                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>
-            </button>
-            <div class="mt-auto flex flex-col gap-4">
-                <button id="settings-btn" class="p-2 text-white/20 hover:text-white transition-all">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
-                </button>
-            </div>
         </nav>
 
 
         <!-- ========== MAIN CONTENT AREA ========== -->
         <div class="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
 
-            <!-- White Header -->
-            <header class="h-16 flex-shrink-0 flex items-center justify-between px-8 bg-white border-b border-slate-200">
+            <!-- Deep Ocean Header -->
+            <header class="h-16 flex-shrink-0 flex items-center justify-between px-8 bg-slate-950 border-b border-white/5">
                 <div class="flex items-center gap-6">
-                    <h1 id="page-title" class="text-lg font-bold text-[#022c22] tracking-tight">Assign Line Preparation</h1>
-                    <div class="flex items-center bg-slate-100 p-1 rounded-md text-[10px] font-bold">
-                        <button id="toggle-daily-btn" class="px-4 py-1.5 bg-white shadow-sm rounded text-slate-800">DAILY</button>
-                        <button id="toggle-weekly-btn" class="px-4 py-1.5 text-slate-500 hover:text-slate-700">WEEKLY</button>
+                    <h1 id="page-title" class="text-sm font-bold text-white tracking-widest uppercase">Culinary QC Dashboard</h1>
+                    <div class="flex items-center bg-slate-900 border border-white/5 p-1 rounded-lg text-[10px] font-bold">
+                        <button id="toggle-daily-btn" class="px-4 py-1.5 bg-emerald-600 shadow-lg shadow-emerald-600/20 rounded text-white">DAILY</button>
+                        <button id="toggle-weekly-btn" class="px-4 py-1.5 text-slate-500 hover:text-slate-300">WEEKLY</button>
                     </div>
                 </div>
                 <div class="flex items-center gap-4">
-                    <div id="day-picker" class="flex items-center bg-slate-100 rounded-lg p-1 mr-2 border border-slate-200">
-                        <button class="day-tab px-3 py-1.5 text-[10px] font-bold rounded shadow-sm bg-white text-slate-800" data-day="mon">MON</button>
-                        <button class="day-tab px-3 py-1.5 text-[10px] font-bold rounded text-slate-500 hover:text-slate-700" data-day="tue">TUE</button>
-                        <button class="day-tab px-3 py-1.5 text-[10px] font-bold rounded text-slate-500 hover:text-slate-700" data-day="wed">WED</button>
-                        <button class="day-tab px-3 py-1.5 text-[10px] font-bold rounded text-slate-500 hover:text-slate-700" data-day="thu">THU</button>
-                        <button class="day-tab px-3 py-1.5 text-[10px] font-bold rounded text-slate-500 hover:text-slate-700" data-day="fri">FRI</button>
+                    <div id="day-picker" class="flex items-center bg-slate-900 rounded-lg p-1 border border-white/5">
+                        <button class="day-tab px-3 py-1.5 text-[10px] font-bold rounded bg-slate-800 text-white" data-day="mon">MON</button>
+                        <button class="day-tab px-3 py-1.5 text-[10px] font-bold rounded text-slate-500 hover:text-slate-300" data-day="tue">TUE</button>
+                        <button class="day-tab px-3 py-1.5 text-[10px] font-bold rounded text-slate-500 hover:text-slate-300" data-day="wed">WED</button>
+                        <button class="day-tab px-3 py-1.5 text-[10px] font-bold rounded text-slate-500 hover:text-slate-300" data-day="thu">THU</button>
+                        <button class="day-tab px-3 py-1.5 text-[10px] font-bold rounded text-slate-500 hover:text-slate-300" data-day="fri">FRI</button>
                     </div>
 
-                    <div id="date-picker-trigger" class="flex items-center gap-2 bg-slate-50 border border-slate-200 px-4 py-2 rounded-md text-xs cursor-pointer hover:bg-slate-100 transition-colors">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-                        <span id="header-date-display" class="font-bold">MON, 29 MAR 2026</span>
+                    <div id="date-picker-trigger" class="flex items-center gap-2 bg-slate-900 border border-white/5 px-4 py-2 rounded-lg text-[11px] font-bold text-slate-300 hover:bg-slate-800 transition-colors">
+                        <svg class="h-3 w-3 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                        <span id="header-date-display">29 MAR 2026</span>
                     </div>
                 </div>
             </header>
 
             <!-- ========== VIEW CONTAINERS ========== -->
-            <main class="flex-1 overflow-hidden flex">
+            <main class="flex-1 overflow-hidden flex bg-slate-950">
 
-                <!-- VIEW: Dashboard / Assign -->
-                <div id="main-view" class="flex flex-1 overflow-hidden">
-                    <aside class="w-80 flex-shrink-0 bg-white border-r border-slate-200 flex flex-col overflow-hidden">
-                        <div class="p-6 border-b border-slate-100 bg-slate-50/30">
-                            <h2 class="text-sm font-bold text-slate-800 mb-1">Available Ingredients</h2>
-                            <p id="available-count" class="text-[10px] text-slate-400 font-medium tracking-tight">0 ingredients</p>
-                        </div>
-                        <div id="ingredients-list" class="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar"></div>
-                    </aside>
-                    <section class="flex-1 bg-slate-50/30 overflow-y-auto p-8 custom-scrollbar">
-                        <div class="flex items-center justify-between mb-8">
-                            <div>
-                                <h2 class="text-sm font-bold text-slate-800">Kitchen Operators</h2>
-                                <p id="operators-count" class="text-[10px] text-slate-400 font-medium tracking-tight">0 operators</p>
+                <!-- MAIN QC VIEW (Integrated Alert Grid + Summary) -->
+                <div id="main-view" class="flex-1 flex flex-col overflow-hidden p-8 gap-8">
+                    <!-- Alert Grid Section -->
+                    <div class="flex-shrink-0">
+                        <h3 class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-4">Hot Dish Status Grid</h3>
+                        <div id="operators-grid" class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-4"></div>
+                    </div>
+
+                    <!-- Summary Table Section -->
+                    <div class="flex-1 flex flex-col min-h-0">
+                        <h3 class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-4">Quality Control Log</h3>
+                        <div class="flex-1 glass-panel rounded-xl overflow-hidden shadow-2xl flex flex-col">
+                            <div class="overflow-x-auto custom-scrollbar">
+                                <table class="qc-table w-full">
+                                    <thead>
+                                        <tr>
+                                            <th>ID</th>
+                                            <th>Dish Name</th>
+                                            <th>Avg Temp</th>
+                                            <th>Avg/Theo Wt</th>
+                                            <th>AI status</th>
+                                            <th>Comments</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="ingredients-list"></tbody>
+                                </table>
                             </div>
                         </div>
-                        <div id="operators-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"></div>
-                    </section>
+                    </div>
                 </div>
 
-                <!-- VIEW: Production -->
-                <section id="production-view" class="hidden flex-1 h-full overflow-y-auto bg-slate-50 custom-scrollbar">
-                    <div class="p-8">
-                        <div class="flex items-center justify-between mb-6">
-                            <h2 class="text-sm font-bold text-slate-800">Production Orders</h2>
-                            <div id="production-stats" class="flex items-center gap-3"></div>
-                        </div>
-                        <div id="production-content-container" class="grid grid-cols-1 lg:grid-cols-2 gap-6"></div>
-                    </div>
-                </section>
-
-                <!-- VIEW: Prep / Kitchen Log -->
-                <section id="prep-view" class="hidden flex-1 h-full overflow-y-auto bg-slate-50 custom-scrollbar">
-                    <div class="p-8">
-                        <h2 class="text-sm font-bold text-slate-800 mb-6">Kitchen Log</h2>
-                        <div id="prep-grid-container" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4"></div>
-                    </div>
-                </section>
-
-                <!-- VIEW: Hygiene -->
-                <section id="hygiene-view" class="hidden flex-1 h-full overflow-y-auto bg-slate-50 custom-scrollbar">
-                    <div class="p-8">
-                        <h2 class="text-sm font-bold text-slate-800 mb-6">Hygiene Audit</h2>
-                        <div id="hygiene-grid-container" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4"></div>
-                    </div>
-                </section>
-
-                <!-- VIEW: Detail (prep/hygiene item detail) -->
-                <section id="dish-detail-view" class="hidden flex-1 h-full overflow-y-auto bg-slate-50 custom-scrollbar">
-                    <div class="p-8">
-                        <button id="detail-back-btn" class="mb-6 flex items-center gap-2 text-xs font-bold text-slate-400 hover:text-slate-700 transition-colors">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>
-                            Back
-                        </button>
-                        <div id="dish-card-container"></div>
-                    </div>
-                </section>
-
-                <!-- VIEW: Quality Control (3-Dish Random Audit) -->
-                <section id="ai-agent-view" class="hidden flex-1 h-full overflow-y-auto bg-slate-50 custom-scrollbar">
-                    <div class="p-4 md:p-8">
-                        <div id="audit-content-container" class="space-y-6"></div>
-                    </div>
-                </section>
-
-                <!-- VIEW: Compliance (existing temperature compliance report) -->
-                <section id="compliance-view" class="hidden flex-1 h-full overflow-y-auto bg-slate-50 custom-scrollbar">
-                </section>
-
-                <!-- VIEW: Logistics (existing logistics report) -->
-                <section id="logistics-view" class="hidden flex-1 h-full overflow-y-auto custom-scrollbar">
-                </section>
-
-                <!-- VIEW: Ingredient Qty -->
-                <section id="ingredient-view" class="hidden flex-1 h-full overflow-y-auto bg-slate-50 custom-scrollbar">
-                    <div class="p-8">
-                        <h2 class="text-sm font-bold text-slate-800 mb-6">Ingredient Quantities</h2>
-                        <div id="ingredient-qty-container" class="space-y-4"></div>
-                    </div>
-                </section>
-
-                <!-- VIEW: Kitchen Overview -->
-                <section id="kitchen-view" class="hidden flex-1 h-full overflow-y-auto bg-slate-50 custom-scrollbar">
-                    <div class="p-8">
-                        <h2 class="text-sm font-bold text-slate-800 mb-6">Kitchen Overview</h2>
-                        <div id="kitchen-overview-container" class="space-y-4"></div>
-                    </div>
-                </section>
-
-                <!-- VIEW: Dish Assign -->
-                <section id="dish-assign-view" class="hidden flex-1 h-full overflow-hidden custom-scrollbar">
-                    <div id="dish-assign-container" class="h-full"></div>
-                </section>
-
-                <!-- VIEW: Assembler View (Personal Task List) -->
-                <section id="assembler-view" class="hidden flex-1 h-full overflow-y-auto bg-slate-50 custom-scrollbar">
-                    <div id="assembler-content-container" class="p-8"></div>
-                </section>
-
-                <!-- VIEW: Forecast -->
-                <section id="forecast-view" class="hidden flex-1 h-full overflow-y-auto bg-slate-50 custom-scrollbar">
-                    <div class="p-8">
-                        <h2 class="text-sm font-bold text-slate-800 mb-6">Order Forecast & Cutoff</h2>
-                        <div id="forecast-container" class="space-y-4"></div>
-                    </div>
-                </section>
-
-                <!-- VIEW: Thermal Validation -->
-                <section id="thermal-view" class="hidden flex-1 h-full overflow-y-auto bg-slate-50 custom-scrollbar">
-                    <div class="p-8">
-                        <h2 class="text-sm font-bold text-slate-800 mb-6">Thermal Validation</h2>
-                        <div id="thermal-container" class="space-y-4"></div>
-                    </div>
-                </section>
+                <!-- ALL OTHER VIEWS (Preserved Containers) -->
+                <section id="production-view" class="hidden flex-1 h-full overflow-y-auto custom-scrollbar p-8"></section>
+                <section id="prep-view" class="hidden flex-1 h-full overflow-y-auto custom-scrollbar p-8"></section>
+                <section id="hygiene-view" class="hidden flex-1 h-full overflow-y-auto custom-scrollbar p-8"></section>
+                <section id="dish-detail-view" class="hidden flex-1 h-full overflow-y-auto custom-scrollbar p-8"></section>
+                <section id="ai-agent-view" class="hidden flex-1 h-full overflow-y-auto custom-scrollbar p-8"></section>
+                <section id="compliance-view" class="hidden flex-1 h-full overflow-y-auto custom-scrollbar p-8"></section>
+                <section id="logistics-view" class="hidden flex-1 h-full overflow-y-auto custom-scrollbar p-8"></section>
+                <section id="ingredient-view" class="hidden flex-1 h-full overflow-y-auto custom-scrollbar p-8"></section>
+                <section id="kitchen-view" class="hidden flex-1 h-full overflow-y-auto custom-scrollbar p-8"></section>
+                <section id="dish-assign-view" class="hidden flex-1 h-full overflow-hidden custom-scrollbar"></section>
+                <section id="assembler-view" class="hidden flex-1 h-full overflow-y-auto custom-scrollbar p-8"></section>
+                <section id="forecast-view" class="hidden flex-1 h-full overflow-y-auto custom-scrollbar p-8"></section>
+                <section id="thermal-view" class="hidden flex-1 h-full overflow-y-auto custom-scrollbar p-8"></section>
 
                 <div id="welcome-placeholder" class="hidden"></div>
             </main>
@@ -269,21 +212,21 @@
     </div>
 
     <!-- Modals & Notifications -->
-    <div id="modal-container" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[100] hidden items-center justify-center p-4"></div>
+    <div id="modal-container" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-[100] hidden items-center justify-center p-4"></div>
     <div id="notification-container" class="fixed top-20 right-4 z-[200] w-full max-w-sm pointer-events-none space-y-2"></div>
 
-    <!-- Main JS -->
-    <script type="module" src="./view-forecast.js?v=6.0.0"></script>
-    <script type="module" src="./view-ingredient-qty.js?v=6.0.0"></script>
-    <script type="module" src="./view-kitchen-overview.js?v=6.0.0"></script>
-    <script type="module" src="./view-thermal.js?v=6.0.0"></script>
-    <script type="module" src="./view-dish-assign.js?v=6.0.0"></script>
-    <script type="module" src="./view-assembler.js?v=6.0.0"></script>
-    <script type="module" src="./view-analytics.js?v=6.0.0"></script>
-    <script type="module" src="./view-prep.js?v=6.0.0"></script>
-    <script type="module" src="./view-hygiene.js?v=6.0.0"></script>
-    <script type="module" src="./view-compliance.js?v=6.0.0"></script>
-    <script type="module" src="./index.js?v=6.0.0"></script>
+    <!-- Main JS Modules -->
+    <script type="module" src="./view-forecast.js?v=7.0.0"></script>
+    <script type="module" src="./view-ingredient-qty.js?v=7.0.0"></script>
+    <script type="module" src="./view-kitchen-overview.js?v=7.0.0"></script>
+    <script type="module" src="./view-thermal.js?v=7.0.0"></script>
+    <script type="module" src="./view-dish-assign.js?v=7.0.0"></script>
+    <script type="module" src="./view-assembler.js?v=7.0.0"></script>
+    <script type="module" src="./view-analytics.js?v=7.0.0"></script>
+    <script type="module" src="./view-prep.js?v=7.0.0"></script>
+    <script type="module" src="./view-hygiene.js?v=7.0.0"></script>
+    <script type="module" src="./view-compliance.js?v=7.0.0"></script>
+    <script type="module" src="./index.js?v=7.0.0"></script>
 </body>
 
 </html>

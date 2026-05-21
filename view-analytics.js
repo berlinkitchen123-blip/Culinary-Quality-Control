@@ -7,7 +7,7 @@ export function renderAuditDishLibrary() {
     if (!container) return;
 
     if (!window._BossData || !window._BossData.activeDishes || window._BossData.activeDishes.length < 3) {
-        container.innerHTML = `<div class="p-10 text-center text-slate-500">Waiting for 3+ dishes to populate Boss Pipeline...</div>`;
+        container.innerHTML = `<div class="p-10 text-center text-slate-500 font-bold uppercase tracking-widest text-[10px]">Waiting for 3+ dishes to populate Quality Pipeline...</div>`;
         return;
     }
 
@@ -16,13 +16,13 @@ export function renderAuditDishLibrary() {
     const qcDishes = shuffled.slice(0, 3);
     
     let qcHtml = `
-        <div class="mb-6 flex justify-between items-end">
+        <div class="mb-8 flex justify-between items-end">
             <div>
-                <h2 class="text-2xl font-black text-slate-800">Daily Quality Audit</h2>
-                <p class="text-xs font-bold text-slate-500 uppercase tracking-widest mt-1">Randomized 3-Dish Compliance Check</p>
+                <h2 class="text-xl font-bold text-white tracking-tight uppercase italic">Daily Quality Audit</h2>
+                <p class="text-[10px] font-bold text-emerald-500 uppercase tracking-[0.3em] mt-1">Randomized 3-Dish Compliance Check</p>
             </div>
-            <button onclick="window.showView('audit')" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded shadow-md text-xs font-bold transition-colors">
-                Regenerate Random Audit
+            <button onclick="window.showView('audit')" class="bg-slate-900 border border-white/10 hover:bg-slate-800 text-white px-4 py-2 rounded-lg text-xs font-bold transition-all shadow-xl">
+                Refresh Audit
             </button>
         </div>
         <div class="space-y-8">
@@ -32,89 +32,89 @@ export function renderAuditDishLibrary() {
         const expectedTotalWeight = dish.ingredientsList.reduce((acc, curr) => acc + curr.weight, 0);
 
         qcHtml += `
-            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+            <div class="glass-panel rounded-2xl shadow-2xl overflow-hidden border border-white/5">
                 <!-- Header -->
-                <div class="bg-slate-900 border-b border-slate-800 p-4 flex justify-between items-center text-white">
-                    <div class="flex items-center gap-3">
-                        <div class="h-8 w-8 bg-slate-800 rounded flex items-center justify-center font-bold text-xs">${dish.letter}</div>
+                <div class="bg-slate-950/80 border-b border-white/5 p-5 flex justify-between items-center">
+                    <div class="flex items-center gap-4">
+                        <div class="h-10 w-10 bg-slate-900 border border-white/10 rounded-xl flex items-center justify-center font-bold text-emerald-400 shadow-inner">${dish.letter}</div>
                         <div>
-                            <h3 class="font-black text-lg">${dish.name}</h3>
-                            <span class="text-[9px] uppercase tracking-widest text-slate-400">Target Qty: ${dish.qty} | Leftover Stock: ${dish.stock}</span>
+                            <h3 class="font-bold text-lg text-white">${dish.name}</h3>
+                            <span class="text-[9px] uppercase tracking-[0.2em] text-slate-500 font-bold">Target: ${dish.qty} | Stock: ${dish.stock}</span>
                         </div>
                     </div>
-                    <span class="text-xs bg-indigo-500/20 text-indigo-300 font-bold px-3 py-1 rounded-full border border-indigo-500/30">
+                    <span class="text-[10px] bg-emerald-500/10 text-emerald-400 font-bold px-4 py-1.5 rounded-full border border-emerald-500/20 tracking-widest">
                         AUDIT #${idx + 1}
                     </span>
                 </div>
 
                 <div class="p-6 grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    <!-- Column 1: Image Comparison -->
+                    <!-- Visual Comparison -->
                     <div class="space-y-4">
-                        <h4 class="text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 pb-2">Visual Comparison</h4>
-                        <div class="grid grid-cols-2 gap-2">
+                        <h4 class="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] border-b border-white/5 pb-2 italic">Visual Validation</h4>
+                        <div class="grid grid-cols-2 gap-3">
                             <div>
-                                <span class="text-[9px] font-bold text-slate-500 mb-1 block">Expected (Spec)</span>
-                                <img src="${dish.image}" class="w-full h-32 object-cover rounded border border-slate-200" />
+                                <span class="text-[9px] font-bold text-slate-400 mb-2 block opacity-60">Spec Image</span>
+                                <img src="${dish.image}" class="w-full h-32 object-cover rounded-xl border border-white/5 grayscale hover:grayscale-0 transition-all duration-500" />
                             </div>
                             <div>
-                                <span class="text-[9px] font-bold text-slate-500 mb-1 block">Actual (Upload/Capture)</span>
-                                <div class="w-full h-32 bg-slate-50 rounded border-2 border-dashed border-slate-200 flex items-center justify-center cursor-pointer hover:bg-slate-100 transition-colors">
-                                    <span class="text-[10px] font-bold text-slate-400 uppercase">Tap to Capture</span>
+                                <span class="text-[9px] font-bold text-slate-400 mb-2 block opacity-60">Active Capture</span>
+                                <div class="w-full h-32 bg-black/40 rounded-xl border-2 border-dashed border-white/10 flex items-center justify-center cursor-pointer hover:bg-emerald-500/5 hover:border-emerald-500/30 transition-all group">
+                                    <span class="text-[9px] font-bold text-slate-600 uppercase group-hover:text-emerald-500 tracking-tighter">Tap to Photo</span>
                                 </div>
                             </div>
                         </div>
                         
-                        <div class="space-y-2 mt-4">
-                             <h4 class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Auditor Comments</h4>
-                             <textarea rows="3" class="w-full bg-slate-50 border border-slate-200 rounded p-3 text-xs w-full focus:ring-2 focus:ring-indigo-500 focus:outline-none" placeholder="Enter findings, visual deviations, or general feedback..."></textarea>
+                        <div class="space-y-2 mt-6">
+                             <h4 class="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] italic">Auditor Comments</h4>
+                             <textarea rows="3" class="w-full bg-black/40 border border-white/10 rounded-xl p-4 text-xs font-medium text-slate-300 focus:ring-1 focus:ring-emerald-500 focus:outline-none transition-all placeholder:text-slate-700" placeholder="Enter deviations or observations..."></textarea>
                         </div>
                     </div>
 
-                    <!-- Column 2: Bill of Materials & Checkboxes -->
+                    <!-- Ingredient Validation -->
                     <div class="space-y-4">
-                        <h4 class="text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 pb-2">Ingredient Spec Validation</h4>
-                        <div class="space-y-2">
+                        <h4 class="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] border-b border-white/5 pb-2 italic">Standard Spec Check</h4>
+                        <div class="space-y-2 max-h-[280px] overflow-y-auto custom-scrollbar pr-2">
                             ${dish.ingredientsList.map((ing, i) => `
-                                <label class="flex items-center gap-3 p-2 hover:bg-slate-50 rounded transition-colors cursor-pointer border border-transparent hover:border-slate-100">
-                                    <input type="checkbox" class="w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer">
+                                <label class="flex items-center gap-4 p-3 bg-white/5 hover:bg-emerald-500/5 rounded-xl transition-all cursor-pointer border border-transparent hover:border-emerald-500/20 group">
+                                    <input type="checkbox" class="w-4 h-4 rounded border-white/20 bg-slate-900 text-emerald-500 focus:ring-emerald-500/20 cursor-pointer">
                                     <div class="flex-1 flex justify-between items-center">
-                                        <span class="text-xs font-bold text-slate-700">${ing.name}</span>
-                                        <span class="text-[10px] font-mono text-slate-500 bg-slate-100 px-2 py-0.5 rounded">${ing.weight}g</span>
+                                        <span class="text-[11px] font-bold text-slate-300 group-hover:text-white">${ing.name}</span>
+                                        <span class="text-[10px] font-mono text-slate-500 bg-black/40 px-2 py-0.5 rounded-lg">${ing.weight}g</span>
                                     </div>
                                 </label>
                             `).join('')}
                         </div>
                         
-                        <div class="mt-4 pt-3 border-t border-slate-100 flex justify-between items-center px-2">
-                            <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Total Spec Weight</span>
-                            <span class="text-sm font-black text-slate-800">${expectedTotalWeight}g</span>
+                        <div class="mt-4 pt-4 border-t border-white/5 flex justify-between items-center px-2">
+                            <span class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Calculated Weight</span>
+                            <span class="text-lg font-bold text-white italic">${expectedTotalWeight}g</span>
                         </div>
                     </div>
 
-                    <!-- Column 3: Measurements (Temps & Weights) -->
-                    <div class="space-y-4">
-                        <h4 class="text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 pb-2">Physical Measurements</h4>
+                    <!-- Measurements -->
+                    <div class="space-y-6">
+                        <h4 class="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] border-b border-white/5 pb-2 italic">Compliance Tests</h4>
                         
                         <div class="space-y-3">
-                            <h5 class="text-[9px] font-bold text-slate-500 uppercase">Temperature Tests (°C)</h5>
+                            <h5 class="text-[9px] font-bold text-slate-400 uppercase tracking-[0.1em] pl-1">Probe Temps (°C)</h5>
                             <div class="grid grid-cols-3 gap-2">
-                                <input type="number" placeholder="Probe 1" class="bg-slate-50 border border-slate-200 rounded p-2 text-xs w-full focus:ring-2 focus:border-indigo-500 focus:outline-none" />
-                                <input type="number" placeholder="Probe 2" class="bg-slate-50 border border-slate-200 rounded p-2 text-xs w-full focus:ring-2 focus:border-indigo-500 focus:outline-none" />
-                                <input type="number" placeholder="Probe 3" class="bg-slate-50 border border-slate-200 rounded p-2 text-xs w-full focus:ring-2 focus:border-indigo-500 focus:outline-none" />
+                                <input type="number" placeholder="P1" class="bg-black/40 border border-white/10 rounded-xl p-3 text-xs font-mono text-emerald-400 focus:ring-1 focus:ring-emerald-500 outline-none text-center" />
+                                <input type="number" placeholder="P2" class="bg-black/40 border border-white/10 rounded-xl p-3 text-xs font-mono text-emerald-400 focus:ring-1 focus:ring-emerald-500 outline-none text-center" />
+                                <input type="number" placeholder="P3" class="bg-black/40 border border-white/10 rounded-xl p-3 text-xs font-mono text-emerald-400 focus:ring-1 focus:ring-emerald-500 outline-none text-center" />
                             </div>
                         </div>
 
-                        <div class="space-y-3 mt-4">
-                            <h5 class="text-[9px] font-bold text-slate-500 uppercase">Final Weight Variations (g)</h5>
+                        <div class="space-y-3">
+                            <h5 class="text-[9px] font-bold text-slate-400 uppercase tracking-[0.1em] pl-1">Sample Weight Deviations (g)</h5>
                             <div class="grid grid-cols-3 gap-2">
-                                <input type="number" placeholder="Sample A" class="bg-slate-50 border border-slate-200 rounded p-2 text-xs w-full focus:ring-2 focus:border-indigo-500 focus:outline-none" />
-                                <input type="number" placeholder="Sample B" class="bg-slate-50 border border-slate-200 rounded p-2 text-xs w-full focus:ring-2 focus:border-indigo-500 focus:outline-none" />
-                                <input type="number" placeholder="Sample C" class="bg-slate-50 border border-slate-200 rounded p-2 text-xs w-full focus:ring-2 focus:border-indigo-500 focus:outline-none" />
+                                <input type="number" placeholder="S-A" class="bg-black/40 border border-white/10 rounded-xl p-3 text-xs font-mono text-blue-400 focus:ring-1 focus:ring-blue-500 outline-none text-center" />
+                                <input type="number" placeholder="S-B" class="bg-black/40 border border-white/10 rounded-xl p-3 text-xs font-mono text-blue-400 focus:ring-1 focus:ring-blue-500 outline-none text-center" />
+                                <input type="number" placeholder="S-C" class="bg-black/40 border border-white/10 rounded-xl p-3 text-xs font-mono text-blue-400 focus:ring-1 focus:ring-blue-500 outline-none text-center" />
                             </div>
                         </div>
                         
-                        <div class="pt-6">
-                            <button class="w-full bg-slate-900 text-white font-bold text-xs py-3 rounded uppercase tracking-widest hover:bg-slate-800 transition-colors">Submit Dish Audit</button>
+                        <div class="pt-2">
+                            <button class="w-full bg-white text-slate-950 font-bold text-[10px] py-4 rounded-xl uppercase tracking-[0.2em] hover:bg-emerald-400 transition-all shadow-xl shadow-white/5">Log Audit Results</button>
                         </div>
                     </div>
                 </div>
@@ -123,12 +123,13 @@ export function renderAuditDishLibrary() {
     });
 
     qcHtml += `</div>
-        <div class="mt-8 flex justify-end">
-             <button class="bg-emerald-600 hover:bg-emerald-700 text-white px-8 py-3 rounded-xl shadow-lg font-black tracking-widest uppercase transition-colors" onclick="alert('QC Data successfully logged to central systems!')">
-                 Sign-Off Weekly Audit
+        <div class="mt-12 flex justify-end pb-12">
+             <button class="bg-emerald-600 hover:bg-emerald-500 text-white px-10 py-5 rounded-2xl shadow-2xl shadow-emerald-600/20 font-bold tracking-[0.3em] uppercase text-[11px] transition-all active:scale-95 italic" onclick="alert('QC Data successfully archived.')">
+                 Sign-Off Final Audit
              </button>
         </div>
     `;
 
     container.innerHTML = qcHtml;
 }
+

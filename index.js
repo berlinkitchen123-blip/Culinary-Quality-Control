@@ -43,8 +43,8 @@ export function showView(viewName) {
     });
 
     // Sidebar highlighting
-    const activeClass = "text-emerald-400 bg-emerald-500/10 shadow-inner";
-    const inactiveClass = "text-white/40 hover:text-white";
+    const activeClass = "p-3 rounded-xl text-emerald-400 bg-emerald-500/10 shadow-lg shadow-emerald-500/5 ring-1 ring-emerald-500/20 transition-all";
+    const inactiveClass = "p-3 rounded-xl text-slate-500 hover:text-emerald-400 hover:bg-emerald-500/5 transition-all";
 
     const navMap = {
         'dashboard': DOMElements.navDashboardBtn,
@@ -62,7 +62,7 @@ export function showView(viewName) {
 
     Object.entries(navMap).forEach(([name, btn]) => {
         if (btn) {
-            btn.className = `p-2 rounded-md transition-all ${viewName === name ? activeClass : inactiveClass}`;
+            btn.className = (viewName === name) ? activeClass : inactiveClass;
         }
     });
 
@@ -125,12 +125,12 @@ window.showView = showView;
 // =============================================
 if (DOMElements.toggleDailyBtn && DOMElements.toggleWeeklyBtn) {
     DOMElements.toggleDailyBtn.onclick = () => {
-        DOMElements.toggleDailyBtn.className = "px-4 py-1.5 bg-white shadow-sm rounded text-slate-800";
-        DOMElements.toggleWeeklyBtn.className = "px-4 py-1.5 text-slate-500 hover:text-slate-700";
+        DOMElements.toggleDailyBtn.className = "px-4 py-1.5 bg-emerald-600 shadow-lg shadow-emerald-600/20 rounded text-white";
+        DOMElements.toggleWeeklyBtn.className = "px-4 py-1.5 text-slate-500 hover:text-slate-300";
     };
     DOMElements.toggleWeeklyBtn.onclick = () => {
-        DOMElements.toggleWeeklyBtn.className = "px-4 py-1.5 bg-white shadow-sm rounded text-slate-800";
-        DOMElements.toggleDailyBtn.className = "px-4 py-1.5 text-slate-500 hover:text-slate-700";
+        DOMElements.toggleWeeklyBtn.className = "px-4 py-1.5 bg-emerald-600 shadow-lg shadow-emerald-600/20 rounded text-white";
+        DOMElements.toggleDailyBtn.className = "px-4 py-1.5 text-slate-500 hover:text-slate-300";
     };
 }
 
@@ -174,8 +174,8 @@ dayTabs.forEach(tab => {
         const selectedDay = e.target.getAttribute('data-day'); // 'mon', 'tue', etc.
         
         // Visual toggle
-        dayTabs.forEach(t => t.className = "day-tab px-3 py-1.5 text-[10px] font-bold rounded text-slate-500 hover:text-slate-700");
-        e.target.className = "day-tab px-3 py-1.5 text-[10px] font-bold rounded shadow-sm bg-white text-slate-800";
+        dayTabs.forEach(t => t.className = "day-tab px-3 py-1.5 text-[10px] font-bold rounded text-slate-500 hover:text-slate-300 transition-all");
+        e.target.className = "day-tab px-3 py-1.5 text-[10px] font-bold rounded shadow-lg bg-slate-800 text-white";
         if (DOMElements.headerDateDisplay) {
             DOMElements.headerDateDisplay.innerText = formatDateDisplay(selectedDay);
         }
@@ -220,42 +220,42 @@ window.showDishModal = (letterCode) => {
     if (!modal) return;
 
     modal.innerHTML = `
-        <div class="bg-white rounded-2xl w-full max-w-md overflow-hidden shadow-2xl scale-100 transition-transform flex flex-col max-h-[90vh]">
-            <div class="relative h-48 w-full bg-slate-100 flex-shrink-0">
-                <img src="${dish.image}" class="w-full h-full object-cover" alt="Dish image" />
-                <div class="absolute inset-0 bg-gradient-to-t from-slate-900/80 to-transparent flex items-end p-4">
-                    <h3 class="text-xl font-black text-white leading-tight">${dish.name}</h3>
+        <div class="glass-panel rounded-2xl w-full max-w-md overflow-hidden shadow-2xl transition-all flex flex-col max-h-[90vh]">
+            <div class="relative h-48 w-full bg-slate-900 flex-shrink-0">
+                <img src="${dish.image}" class="w-full h-full object-cover opacity-70" alt="Dish image" />
+                <div class="absolute inset-0 bg-gradient-to-t from-slate-950 to-transparent flex items-end p-6">
+                    <h3 class="text-xl font-bold text-white tracking-tight">${dish.name}</h3>
                 </div>
-                <button onclick="document.getElementById('modal-container').classList.add('hidden')" class="absolute top-4 right-4 h-8 w-8 bg-slate-900/50 backdrop-blur rounded-full flex items-center justify-center text-white hover:bg-slate-900/80 transition-colors">
-                    ✕
+                <button onclick="document.getElementById('modal-container').classList.add('hidden')" class="absolute top-4 right-4 h-8 w-8 bg-black/40 backdrop-blur rounded-full flex items-center justify-center text-white hover:bg-black/80 transition-colors">
+                    <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M2.146 2.854a.5.5 0 1 1 .708-.708L8 7.293l5.146-5.147a.5.5 0 0 1 .708.708L8.707 8l5.147 5.146a.5.5 0 0 1-.708.708L8 8.707l-5.146 5.147a.5.5 0 0 1-.708-.708L7.293 8l-5.147-5.146z"/></svg>
                 </button>
             </div>
             
-            <div class="p-6 space-y-6 flex-1 overflow-y-auto">
+            <div class="p-6 space-y-6 flex-1 overflow-y-auto custom-scrollbar bg-slate-950/40">
                 <div class="grid grid-cols-2 gap-4">
-                    <div class="bg-emerald-50 rounded-xl p-3 border border-emerald-100 flex flex-col items-center">
-                        <span class="text-[9px] font-black text-emerald-600 uppercase tracking-widest mb-1">Target to Prepare</span>
-                        <span class="text-3xl font-black text-emerald-700">${dish.qty}</span>
+                    <div class="bg-emerald-500/5 rounded-xl p-4 border border-emerald-500/20 flex flex-col items-center">
+                        <span class="text-[9px] font-bold text-emerald-500 uppercase tracking-widest mb-1">Target Qty</span>
+                        <span class="text-2xl font-bold text-white">${dish.qty}</span>
                     </div>
-                    <div class="bg-blue-50 rounded-xl p-3 border border-blue-100 flex flex-col items-center">
-                        <span class="text-[9px] font-black text-blue-600 uppercase tracking-widest mb-1">Leftover Stock</span>
-                        <span class="text-3xl font-black text-blue-700">${dish.stock}</span>
+                    <div class="bg-blue-500/5 rounded-xl p-4 border border-blue-500/20 flex flex-col items-center">
+                        <span class="text-[9px] font-bold text-blue-400 uppercase tracking-widest mb-1">Current Stock</span>
+                        <span class="text-2xl font-bold text-white">${dish.stock}</span>
                     </div>
                 </div>
 
                 <div>
-                    <h4 class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 border-b border-slate-100 pb-2">Recent Feedback</h4>
+                    <h4 class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3 border-b border-white/5 pb-2">Recent Feedback</h4>
                     <ul class="space-y-2">
-                        ${dish.comments.map(c => `<li class="text-xs text-slate-600 bg-slate-50 p-2 rounded border border-slate-100 flex gap-2"><span>💬</span> ${c}</li>`).join('')}
+                        ${dish.comments.map(c => `<li class="text-xs text-slate-300 bg-slate-900/50 p-2 rounded border border-white/5 flex gap-2"><span>💬</span> ${c}</li>`).join('')}
                     </ul>
                 </div>
 
                 <div>
-                    <h4 class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 border-b border-slate-100 pb-2">Bill of Materials</h4>
+                    <h4 class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3 border-b border-white/5 pb-2">Bill of Materials</h4>
                     <ul class="space-y-2">
                         ${dish.ingredientsList.map(i => `
-                            <li class="flex justify-between items-center text-xs border-b border-slate-50 pb-1">
-                                <span class="font-bold text-slate-700">${i.name}</span>
+                            <li class="flex justify-between items-center text-xs border-b border-white/5 pb-1">
+                                <span class="font-bold text-slate-300">${i.name}</span>
                                 <span class="font-mono text-slate-500">${(i.weight * dish.qty).toLocaleString()}g</span>
                             </li>
                         `).join('')}

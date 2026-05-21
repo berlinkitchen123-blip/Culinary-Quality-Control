@@ -4,35 +4,35 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Culinary Quality Control · Bella &amp; Bona</title>
-    <meta name="description" content="The daily quality control instrument for the Bella &amp; Bona kitchen — temperatures, weights, and dispatch logs, in one editorial dashboard.">
+    <meta name="description" content="Daily quality control instrument for the Bella &amp; Bona kitchen — live temperatures, weights, and dispatch logs, synced across the brigade.">
 
-    <!-- Type -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,300;1,9..144,400;1,9..144,500&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 
-    <!-- Brand system -->
     <link rel="stylesheet" href="brand.css">
 
-    <!-- Favicon (simple gold B&B) -->
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230f0d0a'/%3E%3Ctext x='16' y='22' text-anchor='middle' font-family='Georgia,serif' font-style='italic' font-size='18' fill='%23d4a574'%3EB%26B%3C/text%3E%3C/svg%3E">
 </head>
 <body>
 
 <div class="shell">
 
-    <!-- =============================================
-         SIDEBAR
-         ============================================= -->
+    <!-- SIDEBAR -->
     <aside class="sidebar" aria-label="Primary">
         <div class="sidebar-mark">
             <span class="name">Bella<span class="amp">&amp;</span>Bona</span>
             <span class="sub">Culinary Quality Control</span>
         </div>
 
-        <div class="sidebar-section">Operations</div>
+        <div class="sidebar-section">Today</div>
         <button id="nav-dashboard" class="nav-link is-active" type="button">
-            <span class="label"><span class="glyph">i</span>QC Dashboard</span>
+            <span class="label"><span class="glyph">i</span>Pass Sheet</span>
+            <span class="count" id="count-total" title="Total dishes">—</span>
+        </button>
+        <button id="nav-issues" class="nav-link" type="button">
+            <span class="label"><span class="glyph">!</span>Issues</span>
+            <span class="count" id="count-issues" title="Failures + warnings">—</span>
         </button>
         <button id="nav-lifecycle" class="nav-link" type="button">
             <span class="label"><span class="glyph">ii</span>Lifecycle</span>
@@ -42,24 +42,12 @@
         </button>
 
         <div class="sidebar-section">Kitchen</div>
-        <a class="nav-link" href="Kitchen.html">
-            <span class="label"><span class="glyph">·</span>Kitchen Console</span>
-        </a>
-        <a class="nav-link" href="Dispatcher.html">
-            <span class="label"><span class="glyph">·</span>Dispatcher</span>
-        </a>
-        <a class="nav-link" href="Menu.html">
-            <span class="label"><span class="glyph">·</span>Menu</span>
-        </a>
-        <a class="nav-link" href="Order forecast.html">
-            <span class="label"><span class="glyph">·</span>Order Forecast</span>
-        </a>
-        <a class="nav-link" href="weekly forecast.html">
-            <span class="label"><span class="glyph">·</span>Weekly Forecast</span>
-        </a>
-        <a class="nav-link" href="confirm orders for now.html">
-            <span class="label"><span class="glyph">·</span>Confirm Orders</span>
-        </a>
+        <a class="nav-link" href="Kitchen.html"><span class="label"><span class="glyph">·</span>Kitchen Console</span></a>
+        <a class="nav-link" href="Dispatcher.html"><span class="label"><span class="glyph">·</span>Dispatcher</span></a>
+        <a class="nav-link" href="Menu.html"><span class="label"><span class="glyph">·</span>Menu</span></a>
+        <a class="nav-link" href="Order forecast.html"><span class="label"><span class="glyph">·</span>Order Forecast</span></a>
+        <a class="nav-link" href="weekly forecast.html"><span class="label"><span class="glyph">·</span>Weekly Forecast</span></a>
+        <a class="nav-link" href="confirm orders for now.html"><span class="label"><span class="glyph">·</span>Confirm Orders</span></a>
 
         <div class="sidebar-section">Configuration</div>
         <button id="nav-settings" class="nav-link" type="button">
@@ -67,31 +55,43 @@
         </button>
 
         <div class="sidebar-footer">
-            <span><span class="dot"></span>&nbsp;&nbsp;Live</span>
-            <span>Vol. 01</span>
+            <span><span class="dot" id="conn-dot"></span>&nbsp;&nbsp;<span id="conn-label">Connecting</span></span>
+            <span id="build-tag">Vol. 02</span>
         </div>
     </aside>
 
-    <!-- =============================================
-         MAIN
-         ============================================= -->
+    <!-- MAIN -->
     <main class="shell-main">
 
-        <!-- Loader -->
         <div id="loading-overlay" class="loading-overlay hidden">
             <div class="spinner" aria-label="Loading"></div>
         </div>
 
-        <!-- Header -->
+        <!-- HEADER -->
         <header class="page-header">
             <div class="page-header-inner">
                 <div>
-                    <div class="crumb" id="page-title">QC Dashboard · Daily</div>
-                    <div class="title"><span id="date-display">19 May 2026</span><span class="accent">.</span></div>
+                    <div class="crumb" id="page-title">Pass Sheet · Daily</div>
+                    <div class="title"><span id="date-display">—</span><span class="accent">.</span></div>
                 </div>
-                <div style="display:flex; gap:10px; align-items:center;">
+
+                <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
+                    <!-- Date picker -->
+                    <div class="date-control" role="group" aria-label="Date selection">
+                        <button id="date-prev" type="button" aria-label="Previous day">‹</button>
+                        <label class="date-value" id="date-label">
+                            <span id="date-text">Today</span>
+                            <input type="date" id="date-input" />
+                        </label>
+                        <button id="date-next" type="button" aria-label="Next day">›</button>
+                        <button id="date-today" type="button" class="date-today" title="Jump to today">Today</button>
+                    </div>
+
                     <button id="export-team-btn" class="btn btn-outline-gold" type="button">
-                        Export Report
+                        Export
+                    </button>
+                    <button id="print-btn" class="btn btn-ghost" type="button" title="Print end-of-day report">
+                        Print
                     </button>
                     <button class="btn btn-ghost btn-icon" type="button" aria-label="Refresh" onclick="location.reload()">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 15.5-6.4L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-15.5 6.4L3 16"/><path d="M3 21v-5h5"/></svg>
@@ -100,102 +100,92 @@
             </div>
         </header>
 
-        <!-- Content -->
-        <div class="container" style="padding-top: var(--r-7); padding-bottom: var(--r-9); flex: 1;">
+        <!-- CONTENT -->
+        <div class="container" style="padding-top: var(--r-5); padding-bottom: var(--r-9); flex: 1;">
 
-            <!-- HERO / INTRODUCTION -->
-            <section class="section" style="padding-top: 0;">
-                <div style="display:grid; grid-template-columns: 1.6fr 1fr; gap: var(--r-7); align-items: end;">
-                    <div>
-                        <div class="eyebrow eyebrow-gold">№ 01 — The Pass Sheet</div>
-                        <h2 class="display-l" style="margin: 14px 0 18px 0;">
-                            Every dish, <em>read</em> twice<br/>before it ever leaves the line.
-                        </h2>
-                        <p class="lede" style="max-width: 56ch;">
-                            A daily instrument for the Bella &amp; Bona kitchen — temperatures, weights, and dispatch logs measured against the recipe, recorded against the day, and surfaced the moment something drifts.
-                        </p>
-                    </div>
-                    <div class="card card-padded">
-                        <div class="eyebrow">Today's read</div>
-                        <div style="display:flex; align-items:end; gap: var(--r-3); margin-top: 6px;">
-                            <span class="num-display" style="font-size: 76px; line-height: 0.9;">42</span>
-                            <span class="caption" style="margin-bottom: 10px;">dishes on the pass</span>
+            <!-- Alert banner injected here by JS -->
+            <div id="alert-banner-host"></div>
+
+            <!-- VIEW: PASS SHEET (dashboard) -->
+            <div id="view-dashboard">
+
+                <!-- Compliance scorecard -->
+                <section id="compliance-scorecard" class="section" data-dashboard-only style="padding-top: var(--r-5);">
+                    <div class="section-head">
+                        <div class="lhs">
+                            <span class="index">№ 01</span>
+                            <h3 class="section-title">Compliance Scorecard</h3>
                         </div>
-                        <hr class="rule" style="margin: 18px 0;"/>
-                        <div style="display:flex; justify-content:space-between; gap: var(--r-3); flex-wrap: wrap;">
-                            <div>
-                                <div class="eyebrow">Hot</div>
-                                <div class="num" style="font-size: 18px; color: var(--cream); margin-top: 4px;">70% pass</div>
+                        <div class="meta">Pass rate by category · live</div>
+                    </div>
+                    <div id="scorecard-grid" class="grid cols-4 gap-4">
+                        <!-- Injected -->
+                    </div>
+                </section>
+
+                <hr class="rule" data-dashboard-only/>
+
+                <!-- Live dish workspace -->
+                <section class="section" id="dash-workspace">
+                    <div class="section-head" id="workspace-head">
+                        <div class="lhs">
+                            <span class="index" id="workspace-index">№ 02</span>
+                            <h3 class="section-title" id="workspace-title">Live Pass Sheet</h3>
+                        </div>
+                        <div class="meta" id="workspace-meta" style="display:flex; gap: 12px; align-items: center;">
+                            <div class="segmented" role="group" aria-label="Filter">
+                                <button id="filter-all" class="is-active" type="button">All</button>
+                                <button id="filter-hot" type="button">Hot</button>
+                                <button id="filter-cold" type="button">Cold</button>
+                                <button id="filter-issues" type="button">Issues</button>
                             </div>
-                            <div>
-                                <div class="eyebrow">Cold</div>
-                                <div class="num" style="font-size: 18px; color: var(--cream); margin-top: 4px;">93% pass</div>
-                            </div>
-                            <div>
-                                <div class="eyebrow">RTE</div>
-                                <div class="num" style="font-size: 18px; color: var(--cream); margin-top: 4px;">100%</div>
-                            </div>
+                            <button id="add-dish-btn" class="btn btn-outline-gold btn-sm" type="button">+ Add dish</button>
                         </div>
                     </div>
-                </div>
-            </section>
 
-            <hr class="rule"/>
-
-            <!-- HOT DISH GRID + DASHBOARD CONTENT (rendered by JS) -->
-            <section class="section">
-                <div class="section-head">
-                    <div class="lhs">
-                        <span class="index">№ 02</span>
-                        <h3 class="section-title">Live Hot Dish Pipeline</h3>
+                    <!-- Dish workspace grid (cards with inline editing) -->
+                    <div id="hot-dish-grid" class="grid cols-2 gap-3">
+                        <!-- Cards injected -->
                     </div>
-                    <div class="meta">
-                        <span class="chip is-info"><span class="dot"></span>Severity · low → high</span>
-                    </div>
-                </div>
+                </section>
 
-                <!-- The compliance scorecard is injected by modern-ui.js with id="compliance-scorecard" -->
-                <!-- The hot dish cards are injected by modern-ui.js into #hot-dish-grid -->
-                <div id="hot-dish-grid" class="grid cols-4 gap-4">
-                    <!-- Cards injected -->
-                </div>
-            </section>
+                <hr class="rule" data-dashboard-only/>
 
-            <!-- QC SUMMARY TABLE -->
-            <section class="section">
-                <div class="section-head">
-                    <div class="lhs">
-                        <span class="index">№ 03</span>
-                        <h3 class="section-title">Quality Control Summary</h3>
+                <!-- Summary table -->
+                <section class="section" id="dash-summary" data-dashboard-only>
+                    <div class="section-head">
+                        <div class="lhs">
+                            <span class="index">№ 03</span>
+                            <h3 class="section-title">Quality Control Summary</h3>
+                        </div>
+                        <div class="meta">All readings for <span id="summary-date-label">today</span></div>
                     </div>
-                    <div class="meta">
-                        <span class="chip is-ok"><span class="dot"></span>All Systems Nominal</span>
-                    </div>
-                </div>
 
-                <div class="card pro-card" style="overflow:hidden;">
-                    <table class="editorial-table">
-                        <thead>
-                            <tr>
-                                <th>Dish Identity</th>
-                                <th>Status</th>
-                                <th>Compliance (Temp)</th>
-                                <th>Chef Notes</th>
-                            </tr>
-                        </thead>
-                        <tbody id="summary-table-body">
-                            <!-- Rows injected -->
-                        </tbody>
-                    </table>
-                </div>
-            </section>
+                    <div class="card pro-card" style="overflow:hidden;">
+                        <table class="editorial-table">
+                            <thead>
+                                <tr>
+                                    <th>Dish Identity</th>
+                                    <th>Status</th>
+                                    <th>Compliance (Temp)</th>
+                                    <th>Weight</th>
+                                    <th>Chef Notes</th>
+                                </tr>
+                            </thead>
+                            <tbody id="summary-table-body">
+                                <!-- Rows injected -->
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+            </div>
 
             <!-- COLOPHON -->
             <footer class="colophon">
                 <div class="row">
                     <div>
                         Set in <em>Fraunces</em> &amp; <em>Inter</em>. Numbers in <em>JetBrains Mono</em>.<br/>
-                        A Bella &amp; Bona instrument, recorded daily.
+                        A Bella &amp; Bona instrument, recorded daily — synced to Firebase.
                     </div>
                     <div class="label">© 2026 · Bella &amp; Bona Culinary Ops</div>
                 </div>
@@ -205,8 +195,26 @@
     </main>
 </div>
 
-<!-- MODAL CONTAINER -->
+<!-- DRAWER: ISSUES -->
+<div id="issues-scrim" class="drawer-scrim"></div>
+<aside id="issues-drawer" class="drawer" aria-label="Issues">
+    <div class="drawer-head">
+        <div>
+            <div class="eyebrow eyebrow-gold">Currently failing</div>
+            <h3 class="display-m display-italic" style="margin-top: 4px;">Issues</h3>
+        </div>
+        <button id="issues-close" class="btn btn-ghost btn-icon" aria-label="Close">✕</button>
+    </div>
+    <div id="issues-body" class="drawer-body">
+        <!-- Issues injected -->
+    </div>
+</aside>
+
+<!-- MODAL -->
 <div id="modal-container" class="modal-overlay hidden"></div>
+
+<!-- Toast host -->
+<div id="toast-host"></div>
 
 <script type="module" src="modern-ui.js"></script>
 </body>

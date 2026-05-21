@@ -1,7 +1,9 @@
 import { renderLifecycleView } from './view-lifecycle.js';
 import { renderWarmerView } from './view-warmers.js';
+import { database } from './firebase-config.js';
+import { ref, onValue, set } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
 
-const mockData = [
+let mockData = JSON.parse(localStorage.getItem('qc_master_dishes')) || [
     { id: '1', name: 'Indian Butter Chicken', type: 'meat', letter: 'A', status: 'ok', temp: '71.0', stock: '12', weight: '340/320', feedbacks: ['Excellent texture'] },
     { id: '2', name: 'Golden Tofu Coconut Curry', type: 'vegetarian', letter: 'B', status: 'fail', temp: '44.7', stock: '5', weight: '555/495', feedbacks: ['Check marinade'] },
     { id: '3', name: 'Egg Channa Masala', type: 'vegetarian', letter: 'C', status: 'warn', temp: '60.0', stock: '0', weight: '454/520', feedbacks: ['Temperature below spec'] },
@@ -53,6 +55,57 @@ function showView(viewName) {
 document.getElementById('nav-dashboard').onclick = () => showView('dashboard');
 document.getElementById('nav-lifecycle').onclick = () => showView('lifecycle');
 document.getElementById('nav-warmers').onclick = () => showView('warmers');
+if (document.getElementById('nav-settings')) {
+    document.getElementById('nav-settings').onclick = () => showSettingsModal();
+}
+
+function showSettingsModal() {
+    const modal = document.getElementById('modal-container');
+    modal.innerHTML = `
+        <div class="pro-card w-full max-w-xl p-8 bg-slate-900 border border-white/10 shadow-2xl animate-in zoom-in-95 duration-200">
+            <h3 class="text-xl font-black text-white italic tracking-tighter uppercase mb-2">Master Configuration</h3>
+            <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-6">Paste dish JSON to update the dashboard</p>
+            <textarea id="settings-json-input" class="w-full h-64 bg-black/50 border border-white/10 rounded-2xl p-4 font-mono text-xs text-emerald-400 focus:ring-1 focus:ring-emerald-500 outline-none" placeholder='[{"name": "Dish Name", "letter": "A", ...}]'>${JSON.stringify(mockData, null, 2)}</textarea>
+            <div class="flex gap-4 mt-8">
+                <button onclick="document.getElementById('modal-container').classList.add('hidden')" class="flex-1 py-4 bg-white/5 text-slate-400 font-black text-xs uppercase tracking-widest rounded-xl hover:bg-white/10">Cancel</button>
+                <button id="save-settings-btn" class="flex-1 py-4 bg-emerald-600 text-white font-black text-xs uppercase tracking-widest rounded-xl hover:bg-emerald-500 shadow-xl shadow-emerald-500/20">Apply Changes</button>
+            </div>
+        </div>
+    `;
+    modal.classList.remove('hidden');
+    document.getElementById('save-settings-btn').onclick = () => {
+        try {
+            const newDishes = JSON.parse(document.getElementById('settings-json-input').value);
+            mockData = newDishes;
+            localStorage.setItem('qc_master_dishes', JSON.stringify(newDishes));
+            alert("Settings applied successfully!");
+            modal.classList.add('hidden');
+            showView('dashboard');
+        } catch(e) {
+            alert("Invalid JSON format. Please check your data.");
+        }
+    };
+}
+
+if (document.getElementById('export-team-btn')) {
+    document.getElementById('export-team-btn').onclick = () => {
+        const report = `
+# BB DAILY QC REPORT | ${new Date().toLocaleDateString()}
+## SUMMARY
+- Hot Pass Rate: 70%
+- Cold Pass Rate: 93%
+- Total Dishes Tracked: ${mockData.length}
+
+## DISH LOGS
+${mockData.map(d => `- [${d.letter}] ${d.name}: ${d.temp}°C (${d.status.toUpperCase()})`).join('\n')}
+
+Generated for Claude Cowork Sync.
+        `;
+        navigator.clipboard.writeText(report).then(() => {
+            alert("Report copied to clipboard! Share it with Claude or your team.");
+        });
+    };
+}
 
 function renderDashboard() {
     const grid = document.getElementById('hot-dish-grid');

@@ -57,8 +57,14 @@
             <button id="nav-warmers" class="w-full flex items-center gap-3 px-4 py-3 text-slate-500 hover:text-white transition-all font-bold text-xs group text-left">
                 <span class="opacity-50 group-hover:opacity-100">🌡️</span> Warmer Management
             </button>
+            <div class="pt-8 px-4">
+                <p class="text-[9px] font-black text-slate-600 uppercase tracking-widest mb-4 italic">Configuration</p>
+                <button id="nav-settings" class="w-full flex items-center gap-3 px-4 py-2 bg-white/5 border border-white/5 rounded-xl text-slate-400 hover:text-white transition-all font-bold text-xs group">
+                    <span class="opacity-50 group-hover:opacity-100">⚙️</span> Master Settings
+                </button>
+            </div>
         </nav>
-        <div class="p-6 border-t border-white/5 text-[9px] font-black text-slate-700 tracking-[0.3em] text-center uppercase">
+        <div class="p-6 border-t border-white/5 text-[9px] font-black text-slate-800 tracking-[0.3em] text-center uppercase">
             B&B CULINARY OPS
         </div>
     </aside>
@@ -71,20 +77,18 @@
         </div>
 
         <!-- HEADER -->
-        <header class="h-20 flex-shrink-0 flex items-center justify-between px-10 bg-black/40 border-b border-white/5 backdrop-blur-md">
-            <div class="flex items-center gap-10">
+        <header class="h-20 flex-shrink-0 flex items-center justify-between px-6 sm:px-10 bg-black/40 border-b border-white/5 backdrop-blur-md">
+            <div class="flex items-center gap-4 sm:gap-10">
                 <div class="flex flex-col">
-                    <h1 id="page-title" class="text-xs font-black text-slate-500 tracking-[0.4em] uppercase">BB DAILY QC DASHBOARD</h1>
-                    <span id="date-display" class="text-xl font-black text-white italic tracking-tighter uppercase leading-none mt-1">19 May 2026</span>
+                    <h1 id="page-title" class="text-[9px] font-black text-slate-500 tracking-[0.4em] uppercase">BB DAILY QC DASHBOARD</h1>
+                    <span id="date-display" class="text-lg sm:text-xl font-black text-white italic tracking-tighter uppercase leading-none mt-1">19 May 2026</span>
                 </div>
             </div>
-            <div class="flex items-center gap-6">
-                <!-- Toggle as seen on site -->
-                <div class="bg-black border border-white/10 p-1 rounded-xl flex items-center gap-1">
-                    <button class="px-6 py-2 bg-emerald-600 text-white text-[10px] font-black rounded-lg shadow-xl shadow-emerald-600/20">DAILY</button>
-                    <button class="px-6 py-2 text-slate-500 text-[10px] font-black hover:text-slate-300">WEEKLY</button>
-                </div>
-                <!-- Export with the same icon feel -->
+            <div class="flex items-center gap-3 sm:gap-6">
+                <!-- Claude / Team Export -->
+                <button id="export-team-btn" class="flex items-center gap-2 px-4 py-2 bg-indigo-600/20 border border-indigo-500/30 text-indigo-400 rounded-xl hover:bg-indigo-600/40 transition-all text-[10px] font-black uppercase tracking-widest hidden sm:flex">
+                    <span>✨</span> Export for Claude
+                </button>
                 <button class="p-3 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 transition-all group">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" class="text-slate-400 group-hover:text-white transition-colors" stroke="currentColor" stroke-width="2"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
                 </button>

@@ -1,0 +1,871 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Culinary QC · Redesign Prototype · Bella &amp; Bona</title>
+    <meta name="description" content="Read-only redesign prototype against the live Bella &amp; Bona QC Firebase. Compare side-by-side with quality-control.berlin.bellabona.dev to evaluate the new editorial workflow.">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,300;1,9..144,400;1,9..144,500&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230f0d0a'/%3E%3Ctext x='16' y='22' text-anchor='middle' font-family='Georgia,serif' font-style='italic' font-size='18' fill='%23d4a574'%3EB%26B%3C/text%3E%3C/svg%3E">
+
+<style>
+:root{
+  --ink:#0f0d0a; --ink-deep:#07060a;
+  --surface:#181511; --surface-2:#1f1b16; --surface-3:#26211b; --surface-4:#312a22;
+  --hairline:rgba(243,237,226,0.08); --hairline-2:rgba(243,237,226,0.04);
+
+  --cream:#f3ede2; --cream-dim:#d6cfc1; --mute:#8a8074; --mute-low:#5b544a; --whisper:#3a342d;
+
+  --gold:#d4a574; --gold-soft:rgba(212,165,116,0.14); --gold-line:rgba(212,165,116,0.32);
+  --sage:#7fa078; --sage-soft:rgba(127,160,120,0.14); --sage-line:rgba(127,160,120,0.32);
+  --mustard:#d4a13e; --mustard-soft:rgba(212,161,62,0.14); --mustard-line:rgba(212,161,62,0.32);
+  --terracotta:#c8482f; --terracotta-soft:rgba(200,72,47,0.14); --terracotta-line:rgba(200,72,47,0.32);
+  --ink-blue:#6f8aa8; --ink-blue-soft:rgba(111,138,168,0.14);
+
+  --font-serif:'Fraunces','Times New Roman',serif;
+  --font-sans:'Inter',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --font-mono:'JetBrains Mono','SF Mono',ui-monospace,monospace;
+
+  --radius-sm:6px; --radius-md:12px; --radius-lg:18px;
+}
+
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;background:var(--ink);color:var(--cream);font-family:var(--font-sans);font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased}
+body{background:radial-gradient(1200px 600px at 12% -10%,rgba(212,165,116,0.06),transparent 60%),radial-gradient(1000px 700px at 110% 10%,rgba(111,138,168,0.05),transparent 65%),var(--ink);min-height:100vh}
+button{font-family:inherit;cursor:pointer}
+a{color:inherit;text-decoration:none}
+
+/* Banner */
+.preview-banner{
+  background:var(--gold-soft);border-bottom:1px solid var(--gold-line);
+  color:var(--gold);padding:8px 24px;font-size:11px;
+  letter-spacing:0.18em;text-transform:uppercase;font-weight:600;
+  display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;
+}
+.preview-banner a{color:var(--cream);text-decoration:underline;text-decoration-color:var(--gold-line)}
+
+/* Header */
+.app-header{
+  border-bottom:1px solid var(--hairline);
+  background:linear-gradient(180deg,rgba(15,13,10,0.85),rgba(15,13,10,0.6));
+  backdrop-filter:blur(14px);position:sticky;top:0;z-index:30;
+}
+.app-header-inner{display:flex;align-items:center;justify-content:space-between;gap:24px;padding:18px 32px;flex-wrap:wrap}
+.brand{display:flex;flex-direction:column;gap:4px;min-width:240px}
+.brand .wordmark{font-family:var(--font-serif);font-style:italic;font-weight:500;font-size:26px;letter-spacing:-0.025em;color:var(--cream)}
+.brand .wordmark .amp{color:var(--gold);font-weight:400;padding:0 2px}
+.brand .sub{font-family:var(--font-sans);font-size:9px;font-weight:600;letter-spacing:0.3em;text-transform:uppercase;color:var(--gold)}
+
+.week-strip{display:flex;gap:6px;align-items:center;background:var(--surface);border:1px solid var(--hairline);border-radius:9999px;padding:4px}
+.week-strip .nav{width:34px;height:34px;display:inline-flex;align-items:center;justify-content:center;border-radius:9999px;background:transparent;border:0;color:var(--mute);font-family:var(--font-serif);font-style:italic;font-size:18px}
+.week-strip .nav:hover{color:var(--cream);background:var(--surface-2)}
+.day{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  min-width:54px;padding:6px 10px;border-radius:9999px;
+  background:transparent;border:0;color:var(--cream-dim);font-family:var(--font-sans);
+  transition:background 160ms ease,color 160ms ease;
+}
+.day .dow{font-size:9px;letter-spacing:0.22em;text-transform:uppercase;font-weight:700;color:var(--mute)}
+.day .dom{font-family:var(--font-serif);font-style:italic;font-weight:500;font-size:18px;line-height:1;margin-top:2px;color:var(--cream)}
+.day.is-today .dow{color:var(--gold)}
+.day.is-active{background:var(--gold);color:var(--ink)}
+.day.is-active .dow{color:var(--ink);font-weight:800}
+.day.is-active .dom{color:var(--ink)}
+.day:hover:not(.is-active){background:var(--surface-2)}
+
+.actions{display:flex;gap:10px;align-items:center}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:10px 16px;border-radius:9999px;font-family:var(--font-sans);font-size:12px;font-weight:600;letter-spacing:0.05em;border:1px solid transparent;transition:background 160ms ease,color 160ms ease,border-color 160ms ease}
+.btn-ghost{background:transparent;border-color:var(--hairline);color:var(--cream-dim)}
+.btn-ghost:hover{background:var(--surface);color:var(--cream)}
+.btn-outline-gold{background:var(--gold-soft);border-color:var(--gold-line);color:var(--gold)}
+.btn-outline-gold:hover{background:rgba(212,165,116,0.22);color:var(--cream)}
+.btn-solid-gold{background:var(--gold);color:var(--ink);border-color:var(--gold)}
+.btn-solid-gold:hover{background:#e0b485}
+
+/* Main */
+.container{max-width:1480px;margin:0 auto;padding:32px;width:100%}
+
+/* Alert banner */
+.alert{display:flex;gap:16px;padding:16px 20px;border-radius:var(--radius-md);border:1px solid var(--hairline);background:var(--surface);align-items:center;margin-bottom:32px;position:relative;overflow:hidden}
+.alert::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--mute)}
+.alert.is-fail{background:var(--terracotta-soft);border-color:var(--terracotta-line)}
+.alert.is-fail::before{background:var(--terracotta)}
+.alert.is-warn{background:var(--mustard-soft);border-color:var(--mustard-line)}
+.alert.is-warn::before{background:var(--mustard)}
+.alert.is-ok{background:var(--sage-soft);border-color:var(--sage-line)}
+.alert.is-ok::before{background:var(--sage)}
+.alert .icon{width:42px;height:42px;border-radius:99px;display:inline-flex;align-items:center;justify-content:center;background:var(--surface-2);border:1px solid var(--hairline);font-family:var(--font-serif);font-style:italic;font-size:20px;flex-shrink:0}
+.alert .body{flex:1}
+.alert .title{font-family:var(--font-serif);font-style:italic;font-weight:500;font-size:20px;line-height:1.2;color:var(--cream)}
+.alert .detail{font-size:13px;color:var(--cream-dim);margin-top:4px}
+
+/* Section heads */
+.section{padding:32px 0}
+.section-head{display:flex;align-items:end;justify-content:space-between;gap:24px;margin-bottom:20px;flex-wrap:wrap}
+.section-head .index{font-family:var(--font-serif);font-style:italic;font-weight:400;font-size:13px;color:var(--gold)}
+.section-head .title{font-family:var(--font-serif);font-style:italic;font-weight:500;font-size:24px;letter-spacing:-0.01em;color:var(--cream);margin-top:2px}
+.section-head .meta{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+
+/* Filter segmented */
+.segmented{display:inline-flex;background:var(--surface);border:1px solid var(--hairline);border-radius:9999px;padding:4px}
+.segmented button{background:transparent;border:0;font-family:var(--font-sans);font-size:11px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--mute);padding:8px 14px;border-radius:9999px}
+.segmented button:hover{color:var(--cream)}
+.segmented button.is-active{background:var(--surface-3);color:var(--cream)}
+
+/* Score grid */
+.score-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px}
+@media(max-width:1100px){.score-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:560px){.score-grid{grid-template-columns:1fr}}
+.score{background:var(--surface);border:1px solid var(--hairline);border-radius:var(--radius-md);padding:24px;position:relative;overflow:hidden}
+.score::before{content:'';position:absolute;left:0;top:0;right:0;height:2px;background:var(--hairline)}
+.score .rate{font-family:var(--font-serif);font-weight:400;font-size:54px;line-height:1;letter-spacing:-0.04em;color:var(--cream);font-variant-numeric:tabular-nums}
+.score .label{font-size:11px;letter-spacing:0.22em;text-transform:uppercase;font-weight:600;color:var(--mute);margin-top:6px}
+.score .pass{font-size:12px;color:var(--cream-dim);margin-top:8px}
+.score.is-ok{}
+.score.is-ok::before{background:var(--sage)}
+.score.is-ok .rate{color:var(--sage)}
+.score.is-warn::before{background:var(--mustard)}
+.score.is-warn .rate{color:var(--mustard)}
+.score.is-fail::before{background:var(--terracotta)}
+.score.is-fail .rate{color:var(--terracotta)}
+.score.is-empty .rate{color:var(--mute)}
+.score.is-empty::before{background:var(--mute-low)}
+
+/* Category title */
+.category-title{font-family:var(--font-serif);font-style:italic;font-weight:500;font-size:18px;color:var(--cream-dim);margin:24px 0 12px 0;display:flex;align-items:center;gap:14px}
+.category-title::after{content:'';flex:1;height:1px;background:var(--hairline)}
+.category-title .count{font-family:var(--font-mono);font-size:11px;color:var(--mute);padding:2px 8px;border:1px solid var(--hairline);border-radius:99px;background:var(--surface-2)}
+
+/* Dish grid */
+.dish-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px}
+
+/* Dish tile */
+.dish-tile{
+  background:var(--surface);border:1px solid var(--hairline);border-radius:var(--radius-md);
+  padding:16px 18px;display:flex;flex-direction:column;gap:10px;
+  cursor:pointer;transition:border-color 160ms ease,transform 160ms ease;
+  position:relative;overflow:hidden;
+}
+.dish-tile::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--hairline)}
+.dish-tile.is-ok::before{background:var(--sage)}
+.dish-tile.is-warn::before{background:var(--mustard)}
+.dish-tile.is-fail::before{background:var(--terracotta)}
+.dish-tile.is-empty::before{background:var(--mute-low)}
+.dish-tile:hover{border-color:var(--gold-line);transform:translateY(-2px)}
+.dish-tile .head{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.dish-tile .meta{display:flex;align-items:center;gap:10px}
+.dish-tile .letter{
+  width:34px;height:34px;display:inline-flex;align-items:center;justify-content:center;
+  border-radius:8px;border:1px solid var(--hairline);background:var(--surface-2);
+  font-family:var(--font-serif);font-style:italic;font-weight:500;font-size:16px;color:var(--cream);
+}
+.dish-tile .name{font-family:var(--font-serif);font-style:italic;font-weight:500;font-size:16px;line-height:1.15;color:var(--cream);letter-spacing:-0.01em;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dish-tile .reads{display:flex;gap:8px;align-items:baseline}
+.dish-tile .temp{font-family:var(--font-mono);font-size:22px;color:var(--cream);font-variant-numeric:tabular-nums}
+.dish-tile.is-ok .temp{color:var(--sage)}
+.dish-tile.is-warn .temp{color:var(--mustard)}
+.dish-tile.is-fail .temp{color:var(--terracotta)}
+.dish-tile.is-empty .temp{color:var(--mute-low)}
+.dish-tile .unit{font-size:11px;color:var(--mute)}
+.dish-tile .footer{display:flex;justify-content:space-between;align-items:center;gap:8px;font-family:var(--font-mono);font-size:11px;color:var(--mute);font-variant-numeric:tabular-nums}
+
+/* Status pill */
+.pill{display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:9999px;font-family:var(--font-sans);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.15em;border:1px solid var(--hairline);color:var(--cream-dim);background:var(--surface-2)}
+.pill::before{content:'';width:6px;height:6px;border-radius:99px;background:currentColor}
+.pill.is-ok{color:var(--sage);border-color:var(--sage-line);background:var(--sage-soft)}
+.pill.is-warn{color:var(--mustard);border-color:var(--mustard-line);background:var(--mustard-soft)}
+.pill.is-fail{color:var(--terracotta);border-color:var(--terracotta-line);background:var(--terracotta-soft)}
+.pill.is-empty{color:var(--mute);border-color:var(--hairline);background:var(--surface-2)}
+
+/* Summary table */
+.table-wrap{background:var(--surface);border:1px solid var(--hairline);border-radius:var(--radius-md);overflow:hidden}
+table.editorial{width:100%;border-collapse:collapse;font-family:var(--font-sans)}
+table.editorial thead th{
+  text-align:left;font-size:10px;font-weight:600;letter-spacing:0.24em;text-transform:uppercase;color:var(--mute);
+  padding:14px 24px;background:var(--surface-2);border-bottom:1px solid var(--hairline);
+}
+table.editorial tbody td{padding:14px 24px;border-bottom:1px solid var(--hairline-2);font-size:14px;color:var(--cream-dim);vertical-align:middle}
+table.editorial tbody tr:last-child td{border-bottom:none}
+table.editorial tbody tr.category-row td{background:var(--surface-2);font-family:var(--font-serif);font-style:italic;font-size:13px;color:var(--mute);letter-spacing:0.1em;text-transform:uppercase;padding:10px 24px}
+table.editorial tbody tr:not(.category-row){cursor:pointer;transition:background 160ms ease}
+table.editorial tbody tr:not(.category-row):hover{background:rgba(243,237,226,0.02)}
+table.editorial .letter-cell{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:6px;border:1px solid var(--hairline);background:var(--surface-2);font-family:var(--font-serif);font-style:italic;font-weight:500;font-size:13px;color:var(--cream)}
+table.editorial .name-cell{font-family:var(--font-serif);font-style:italic;font-weight:500;font-size:16px;color:var(--cream);letter-spacing:-0.01em}
+table.editorial .num-cell{font-family:var(--font-mono);font-size:13px;color:var(--cream);font-variant-numeric:tabular-nums}
+table.editorial .note-cell{font-family:var(--font-serif);font-style:italic;font-weight:300;font-size:14px;color:var(--mute)}
+
+/* Modal */
+.modal-overlay{position:fixed;inset:0;background:rgba(7,6,5,0.78);backdrop-filter:blur(12px);display:flex;align-items:center;justify-content:center;padding:24px;z-index:80}
+.modal-overlay.hidden{display:none}
+.modal-panel{width:100%;max-width:880px;background:var(--surface);border:1px solid var(--hairline);border-radius:var(--radius-lg);overflow:hidden;box-shadow:0 24px 64px rgba(0,0,0,0.55);max-height:92vh;display:flex;flex-direction:column}
+.modal-cover{position:relative;padding:32px 32px 24px 32px;background:radial-gradient(600px 200px at 80% 0%,rgba(212,165,116,0.18),transparent 70%),linear-gradient(180deg,var(--surface-2),var(--surface));border-bottom:1px solid var(--hairline)}
+.modal-cover .cover-letter{position:absolute;right:20px;bottom:-32px;font-family:var(--font-serif);font-style:italic;font-weight:400;font-size:220px;line-height:1;color:var(--cream);opacity:0.05;letter-spacing:-0.05em}
+.modal-cover .eyebrow{font-family:var(--font-sans);font-size:10px;font-weight:600;letter-spacing:0.22em;text-transform:uppercase;color:var(--gold)}
+.modal-cover .title{font-family:var(--font-serif);font-style:italic;font-weight:500;font-size:42px;line-height:1;letter-spacing:-0.025em;color:var(--cream);margin-top:10px}
+.modal-cover .chips{display:flex;gap:8px;margin-top:16px;flex-wrap:wrap;align-items:center}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:9999px;font-size:11px;font-weight:500;background:var(--surface-2);border:1px solid var(--hairline);color:var(--cream-dim)}
+.chip .dot{width:6px;height:6px;border-radius:99px;background:var(--mute)}
+.modal-close{position:absolute;top:24px;right:24px;width:38px;height:38px;border:1px solid var(--hairline);background:var(--surface);border-radius:99px;color:var(--cream-dim);font-size:18px}
+.modal-close:hover{background:var(--surface-3);color:var(--cream)}
+.modal-body{padding:32px;overflow-y:auto}
+
+.photo-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px}
+@media(max-width:640px){.photo-row{grid-template-columns:1fr}}
+.photo{background:var(--surface-2);border:1px solid var(--hairline);border-radius:var(--radius-sm);overflow:hidden;aspect-ratio:1/1;display:flex;align-items:center;justify-content:center;color:var(--mute);font-size:11px;letter-spacing:0.2em;text-transform:uppercase}
+.photo img{width:100%;height:100%;object-fit:cover;display:block}
+
+.section-mini{font-family:var(--font-sans);font-size:10px;font-weight:600;letter-spacing:0.22em;text-transform:uppercase;color:var(--mute);margin-bottom:10px}
+
+.samples{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px}
+.sample{background:var(--surface-2);border:1px solid var(--hairline);border-radius:var(--radius-sm);padding:14px;text-align:center;position:relative;overflow:hidden}
+.sample::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--hairline)}
+.sample.is-ok::before{background:var(--sage)}
+.sample.is-warn::before{background:var(--mustard)}
+.sample.is-fail::before{background:var(--terracotta)}
+.sample .num{font-family:var(--font-mono);font-size:22px;color:var(--cream);font-variant-numeric:tabular-nums}
+.sample.is-ok .num{color:var(--sage)}
+.sample.is-warn .num{color:var(--mustard)}
+.sample.is-fail .num{color:var(--terracotta)}
+.sample .unit{font-size:10px;color:var(--mute);margin-top:2px;letter-spacing:0.18em;text-transform:uppercase;font-weight:600}
+
+.avg-bar{display:flex;justify-content:space-between;align-items:baseline;background:var(--ink-deep);border:1px solid var(--hairline);border-radius:var(--radius-sm);padding:12px 16px;margin-bottom:20px;font-family:var(--font-mono);font-size:13px;font-variant-numeric:tabular-nums}
+.avg-bar .lbl{color:var(--mute);font-size:10px;letter-spacing:0.2em;text-transform:uppercase;font-weight:700}
+.avg-bar .val{color:var(--cream)}
+.avg-bar .delta{color:var(--mute);font-size:11px}
+
+.ingredients-list{display:grid;grid-template-columns:1fr 1fr;gap:6px 14px}
+@media(max-width:560px){.ingredients-list{grid-template-columns:1fr}}
+.ingredient{display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-bottom:1px dashed var(--hairline-2);font-size:13px}
+.ingredient.checked{color:var(--cream)}
+.ingredient.unchecked{color:var(--mute-low);text-decoration:line-through;text-decoration-color:var(--mute-low)}
+.ingredient .w{font-family:var(--font-mono);font-size:11px;color:var(--mute);font-variant-numeric:tabular-nums}
+
+.comment-block{background:var(--surface-2);border:1px solid var(--hairline);border-radius:var(--radius-sm);padding:14px 16px;font-family:var(--font-serif);font-style:italic;font-weight:300;font-size:14px;color:var(--cream-dim);line-height:1.5}
+.comment-block.empty{color:var(--mute-low)}
+
+/* Loader */
+.loading{display:flex;align-items:center;justify-content:center;padding:80px 0;color:var(--mute);font-family:var(--font-serif);font-style:italic;font-size:14px}
+.spinner{width:18px;height:18px;border:2px solid var(--hairline);border-top-color:var(--gold);border-radius:99px;animation:spin 0.9s linear infinite;margin-right:10px}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* Colophon */
+.colophon{border-top:1px solid var(--hairline);margin-top:64px;padding:32px 0;font-family:var(--font-serif);font-style:italic;font-weight:300;font-size:13px;color:var(--mute);display:flex;justify-content:space-between;align-items:center;gap:24px;flex-wrap:wrap}
+.colophon .lbl{font-family:var(--font-sans);font-style:normal;font-size:10px;letter-spacing:0.28em;text-transform:uppercase;color:var(--whisper);font-weight:600}
+
+::-webkit-scrollbar{width:8px;height:8px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--surface-3);border-radius:99px}
+::-webkit-scrollbar-thumb:hover{background:var(--mute-low)}
+</style>
+</head>
+<body>
+
+<div class="preview-banner">
+    <span>Read-only design preview · live data from production Firebase</span>
+    <span>Compare with <a href="https://quality-control.berlin.bellabona.dev/" target="_blank" rel="noopener">the current app →</a></span>
+</div>
+
+<header class="app-header">
+    <div class="app-header-inner">
+        <div class="brand">
+            <span class="wordmark">Bella<span class="amp">&amp;</span>Bona</span>
+            <span class="sub">Culinary Quality Control</span>
+        </div>
+
+        <div class="week-strip" id="week-strip" role="group" aria-label="Date selection">
+            <button class="nav" id="week-prev" aria-label="Previous week">‹</button>
+            <!-- Days injected -->
+            <button class="nav" id="week-next" aria-label="Next week">›</button>
+        </div>
+
+        <div class="actions">
+            <button class="btn btn-ghost" id="btn-export-details">Details</button>
+            <button class="btn btn-ghost" id="btn-export-summary">Summary</button>
+            <button class="btn btn-outline-gold" id="btn-print">Print</button>
+        </div>
+    </div>
+</header>
+
+<main class="container">
+
+    <div id="alert-host"></div>
+
+    <!-- SCORECARD -->
+    <section class="section" id="scorecard-section">
+        <div class="section-head">
+            <div>
+                <div class="index">№ 01</div>
+                <h2 class="title">Compliance Scorecard</h2>
+            </div>
+            <div class="meta">
+                <span class="pill is-empty" id="scorecard-meta">Pass rate · live</span>
+            </div>
+        </div>
+        <div class="score-grid" id="scorecard"></div>
+    </section>
+
+    <!-- PASS SHEET -->
+    <section class="section">
+        <div class="section-head">
+            <div>
+                <div class="index">№ 02</div>
+                <h2 class="title">Pass Sheet</h2>
+            </div>
+            <div class="meta">
+                <div class="segmented" role="group" aria-label="Filter">
+                    <button class="is-active" data-filter="all">All</button>
+                    <button data-filter="cold">Cold</button>
+                    <button data-filter="hot">Hot</button>
+                    <button data-filter="issues">Issues</button>
+                </div>
+            </div>
+        </div>
+        <div id="dish-area">
+            <div class="loading"><span class="spinner"></span>Loading menu &amp; readings…</div>
+        </div>
+    </section>
+
+    <!-- SUMMARY -->
+    <section class="section">
+        <div class="section-head">
+            <div>
+                <div class="index">№ 03</div>
+                <h2 class="title">Daily Summary</h2>
+            </div>
+            <div class="meta">
+                <span class="pill is-empty" id="summary-date-pill">—</span>
+            </div>
+        </div>
+        <div class="table-wrap">
+            <table class="editorial">
+                <thead>
+                    <tr>
+                        <th style="width:60px">Dish</th>
+                        <th>Name</th>
+                        <th style="width:120px">Avg temp</th>
+                        <th style="width:160px">Avg / theo weight</th>
+                        <th>Chef note</th>
+                    </tr>
+                </thead>
+                <tbody id="summary-body">
+                    <tr><td colspan="5" style="text-align:center;padding:48px;color:var(--mute)">No readings yet.</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <footer class="colophon">
+        <div>Set in <em>Fraunces</em> &amp; <em>Inter</em>. Numbers in <em>JetBrains Mono</em>.<br/>Read-only redesign preview · live data from <span class="lbl" style="margin-left:4px;font-family:var(--font-mono);text-transform:none;font-size:11px;letter-spacing:0">quality-control-24</span></div>
+        <div class="lbl">© 2026 · Bella &amp; Bona Culinary Ops</div>
+    </footer>
+</main>
+
+<!-- MODAL -->
+<div id="modal-overlay" class="modal-overlay hidden"></div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+import { getDatabase, ref, get, onValue } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
+
+const firebaseConfig = {
+    apiKey: "AIzaSyA3O6Dw0Hj06BH_DUupZvUrufi1jjbDi0g",
+    authDomain: "quality-control-24.firebaseapp.com",
+    databaseURL: "https://quality-control-24-default-rtdb.europe-west1.firebasedatabase.app",
+    projectId: "quality-control-24",
+    storageBucket: "quality-control-24.firebasestorage.app",
+    messagingSenderId: "708146875113",
+    appId: "1:708146875113:web:a318755bce78ef99ffbe78"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+/* ============ Thresholds ============ */
+const HOT_MIN = 65;   // °C
+const COLD_MAX = 8;   // °C
+const HOT_WARN = 3;   // within 3°C of min → warn
+const COLD_WARN = 2;  // within 2°C of max → warn
+
+/* ============ State ============ */
+const state = {
+    selectedDate: todayIso(),
+    weekStartIso: null,  // Monday of the visible week
+    menu: null,          // {startDate, dishes:[...]}
+    checks: {},          // {dishLetter: checkRecord}
+    filter: 'all'
+};
+
+/* ============ Date helpers ============ */
+function todayIso() {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+function parseIso(iso){ return new Date(iso+'T12:00:00'); }
+function isoOfMondayOf(iso) {
+    const d = parseIso(iso);
+    const dow = d.getDay(); // 0=Sun..6=Sat
+    const monOffset = dow === 0 ? -6 : 1 - dow;
+    d.setDate(d.getDate() + monOffset);
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+function isoYearWeek(iso) {
+    const d = parseIso(iso);
+    d.setHours(0,0,0,0);
+    // ISO week algorithm
+    const target = new Date(d.valueOf());
+    const dayNr = (d.getDay() + 6) % 7;
+    target.setDate(target.getDate() - dayNr + 3);
+    const firstThursday = target.valueOf();
+    target.setMonth(0,1);
+    if (target.getDay() !== 4) target.setMonth(0, 1 + ((4 - target.getDay()) + 7) % 7);
+    const weekNo = 1 + Math.ceil((firstThursday - target.valueOf()) / 604800000);
+    return `${target.getFullYear()}-${String(weekNo).padStart(2,'0')}`;
+}
+function humanDate(iso) {
+    const d = parseIso(iso);
+    const m = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+    return `${d.getDate()} ${m[d.getMonth()]} ${d.getFullYear()}`;
+}
+function fmtDow(d) { return ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][d.getDay()]; }
+function shiftIso(iso, days) {
+    const d = parseIso(iso);
+    d.setDate(d.getDate() + days);
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+
+/* ============ Threshold logic ============ */
+function avg(arr){ if(!arr||!arr.length) return null; const n=arr.map(Number).filter(x=>Number.isFinite(x)); return n.length?n.reduce((a,b)=>a+b,0)/n.length:null; }
+function readingStatus(dish, check){
+    if(!check) return 'empty';
+    const isCold = (dish.dishType||'').toLowerCase().includes('cold');
+    const t = avg(check.temperatures);
+    if(t==null) return 'empty';
+    if(isCold){
+        if(t <= COLD_MAX) return 'ok';
+        if(t <= COLD_MAX + COLD_WARN) return 'warn';
+        return 'fail';
+    } else {
+        if(t >= HOT_MIN) return 'ok';
+        if(t >= HOT_MIN - HOT_WARN) return 'warn';
+        return 'fail';
+    }
+}
+function weightDeltaPct(dish, check){
+    if(!check) return null;
+    const w = avg(check.weights);
+    if(w==null || !dish.theoreticalWeight) return null;
+    return ((w - dish.theoreticalWeight) / dish.theoreticalWeight) * 100;
+}
+
+/* ============ Data loading ============ */
+async function loadMenuForWeek(yearWeek){
+    const snap = await get(ref(db, `menus/${yearWeek}`));
+    return snap.val();
+}
+function listenChecks(date){
+    return onValue(ref(db, `quality-checks/${date}`), snap=>{
+        state.checks = snap.val() || {};
+        renderAll();
+    });
+}
+
+/* ============ Rendering ============ */
+function renderWeekStrip(){
+    const strip = document.getElementById('week-strip');
+    // remove all day buttons (keep nav arrows)
+    strip.querySelectorAll('.day').forEach(d=>d.remove());
+
+    const monday = state.weekStartIso;
+    const today = todayIso();
+    const days = [0,1,2,3,4,5,6].map(offset=>shiftIso(monday, offset));
+
+    const fragment = document.createDocumentFragment();
+    days.forEach(iso=>{
+        const d = parseIso(iso);
+        const btn = document.createElement('button');
+        btn.className = 'day';
+        if(iso === today) btn.classList.add('is-today');
+        if(iso === state.selectedDate) btn.classList.add('is-active');
+        btn.innerHTML = `<span class="dow">${fmtDow(d)}</span><span class="dom">${d.getDate()}</span>`;
+        btn.addEventListener('click', ()=>{ selectDate(iso); });
+        fragment.appendChild(btn);
+    });
+
+    // Insert before the next arrow
+    const next = document.getElementById('week-next');
+    next.parentNode.insertBefore(fragment, next);
+}
+
+function renderAlert(){
+    const host = document.getElementById('alert-host');
+    if(!state.menu){
+        host.innerHTML = `<div class="alert"><div class="icon">i</div><div class="body"><div class="title">No menu found for this week.</div><div class="detail">No <code style="font-family:var(--font-mono);font-size:12px;color:var(--cream)">/menus/${isoYearWeek(state.selectedDate)}</code> record in Firebase.</div></div></div>`;
+        return;
+    }
+    const dishes = state.menu.dishes||[];
+    const stats = dishes.map(d=>({dish:d, status:readingStatus(d, state.checks[d.dishLetter])}));
+    const empty = stats.filter(s=>s.status==='empty').length;
+    const fails = stats.filter(s=>s.status==='fail');
+    const warns = stats.filter(s=>s.status==='warn');
+
+    if(fails.length === 0 && warns.length === 0 && empty < dishes.length){
+        host.innerHTML = `<div class="alert is-ok"><div class="icon">✓</div><div class="body"><div class="title">All systems nominal.</div><div class="detail">Every logged reading on ${humanDate(state.selectedDate)} is within spec.</div></div></div>`;
+        return;
+    }
+    if(fails.length === 0 && warns.length === 0 && empty === dishes.length){
+        host.innerHTML = `<div class="alert"><div class="icon">i</div><div class="body"><div class="title">No readings logged yet.</div><div class="detail">${dishes.length} dish${dishes.length===1?'':'es'} on the menu for ${humanDate(state.selectedDate)}.</div></div></div>`;
+        return;
+    }
+    const top = (fails[0] || warns[0]);
+    const r = state.checks[top.dish.dishLetter] || {};
+    const t = avg(r.temperatures);
+    const isCold = (top.dish.dishType||'').toLowerCase().includes('cold');
+    const tone = fails.length ? 'fail' : 'warn';
+    const summary = [
+        fails.length ? `${fails.length} on hold` : null,
+        warns.length ? `${warns.length} on watch` : null
+    ].filter(Boolean).join(' · ');
+    host.innerHTML = `
+        <div class="alert is-${tone}">
+            <div class="icon">!</div>
+            <div class="body">
+                <div class="title">${summary}</div>
+                <div class="detail"><strong>${escapeHtml(top.dish.dishName)}</strong> reading ${t!=null?t.toFixed(1):'—'}°C · ${isCold?`spec ≤${COLD_MAX}°C`:`spec ≥${HOT_MIN}°C`} · ${humanDate(state.selectedDate)}</div>
+            </div>
+            <button class="btn btn-ghost" onclick="window.__qc.openIssues()">Review</button>
+        </div>
+    `;
+}
+
+function renderScorecard(){
+    const host = document.getElementById('scorecard');
+    const meta = document.getElementById('scorecard-meta');
+    if(!state.menu){ host.innerHTML=''; return; }
+    const dishes = state.menu.dishes||[];
+    const buckets = { hotPass:0, hotTot:0, coldPass:0, coldTot:0, weightOk:0, weightTot:0, logged:0 };
+    for(const d of dishes){
+        const c = state.checks[d.dishLetter];
+        if(!c) continue;
+        const t = avg(c.temperatures);
+        if(t != null) buckets.logged++;
+        const isCold = (d.dishType||'').toLowerCase().includes('cold');
+        const s = readingStatus(d, c);
+        if(t != null){
+            if(isCold){ buckets.coldTot++; if(s!=='fail') buckets.coldPass++; }
+            else      { buckets.hotTot++;  if(s!=='fail') buckets.hotPass++;  }
+        }
+        const w = avg(c.weights);
+        if(w != null && d.theoreticalWeight){
+            buckets.weightTot++;
+            const pct = Math.abs((w - d.theoreticalWeight)/d.theoreticalWeight);
+            if(pct <= 0.08) buckets.weightOk++;  // within 8%
+        }
+    }
+    const pct = (n,d) => d===0?'—':`${Math.round((n/d)*100)}%`;
+    const tone = (n,d)=>{ if(d===0) return 'empty'; const r=n/d; return r>=0.95?'ok':r>=0.8?'warn':'fail'; };
+    const cards = [
+        { label:'Hot · temperature',  rate:pct(buckets.hotPass,buckets.hotTot),    pass:buckets.hotTot?`${buckets.hotPass} of ${buckets.hotTot} pass`:'no readings yet', tone:tone(buckets.hotPass,buckets.hotTot) },
+        { label:'Cold · temperature', rate:pct(buckets.coldPass,buckets.coldTot),  pass:buckets.coldTot?`${buckets.coldPass} of ${buckets.coldTot} pass`:'no readings yet', tone:tone(buckets.coldPass,buckets.coldTot) },
+        { label:'Weight band',        rate:pct(buckets.weightOk,buckets.weightTot),pass:buckets.weightTot?`${buckets.weightOk} of ${buckets.weightTot} within ±8%`:'no weights yet', tone:tone(buckets.weightOk,buckets.weightTot) },
+        { label:'Coverage',           rate:pct(buckets.logged, dishes.length),    pass:`${buckets.logged} of ${dishes.length} logged`, tone:tone(buckets.logged, dishes.length) }
+    ];
+    host.innerHTML = cards.map(c=>`
+        <div class="score is-${c.tone}">
+            <div class="rate">${c.rate}</div>
+            <div class="label">${c.label}</div>
+            <div class="pass">${c.pass}</div>
+        </div>
+    `).join('');
+    meta.textContent = humanDate(state.selectedDate);
+    meta.className = `pill ${cards.some(c=>c.tone==='fail')?'is-fail':cards.some(c=>c.tone==='warn')?'is-warn':buckets.logged?'is-ok':'is-empty'}`;
+}
+
+function passesFilter(dish, check){
+    const s = readingStatus(dish, check);
+    if(state.filter === 'all') return true;
+    if(state.filter === 'cold') return (dish.dishType||'').toLowerCase().includes('cold');
+    if(state.filter === 'hot')  return !(dish.dishType||'').toLowerCase().includes('cold');
+    if(state.filter === 'issues') return s === 'fail' || s === 'warn';
+    return true;
+}
+
+function renderDishes(){
+    const host = document.getElementById('dish-area');
+    if(!state.menu){
+        host.innerHTML = `<div class="loading" style="padding:40px 0">No menu for this week yet.</div>`;
+        return;
+    }
+    const dishes = (state.menu.dishes||[]).filter(d=>passesFilter(d, state.checks[d.dishLetter]));
+    if(dishes.length === 0){
+        host.innerHTML = `<div class="loading" style="padding:40px 0">No dishes match this filter.</div>`;
+        return;
+    }
+    // Group by type
+    const cold = dishes.filter(d=>(d.dishType||'').toLowerCase().includes('cold'));
+    const hot  = dishes.filter(d=>!(d.dishType||'').toLowerCase().includes('cold'));
+
+    const renderGroup = (title, list) => {
+        if(list.length === 0) return '';
+        return `
+            <div class="category-title">${title}<span class="count">${list.length}</span></div>
+            <div class="dish-grid">${list.map(renderTile).join('')}</div>
+        `;
+    };
+
+    host.innerHTML = renderGroup('Cold dishes', cold) + renderGroup('Hot dishes', hot);
+    host.querySelectorAll('.dish-tile').forEach(tile=>{
+        tile.addEventListener('click', ()=>openDetail(tile.getAttribute('data-letter')));
+    });
+}
+
+function renderTile(dish){
+    const c = state.checks[dish.dishLetter];
+    const s = readingStatus(dish, c);
+    const t = avg(c?.temperatures);
+    const w = avg(c?.weights);
+    const isCold = (dish.dishType||'').toLowerCase().includes('cold');
+    return `
+        <article class="dish-tile is-${s}" data-letter="${escapeHtml(dish.dishLetter)}">
+            <div class="head">
+                <div class="meta" style="min-width:0">
+                    <span class="letter">${escapeHtml(dish.dishLetter)}</span>
+                    <span class="name" title="${escapeHtml(dish.dishName)}">${escapeHtml(dish.dishName)}</span>
+                </div>
+                <span class="pill is-${s}">${statusLabel(s)}</span>
+            </div>
+            <div class="reads">
+                <span class="temp">${t!=null?t.toFixed(1):'—'}</span>
+                <span class="unit">°C · ${isCold?`≤${COLD_MAX}`:`≥${HOT_MIN}`}</span>
+            </div>
+            <div class="footer">
+                <span>${w!=null?`${Math.round(w)} / ${dish.theoreticalWeight}g`:`— / ${dish.theoreticalWeight}g`}</span>
+                <span>${c?.timestamp?fmtTime(c.timestamp):'no read'}</span>
+            </div>
+        </article>
+    `;
+}
+
+function statusLabel(s){ return s==='ok'?'Pass':s==='warn'?'Watch':s==='fail'?'Hold':'—'; }
+function fmtTime(ts){ try{ const d=new Date(typeof ts==='number'?ts:parseInt(ts)); return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`; }catch(e){ return '—'; } }
+
+function renderSummary(){
+    const tbody = document.getElementById('summary-body');
+    document.getElementById('summary-date-pill').textContent = humanDate(state.selectedDate);
+    if(!state.menu){ tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:32px;color:var(--mute)">No menu for this week.</td></tr>`; return; }
+    const dishes = state.menu.dishes||[];
+    const cold = dishes.filter(d=>(d.dishType||'').toLowerCase().includes('cold'));
+    const hot  = dishes.filter(d=>!(d.dishType||'').toLowerCase().includes('cold'));
+    const rowsFor = (list) => list.map(d=>{
+        const c = state.checks[d.dishLetter];
+        const s = readingStatus(d, c);
+        const t = avg(c?.temperatures);
+        const w = avg(c?.weights);
+        return `
+            <tr data-letter="${escapeHtml(d.dishLetter)}">
+                <td><span class="letter-cell">${escapeHtml(d.dishLetter)}</span></td>
+                <td class="name-cell">${escapeHtml(d.dishName)} <span class="pill is-${s}" style="margin-left:8px">${statusLabel(s)}</span></td>
+                <td><span class="num-cell">${t!=null?t.toFixed(1)+'°C':'—'}</span></td>
+                <td><span class="num-cell">${w!=null?`${Math.round(w)} / ${d.theoreticalWeight}g`:`— / ${d.theoreticalWeight}g`}</span></td>
+                <td class="note-cell">${escapeHtml(c?.comment||'—')}</td>
+            </tr>
+        `;
+    }).join('');
+    tbody.innerHTML = `
+        <tr class="category-row"><td colspan="5">Cold</td></tr>
+        ${rowsFor(cold)}
+        <tr class="category-row"><td colspan="5">Hot</td></tr>
+        ${rowsFor(hot)}
+    `;
+    tbody.querySelectorAll('tr[data-letter]').forEach(tr=>{
+        tr.addEventListener('click', ()=>openDetail(tr.getAttribute('data-letter')));
+    });
+}
+
+function renderAll(){
+    renderWeekStrip();
+    renderAlert();
+    renderScorecard();
+    renderDishes();
+    renderSummary();
+}
+
+/* ============ Detail modal ============ */
+function openDetail(letter){
+    const dish = (state.menu?.dishes||[]).find(d=>d.dishLetter===letter);
+    if(!dish) return;
+    const c = state.checks[letter] || {};
+    const status = readingStatus(dish, c);
+    const isCold = (dish.dishType||'').toLowerCase().includes('cold');
+    const tAvg = avg(c.temperatures);
+    const wAvg = avg(c.weights);
+    const wDelta = weightDeltaPct(dish, c);
+    const overlay = document.getElementById('modal-overlay');
+
+    const tempThr = isCold ? COLD_MAX : HOT_MIN;
+    const sampleTempStatus = (v) => {
+        if(v == null) return 'empty';
+        if(isCold){ if(v<=COLD_MAX) return 'ok'; if(v<=COLD_MAX+COLD_WARN) return 'warn'; return 'fail'; }
+        if(v>=HOT_MIN) return 'ok'; if(v>=HOT_MIN-HOT_WARN) return 'warn'; return 'fail';
+    };
+
+    const ingredients = dish.dishIngredients||[];
+    const selected = new Set(c.selectedIngredients||[]);
+
+    overlay.innerHTML = `
+        <div class="modal-panel">
+            <div class="modal-cover">
+                <span class="cover-letter">${escapeHtml(dish.dishLetter)}</span>
+                <div class="eyebrow">QC file · ${humanDate(state.selectedDate)}</div>
+                <h3 class="title">${escapeHtml(dish.dishLetter)} — ${escapeHtml(dish.dishName)}</h3>
+                <div class="chips">
+                    <span class="pill is-${status}">${statusLabel(status)}</span>
+                    <span class="chip"><span class="dot"></span>${isCold?'Cold':'Hot'}</span>
+                    <span class="chip"><span class="dot"></span>Theo ${dish.theoreticalWeight}g</span>
+                    ${c.timestamp ? `<span class="chip"><span class="dot"></span>Checked ${fmtTime(c.timestamp)}</span>` : '<span class="chip"><span class="dot"></span>Not yet logged</span>'}
+                </div>
+                <button class="modal-close" aria-label="Close" onclick="window.__qc.closeModal()">×</button>
+            </div>
+            <div class="modal-body">
+
+                <div class="photo-row">
+                    <div class="photo">${dish.dishImage?`<img src="${escapeAttr(dish.dishImage)}" alt="Reference"/>`:'Reference photo'}</div>
+                    <div class="photo">${c.capturedImage?`<img src="${escapeAttr(c.capturedImage)}" alt="Today\\'s capture"/>`:'No capture today'}</div>
+                </div>
+
+                <div class="section-mini">Temperature samples · spec ${isCold?`≤${COLD_MAX}`:`≥${HOT_MIN}`}°C</div>
+                <div class="samples">
+                    ${[0,1,2].map(i=>{
+                        const v = c.temperatures?.[i];
+                        const s = sampleTempStatus(v);
+                        return `<div class="sample is-${s}"><div class="num">${v!=null?v:'—'}</div><div class="unit">°C · ${i+1}</div></div>`;
+                    }).join('')}
+                </div>
+                <div class="avg-bar">
+                    <span class="lbl">Average</span>
+                    <span><span class="val">${tAvg!=null?tAvg.toFixed(1)+'°C':'—'}</span></span>
+                    <span class="delta">${tAvg!=null?(isCold?(tAvg<=COLD_MAX?`+${(COLD_MAX-tAvg).toFixed(1)} headroom`:`+${(tAvg-COLD_MAX).toFixed(1)} over spec`):(tAvg>=HOT_MIN?`+${(tAvg-HOT_MIN).toFixed(1)} above min`:`-${(HOT_MIN-tAvg).toFixed(1)} below min`)):'—'}</span>
+                </div>
+
+                <div class="section-mini">Weight samples · theoretical ${dish.theoreticalWeight}g</div>
+                <div class="samples">
+                    ${[0,1,2].map(i=>{
+                        const v = c.weights?.[i];
+                        let s = 'empty';
+                        if(v != null && dish.theoreticalWeight){
+                            const pct = Math.abs((v-dish.theoreticalWeight)/dish.theoreticalWeight);
+                            s = pct <= 0.08 ? 'ok' : pct <= 0.15 ? 'warn' : 'fail';
+                        }
+                        return `<div class="sample is-${s}"><div class="num">${v!=null?v:'—'}</div><div class="unit">g · ${i+1}</div></div>`;
+                    }).join('')}
+                </div>
+                <div class="avg-bar">
+                    <span class="lbl">Average</span>
+                    <span><span class="val">${wAvg!=null?Math.round(wAvg)+'g':'—'}</span></span>
+                    <span class="delta">${wDelta!=null?`${wDelta>=0?'+':''}${wDelta.toFixed(1)}% vs theoretical`:'—'}</span>
+                </div>
+
+                <div class="section-mini">Ingredients</div>
+                <div class="ingredients-list">
+                    ${ingredients.map(ing=>{
+                        const present = selected.has(ing.name);
+                        return `<div class="ingredient ${present?'checked':'unchecked'}"><span>${present?'✓ ':'· '}${escapeHtml(ing.name)}</span><span class="w">${escapeHtml(ing.weight||'')}</span></div>`;
+                    }).join('') || '<div class="ingredient unchecked">No ingredients in menu data.</div>'}
+                </div>
+
+                <div class="section-mini" style="margin-top:24px">Chef's note</div>
+                <div class="comment-block ${c.comment?'':'empty'}">${escapeHtml(c.comment||'No comment logged.')}</div>
+
+                <div style="display:flex;gap:10px;margin-top:24px;justify-content:flex-end">
+                    <button class="btn btn-ghost" onclick="window.__qc.closeModal()">Close</button>
+                </div>
+            </div>
+        </div>
+    `;
+    overlay.classList.remove('hidden');
+}
+
+function closeModal(){
+    const overlay = document.getElementById('modal-overlay');
+    overlay.classList.add('hidden');
+    overlay.innerHTML = '';
+}
+
+function openIssues(){
+    // For the prototype, just filter to issues.
+    state.filter = 'issues';
+    document.querySelectorAll('.segmented button').forEach(b=>b.classList.toggle('is-active', b.getAttribute('data-filter')==='issues'));
+    renderDishes();
+    document.getElementById('dish-area').scrollIntoView({behavior:'smooth', block:'start'});
+}
+
+/* ============ Helpers ============ */
+function escapeHtml(s){ if(s==null) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;'); }
+function escapeAttr(s){ return escapeHtml(s); }
+
+/* ============ Bootstrap ============ */
+async function selectDate(iso){
+    state.selectedDate = iso;
+    state.weekStartIso = isoOfMondayOf(iso);
+    const yw = isoYearWeek(iso);
+    state.menu = await loadMenuForWeek(yw);
+    // (re)subscribe to checks for the selected date
+    if(state._unsub) state._unsub();
+    state._unsub = listenChecks(iso);
+}
+
+function wire(){
+    document.getElementById('week-prev').onclick = ()=>{
+        state.weekStartIso = shiftIso(state.weekStartIso, -7);
+        selectDate(state.weekStartIso);
+    };
+    document.getElementById('week-next').onclick = ()=>{
+        state.weekStartIso = shiftIso(state.weekStartIso, 7);
+        selectDate(state.weekStartIso);
+    };
+    document.querySelectorAll('.segmented button').forEach(btn=>{
+        btn.addEventListener('click', ()=>{
+            document.querySelectorAll('.segmented button').forEach(b=>b.classList.remove('is-active'));
+            btn.classList.add('is-active');
+            state.filter = btn.getAttribute('data-filter');
+            renderDishes();
+        });
+    });
+    document.getElementById('modal-overlay').addEventListener('click', e=>{
+        if(e.target.id === 'modal-overlay') closeModal();
+    });
+    window.addEventListener('keydown', e=>{ if(e.key === 'Escape') closeModal(); });
+    document.getElementById('btn-print').onclick = ()=>window.print();
+    document.getElementById('btn-export-details').onclick = ()=>copyReport('details');
+    document.getElementById('btn-export-summary').onclick = ()=>copyReport('summary');
+}
+
+function copyReport(kind){
+    if(!state.menu) return;
+    const dishes = state.menu.dishes||[];
+    const lines = [`# Bella & Bona QC ${kind} — ${humanDate(state.selectedDate)}`, ''];
+    for(const d of dishes){
+        const c = state.checks[d.dishLetter] || {};
+        const t = avg(c.temperatures), w = avg(c.weights);
+        const s = readingStatus(d, c);
+        lines.push(`- [${d.dishLetter}] ${d.dishName} · ${t!=null?t.toFixed(1)+'°C':'—'} / ${w!=null?Math.round(w)+'g':'—'} of ${d.theoreticalWeight}g · ${s.toUpperCase()}${c.comment?'  — '+c.comment:''}`);
+    }
+    navigator.clipboard.writeText(lines.join('\n')).then(()=>{
+        const btn = document.getElementById(`btn-export-${kind}`);
+        const orig = btn.textContent;
+        btn.textContent = '✓ Copied';
+        setTimeout(()=>{ btn.textContent = orig; }, 1400);
+    });
+}
+
+window.__qc = { closeModal, openIssues };
+
+wire();
+selectDate(state.selectedDate);
+</script>
+
+</body>
+</html>

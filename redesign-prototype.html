@@ -788,7 +788,9 @@ function passesFilter(dish, check){
 /* === Dish rendering (per stage) === */
 function renderDishes(){
     const host=document.getElementById('dish-area');
-    document.getElementById('pass-count').textContent = state.menu ? (state.menu.dishes||[]).length : '—';
+    if(!host) return;
+    const pc=document.getElementById('pass-count');
+    if(pc) pc.textContent = state.menu ? (state.menu.dishes||[]).length : '—';
     if(!state.menu){ host.innerHTML=`<div class="loading">No menu for this week yet. Open ⚙ to paste menu JSON.</div>`; return; }
     const all=(state.menu.dishes||[]).filter(d=>passesFilter(d, state.checks[d.dishLetter]));
     if(all.length===0){ host.innerHTML=`<div class="loading">No dishes match this filter.</div>`; return; }

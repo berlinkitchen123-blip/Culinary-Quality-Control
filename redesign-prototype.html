@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
     <title>Culinary QC · Bella &amp; Bona</title>
-    <meta name="description" content="Daily QC instrument for the Bella &amp; Bona kitchen. Cold dishes in blue, hot in red. Tap any number to log a reading.">
+    <meta name="description" content="Daily QC instrument: separate Assembly, QC, Dispatch tabs. Cold dishes in blue, hot in red.">
     <meta name="theme-color" content="#2563eb">
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -25,7 +25,12 @@
   --pass:#16a34a; --pass-soft:#dcfce7; --pass-line:#86efac;
   --watch:#ea580c; --watch-soft:#ffedd5; --watch-line:#fdba74;
   --hold:#b91c1c; --hold-soft:#fee2e2;  --hold-line:#fca5a5;
-  --empty:#9ca3af; --empty-soft:#f3f4f6;
+  --empty:#9ca3af;
+
+  /* Stage accent colors */
+  --assembly:#7c3aed; --assembly-soft:#ede9fe; --assembly-line:#c4b5fd;
+  --qc:#2563eb;       --qc-soft:#dbeafe;       --qc-line:#93c5fd;
+  --dispatch:#0891b2; --dispatch-soft:#cffafe; --dispatch-line:#67e8f9;
 
   --brand:#2563eb; --brand-soft:#dbeafe; --gold:#f59e0b;
 
@@ -42,28 +47,27 @@ html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);font-family:v
 body{min-height:100vh;overflow-x:hidden}
 button{font-family:inherit;cursor:pointer}
 a{color:inherit;text-decoration:none}
-input,textarea,select{font-family:inherit;font-size:16px} /* 16px to prevent iOS zoom */
+input,textarea,select{font-family:inherit;font-size:16px}
 
-/* Helper banner */
 .helper-banner{background:var(--brand-soft);border-bottom:1px solid var(--cold-line);color:var(--cold);padding:10px 20px;font-size:13px;font-weight:500;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
 .helper-banner strong{color:var(--ink)}
 .helper-banner a{font-weight:600;text-decoration:underline;white-space:nowrap}
 
 /* Header */
 .app-header{background:var(--bg-2);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:30}
-.app-header-inner{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px 24px;flex-wrap:wrap}
+.app-header-inner{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:12px 20px;flex-wrap:wrap}
 .brand{display:flex;align-items:center;gap:12px;min-width:0}
-.brand .mark{width:42px;height:42px;border-radius:10px;background:var(--brand);color:white;display:inline-flex;align-items:center;justify-content:center;font-weight:800;font-size:16px;box-shadow:var(--shadow-sm);flex-shrink:0}
-.brand .name{font-weight:700;font-size:18px;letter-spacing:-0.01em;color:var(--ink);line-height:1.1}
-.brand .sub{font-size:12px;color:var(--mute);font-weight:500;white-space:nowrap}
+.brand .mark{width:38px;height:38px;border-radius:9px;background:var(--brand);color:white;display:inline-flex;align-items:center;justify-content:center;font-weight:800;font-size:15px;box-shadow:var(--shadow-sm);flex-shrink:0}
+.brand .name{font-weight:700;font-size:17px;letter-spacing:-0.01em;color:var(--ink);line-height:1.1}
+.brand .sub{font-size:11px;color:var(--mute);font-weight:500}
 
-.week-strip{display:flex;gap:2px;align-items:center;background:var(--bg);border:1px solid var(--line);border-radius:14px;padding:5px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.week-strip{display:flex;gap:2px;align-items:center;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:4px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;max-width:100%}
 .week-strip::-webkit-scrollbar{display:none}
-.week-strip .nav{width:32px;height:42px;display:inline-flex;align-items:center;justify-content:center;border-radius:10px;background:transparent;border:0;color:var(--mute);font-size:18px;font-weight:600;flex-shrink:0}
+.week-strip .nav{width:30px;height:38px;display:inline-flex;align-items:center;justify-content:center;border-radius:8px;background:transparent;border:0;color:var(--mute);font-size:17px;font-weight:600;flex-shrink:0}
 .week-strip .nav:hover{color:var(--ink);background:var(--bg-3)}
-.day{display:flex;flex-direction:column;align-items:center;justify-content:center;min-width:50px;padding:6px 10px;border-radius:10px;background:transparent;border:0;color:var(--ink-2);flex-shrink:0;transition:background 160ms ease,color 160ms ease}
-.day .dow{font-size:10px;letter-spacing:0.1em;text-transform:uppercase;font-weight:700;color:var(--mute)}
-.day .dom{font-weight:700;font-size:17px;line-height:1.1;margin-top:2px;color:var(--ink)}
+.day{display:flex;flex-direction:column;align-items:center;justify-content:center;min-width:46px;padding:5px 9px;border-radius:9px;background:transparent;border:0;color:var(--ink-2);flex-shrink:0;transition:background 160ms ease,color 160ms ease}
+.day .dow{font-size:9px;letter-spacing:0.1em;text-transform:uppercase;font-weight:700;color:var(--mute)}
+.day .dom{font-weight:700;font-size:16px;line-height:1.1;margin-top:2px;color:var(--ink)}
 .day.is-today .dow,.day.is-today .dom{color:var(--brand)}
 .day.is-active{background:var(--brand);color:white}
 .day.is-active .dow{color:rgba(255,255,255,0.85)}
@@ -71,63 +75,96 @@ input,textarea,select{font-family:inherit;font-size:16px} /* 16px to prevent iOS
 .day:hover:not(.is-active){background:var(--bg-3)}
 
 .actions{display:flex;gap:6px;align-items:center}
-.btn{display:inline-flex;align-items:center;gap:6px;padding:10px 14px;border-radius:10px;font-size:13px;font-weight:600;background:transparent;color:var(--ink-2);border:1px solid var(--line);white-space:nowrap;transition:background 160ms ease,color 160ms ease,border-color 160ms ease}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:9px 14px;border-radius:10px;font-size:13px;font-weight:600;background:transparent;color:var(--ink-2);border:1px solid var(--line);white-space:nowrap;transition:background 160ms ease,color 160ms ease,border-color 160ms ease}
 .btn:hover{background:var(--bg-3);color:var(--ink)}
 .btn-primary{background:var(--brand);color:white;border-color:var(--brand)}
 .btn-primary:hover{background:#1d4ed8;color:white}
-.btn-success{background:var(--pass);color:white;border-color:var(--pass)}
-.btn-success:hover{background:#15803d;color:white}
 .btn-ghost-danger{color:var(--hold);border-color:var(--hold-line)}
 .btn-ghost-danger:hover{background:var(--hold-soft);color:var(--hold)}
-.btn-icon{padding:8px;width:42px;height:42px;justify-content:center}
+.btn-icon{padding:8px;width:40px;height:40px;justify-content:center}
+.btn-sm{padding:6px 10px;font-size:12px}
+
+/* ===========================================
+   TOP-LEVEL STAGE TABS
+   =========================================== */
+.stage-bar{background:var(--bg-2);border-bottom:1px solid var(--line);position:sticky;top:62px;z-index:29;padding:0;box-shadow:0 1px 0 var(--line)}
+@media(max-width:760px){.stage-bar{top:auto}}
+.stage-bar-inner{display:flex;max-width:1480px;margin:0 auto;padding:0 20px;gap:0;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap}
+.stage-tabs{display:flex;gap:0;flex:1;min-width:0}
+.stage-tab{
+    background:transparent;border:0;border-bottom:3px solid transparent;
+    font-size:14px;font-weight:600;color:var(--mute);
+    padding:14px 18px;display:inline-flex;align-items:center;gap:10px;
+    transition:background 160ms ease,color 160ms ease,border-color 160ms ease;
+    flex:1;justify-content:center;
+}
+.stage-tab:hover{color:var(--ink);background:var(--bg-3)}
+.stage-tab .stage-emoji{font-size:18px;line-height:1;display:inline-flex;width:24px;height:24px;align-items:center;justify-content:center;border-radius:6px}
+.stage-tab .stage-count{font-size:11px;font-weight:700;background:var(--bg-3);color:var(--mute);padding:2px 8px;border-radius:99px;border:1px solid var(--line)}
+.stage-tab.is-active{color:var(--ink);background:var(--bg-3)}
+.stage-tab.is-active[data-stage=assembly]{color:var(--assembly);border-bottom-color:var(--assembly);background:var(--assembly-soft)}
+.stage-tab.is-active[data-stage=assembly] .stage-count{background:white;color:var(--assembly);border-color:var(--assembly-line)}
+.stage-tab.is-active[data-stage=qc]{color:var(--qc);border-bottom-color:var(--qc);background:var(--qc-soft)}
+.stage-tab.is-active[data-stage=qc] .stage-count{background:white;color:var(--qc);border-color:var(--qc-line)}
+.stage-tab.is-active[data-stage=dispatch]{color:var(--dispatch);border-bottom-color:var(--dispatch);background:var(--dispatch-soft)}
+.stage-tab.is-active[data-stage=dispatch] .stage-count{background:white;color:var(--dispatch);border-color:var(--dispatch-line)}
+
+.stage-tab .tab-label-short{display:none}
+@media(max-width:560px){
+    .stage-tab{padding:10px 6px;font-size:13px;gap:6px}
+    .stage-tab .tab-label-full{display:none}
+    .stage-tab .tab-label-short{display:inline}
+    .stage-tab .stage-emoji{font-size:16px;width:22px;height:22px}
+    .stage-tab .stage-count{font-size:10px;padding:1px 6px}
+}
 
 /* Container */
-.container{max-width:1480px;margin:0 auto;padding:24px 24px 64px 24px;width:100%}
+.container{max-width:1480px;margin:0 auto;padding:20px 20px 60px 20px;width:100%}
 @media(max-width:760px){
-    .container{padding:16px 14px 48px 14px}
-    .app-header-inner{padding:12px 14px;gap:10px}
+    .container{padding:14px 12px 48px 12px}
+    .app-header-inner{padding:10px 12px;gap:10px}
     .brand{order:0;flex:1}
-    .brand .name{font-size:16px}
+    .brand .name{font-size:15px}
     .brand .sub{display:none}
     .actions{order:1}
-    .week-strip{order:2;width:100%;justify-content:flex-start}
-    .helper-banner{padding:10px 14px;font-size:12.5px;flex-direction:column;align-items:flex-start;gap:6px}
+    .week-strip{order:2;width:100%}
+    .helper-banner{padding:8px 12px;font-size:12px;flex-direction:column;align-items:flex-start;gap:4px}
+    .stage-bar-inner{padding:0 0}
 }
 
 /* Alert */
-.alert{display:flex;gap:14px;padding:14px 18px;border-radius:var(--radius-md);border:1px solid var(--line);background:var(--bg-2);align-items:center;margin-bottom:20px;box-shadow:var(--shadow-sm)}
+.alert{display:flex;gap:14px;padding:14px 16px;border-radius:var(--radius-md);border:1px solid var(--line);background:var(--bg-2);align-items:center;margin-bottom:18px;box-shadow:var(--shadow-sm)}
 .alert.is-fail{background:var(--hold-soft);border-color:var(--hold-line)}
 .alert.is-warn{background:var(--watch-soft);border-color:var(--watch-line)}
 .alert.is-ok{background:var(--pass-soft);border-color:var(--pass-line)}
-.alert .icon{width:40px;height:40px;border-radius:99px;display:inline-flex;align-items:center;justify-content:center;background:var(--bg-2);font-weight:700;font-size:18px;color:var(--mute);flex-shrink:0;border:1px solid var(--line)}
+.alert .icon{width:38px;height:38px;border-radius:99px;display:inline-flex;align-items:center;justify-content:center;background:var(--bg-2);font-weight:700;font-size:17px;color:var(--mute);flex-shrink:0;border:1px solid var(--line)}
 .alert.is-fail .icon{color:var(--hold);background:white;border-color:var(--hold-line)}
 .alert.is-warn .icon{color:var(--watch);background:white;border-color:var(--watch-line)}
 .alert.is-ok .icon{color:var(--pass);background:white;border-color:var(--pass-line)}
 .alert .body{flex:1;min-width:0}
-.alert .title{font-weight:700;font-size:16px;color:var(--ink);line-height:1.2}
-.alert .detail{font-size:13px;color:var(--ink-2);margin-top:3px}
+.alert .title{font-weight:700;font-size:15px;color:var(--ink);line-height:1.2}
+.alert .detail{font-size:13px;color:var(--ink-2);margin-top:2px}
 
 /* Section */
-.section{padding:18px 0 8px 0}
-.section-head{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:16px;flex-wrap:wrap}
-.section-head .title{font-weight:700;font-size:18px;color:var(--ink);letter-spacing:-0.01em;display:flex;align-items:center;gap:10px}
+.section{padding:14px 0 8px 0}
+.section-head{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:12px;flex-wrap:wrap}
+.section-head .title{font-weight:700;font-size:17px;color:var(--ink);letter-spacing:-0.01em;display:flex;align-items:center;gap:10px}
 .section-head .count{background:var(--bg-3);border:1px solid var(--line);border-radius:99px;padding:2px 10px;font-size:12px;font-weight:600;color:var(--mute)}
 
-/* Filter chips */
-.filter{display:inline-flex;background:var(--bg-2);border:1px solid var(--line);border-radius:10px;padding:4px;gap:2px}
-.filter button{background:transparent;border:0;font-size:13px;font-weight:600;color:var(--mute);padding:8px 14px;border-radius:8px}
+.filter{display:inline-flex;background:var(--bg-2);border:1px solid var(--line);border-radius:10px;padding:3px;gap:2px}
+.filter button{background:transparent;border:0;font-size:12px;font-weight:600;color:var(--mute);padding:7px 12px;border-radius:7px}
 .filter button:hover{color:var(--ink)}
 .filter button.is-active{background:var(--ink);color:white}
 .filter button[data-filter=cold].is-active{background:var(--cold)}
 .filter button[data-filter=hot].is-active{background:var(--hot)}
 
 /* Scorecard */
-.scorecard{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-bottom:8px}
+.scorecard{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:8px}
 @media(max-width:900px){.scorecard{grid-template-columns:repeat(2,1fr)}}
-.score{background:var(--bg-2);border:1px solid var(--line);border-radius:var(--radius-md);padding:18px 20px;display:flex;flex-direction:column;gap:4px;box-shadow:var(--shadow-sm)}
-.score .rate{font-weight:800;font-size:36px;line-height:1.1;color:var(--ink);letter-spacing:-0.03em;font-variant-numeric:tabular-nums}
-.score .label{font-size:12px;font-weight:600;color:var(--mute);text-transform:uppercase;letter-spacing:0.08em;margin-top:4px}
-.score .meta{font-size:13px;color:var(--ink-2);margin-top:6px}
+.score{background:var(--bg-2);border:1px solid var(--line);border-radius:var(--radius-md);padding:14px 16px;display:flex;flex-direction:column;gap:2px;box-shadow:var(--shadow-sm)}
+.score .rate{font-weight:800;font-size:30px;line-height:1.1;color:var(--ink);letter-spacing:-0.03em;font-variant-numeric:tabular-nums}
+.score .label{font-size:11px;font-weight:600;color:var(--mute);text-transform:uppercase;letter-spacing:0.08em;margin-top:4px}
+.score .meta{font-size:12px;color:var(--ink-2);margin-top:4px}
 .score.cold{border-left:4px solid var(--cold)}
 .score.cold .rate{color:var(--cold)}
 .score.hot{border-left:4px solid var(--hot)}
@@ -135,13 +172,16 @@ input,textarea,select{font-family:inherit;font-size:16px} /* 16px to prevent iOS
 .score.weight{border-left:4px solid var(--gold)}
 .score.coverage{border-left:4px solid var(--brand)}
 .score.coverage .rate{color:var(--brand)}
+.score.assembly{border-left:4px solid var(--assembly)}
+.score.assembly .rate{color:var(--assembly)}
+.score.dispatch{border-left:4px solid var(--dispatch)}
+.score.dispatch .rate{color:var(--dispatch)}
 
-/* Dish grid */
-.dish-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}
-@media(max-width:560px){.dish-grid{grid-template-columns:1fr;gap:10px}}
+.dish-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px}
+.dish-grid.stage{grid-template-columns:repeat(auto-fill,minmax(300px,1fr))}
+@media(max-width:560px){.dish-grid,.dish-grid.stage{grid-template-columns:1fr;gap:10px}}
 
-/* Category title */
-.cat-title{display:flex;align-items:center;gap:12px;margin:20px 0 12px 0;font-weight:700;font-size:16px}
+.cat-title{display:flex;align-items:center;gap:12px;margin:18px 0 10px 0;font-weight:700;font-size:15px}
 .cat-title.cold{color:var(--cold)}
 .cat-title.hot{color:var(--hot)}
 .cat-title .dot{width:10px;height:10px;border-radius:99px}
@@ -149,8 +189,8 @@ input,textarea,select{font-family:inherit;font-size:16px} /* 16px to prevent iOS
 .cat-title.hot .dot{background:var(--hot)}
 .cat-title .badge{background:var(--bg-3);border:1px solid var(--line);border-radius:99px;padding:2px 10px;font-size:12px;font-weight:600;color:var(--mute)}
 
-/* Dish tile */
-.tile{background:var(--bg-2);border:1px solid var(--line);border-radius:var(--radius-md);padding:14px 16px;display:flex;flex-direction:column;gap:10px;position:relative;transition:border-color 160ms ease,box-shadow 160ms ease}
+/* === DISH TILES === */
+.tile{background:var(--bg-2);border:1px solid var(--line);border-radius:var(--radius-md);padding:14px 14px;display:flex;flex-direction:column;gap:10px;position:relative;transition:border-color 160ms ease,box-shadow 160ms ease}
 .tile:hover{border-color:var(--mute-low);box-shadow:var(--shadow-md)}
 .tile.cold{border-top:3px solid var(--cold)}
 .tile.hot{border-top:3px solid var(--hot)}
@@ -164,7 +204,7 @@ input,textarea,select{font-family:inherit;font-size:16px} /* 16px to prevent iOS
 .tile-name{font-weight:600;font-size:14px;line-height:1.2;flex:1;min-width:0;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
 .tile.cold .tile-name{color:var(--cold)}
 .tile.hot .tile-name{color:var(--hot)}
-.tile-spec{font-size:11px;color:var(--mute);font-weight:500;font-variant-numeric:tabular-nums;margin-top:-4px}
+.tile-spec{font-size:11px;color:var(--mute);font-weight:500;font-variant-numeric:tabular-nums;margin-top:-2px}
 
 .read-row{display:flex;gap:8px}
 .read-cell{flex:1;background:var(--bg-3);border:1px solid var(--line);border-radius:8px;padding:10px;display:flex;flex-direction:column;gap:2px;position:relative;transition:background 160ms ease,border-color 160ms ease}
@@ -190,25 +230,36 @@ input,textarea,select{font-family:inherit;font-size:16px} /* 16px to prevent iOS
 .tile-more{background:transparent;border:0;color:var(--mute);font-size:20px;line-height:1;padding:4px 10px;border-radius:6px}
 .tile-more:hover{background:var(--bg-3);color:var(--ink)}
 
-/* Stage badges on tile */
-.stage-strip{display:flex;gap:4px;margin-top:2px;flex-wrap:wrap}
-.stage-badge{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:99px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;background:var(--bg-3);color:var(--mute);border:1px solid var(--line)}
-.stage-badge.is-set{background:var(--pass-soft);color:var(--pass);border-color:var(--pass-line)}
+/* Stage strip on tiles (shows which stages are logged) */
+.stage-strip{display:flex;gap:4px;flex-wrap:wrap}
+.stage-badge{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:99px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;background:var(--bg-3);color:var(--mute);border:1px solid var(--line)}
+.stage-badge.is-set[data-stage=assembly]{background:var(--assembly-soft);color:var(--assembly);border-color:var(--assembly-line)}
+.stage-badge.is-set[data-stage=qc]{background:var(--qc-soft);color:var(--qc);border-color:var(--qc-line)}
+.stage-badge.is-set[data-stage=dispatch]{background:var(--dispatch-soft);color:var(--dispatch);border-color:var(--dispatch-line)}
 .stage-badge.is-set::before{content:'✓';font-weight:800}
+
+/* Time input field */
+.time-cell{flex:0 0 110px;background:var(--bg-3);border:1px solid var(--line);border-radius:8px;padding:10px;display:flex;flex-direction:column;gap:2px;position:relative;transition:background 160ms ease,border-color 160ms ease}
+.time-cell:focus-within{background:white;border-color:var(--brand);box-shadow:0 0 0 3px var(--brand-soft)}
+.time-cell .lbl{font-size:10px;font-weight:700;color:var(--mute);text-transform:uppercase;letter-spacing:0.06em}
+.time-cell input{background:transparent;border:0;outline:none;width:100%;padding:0;font-weight:700;font-size:18px;color:var(--ink);font-variant-numeric:tabular-nums}
+.time-now{background:transparent;border:0;color:var(--brand);font-size:11px;font-weight:700;padding:4px 8px;border-radius:6px;cursor:pointer;align-self:flex-start;margin-top:2px}
+.time-now:hover{background:var(--brand-soft)}
+@media(max-width:560px){.time-cell{flex:1}.read-row{flex-wrap:wrap}}
 
 /* Summary table */
 .table-card{background:var(--bg-2);border:1px solid var(--line);border-radius:var(--radius-md);overflow:hidden;box-shadow:var(--shadow-sm)}
 .table-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
 table.summary{width:100%;border-collapse:collapse;min-width:680px}
-table.summary thead th{text-align:left;font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--mute);padding:12px 18px;background:var(--bg-3);border-bottom:1px solid var(--line)}
-table.summary tbody td{padding:14px 18px;border-bottom:1px solid var(--line-2);font-size:14px;color:var(--ink-2)}
-table.summary tbody tr.cat-row td{background:var(--bg-3);font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:0.08em;padding:8px 18px}
+table.summary thead th{text-align:left;font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--mute);padding:12px 16px;background:var(--bg-3);border-bottom:1px solid var(--line)}
+table.summary tbody td{padding:12px 16px;border-bottom:1px solid var(--line-2);font-size:13.5px;color:var(--ink-2)}
+table.summary tbody tr.cat-row td{background:var(--bg-3);font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:0.08em;padding:8px 16px}
 table.summary tbody tr.cat-row.cold td{color:var(--cold);background:var(--cold-bg)}
 table.summary tbody tr.cat-row.hot td{color:var(--hot);background:var(--hot-bg)}
 table.summary tbody tr.row-data{cursor:pointer;transition:background 160ms ease}
 table.summary tbody tr.row-data:hover{background:var(--bg-3)}
 table.summary tbody tr:last-child td{border-bottom:none}
-.cell-letter{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:6px;font-weight:800;font-size:13px}
+.cell-letter{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:6px;font-weight:800;font-size:12px}
 .row-data.cold .cell-letter{background:var(--cold-bg);color:var(--cold);border:1px solid var(--cold-line)}
 .row-data.hot .cell-letter{background:var(--hot-bg);color:var(--hot);border:1px solid var(--hot-line)}
 .row-data.cold .cell-name{color:var(--cold);font-weight:600}
@@ -224,31 +275,29 @@ table.summary tbody tr:last-child td{border-bottom:none}
     .modal-overlay{padding:0;align-items:flex-end}
     .modal-panel{max-height:96vh;border-radius:18px 18px 0 0;border-bottom:0}
 }
-.modal-head{position:relative;padding:20px 24px 16px 24px;border-bottom:1px solid var(--line)}
+.modal-head{position:relative;padding:20px 22px 14px 22px;border-bottom:1px solid var(--line)}
 .modal-head.cold{background:var(--cold-bg)}
 .modal-head.hot{background:var(--hot-bg)}
 .modal-head .eyebrow{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--mute)}
-.modal-head .title{font-weight:700;font-size:24px;letter-spacing:-0.02em;color:var(--ink);margin-top:6px;line-height:1.15;padding-right:48px}
+.modal-head .title{font-weight:700;font-size:22px;letter-spacing:-0.02em;color:var(--ink);margin-top:4px;line-height:1.15;padding-right:48px}
 .modal-head.cold .title{color:var(--cold)}
 .modal-head.hot .title{color:var(--hot)}
-.modal-head .chips{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap}
-.modal-close{position:absolute;top:16px;right:16px;width:38px;height:38px;border:1px solid var(--line);background:white;border-radius:99px;color:var(--mute);font-size:18px}
+.modal-head .chips{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+.modal-close{position:absolute;top:14px;right:14px;width:36px;height:36px;border:1px solid var(--line);background:white;border-radius:99px;color:var(--mute);font-size:18px}
 .modal-close:hover{background:var(--bg-3);color:var(--ink)}
 
-/* Modal tabs */
-.modal-tabs{display:flex;gap:4px;padding:8px 16px 0 16px;background:var(--bg-2);border-bottom:1px solid var(--line);overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.modal-tabs{display:flex;gap:2px;padding:6px 14px 0 14px;background:var(--bg-2);border-bottom:1px solid var(--line);overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
 .modal-tabs::-webkit-scrollbar{display:none}
-.modal-tab{background:transparent;border:0;font-size:13px;font-weight:600;color:var(--mute);padding:10px 14px;border-bottom:3px solid transparent;white-space:nowrap;display:inline-flex;align-items:center;gap:6px}
+.modal-tab{background:transparent;border:0;font-size:13px;font-weight:600;color:var(--mute);padding:9px 12px;border-bottom:3px solid transparent;white-space:nowrap;display:inline-flex;align-items:center;gap:6px}
 .modal-tab:hover{color:var(--ink)}
 .modal-tab.is-active{color:var(--ink);border-bottom-color:var(--brand)}
 .modal-tab .tab-dot{width:6px;height:6px;border-radius:99px;background:var(--mute-low);display:inline-block}
 .modal-tab.has-data .tab-dot{background:var(--pass)}
 
-.modal-body{padding:20px 24px;overflow-y:auto;flex:1}
-@media(max-width:640px){.modal-body{padding:16px 16px}}
+.modal-body{padding:18px 22px;overflow-y:auto;flex:1}
+@media(max-width:640px){.modal-body{padding:14px 14px}}
 
-/* Photos */
-.photo-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px}
+.photo-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:18px}
 @media(max-width:640px){.photo-row{grid-template-columns:1fr;gap:10px}}
 .photo{background:var(--bg-3);border:1px solid var(--line);border-radius:var(--radius-sm);overflow:hidden;aspect-ratio:1/1;display:flex;align-items:center;justify-content:center;color:var(--mute);font-size:13px;position:relative}
 .photo img{width:100%;height:100%;object-fit:cover}
@@ -264,7 +313,6 @@ table.summary tbody tr:last-child td{border-bottom:none}
 
 .section-mini{font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:0.08em;color:var(--mute);margin-bottom:10px}
 
-/* Samples */
 .samples{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px}
 .sample{background:var(--bg-3);border:1px solid var(--line);border-radius:var(--radius-sm);padding:12px;text-align:center;position:relative;transition:background 160ms ease,border-color 160ms ease}
 .sample input{background:transparent;border:0;outline:none;width:100%;text-align:center;font-weight:800;font-size:22px;color:var(--ink);font-variant-numeric:tabular-nums;-moz-appearance:textfield;padding:2px 0}
@@ -282,9 +330,7 @@ table.summary tbody tr:last-child td{border-bottom:none}
 .avg-row.cold .val{color:var(--cold)}
 .avg-row.hot .val{color:var(--hot)}
 
-/* Stage form (assembly/dispatch) */
-.stage-form{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:18px}
-@media(max-width:560px){.stage-form{grid-template-columns:1fr 1fr}}
+.stage-form{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}
 .field{display:flex;flex-direction:column;gap:6px}
 .field .label{font-size:11px;font-weight:700;color:var(--mute);text-transform:uppercase;letter-spacing:0.06em}
 .field input,.field textarea{background:var(--bg-3);border:1px solid var(--line);border-radius:var(--radius-sm);padding:10px 12px;color:var(--ink);font-weight:600;font-size:16px;outline:none;transition:background 160ms ease,border-color 160ms ease;-moz-appearance:textfield}
@@ -294,12 +340,6 @@ table.summary tbody tr:last-child td{border-bottom:none}
 .field.full{grid-column:1 / -1}
 .field textarea{font-weight:500;line-height:1.5;min-height:60px;resize:vertical}
 
-.stage-summary{background:var(--bg-3);border:1px solid var(--line);border-radius:var(--radius-sm);padding:12px 14px;display:flex;gap:14px;align-items:center;margin-bottom:14px;font-size:13px;flex-wrap:wrap}
-.stage-summary .label{font-size:11px;font-weight:700;color:var(--mute);text-transform:uppercase;letter-spacing:0.06em}
-.stage-summary .val{font-weight:700;font-variant-numeric:tabular-nums}
-.stage-summary .pill{margin-left:auto}
-
-/* Ingredients */
 .ing-list{display:grid;grid-template-columns:1fr 1fr;gap:6px 14px}
 @media(max-width:560px){.ing-list{grid-template-columns:1fr}}
 .ing{display:flex;justify-content:space-between;gap:12px;padding:10px;border-radius:8px;cursor:pointer;border:1px solid transparent;transition:background 160ms ease,border-color 160ms ease;min-height:42px;align-items:center}
@@ -311,21 +351,19 @@ table.summary tbody tr:last-child td{border-bottom:none}
 .ing.unchecked .ing-name{color:var(--mute);text-decoration:line-through}
 .ing .ing-weight{font-size:11px;color:var(--mute);font-variant-numeric:tabular-nums;font-weight:500;align-self:center;white-space:nowrap}
 
-.comment-area{width:100%;min-height:80px;background:var(--bg-3);border:1px solid var(--line);border-radius:var(--radius-sm);padding:12px 14px;color:var(--ink);font-size:15px;line-height:1.5;resize:vertical;outline:none}
+.comment-area{width:100%;min-height:70px;background:var(--bg-3);border:1px solid var(--line);border-radius:var(--radius-sm);padding:11px 13px;color:var(--ink);font-size:14px;line-height:1.5;resize:vertical;outline:none}
 .comment-area:focus{background:white;border-color:var(--brand);box-shadow:0 0 0 3px var(--brand-soft)}
 .comment-area::placeholder{color:var(--mute-low)}
 
-.modal-foot{display:flex;gap:10px;justify-content:flex-end;align-items:center;padding:14px 24px;border-top:1px solid var(--line);background:var(--bg-3)}
+.modal-foot{display:flex;gap:10px;justify-content:flex-end;align-items:center;padding:14px 22px;border-top:1px solid var(--line);background:var(--bg-3)}
 .modal-foot .hint{flex:1;font-size:12px;color:var(--mute);font-weight:500;min-width:0}
 .modal-foot .hint .save-state{color:var(--pass);font-weight:600}
 
-/* Loader */
 .loading{display:flex;align-items:center;justify-content:center;padding:60px 0;color:var(--mute);font-weight:500}
 .spinner{width:18px;height:18px;border:2px solid var(--line);border-top-color:var(--brand);border-radius:99px;animation:spin 0.9s linear infinite;margin-right:10px}
 @keyframes spin{to{transform:rotate(360deg)}}
 
-/* Toast */
-.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--ink);color:white;padding:10px 18px;border-radius:99px;font-size:13px;font-weight:500;box-shadow:var(--shadow-lg);z-index:200;display:flex;align-items:center;gap:8px;animation:fadeIn 240ms ease;max-width:90vw}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--ink);color:white;padding:9px 16px;border-radius:99px;font-size:13px;font-weight:500;box-shadow:var(--shadow-lg);z-index:200;display:flex;align-items:center;gap:8px;animation:fadeIn 240ms ease;max-width:90vw}
 .toast .toast-dot{width:6px;height:6px;border-radius:99px;background:var(--gold);flex-shrink:0}
 .toast.is-ok{background:var(--pass)}
 .toast.is-fail{background:var(--hold)}
@@ -333,8 +371,7 @@ table.summary tbody tr:last-child td{border-bottom:none}
 
 .tile.is-empty .tile-name{opacity:0.6}
 
-/* Footer */
-.footer{margin-top:36px;padding:18px 0;text-align:center;font-size:12px;color:var(--mute);font-weight:500}
+.footer{margin-top:36px;padding:14px 0;text-align:center;font-size:12px;color:var(--mute);font-weight:500}
 .footer code{font-family:ui-monospace,monospace;color:var(--ink-2);background:var(--bg-3);padding:2px 6px;border-radius:4px}
 
 ::-webkit-scrollbar{width:10px;height:10px}
@@ -342,7 +379,6 @@ table.summary tbody tr:last-child td{border-bottom:none}
 ::-webkit-scrollbar-thumb{background:var(--line);border-radius:99px}
 ::-webkit-scrollbar-thumb:hover{background:var(--mute-low)}
 
-/* Settings modal specific */
 .settings-help{background:var(--bg-3);border:1px dashed var(--line);border-radius:var(--radius-sm);padding:12px 14px;font-size:13px;color:var(--ink-2);margin-bottom:14px;line-height:1.55}
 .settings-help code{font-family:ui-monospace,monospace;background:white;padding:1px 6px;border-radius:4px;border:1px solid var(--line);font-size:12px}
 .settings-help summary{cursor:pointer;font-weight:600;color:var(--ink);outline:none;list-style:none}
@@ -355,7 +391,7 @@ table.summary tbody tr:last-child td{border-bottom:none}
 <body>
 
 <div class="helper-banner">
-    <span><strong>Logging readings:</strong> tap any number on a dish to edit. For three samples, photo capture, ingredients, assembly &amp; dispatch — open the dish file via the “⋯” button.</span>
+    <span><strong>Quick log:</strong> pick a stage tab above the dishes — <span style="color:var(--assembly);font-weight:700">Assembly</span>, <span style="color:var(--qc);font-weight:700">QC Check</span>, or <span style="color:var(--dispatch);font-weight:700">Dispatch</span>. Tap any number to enter; the save is instant. Tap ⋯ for photos, ingredients &amp; full file.</span>
     <span><a href="https://quality-control.berlin.bellabona.dev/" target="_blank" rel="noopener">Open current app →</a></span>
 </div>
 
@@ -375,12 +411,38 @@ table.summary tbody tr:last-child td{border-bottom:none}
         </div>
 
         <div class="actions">
-            <button class="btn" id="btn-settings" title="Settings: paste menu JSON">⚙</button>
-            <button class="btn" id="btn-export-summary">Copy summary</button>
+            <button class="btn btn-icon" id="btn-settings" title="Settings · paste menu JSON" aria-label="Settings">⚙</button>
+            <button class="btn" id="btn-export-summary">Copy</button>
             <button class="btn" id="btn-print">Print</button>
         </div>
     </div>
 </header>
+
+<!-- TOP-LEVEL STAGE TABS -->
+<nav class="stage-bar" aria-label="Stage">
+    <div class="stage-bar-inner">
+        <div class="stage-tabs" role="tablist">
+            <button class="stage-tab" data-stage="assembly" role="tab" aria-selected="false">
+                <span class="stage-emoji">①</span>
+                <span class="tab-label-full">Assembly</span>
+                <span class="tab-label-short">Asm</span>
+                <span class="stage-count" id="count-assembly">—</span>
+            </button>
+            <button class="stage-tab is-active" data-stage="qc" role="tab" aria-selected="true">
+                <span class="stage-emoji">②</span>
+                <span class="tab-label-full">QC Check</span>
+                <span class="tab-label-short">QC</span>
+                <span class="stage-count" id="count-qc">—</span>
+            </button>
+            <button class="stage-tab" data-stage="dispatch" role="tab" aria-selected="false">
+                <span class="stage-emoji">③</span>
+                <span class="tab-label-full">Dispatch</span>
+                <span class="tab-label-short">Dsp</span>
+                <span class="stage-count" id="count-dispatch">—</span>
+            </button>
+        </div>
+    </div>
+</nav>
 
 <main class="container">
 
@@ -388,7 +450,7 @@ table.summary tbody tr:last-child td{border-bottom:none}
 
     <section class="section">
         <div class="section-head">
-            <div class="title">Today's compliance</div>
+            <div class="title" id="scorecard-title">—</div>
             <div style="font-size:13px;color:var(--mute);font-weight:500" id="scorecard-date">—</div>
         </div>
         <div class="scorecard" id="scorecard"></div>
@@ -396,7 +458,7 @@ table.summary tbody tr:last-child td{border-bottom:none}
 
     <section class="section">
         <div class="section-head">
-            <div class="title">Pass sheet <span class="count" id="pass-count">—</span></div>
+            <div class="title" id="dish-section-title">Dishes <span class="count" id="pass-count">—</span></div>
             <div class="filter" role="group" aria-label="Filter">
                 <button class="is-active" data-filter="all">All</button>
                 <button data-filter="cold">Cold</button>
@@ -421,10 +483,10 @@ table.summary tbody tr:last-child td{border-bottom:none}
                         <tr>
                             <th style="width:60px">Dish</th>
                             <th>Name</th>
-                            <th style="width:100px">Assembly</th>
-                            <th style="width:100px">QC</th>
-                            <th style="width:100px">Dispatch</th>
-                            <th style="width:160px">Avg / theo weight</th>
+                            <th style="width:90px">Assembly</th>
+                            <th style="width:90px">QC</th>
+                            <th style="width:90px">Dispatch</th>
+                            <th style="width:150px">Weight</th>
                             <th>Chef note</th>
                         </tr>
                     </thead>
@@ -439,7 +501,6 @@ table.summary tbody tr:last-child td{border-bottom:none}
     </footer>
 </main>
 
-<!-- MODALS -->
 <div id="modal-overlay" class="modal-overlay hidden"></div>
 <div id="settings-overlay" class="modal-overlay hidden"></div>
 
@@ -460,19 +521,18 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
-/* === Thresholds === */
 const HOT_MIN = 65;
 const COLD_MAX = 8;
 const HOT_WARN = 3;
 const COLD_WARN = 2;
 
-/* === State === */
 const state = {
     selectedDate: todayIso(),
     weekStartIso: null,
     menu: null,
     checks: {},
     filter: 'all',
+    stage: 'qc',     // 'assembly' | 'qc' | 'dispatch'
     _unsub: null
 };
 const modalState = { letter: null, tab: 'qc' };
@@ -497,7 +557,7 @@ function fmtDow(d){ return ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][d.getDay(
 function shiftIso(iso,days){ const d=parseIso(iso); d.setDate(d.getDate()+days); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
 function nowHHMM(){ const d=new Date(); return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`; }
 
-/* === Threshold logic === */
+/* === Status logic === */
 function avg(arr){ if(!arr||!arr.length) return null; const n=arr.map(Number).filter(x=>Number.isFinite(x)); return n.length?n.reduce((a,b)=>a+b,0)/n.length:null; }
 function isCold(dish){ return (dish?.dishType||'').toLowerCase().includes('cold'); }
 function tempStatus(v, dish){
@@ -518,6 +578,19 @@ function readingStatus(dish, check){
     if(t==null) return 'empty';
     return tempStatus(t, dish);
 }
+function stageStatus(dish, stage, check){
+    if(stage === 'qc') return readingStatus(dish, check);
+    const v = check?.[stage]?.temp;
+    return tempStatus(v, dish);
+}
+function stageTemp(dish, stage, check){
+    if(stage === 'qc') return avg(check?.temperatures);
+    return check?.[stage]?.temp ?? null;
+}
+function stageTime(stage, check){
+    if(stage === 'qc') return check?.timestamp ? fmtTime(check.timestamp) : '';
+    return check?.[stage]?.time || '';
+}
 function weightStatus(v, dish){
     if(v==null||v===''||!dish.theoreticalWeight) return 'empty';
     const n=Number(v); if(Number.isNaN(n)) return 'empty';
@@ -527,6 +600,7 @@ function weightStatus(v, dish){
     return 'hold';
 }
 function statusLabel(s){ return s==='pass'?'Pass':s==='watch'?'Watch':s==='hold'?'Hold':'—'; }
+function stageLabel(s){ return s==='assembly'?'Assembly':s==='qc'?'QC Check':s==='dispatch'?'Dispatch':s; }
 
 /* === Firebase === */
 async function loadMenuForWeek(weekId){ const s=await get(ref(db,`menus/${weekId}`)); return s.val(); }
@@ -534,25 +608,52 @@ function listenChecks(date){ return onValue(ref(db,`quality-checks/${date}`), sn
 
 async function saveCheckField(dishLetter, partial){
     const path=`quality-checks/${state.selectedDate}/${dishLetter}`;
-    await update(ref(db, path), {
-        ...partial,
-        date: state.selectedDate,
-        dishLetter,
-        timestamp: serverTimestamp()
-    });
+    await update(ref(db, path), { ...partial, date: state.selectedDate, dishLetter, timestamp: serverTimestamp() });
 }
-async function saveStage(dishLetter, stage /* 'assembly'|'dispatch' */, partial){
+async function saveStage(dishLetter, stage, partial){
     const path=`quality-checks/${state.selectedDate}/${dishLetter}/${stage}`;
     await update(ref(db, path), { ...partial, updatedAt: serverTimestamp() });
-    // Also ensure dishLetter/date on parent
     await update(ref(db, `quality-checks/${state.selectedDate}/${dishLetter}`), { dishLetter, date: state.selectedDate });
 }
+async function saveMenu(weekId, menuObj){ await set(ref(db, `menus/${weekId}`), menuObj); }
 
-async function saveMenu(weekId, menuObj){
-    await set(ref(db, `menus/${weekId}`), menuObj);
+/* === Counts for stage tabs === */
+function countLoggedForStage(stage){
+    if(!state.menu) return { logged: 0, total: 0 };
+    const dishes = state.menu.dishes || [];
+    let logged = 0;
+    for(const d of dishes){
+        const c = state.checks[d.dishLetter];
+        if(!c) continue;
+        if(stage === 'qc'){
+            if(avg(c.temperatures) != null) logged++;
+        } else {
+            if(c[stage]?.temp != null) logged++;
+        }
+    }
+    return { logged, total: dishes.length };
 }
 
-/* === Rendering === */
+/* === Stage tabs render === */
+function updateStageTabs(){
+    ['assembly','qc','dispatch'].forEach(stg=>{
+        const { logged, total } = countLoggedForStage(stg);
+        const cnt = document.getElementById(`count-${stg}`);
+        if(cnt) cnt.textContent = total === 0 ? '—' : `${logged}/${total}`;
+    });
+    document.querySelectorAll('.stage-tab').forEach(t=>{
+        const s = t.getAttribute('data-stage');
+        t.classList.toggle('is-active', s === state.stage);
+        t.setAttribute('aria-selected', s === state.stage ? 'true' : 'false');
+    });
+    const ttl = document.getElementById('scorecard-title');
+    if(ttl) ttl.textContent = `${stageLabel(state.stage)} · today`;
+    const dst = document.getElementById('dish-section-title');
+    const dishCount = state.menu ? (state.menu.dishes||[]).length : 0;
+    if(dst) dst.innerHTML = `${stageLabel(state.stage)} sheet <span class="count">${dishCount || '—'}</span>`;
+}
+
+/* === Week strip === */
 function renderWeekStrip(){
     const strip=document.getElementById('week-strip');
     strip.querySelectorAll('.day').forEach(d=>d.remove());
@@ -571,29 +672,34 @@ function renderWeekStrip(){
     });
 }
 
+/* === Alert (per stage) === */
 function renderAlert(){
     const host=document.getElementById('alert-host');
     if(!state.menu){
-        host.innerHTML=`<div class="alert"><div class="icon">i</div><div class="body"><div class="title">No menu for this week</div><div class="detail">Firebase has no <code>menus/${isoYearWeek(state.selectedDate)}</code> record yet. Click ⚙ Settings to paste menu JSON.</div></div></div>`;
+        host.innerHTML=`<div class="alert"><div class="icon">i</div><div class="body"><div class="title">No menu for this week</div><div class="detail">No <code>menus/${isoYearWeek(state.selectedDate)}</code> record yet. Click ⚙ to paste menu JSON.</div></div></div>`;
         return;
     }
     const dishes=state.menu.dishes||[];
-    const stats=dishes.map(d=>({dish:d,status:readingStatus(d, state.checks[d.dishLetter])}));
+    const stats=dishes.map(d=>({dish:d, status:stageStatus(d, state.stage, state.checks[d.dishLetter])}));
     const fails=stats.filter(s=>s.status==='hold');
     const warns=stats.filter(s=>s.status==='watch');
     const empties=stats.filter(s=>s.status==='empty');
 
     if(fails.length===0 && warns.length===0 && empties.length<dishes.length){
-        host.innerHTML=`<div class="alert is-ok"><div class="icon">✓</div><div class="body"><div class="title">All readings within spec.</div><div class="detail">Every logged reading on ${humanDate(state.selectedDate)} is passing.</div></div></div>`;
+        host.innerHTML=`<div class="alert is-ok"><div class="icon">✓</div><div class="body"><div class="title">${stageLabel(state.stage)}: all within spec</div><div class="detail">Every logged ${stageLabel(state.stage).toLowerCase()} reading on ${humanDate(state.selectedDate)} is passing.</div></div></div>`;
         return;
     }
-    if(fails.length===0 && warns.length===0 && empties.length===dishes.length){
-        host.innerHTML=`<div class="alert"><div class="icon">i</div><div class="body"><div class="title">No readings yet for ${humanDate(state.selectedDate)}</div><div class="detail">${dishes.length} ${dishes.length===1?'dish':'dishes'} on the menu. Tap a number on any dish to start logging.</div></div></div>`;
+    if(empties.length===dishes.length){
+        host.innerHTML=`<div class="alert"><div class="icon">i</div><div class="body"><div class="title">No ${stageLabel(state.stage).toLowerCase()} readings yet</div><div class="detail">${dishes.length} ${dishes.length===1?'dish':'dishes'} on the menu for ${humanDate(state.selectedDate)}. Tap a temperature to start logging.</div></div></div>`;
         return;
     }
     const top=(fails[0]||warns[0]);
+    if(!top){
+        host.innerHTML='';
+        return;
+    }
     const r=state.checks[top.dish.dishLetter]||{};
-    const t=avg(r.temperatures);
+    const t=stageTemp(top.dish, state.stage, r);
     const tone=fails.length?'fail':'warn';
     const parts=[
         fails.length?`${fails.length} on hold`:null,
@@ -603,48 +709,75 @@ function renderAlert(){
         <div class="alert is-${tone}">
             <div class="icon">${tone==='fail'?'!':'•'}</div>
             <div class="body">
-                <div class="title">${parts.join(' · ')}</div>
-                <div class="detail">${escapeHtml(top.dish.dishName)} reading ${t!=null?t.toFixed(1):'—'}°C · ${isCold(top.dish)?`spec ≤${COLD_MAX}°C`:`spec ≥${HOT_MIN}°C`}</div>
+                <div class="title">${stageLabel(state.stage)}: ${parts.join(' · ')}</div>
+                <div class="detail">${escapeHtml(top.dish.dishName)} reading ${t!=null?Number(t).toFixed(1):'—'}°C · ${isCold(top.dish)?`spec ≤${COLD_MAX}°C`:`spec ≥${HOT_MIN}°C`}</div>
             </div>
-            <button class="btn btn-ghost-danger" onclick="window.__qc.filterToIssues()">Review</button>
+            <button class="btn btn-ghost-danger btn-sm" onclick="window.__qc.filterToIssues()">Review</button>
         </div>
     `;
 }
 
+/* === Scorecard (per stage) === */
 function renderScorecard(){
     const host=document.getElementById('scorecard');
     document.getElementById('scorecard-date').textContent=humanDate(state.selectedDate);
     if(!state.menu){ host.innerHTML=''; return; }
     const dishes=state.menu.dishes||[];
-    const b={ hotPass:0, hotTot:0, coldPass:0, coldTot:0, wOk:0, wTot:0, logged:0 };
+
+    if(state.stage === 'qc'){
+        // existing 4 cards: cold/hot temp pass, weight band, coverage
+        const b={ hotPass:0, hotTot:0, coldPass:0, coldTot:0, wOk:0, wTot:0, logged:0 };
+        for(const d of dishes){
+            const c=state.checks[d.dishLetter];
+            if(!c) continue;
+            const t=avg(c.temperatures);
+            if(t!=null) b.logged++;
+            const s=readingStatus(d,c);
+            if(t!=null){
+                if(isCold(d)){ b.coldTot++; if(s!=='hold') b.coldPass++; }
+                else         { b.hotTot++;  if(s!=='hold') b.hotPass++;  }
+            }
+            const w=avg(c.weights);
+            if(w!=null && d.theoreticalWeight){
+                b.wTot++;
+                if(Math.abs((w-d.theoreticalWeight)/d.theoreticalWeight)<=0.08) b.wOk++;
+            }
+        }
+        const pct=(n,d)=>d===0?'—':`${Math.round(n/d*100)}%`;
+        host.innerHTML=[
+            {cls:'cold',    label:'Cold · temperature', rate:pct(b.coldPass,b.coldTot), meta:b.coldTot?`${b.coldPass} of ${b.coldTot} pass`:'no readings'},
+            {cls:'hot',     label:'Hot · temperature',  rate:pct(b.hotPass,b.hotTot),   meta:b.hotTot?`${b.hotPass} of ${b.hotTot} pass`:'no readings'},
+            {cls:'weight',  label:'Weight band',        rate:pct(b.wOk,b.wTot),         meta:b.wTot?`${b.wOk} of ${b.wTot} within ±8%`:'no weights'},
+            {cls:'coverage',label:'Coverage',           rate:pct(b.logged,dishes.length), meta:`${b.logged} of ${dishes.length} logged`}
+        ].map(s=>`<div class="score ${s.cls}"><div class="rate">${s.rate}</div><div class="label">${s.label}</div><div class="meta">${s.meta}</div></div>`).join('');
+        return;
+    }
+
+    // Assembly or Dispatch: stats per stage
+    const b={ hotPass:0, hotTot:0, coldPass:0, coldTot:0, logged:0 };
+    let hotSum=0, hotCnt=0, coldSum=0, coldCnt=0;
     for(const d of dishes){
         const c=state.checks[d.dishLetter];
-        if(!c) continue;
-        const t=avg(c.temperatures);
-        if(t!=null) b.logged++;
-        const s=readingStatus(d,c);
-        if(t!=null){
-            if(isCold(d)){ b.coldTot++; if(s!=='hold') b.coldPass++; }
-            else         { b.hotTot++;  if(s!=='hold') b.hotPass++;  }
-        }
-        const w=avg(c.weights);
-        if(w!=null && d.theoreticalWeight){
-            b.wTot++;
-            if(Math.abs((w-d.theoreticalWeight)/d.theoreticalWeight)<=0.08) b.wOk++;
-        }
+        const v=c?.[state.stage]?.temp;
+        if(v==null) continue;
+        b.logged++;
+        const s=tempStatus(v, d);
+        if(isCold(d)){ b.coldTot++; if(s!=='hold') b.coldPass++; coldSum+=Number(v); coldCnt++; }
+        else         { b.hotTot++;  if(s!=='hold') b.hotPass++;  hotSum+=Number(v);  hotCnt++; }
     }
     const pct=(n,d)=>d===0?'—':`${Math.round(n/d*100)}%`;
-    const items=[
-        {cls:'cold',    label:'Cold · temperature', rate:pct(b.coldPass,b.coldTot), meta:b.coldTot?`${b.coldPass} of ${b.coldTot} pass`:'no readings yet'},
-        {cls:'hot',     label:'Hot · temperature',  rate:pct(b.hotPass,b.hotTot),   meta:b.hotTot?`${b.hotPass} of ${b.hotTot} pass`:'no readings yet'},
-        {cls:'weight',  label:'Weight band',        rate:pct(b.wOk,b.wTot),         meta:b.wTot?`${b.wOk} of ${b.wTot} within ±8%`:'no weights yet'},
+    const cls = state.stage; // 'assembly' or 'dispatch'
+    host.innerHTML=[
+        {cls:'cold',  label:'Cold · '+state.stage, rate:pct(b.coldPass,b.coldTot), meta:b.coldTot?`${b.coldPass} of ${b.coldTot} pass`:'no readings'},
+        {cls:'hot',   label:'Hot · '+state.stage,  rate:pct(b.hotPass,b.hotTot),   meta:b.hotTot?`${b.hotPass} of ${b.hotTot} pass`:'no readings'},
+        {cls:cls,     label:'Avg hot temp',         rate:hotCnt?`${(hotSum/hotCnt).toFixed(1)}°C`:'—', meta:hotCnt?`across ${hotCnt} hot dishes`:'no hot readings'},
         {cls:'coverage',label:'Coverage',           rate:pct(b.logged,dishes.length), meta:`${b.logged} of ${dishes.length} logged`}
-    ];
-    host.innerHTML=items.map(s=>`<div class="score ${s.cls}"><div class="rate">${s.rate}</div><div class="label">${s.label}</div><div class="meta">${s.meta}</div></div>`).join('');
+    ].map(s=>`<div class="score ${s.cls}"><div class="rate">${s.rate}</div><div class="label">${s.label}</div><div class="meta">${s.meta}</div></div>`).join('');
 }
 
+/* === Filter === */
 function passesFilter(dish, check){
-    const s=readingStatus(dish, check);
+    const s=stageStatus(dish, state.stage, check);
     if(state.filter==='all') return true;
     if(state.filter==='cold') return isCold(dish);
     if(state.filter==='hot') return !isCold(dish);
@@ -652,23 +785,24 @@ function passesFilter(dish, check){
     return true;
 }
 
+/* === Dish rendering (per stage) === */
 function renderDishes(){
     const host=document.getElementById('dish-area');
     document.getElementById('pass-count').textContent = state.menu ? (state.menu.dishes||[]).length : '—';
-    if(!state.menu){ host.innerHTML=`<div class="loading">No menu for this week yet. Open ⚙ Settings to paste menu JSON.</div>`; return; }
+    if(!state.menu){ host.innerHTML=`<div class="loading">No menu for this week yet. Open ⚙ to paste menu JSON.</div>`; return; }
     const all=(state.menu.dishes||[]).filter(d=>passesFilter(d, state.checks[d.dishLetter]));
     if(all.length===0){ host.innerHTML=`<div class="loading">No dishes match this filter.</div>`; return; }
     const cold=all.filter(d=>isCold(d));
     const hot=all.filter(d=>!isCold(d));
     const renderCat=(label,cls,list)=>{
         if(!list.length) return '';
-        return `<div class="cat-title ${cls}"><span class="dot"></span>${label}<span class="badge">${list.length}</span></div><div class="dish-grid">${list.map(renderTile).join('')}</div>`;
+        return `<div class="cat-title ${cls}"><span class="dot"></span>${label}<span class="badge">${list.length}</span></div><div class="dish-grid ${state.stage==='qc'?'':'stage'}">${list.map(state.stage==='qc'?renderQcTile:renderStageTile).join('')}</div>`;
     };
     host.innerHTML = renderCat('Cold dishes', 'cold', cold) + renderCat('Hot dishes', 'hot', hot);
     bindTiles();
 }
 
-function renderTile(dish){
+function renderQcTile(dish){
     const c=state.checks[dish.dishLetter]||{};
     const s=readingStatus(dish, c);
     const t=avg(c.temperatures), w=avg(c.weights);
@@ -689,33 +823,75 @@ function renderTile(dish){
                 </div>
                 <button class="tile-more" data-action="open" data-letter="${escapeHtml(dish.dishLetter)}" aria-label="Open ${escapeHtml(dish.dishName)}">⋯</button>
             </div>
-
             <div class="tile-spec">Spec ${specHint} · target ${dish.theoreticalWeight}g</div>
-
             <div class="read-row">
                 <label class="read-cell is-${tStat}">
                     <span class="lbl">Avg temp</span>
-                    <input type="number" step="0.1" inputmode="decimal" data-edit="temp" data-letter="${escapeHtml(dish.dishLetter)}" value="${t!=null?t.toFixed(1):''}" placeholder="—" aria-label="Temperature for ${escapeHtml(dish.dishName)}" />
+                    <input type="number" step="0.1" inputmode="decimal" data-edit="qc-temp" data-letter="${escapeHtml(dish.dishLetter)}" value="${t!=null?t.toFixed(1):''}" placeholder="—" />
                     <span class="unit">°C</span>
                     <span class="save-pulse"></span>
                 </label>
                 <label class="read-cell is-${wStat}">
                     <span class="lbl">Avg weight</span>
-                    <input type="number" step="1" inputmode="numeric" data-edit="weight" data-letter="${escapeHtml(dish.dishLetter)}" value="${w!=null?w.toFixed(0):''}" placeholder="—" aria-label="Weight for ${escapeHtml(dish.dishName)}" />
+                    <input type="number" step="1" inputmode="numeric" data-edit="qc-weight" data-letter="${escapeHtml(dish.dishLetter)}" value="${w!=null?w.toFixed(0):''}" placeholder="—" />
                     <span class="unit">g</span>
                     <span class="save-pulse"></span>
                 </label>
             </div>
-
             <div class="stage-strip">
-                <span class="stage-badge ${hasAssembly?'is-set':''}" title="${hasAssembly?'Assembly logged · '+c.assembly.temp+'°C':'Assembly not logged'}">Assembly</span>
-                <span class="stage-badge ${t!=null?'is-set':''}" title="QC ${t!=null?'logged':'not logged'}">QC</span>
-                <span class="stage-badge ${hasDispatch?'is-set':''}" title="${hasDispatch?'Dispatch logged · '+c.dispatch.temp+'°C':'Dispatch not logged'}">Dispatch</span>
+                <span class="stage-badge ${hasAssembly?'is-set':''}" data-stage="assembly">Assembly</span>
+                <span class="stage-badge ${t!=null?'is-set':''}" data-stage="qc">QC</span>
+                <span class="stage-badge ${hasDispatch?'is-set':''}" data-stage="dispatch">Dispatch</span>
+            </div>
+            <div class="status-bar">
+                <span class="pill is-${s}">${statusLabel(s)}</span>
+                <span style="font-size:11px;color:var(--mute);font-weight:500">${c.timestamp?fmtTime(c.timestamp):''}</span>
+            </div>
+        </article>
+    `;
+}
+
+function renderStageTile(dish){
+    const stage = state.stage; // assembly or dispatch
+    const c=state.checks[dish.dishLetter]||{};
+    const data = c[stage] || {};
+    const t = data.temp;
+    const w = data.weight;
+    const time = data.time || '';
+    const tStat = tempStatus(t, dish);
+    const cls=isCold(dish)?'cold':'hot';
+    const specHint = isCold(dish)?`≤${COLD_MAX}°C`:`≥${HOT_MIN}°C`;
+    const s = tStat;
+    return `
+        <article class="tile ${cls} ${s==='empty'?'is-empty':''}" data-letter="${escapeHtml(dish.dishLetter)}">
+            <div class="tile-head">
+                <div class="tile-meta">
+                    <span class="tile-letter">${escapeHtml(dish.dishLetter)}</span>
+                    <div style="min-width:0;flex:1">
+                        <div class="tile-name" title="${escapeHtml(dish.dishName)}">${escapeHtml(dish.dishName)}</div>
+                    </div>
+                </div>
+                <button class="tile-more" data-action="open" data-letter="${escapeHtml(dish.dishLetter)}" aria-label="Open ${escapeHtml(dish.dishName)}">⋯</button>
+            </div>
+            <div class="tile-spec">${stageLabel(stage)} spec ${specHint} · target ${dish.theoreticalWeight}g</div>
+
+            <div class="read-row">
+                <label class="read-cell is-${tStat}">
+                    <span class="lbl">${stageLabel(stage)} temp</span>
+                    <input type="number" step="0.1" inputmode="decimal" data-edit="stage-temp" data-letter="${escapeHtml(dish.dishLetter)}" value="${t!=null?t:''}" placeholder="—" />
+                    <span class="unit">°C</span>
+                    <span class="save-pulse"></span>
+                </label>
+                <label class="time-cell">
+                    <span class="lbl">Time</span>
+                    <input type="time" data-edit="stage-time" data-letter="${escapeHtml(dish.dishLetter)}" value="${escapeAttr(time)}" />
+                    <button class="time-now" type="button" data-action="now" data-letter="${escapeHtml(dish.dishLetter)}">Now</button>
+                </label>
             </div>
 
             <div class="status-bar">
                 <span class="pill is-${s}">${statusLabel(s)}</span>
-                <span style="font-size:11px;color:var(--mute);font-weight:500">${c.timestamp?fmtTime(c.timestamp):''}</span>
+                <span style="font-size:11px;color:var(--mute);font-weight:500">${time||(t!=null?'logged':'')}</span>
             </div>
         </article>
     `;
@@ -725,33 +901,71 @@ function bindTiles(){
     document.querySelectorAll('[data-action="open"]').forEach(btn=>{
         btn.addEventListener('click', e=>{ e.stopPropagation(); openModal(btn.getAttribute('data-letter')); });
     });
+    document.querySelectorAll('[data-action="now"]').forEach(btn=>{
+        btn.addEventListener('click', async e=>{
+            e.preventDefault(); e.stopPropagation();
+            const letter=btn.getAttribute('data-letter');
+            const timeInp = document.querySelector(`input[data-edit="stage-time"][data-letter="${letter}"]`);
+            if(timeInp){ timeInp.value = nowHHMM(); }
+            try{
+                await saveStage(letter, state.stage, { time: nowHHMM() });
+                toast('Time stamped', 'ok');
+            }catch(err){ toast('Save failed','fail'); console.error(err); }
+        });
+    });
     document.querySelectorAll('.tile').forEach(tile=>{
         tile.addEventListener('click', e=>{
-            if(e.target.closest('input, button, label.read-cell')) return;
+            if(e.target.closest('input, button, label.read-cell, label.time-cell')) return;
             openModal(tile.getAttribute('data-letter'));
         });
     });
     document.querySelectorAll('[data-edit]').forEach(el=>{
-        el.addEventListener('keydown', e=>{ if(e.key==='Enter'){ e.preventDefault(); el.blur(); } });
+        el.addEventListener('keydown', e=>{ if(e.key==='Enter' && el.type !== 'time'){ e.preventDefault(); el.blur(); } });
         el.addEventListener('blur', async ()=>{
             const letter=el.getAttribute('data-letter');
             const kind=el.getAttribute('data-edit');
             const v=el.value.trim();
-            const num=v===''?null:Number(v);
-            if(v!=='' && Number.isNaN(num)) return;
-            const partial={};
-            if(kind==='temp') partial.temperatures = num==null ? null : [num,num,num];
-            if(kind==='weight') partial.weights = num==null ? null : [num,num,num];
-            try{
-                await saveCheckField(letter, partial);
-                const cell=el.closest('.read-cell');
-                cell.classList.remove('saved'); void cell.offsetWidth; cell.classList.add('saved');
-                toast('Saved', 'ok');
-            }catch(e){ toast('Save failed','fail'); console.error(e); }
+
+            if(kind === 'qc-temp'){
+                const num=v===''?null:Number(v);
+                if(v!=='' && Number.isNaN(num)) return;
+                try{
+                    await saveCheckField(letter, { temperatures: num==null ? null : [num,num,num] });
+                    flashSave(el); toast('Saved','ok');
+                }catch(e){ toast('Save failed','fail'); }
+            } else if(kind === 'qc-weight'){
+                const num=v===''?null:Number(v);
+                if(v!=='' && Number.isNaN(num)) return;
+                try{
+                    await saveCheckField(letter, { weights: num==null ? null : [num,num,num] });
+                    flashSave(el); toast('Saved','ok');
+                }catch(e){ toast('Save failed','fail'); }
+            } else if(kind === 'stage-temp'){
+                const num=v===''?null:Number(v);
+                if(v!=='' && Number.isNaN(num)) return;
+                try{
+                    await saveStage(letter, state.stage, { temp: num });
+                    flashSave(el); toast('Saved','ok');
+                }catch(e){ toast('Save failed','fail'); }
+            } else if(kind === 'stage-time'){
+                try{
+                    await saveStage(letter, state.stage, { time: v });
+                    flashSave(el); toast('Saved','ok');
+                }catch(e){ toast('Save failed','fail'); }
+            }
         });
     });
 }
 
+function flashSave(el){
+    const cell=el.closest('.read-cell');
+    if(!cell) return;
+    cell.classList.remove('saved');
+    void cell.offsetWidth;
+    cell.classList.add('saved');
+}
+
+/* === Summary table === */
 function renderSummary(){
     const tbody=document.getElementById('summary-body');
     document.getElementById('summary-date').textContent=humanDate(state.selectedDate);
@@ -793,10 +1007,15 @@ function renderSummary(){
     });
 }
 
-function renderAll(){ renderWeekStrip(); renderAlert(); renderScorecard(); renderDishes(); renderSummary(); }
+function renderAll(){ renderWeekStrip(); updateStageTabs(); renderAlert(); renderScorecard(); renderDishes(); renderSummary(); }
 
-/* === Detail Modal === */
-function openModal(letter){ modalState.letter=letter; modalState.tab='qc'; renderModal(); document.getElementById('modal-overlay').classList.remove('hidden'); }
+/* === Modal === */
+function openModal(letter){
+    modalState.letter=letter;
+    modalState.tab=state.stage; // open to the current top-level stage
+    renderModal();
+    document.getElementById('modal-overlay').classList.remove('hidden');
+}
 function closeModal(){ document.getElementById('modal-overlay').classList.add('hidden'); document.getElementById('modal-overlay').innerHTML=''; }
 
 function renderModal(){
@@ -807,18 +1026,16 @@ function renderModal(){
     const cls=isCold(dish)?'cold':'hot';
     const overlay=document.getElementById('modal-overlay');
     const s=readingStatus(dish,c);
-
     const tab = modalState.tab;
     const hasAssembly = c.assembly && c.assembly.temp != null;
     const hasDispatch = c.dispatch && c.dispatch.temp != null;
     const hasQc = (c.temperatures||[]).some(v=>v!=null);
     const hasIng = (c.selectedIngredients||[]).length > 0;
     const hasPhoto = !!c.capturedImage;
-
     overlay.innerHTML=`
         <div class="modal-panel">
             <div class="modal-head ${cls}">
-                <div class="eyebrow">QC file · ${humanDate(state.selectedDate)}</div>
+                <div class="eyebrow">${stageLabel(tab)} · ${humanDate(state.selectedDate)}</div>
                 <h3 class="title">${escapeHtml(dish.dishLetter)} — ${escapeHtml(dish.dishName)}</h3>
                 <div class="chips">
                     <span class="pill is-${s}">${statusLabel(s)}</span>
@@ -827,33 +1044,25 @@ function renderModal(){
                 </div>
                 <button class="modal-close" aria-label="Close" onclick="window.__qc.closeModal()">×</button>
             </div>
-
             <div class="modal-tabs">
-                <button class="modal-tab ${tab==='qc'?'is-active':''} ${hasQc?'has-data':''}" data-tab="qc"><span class="tab-dot"></span>QC check</button>
                 <button class="modal-tab ${tab==='assembly'?'is-active':''} ${hasAssembly?'has-data':''}" data-tab="assembly"><span class="tab-dot"></span>Assembly</button>
+                <button class="modal-tab ${tab==='qc'?'is-active':''} ${hasQc?'has-data':''}" data-tab="qc"><span class="tab-dot"></span>QC check</button>
                 <button class="modal-tab ${tab==='dispatch'?'is-active':''} ${hasDispatch?'has-data':''}" data-tab="dispatch"><span class="tab-dot"></span>Dispatch</button>
                 <button class="modal-tab ${tab==='ingredients'?'is-active':''} ${hasIng?'has-data':''}" data-tab="ingredients"><span class="tab-dot"></span>Ingredients</button>
                 <button class="modal-tab ${tab==='photo'?'is-active':''} ${hasPhoto?'has-data':''}" data-tab="photo"><span class="tab-dot"></span>Photos</button>
             </div>
-
             <div class="modal-body" id="modal-body">
                 ${renderTabContent(tab, dish, c)}
             </div>
             <div class="modal-foot">
-                <span class="hint">All changes save automatically. <span class="save-state" id="modal-save-state"></span></span>
+                <span class="hint">Auto-saves on blur. <span class="save-state" id="modal-save-state"></span></span>
                 <button class="btn" onclick="window.__qc.closeModal()">Done</button>
             </div>
         </div>
     `;
-
-    // Tab clicks
     overlay.querySelectorAll('.modal-tab').forEach(t=>{
-        t.addEventListener('click', ()=>{
-            modalState.tab = t.getAttribute('data-tab');
-            renderModal();
-        });
+        t.addEventListener('click', ()=>{ modalState.tab=t.getAttribute('data-tab'); renderModal(); });
     });
-
     bindTabHandlers(tab, dish);
 }
 
@@ -906,23 +1115,14 @@ function renderQcTab(dish, c){
 
 function renderStageTab(stage, label, dish, c){
     const data = c[stage] || {};
-    const tStat = tempStatus(data.temp, dish);
-    const cls=isCold(dish)?'cold':'hot';
     return `
-        <div class="stage-summary">
-            <span class="label">${label} temp</span>
-            <span class="val" style="color:var(--${tStat==='pass'?'pass':tStat==='watch'?'watch':tStat==='hold'?'hold':'mute'})">${data.temp!=null?Number(data.temp).toFixed(1)+'°C':'—'}</span>
-            <span class="label">at</span>
-            <span class="val">${data.time||'—'}</span>
-            <span class="pill is-${tStat}">${statusLabel(tStat)}</span>
-        </div>
         <div class="stage-form">
             <div class="field">
                 <label class="label">Temperature (°C)</label>
                 <input class="num" type="number" step="0.1" inputmode="decimal" data-stage-input="temp" value="${data.temp!=null?data.temp:''}" placeholder="—" />
             </div>
             <div class="field">
-                <label class="label">Time (HH:MM)</label>
+                <label class="label">Time</label>
                 <input type="time" data-stage-input="time" value="${escapeAttr(data.time||'')}" />
             </div>
             <div class="field">
@@ -931,15 +1131,15 @@ function renderStageTab(stage, label, dish, c){
             </div>
             <div class="field">
                 <label class="label">Logged by (optional)</label>
-                <input type="text" data-stage-input="by" value="${escapeAttr(data.by||'')}" placeholder="Initials or name" />
+                <input type="text" data-stage-input="by" value="${escapeAttr(data.by||'')}" placeholder="Initials" />
             </div>
             <div class="field full">
                 <label class="label">Note</label>
                 <textarea data-stage-input="note" placeholder="What was noted at this stage?">${escapeHtml(data.note||'')}</textarea>
             </div>
         </div>
-        <div style="font-size:12px;color:var(--mute);text-align:right">
-            <button class="btn" data-stage-now>Stamp current time</button>
+        <div style="text-align:right">
+            <button class="btn btn-sm" data-stage-now>Stamp current time</button>
         </div>
     `;
 }
@@ -949,7 +1149,7 @@ function renderIngredientsTab(dish, c){
     const selected=new Set(c.selectedIngredients||[]);
     if(ingredients.length === 0) return `<div style="color:var(--mute);padding:24px;text-align:center">No ingredients in menu data for this dish.</div>`;
     return `
-        <div class="section-mini">Ingredients · click to toggle present</div>
+        <div class="section-mini">Ingredients · tap to toggle present</div>
         <div class="ing-list">
             ${ingredients.map(ing=>{
                 const present=selected.has(ing.name);
@@ -966,7 +1166,7 @@ function renderPhotoTab(dish, c){
                 ${dish.dishImage?`<img src="${escapeAttr(dish.dishImage)}" alt="Reference"/>`:''}
                 <div class="photo-label">Reference</div>
             </div>
-            <div class="photo" id="photo-captured">
+            <div class="photo">
                 ${c.capturedImage
                     ? `<img src="${escapeAttr(c.capturedImage)}" alt="Today's capture"/>
                        <div class="photo-label">Today's capture</div>
@@ -981,14 +1181,13 @@ function renderPhotoTab(dish, c){
                 }
             </div>
         </div>
-        <div style="font-size:12px;color:var(--mute);text-align:center;margin-top:-6px">Photo is resized to ~1024px and stored as JPEG.</div>
+        <div style="font-size:12px;color:var(--mute);text-align:center">Photo is resized to ~1024px and stored as JPEG.</div>
     `;
 }
 
 function bindTabHandlers(tab, dish){
     const overlay=document.getElementById('modal-overlay');
     const letter=modalState.letter;
-
     if(tab === 'qc'){
         overlay.querySelectorAll('input[data-modal]').forEach(inp=>{
             inp.addEventListener('keydown', e=>{ if(e.key==='Enter'){ e.preventDefault(); inp.blur(); } });
@@ -1084,7 +1283,6 @@ function flashSaved(){
     window.__saveFlash=setTimeout(()=>{ el.textContent=''; }, 1500);
 }
 
-/* === Photo resize === */
 async function resizeImageToDataUrl(file, maxSide=1024, quality=0.85){
     const url=URL.createObjectURL(file);
     try{
@@ -1096,12 +1294,10 @@ async function resizeImageToDataUrl(file, maxSide=1024, quality=0.85){
         canvas.width=w; canvas.height=h;
         canvas.getContext('2d').drawImage(img, 0, 0, w, h);
         return canvas.toDataURL('image/jpeg', quality);
-    } finally {
-        URL.revokeObjectURL(url);
-    }
+    } finally { URL.revokeObjectURL(url); }
 }
 
-/* === Settings modal (menu JSON paste) === */
+/* === Settings modal === */
 function openSettings(){
     const overlay=document.getElementById('settings-overlay');
     const weekId=isoYearWeek(state.selectedDate);
@@ -1111,13 +1307,12 @@ function openSettings(){
         dishes: [
             { dishLetter:'A', dishName:'Bowl Of Goodness', dishType:'cold', theoreticalWeight:580,
               dishImage:'https://example.com/bowl.jpg',
-              dishIngredients:[{name:'Quinoa - Steamed', weight:'80g'},{name:'Cherry Tomato', weight:'30g'}] },
+              dishIngredients:[{name:'Quinoa - Steamed', weight:'80g'}] },
             { dishLetter:'E', dishName:'Bun Bo Xao', dishType:'hot', theoreticalWeight:555,
               dishImage:'https://example.com/bun.jpg',
-              dishIngredients:[{name:'Beef Strips', weight:'150g'},{name:'Rice Noodle', weight:'200g'}] }
+              dishIngredients:[{name:'Beef Strips', weight:'150g'}] }
         ]
     }, null, 2);
-
     overlay.innerHTML=`
         <div class="modal-panel" style="max-width:720px">
             <div class="modal-head">
@@ -1130,18 +1325,15 @@ function openSettings(){
                 <button class="modal-close" aria-label="Close" onclick="window.__qc.closeSettings()">×</button>
             </div>
             <div class="modal-body">
-
                 <details class="settings-help">
                     <summary>Expected JSON format</summary>
-                    <div style="margin-top:8px">Paste a menu for a specific ISO week (e.g. <code>${weekId}</code>). Each dish needs <code>dishLetter</code>, <code>dishName</code>, <code>dishType</code> (<code>"cold"</code> or <code>"hot"</code>), <code>theoreticalWeight</code> (grams), and optionally <code>dishImage</code> (URL) and <code>dishIngredients</code> (array of <code>{name, weight}</code>).</div>
+                    <div style="margin-top:8px">Paste a menu for ISO week <code>${weekId}</code>. Each dish needs <code>dishLetter</code>, <code>dishName</code>, <code>dishType</code> (<code>"cold"</code> or <code>"hot"</code>), <code>theoreticalWeight</code> (grams). Optional: <code>dishImage</code>, <code>dishIngredients</code>.</div>
                     <pre>${escapeHtml(sampleJson)}</pre>
                 </details>
-
                 <div class="field">
                     <label class="label">Menu JSON for week ${weekId}</label>
                     <textarea class="comment-area" id="settings-menu-json" style="min-height:280px;font-family:ui-monospace,monospace;font-size:12.5px" placeholder="Paste the JSON for this week's menu here…">${escapeHtml(existing)}</textarea>
                 </div>
-
                 <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px;flex-wrap:wrap">
                     <button class="btn" onclick="window.__qc.closeSettings()">Cancel</button>
                     <button class="btn btn-ghost-danger" id="settings-clear">Clear week</button>
@@ -1151,18 +1343,15 @@ function openSettings(){
         </div>
     `;
     overlay.classList.remove('hidden');
-
     overlay.querySelector('#settings-save').onclick=async()=>{
         const txt=document.getElementById('settings-menu-json').value.trim();
         if(!txt){ toast('Empty JSON','fail'); return; }
         let parsed;
         try{ parsed=JSON.parse(txt); }catch(e){ toast('Invalid JSON','fail'); return; }
-        // Accept either { dishes:[...] } or just [...] (a dishes array)
         let menuObj;
         if(Array.isArray(parsed)) menuObj={ dishes: parsed, startDate: state.weekStartIso };
         else if(parsed && Array.isArray(parsed.dishes)) menuObj = { startDate: state.weekStartIso, ...parsed };
         else { toast('Need a dishes array', 'fail'); return; }
-        // Validate dish shape
         const bad = menuObj.dishes.find(d=>!d.dishLetter || !d.dishName || !d.dishType);
         if(bad){ toast('Each dish needs dishLetter, dishName, dishType', 'fail'); return; }
         try{
@@ -1188,8 +1377,8 @@ function toast(msg, kind){
     t.className=`toast ${kind==='ok'?'is-ok':kind==='fail'?'is-fail':''}`;
     t.innerHTML=`<span class="toast-dot"></span><span>${escapeHtml(msg)}</span>`;
     document.body.appendChild(t);
-    setTimeout(()=>{ t.style.opacity='0'; t.style.transition='opacity 240ms ease'; },1500);
-    setTimeout(()=>t.remove(),1900);
+    setTimeout(()=>{ t.style.opacity='0'; t.style.transition='opacity 240ms ease'; },1400);
+    setTimeout(()=>t.remove(),1800);
 }
 
 /* === Helpers === */
@@ -1215,9 +1404,20 @@ async function selectDate(iso){
     renderAll();
 }
 
+function setStage(stg){
+    state.stage = stg;
+    state.filter = 'all';
+    document.querySelectorAll('.filter button').forEach(b=>b.classList.toggle('is-active', b.getAttribute('data-filter')==='all'));
+    renderAll();
+    document.getElementById('dish-area').scrollIntoView({behavior:'smooth', block:'start'});
+}
+
 function wire(){
     document.getElementById('week-prev').onclick=()=>{ state.weekStartIso=shiftIso(state.weekStartIso,-7); selectDate(state.weekStartIso); };
     document.getElementById('week-next').onclick=()=>{ state.weekStartIso=shiftIso(state.weekStartIso,7); selectDate(state.weekStartIso); };
+    document.querySelectorAll('.stage-tab').forEach(btn=>{
+        btn.addEventListener('click',()=>setStage(btn.getAttribute('data-stage')));
+    });
     document.querySelectorAll('.filter button').forEach(btn=>{
         btn.addEventListener('click',()=>{
             document.querySelectorAll('.filter button').forEach(b=>b.classList.remove('is-active'));

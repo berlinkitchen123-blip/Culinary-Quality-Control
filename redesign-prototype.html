@@ -825,7 +825,7 @@ function renderQcTile(dish){
                 </div>
                 <button class="tile-more" data-action="open" data-letter="${escapeHtml(dish.dishLetter)}" aria-label="Open ${escapeHtml(dish.dishName)}">⋯</button>
             </div>
-            <div class="tile-spec">Spec ${specHint} · target ${dish.theoreticalWeight}g</div>
+            <div class="tile-spec">Spec ${specHint} · target ${dish.theoreticalWeight ? dish.theoreticalWeight+'g' : '—'}</div>
             <div class="read-row">
                 <label class="read-cell is-${tStat}">
                     <span class="lbl">Avg temp</span>
@@ -875,7 +875,7 @@ function renderStageTile(dish){
                 </div>
                 <button class="tile-more" data-action="open" data-letter="${escapeHtml(dish.dishLetter)}" aria-label="Open ${escapeHtml(dish.dishName)}">⋯</button>
             </div>
-            <div class="tile-spec">${stageLabel(stage)} spec ${specHint} · target ${dish.theoreticalWeight}g</div>
+            <div class="tile-spec">${stageLabel(stage)} spec ${specHint} · target ${dish.theoreticalWeight ? dish.theoreticalWeight+'g' : '—'}</div>
 
             <div class="read-row">
                 <label class="read-cell is-${tStat}">
@@ -993,7 +993,7 @@ function renderSummary(){
                 <td>${cellTemp(aT, d)}</td>
                 <td>${cellTemp(t, d)}</td>
                 <td>${cellTemp(dT, d)}</td>
-                <td><span class="cell-num">${w!=null?`${Math.round(w)} / ${d.theoreticalWeight}g`:`— / ${d.theoreticalWeight}g`}</span></td>
+                <td><span class="cell-num">${w!=null?`${Math.round(w)}${d.theoreticalWeight?' / '+d.theoreticalWeight+'g':'g'}`:(d.theoreticalWeight?`— / ${d.theoreticalWeight}g`:'—')}</span></td>
                 <td class="cell-note">${escapeHtml(c.comment||'—')}</td>
             </tr>
         `;
@@ -1042,7 +1042,7 @@ function renderModal(){
                 <div class="chips">
                     <span class="pill is-${s}">${statusLabel(s)}</span>
                     <span class="pill" style="text-transform:none;letter-spacing:0;color:${cls==='cold'?'var(--cold)':'var(--hot)'};background:${cls==='cold'?'var(--cold-soft)':'var(--hot-soft)'};border-color:${cls==='cold'?'var(--cold-line)':'var(--hot-line)'}">${cls==='cold'?'Cold':'Hot'} dish</span>
-                    <span class="pill" style="text-transform:none;letter-spacing:0">Theo ${dish.theoreticalWeight}g</span>
+                    <span class="pill" style="text-transform:none;letter-spacing:0">${dish.theoreticalWeight?'Theo '+dish.theoreticalWeight+'g':'No weight target'}</span>
                 </div>
                 <button class="modal-close" aria-label="Close" onclick="window.__qc.closeModal()">×</button>
             </div>
@@ -1096,7 +1096,7 @@ function renderQcTab(dish, c){
             <span class="delta">${tAvg!=null?(isCold(dish)?(tAvg<=COLD_MAX?`+${(COLD_MAX-tAvg).toFixed(1)} headroom`:`+${(tAvg-COLD_MAX).toFixed(1)} over spec`):(tAvg>=HOT_MIN?`+${(tAvg-HOT_MIN).toFixed(1)} above min`:`-${(HOT_MIN-tAvg).toFixed(1)} below min`)):'—'}</span>
         </div>
 
-        <div class="section-mini">Weight samples · theoretical ${dish.theoreticalWeight}g</div>
+        <div class="section-mini">Weight samples${dish.theoreticalWeight?' · theoretical '+dish.theoreticalWeight+'g':' · no target set'}</div>
         <div class="samples">
             ${[0,1,2].map(i=>{
                 const v=c.weights?.[i];
@@ -1299,6 +1299,123 @@ async function resizeImageToDataUrl(file, maxSide=1024, quality=0.85){
     } finally { URL.revokeObjectURL(url); }
 }
 
+/* === Menu JSON normalizer ===
+   Accepts:
+   1. Production format (Bella & Bona weekly menu):
+      { id, name, startDate, endDate, stickerMap, dishes: [
+        { id, variantName, type:'cold'|'hot', diet, stickerNo, webUrl, ingredients:[...], nutritionalInfo:{...}, category:{...} }
+      ] }
+   2. Simple QC format:
+      { dishes: [ { dishLetter, dishName, dishType, theoreticalWeight, dishImage, dishIngredients } ] }
+      or a bare array.
+   Returns a QC-shaped menu: { startDate, weekName, dishes:[{ dishLetter, dishName, dishType, theoreticalWeight, dishImage, dishIngredients, diet, category, stickerNo }] }
+*/
+function normalizeMenu(raw, opts){
+    opts = opts || {};
+    if(raw == null) throw new Error('Empty JSON');
+    let parsed = raw;
+    // Bare array → wrap
+    if(Array.isArray(parsed)) parsed = { dishes: parsed };
+    if(!parsed || !Array.isArray(parsed.dishes)) throw new Error('JSON must contain a dishes array');
+
+    // Detect production format: dishes have variantName + stickerNo + type
+    const looksProduction = parsed.dishes.some(d => d && (d.variantName || d.stickerNo) && (d.type === 'cold' || d.type === 'hot'));
+
+    let normalized;
+    if(looksProduction){
+        const includeAddons = !!opts.includeAddons;
+        const out = [];
+        const seenLetters = new Set();
+        for(const d of parsed.dishes){
+            if(!d) continue;
+            const sticker = String(d.stickerNo || '').trim();
+            const isAddon = sticker.toLowerCase() === 'addons';
+            if(isAddon && !includeAddons) continue;
+            const dishType = (d.type === 'hot' || d.type === 'cold') ? d.type : 'cold';
+            // dishLetter: use stickerNo (A-Z, 1-9, or "addons-<short id>")
+            let dishLetter = sticker || (d.id ? d.id.slice(0,4) : '?');
+            if(isAddon && includeAddons) dishLetter = 'ad-' + (d.id ? d.id.slice(0,4) : Math.random().toString(36).slice(2,6));
+            // De-duplicate dishLetter collisions
+            let unique = dishLetter, n = 1;
+            while(seenLetters.has(unique)){ unique = dishLetter + '·' + (++n); }
+            seenLetters.add(unique);
+
+            // Weight target: production doesn't ship this; try to derive from sum of ingredient amounts (only if all amounts look like grams), else null.
+            let theoreticalWeight = null;
+            if(Array.isArray(d.ingredients) && d.ingredients.length){
+                const sum = d.ingredients.reduce((acc,ing)=>{
+                    const a = Number(ing && ing.amount);
+                    if(!isFinite(a) || a <= 0 || a > 2000) return acc; // skip 999.99 placeholders + sub-recipe noise
+                    return acc + a;
+                }, 0);
+                if(sum > 50 && sum < 2000) theoreticalWeight = Math.round(sum);
+            }
+
+            // Ingredients: keep a flat list of {name, weight} from top-level ingredients only
+            const dishIngredients = Array.isArray(d.ingredients)
+                ? d.ingredients.map(ing => ({
+                    name: (ing.ingredient && ing.ingredient.name) || ing.name || '',
+                    weight: ing.amount != null ? (ing.amount + (ing.amount === 1 ? ' pc' : 'g')) : ''
+                  })).filter(i => i.name)
+                : [];
+
+            out.push({
+                dishLetter: unique,
+                dishName: d.variantName || d.name || 'Untitled',
+                dishType,
+                theoreticalWeight,
+                dishImage: d.webUrl || d.dishImage || '',
+                dishIngredients,
+                diet: d.diet || '',
+                category: (d.category && d.category.name) || '',
+                stickerNo: sticker,
+                isAddon,
+                productId: d.id || null,
+                spiciness: d.spiciness || 0
+            });
+        }
+        normalized = {
+            startDate: opts.weekStartIso,
+            weekName: parsed.name || '',
+            sourceId: parsed.id || null,
+            sourceStartDate: parsed.startDate || null,
+            sourceEndDate: parsed.endDate || null,
+            dishes: out
+        };
+    } else {
+        // Simple QC format — validate required fields
+        const bad = parsed.dishes.find(d=>!d || !d.dishLetter || !d.dishName || !d.dishType);
+        if(bad) throw new Error('Each dish needs dishLetter, dishName, dishType (cold|hot)');
+        normalized = {
+            startDate: parsed.startDate || opts.weekStartIso,
+            weekName: parsed.weekName || '',
+            dishes: parsed.dishes.map(d => ({
+                dishLetter: String(d.dishLetter),
+                dishName: String(d.dishName),
+                dishType: d.dishType === 'hot' ? 'hot' : 'cold',
+                theoreticalWeight: (typeof d.theoreticalWeight === 'number') ? d.theoreticalWeight : null,
+                dishImage: d.dishImage || '',
+                dishIngredients: Array.isArray(d.dishIngredients) ? d.dishIngredients : [],
+                diet: d.diet || '',
+                category: d.category || '',
+                stickerNo: d.stickerNo || d.dishLetter,
+                isAddon: !!d.isAddon,
+                spiciness: d.spiciness || 0
+            }))
+        };
+    }
+
+    // Sort: main letters (A-Z) first, then digits, then addons. Within each group, alphabetical.
+    normalized.dishes.sort((a, b) => {
+        const cls = x => x.isAddon ? 3 : (/^[A-Z]/i.test(x.dishLetter) ? 1 : (/^[0-9]/.test(x.dishLetter) ? 2 : 4));
+        const da = cls(a), db = cls(b);
+        if(da !== db) return da - db;
+        return String(a.dishLetter).localeCompare(String(b.dishLetter), undefined, { numeric: true });
+    });
+
+    return normalized;
+}
+
 /* === Settings modal === */
 function openSettings(){
     const overlay=document.getElementById('settings-overlay');
@@ -1328,14 +1445,24 @@ function openSettings(){
             </div>
             <div class="modal-body">
                 <details class="settings-help">
-                    <summary>Expected JSON format</summary>
-                    <div style="margin-top:8px">Paste a menu for ISO week <code>${weekId}</code>. Each dish needs <code>dishLetter</code>, <code>dishName</code>, <code>dishType</code> (<code>"cold"</code> or <code>"hot"</code>), <code>theoreticalWeight</code> (grams). Optional: <code>dishImage</code>, <code>dishIngredients</code>.</div>
-                    <pre>${escapeHtml(sampleJson)}</pre>
+                    <summary>Accepted JSON formats</summary>
+                    <div style="margin-top:8px;line-height:1.5">
+                        Paste a menu for ISO week <code>${weekId}</code>. Two formats are detected automatically:
+                        <ul style="margin:6px 0 0 18px;padding:0">
+                            <li><b>Bella &amp; Bona production format</b> — the full weekly menu object (with <code>dishes[]</code> containing <code>variantName</code>, <code>stickerNo</code>, <code>type</code>). Addons (drinks/snacks/sides) are filtered out by default.</li>
+                            <li><b>Simple QC format</b> — array of dishes or <code>{dishes:[…]}</code> with fields <code>dishLetter</code>, <code>dishName</code>, <code>dishType</code> (<code>cold</code>/<code>hot</code>), <code>theoreticalWeight</code> (grams), optional <code>dishImage</code>, <code>dishIngredients</code>.</li>
+                        </ul>
+                        <pre style="margin-top:10px">${escapeHtml(sampleJson)}</pre>
+                    </div>
                 </details>
                 <div class="field">
                     <label class="label">Menu JSON for week ${weekId}</label>
                     <textarea class="comment-area" id="settings-menu-json" style="min-height:280px;font-family:ui-monospace,monospace;font-size:12.5px" placeholder="Paste the JSON for this week's menu here…">${escapeHtml(existing)}</textarea>
                 </div>
+                <label class="field" style="display:flex;align-items:center;gap:8px;margin-top:8px;cursor:pointer">
+                    <input type="checkbox" id="settings-include-addons" />
+                    <span>Include addons (drinks, snacks, sides). Off by default — only main dishes appear on the QC sheet.</span>
+                </label>
                 <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px;flex-wrap:wrap">
                     <button class="btn" onclick="window.__qc.closeSettings()">Cancel</button>
                     <button class="btn btn-ghost-danger" id="settings-clear">Clear week</button>
@@ -1350,17 +1477,21 @@ function openSettings(){
         if(!txt){ toast('Empty JSON','fail'); return; }
         let parsed;
         try{ parsed=JSON.parse(txt); }catch(e){ toast('Invalid JSON','fail'); return; }
+        const includeAddons = !!document.getElementById('settings-include-addons')?.checked;
         let menuObj;
-        if(Array.isArray(parsed)) menuObj={ dishes: parsed, startDate: state.weekStartIso };
-        else if(parsed && Array.isArray(parsed.dishes)) menuObj = { startDate: state.weekStartIso, ...parsed };
-        else { toast('Need a dishes array', 'fail'); return; }
-        const bad = menuObj.dishes.find(d=>!d.dishLetter || !d.dishName || !d.dishType);
-        if(bad){ toast('Each dish needs dishLetter, dishName, dishType', 'fail'); return; }
+        try {
+            menuObj = normalizeMenu(parsed, { weekStartIso: state.weekStartIso, includeAddons });
+        } catch(e) {
+            toast(e.message || 'Could not read JSON', 'fail');
+            console.error(e);
+            return;
+        }
+        if(!menuObj.dishes.length){ toast('No dishes found in JSON', 'fail'); return; }
         try{
             await saveMenu(weekId, menuObj);
             state.menu = menuObj;
             renderAll();
-            toast('Menu saved','ok');
+            toast(`Saved ${menuObj.dishes.length} dishes`, 'ok');
             closeSettings();
         }catch(e){ toast('Save failed','fail'); console.error(e); }
     };

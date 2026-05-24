@@ -311,6 +311,34 @@ table.summary tbody tr:last-child td{border-bottom:none}
 .photo-empty .camera-btn input{display:none}
 .photo-empty .icon-svg{width:18px;height:18px;display:inline-flex}
 
+/* Camera overlay */
+.cam-scrim{position:fixed;inset:0;background:#000;z-index:100;display:flex;flex-direction:column}
+.cam-scrim.hidden{display:none}
+.cam-stage{flex:1;position:relative;overflow:hidden;background:#000;display:flex;align-items:center;justify-content:center}
+.cam-video{width:100%;height:100%;object-fit:cover;background:#000}
+.cam-loading{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#eee;font-size:14px;letter-spacing:0.04em}
+.cam-error{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#eee;text-align:center;padding:30px;gap:14px}
+.cam-error .cam-error-title{font-weight:700;font-size:16px}
+.cam-error .cam-error-detail{font-size:13px;color:#bbb;line-height:1.5;max-width:320px}
+.cam-error label{background:var(--brand);color:white;border-radius:99px;padding:10px 18px;font-weight:600;cursor:pointer;font-size:14px;display:inline-flex;align-items:center;gap:6px}
+.cam-error label input{display:none}
+.cam-bar{background:#111;padding:14px 16px env(safe-area-inset-bottom, 14px);display:flex;align-items:center;justify-content:space-between;gap:12px}
+.cam-bar .cam-btn{background:transparent;border:0;color:#eee;font-size:14px;font-weight:600;padding:8px 12px;border-radius:8px;cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+.cam-bar .cam-btn:hover{background:rgba(255,255,255,0.08)}
+.cam-shutter{width:64px;height:64px;border-radius:50%;background:white;border:4px solid #ddd;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;box-shadow:0 0 0 4px rgba(255,255,255,0.15)}
+.cam-shutter:hover{background:#f4f4f4}
+.cam-shutter:disabled{opacity:0.5;cursor:not-allowed}
+.cam-shutter::after{content:'';width:46px;height:46px;border-radius:50%;background:white;border:1.5px solid #999}
+.cam-flip{width:42px;height:42px;border-radius:50%;background:rgba(255,255,255,0.12);border:0;cursor:pointer;color:#eee;font-size:20px;display:inline-flex;align-items:center;justify-content:center}
+.cam-flip:hover{background:rgba(255,255,255,0.22)}
+.cam-upload{font-size:12px;color:#999;text-decoration:underline;cursor:pointer;background:transparent;border:0;padding:6px 8px}
+.cam-upload:hover{color:#fff}
+.cam-upload input{display:none}
+@media(max-width:560px){
+    .cam-shutter{width:58px;height:58px}
+    .cam-shutter::after{width:40px;height:40px}
+}
+
 .section-mini{font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:0.08em;color:var(--mute);margin-bottom:10px}
 
 .samples{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px}
@@ -502,6 +530,7 @@ table.summary tbody tr:last-child td{border-bottom:none}
 </main>
 
 <div id="modal-overlay" class="modal-overlay hidden"></div>
+<div id="cam-scrim" class="cam-scrim hidden" aria-hidden="true"></div>
 <div id="settings-overlay" class="modal-overlay hidden"></div>
 
 <script type="module">
@@ -1092,12 +1121,15 @@ function renderQcTab(dish, c){
                 ${c.capturedImage
                     ? `<img src="${escapeAttr(c.capturedImage)}" alt="Today's capture"/>
                        <div class="photo-label">Today</div>
-                       <label class="photo-action"><input type="file" accept="image/*" capture="environment" id="photo-input"/>Retake</label>`
+                       <button class="photo-action" type="button" data-action="open-camera">Retake</button>`
                     : `<div class="photo-empty">
                          <div style="font-weight:600;color:var(--ink-2);font-size:13px">No capture today</div>
-                         <label class="camera-btn"><input type="file" accept="image/*" capture="environment" id="photo-input"/>
+                         <button class="camera-btn" type="button" data-action="open-camera">
                            <svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
                            Take photo
+                         </button>
+                         <label class="cam-upload" style="color:var(--mute);text-decoration:underline;font-size:12px;cursor:pointer">or upload a file
+                           <input type="file" accept="image/*" id="photo-input"/>
                          </label>
                        </div>`
                 }
@@ -1246,7 +1278,11 @@ function bindTabHandlers(tab, dish){
                 await saveModalIngredients();
             });
         });
-        // Photo input (now lives inside the QC tab)
+        // Camera button (opens live camera overlay)
+        overlay.querySelectorAll('[data-action="open-camera"]').forEach(btn=>{
+            btn.addEventListener('click', (e)=>{ e.preventDefault(); openCamera(letter); });
+        });
+        // File-upload fallback (still inside QC tab)
         const photoInp=overlay.querySelector('#photo-input');
         if(photoInp){
             photoInp.addEventListener('change', async (e)=>{
@@ -1336,6 +1372,152 @@ async function resizeImageToDataUrl(file, maxSide=1024, quality=0.85){
         canvas.getContext('2d').drawImage(img, 0, 0, w, h);
         return canvas.toDataURL('image/jpeg', quality);
     } finally { URL.revokeObjectURL(url); }
+}
+
+/* === Live camera capture ===
+   Opens a fullscreen overlay with the device camera, lets the user snap a
+   frame, resizes it to ~1024px JPEG and saves to Firebase for the given dish.
+*/
+let _camState = { stream: null, facing: 'environment' };
+
+async function openCamera(letter){
+    const scrim = document.getElementById('cam-scrim');
+    scrim.classList.remove('hidden');
+    scrim.setAttribute('aria-hidden','false');
+
+    function renderShell(extra){
+        scrim.innerHTML = `
+            <div class="cam-stage">
+                <video class="cam-video" id="cam-video" autoplay muted playsinline></video>
+                ${extra || `<div class="cam-loading" id="cam-loading">Starting camera…</div>`}
+            </div>
+            <div class="cam-bar">
+                <button class="cam-btn" id="cam-cancel">✕ Cancel</button>
+                <button class="cam-shutter" id="cam-shutter" disabled aria-label="Capture"></button>
+                <button class="cam-flip" id="cam-flip" title="Switch camera" aria-label="Switch camera">⟳</button>
+            </div>
+        `;
+        scrim.querySelector('#cam-cancel').onclick = closeCamera;
+        scrim.querySelector('#cam-flip').onclick = () => {
+            _camState.facing = _camState.facing === 'environment' ? 'user' : 'environment';
+            startStream();
+        };
+        scrim.querySelector('#cam-shutter').onclick = () => captureFrame(letter);
+    }
+
+    function showError(title, detail){
+        const safeT = escapeHtml(title);
+        const safeD = escapeHtml(detail || '');
+        renderShell(`
+            <div class="cam-error">
+                <div class="cam-error-title">${safeT}</div>
+                <div class="cam-error-detail">${safeD}</div>
+                <label>Upload a photo instead
+                    <input type="file" accept="image/*" id="cam-fallback-upload"/>
+                </label>
+            </div>
+        `);
+        const inp = scrim.querySelector('#cam-fallback-upload');
+        inp && inp.addEventListener('change', async (e) => {
+            const file = e.target.files?.[0];
+            if(!file) return;
+            try{
+                toast('Processing photo…');
+                const dataUrl = await resizeImageToDataUrl(file, 1024, 0.85);
+                await saveCheckField(letter, { capturedImage: dataUrl });
+                toast('Photo saved','ok');
+                closeCamera();
+                renderModal();
+            }catch(err){ toast('Photo save failed','fail'); console.error(err); }
+        });
+        // Hide shutter when in error state — no live stream
+        scrim.querySelector('#cam-shutter').style.display = 'none';
+        scrim.querySelector('#cam-flip').style.display = 'none';
+    }
+
+    async function startStream(){
+        // Stop any existing stream first
+        if(_camState.stream){
+            _camState.stream.getTracks().forEach(t => t.stop());
+            _camState.stream = null;
+        }
+        const vid = scrim.querySelector('#cam-video');
+        const loading = scrim.querySelector('#cam-loading');
+        if(loading) loading.textContent = 'Starting camera…';
+
+        if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
+            showError('Camera not available', 'This browser does not support live camera capture. You can upload a photo from your device instead.');
+            return;
+        }
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({
+                video: { facingMode: { ideal: _camState.facing }, width: { ideal: 1920 }, height: { ideal: 1080 } },
+                audio: false
+            });
+            _camState.stream = stream;
+            vid.srcObject = stream;
+            await new Promise(res => { vid.onloadedmetadata = res; });
+            await vid.play();
+            if(loading) loading.remove();
+            scrim.querySelector('#cam-shutter').disabled = false;
+        } catch(err){
+            console.warn('Camera failed', err);
+            let title = 'Could not start camera';
+            let detail = 'You can upload a photo from your device instead.';
+            if(err && (err.name === 'NotAllowedError' || err.name === 'SecurityError')){
+                title = 'Camera permission denied';
+                detail = 'Allow camera access for this site (browser address bar) to capture photos. Meanwhile, you can upload an image instead.';
+            } else if(err && err.name === 'NotFoundError'){
+                title = 'No camera found';
+                detail = 'No camera is connected. Upload a photo from your device instead.';
+            } else if(window.location.protocol !== 'https:' && window.location.hostname !== 'localhost'){
+                title = 'Camera requires HTTPS';
+                detail = 'Browsers only allow camera access over secure (https://) connections.';
+            }
+            showError(title, detail);
+        }
+    }
+
+    renderShell();
+    startStream();
+}
+
+async function captureFrame(letter){
+    const vid = document.getElementById('cam-video');
+    if(!vid || !_camState.stream) { toast('Camera not ready','fail'); return; }
+    const shutter = document.getElementById('cam-shutter');
+    if(shutter) shutter.disabled = true;
+    try {
+        const vw = vid.videoWidth, vh = vid.videoHeight;
+        const maxSide = 1024;
+        let w = vw, h = vh;
+        if(w >= h && w > maxSide){ h = Math.round(h * maxSide / w); w = maxSide; }
+        else if(h > maxSide){ w = Math.round(w * maxSide / h); h = maxSide; }
+        const canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = h;
+        canvas.getContext('2d').drawImage(vid, 0, 0, w, h);
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+        toast('Saving photo…');
+        await saveCheckField(letter, { capturedImage: dataUrl });
+        toast('Photo saved','ok');
+        closeCamera();
+        renderModal();
+    } catch(err){
+        console.error('Capture failed', err);
+        toast('Capture failed','fail');
+        if(shutter) shutter.disabled = false;
+    }
+}
+
+function closeCamera(){
+    const scrim = document.getElementById('cam-scrim');
+    if(_camState.stream){
+        _camState.stream.getTracks().forEach(t => t.stop());
+        _camState.stream = null;
+    }
+    scrim.classList.add('hidden');
+    scrim.setAttribute('aria-hidden','true');
+    scrim.innerHTML = '';
 }
 
 /* === Menu JSON normalizer ===
@@ -1620,6 +1802,7 @@ function wire(){
 window.__qc = {
     closeModal,
     closeSettings,
+    closeCamera,
     filterToIssues:()=>{
         state.filter='issues';
         document.querySelectorAll('.filter button').forEach(b=>b.classList.toggle('is-active', b.getAttribute('data-filter')==='issues'));
@@ -1627,6 +1810,15 @@ window.__qc = {
         document.getElementById('dish-area').scrollIntoView({behavior:'smooth',block:'start'});
     }
 };
+
+// Cleanup stream if user navigates away
+window.addEventListener('beforeunload', () => { try { closeCamera(); } catch(e){} });
+// Esc key closes camera
+document.addEventListener('keydown', (e) => {
+    if(e.key === 'Escape' && !document.getElementById('cam-scrim').classList.contains('hidden')){
+        closeCamera();
+    }
+});
 
 wire();
 selectDate(state.selectedDate);

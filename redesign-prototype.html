@@ -1047,11 +1047,9 @@ function renderModal(){
                 <button class="modal-close" aria-label="Close" onclick="window.__qc.closeModal()">×</button>
             </div>
             <div class="modal-tabs">
-                <button class="modal-tab ${tab==='assembly'?'is-active':''} ${hasAssembly?'has-data':''}" data-tab="assembly"><span class="tab-dot"></span>Assembly</button>
-                <button class="modal-tab ${tab==='qc'?'is-active':''} ${hasQc?'has-data':''}" data-tab="qc"><span class="tab-dot"></span>QC check</button>
-                <button class="modal-tab ${tab==='dispatch'?'is-active':''} ${hasDispatch?'has-data':''}" data-tab="dispatch"><span class="tab-dot"></span>Dispatch</button>
-                <button class="modal-tab ${tab==='ingredients'?'is-active':''} ${hasIng?'has-data':''}" data-tab="ingredients"><span class="tab-dot"></span>Ingredients</button>
-                <button class="modal-tab ${tab==='photo'?'is-active':''} ${hasPhoto?'has-data':''}" data-tab="photo"><span class="tab-dot"></span>Photos</button>
+                <button class="modal-tab ${tab==='assembly'?'is-active':''} ${hasAssembly?'has-data':''}" data-tab="assembly"><span class="tab-dot"></span>① Assembly</button>
+                <button class="modal-tab ${tab==='qc'?'is-active':''} ${(hasQc||hasIng||hasPhoto)?'has-data':''}" data-tab="qc"><span class="tab-dot"></span>② QC check</button>
+                <button class="modal-tab ${tab==='dispatch'?'is-active':''} ${hasDispatch?'has-data':''}" data-tab="dispatch"><span class="tab-dot"></span>③ Dispatch</button>
             </div>
             <div class="modal-body" id="modal-body">
                 ${renderTabContent(tab, dish, c)}
@@ -1069,19 +1067,56 @@ function renderModal(){
 }
 
 function renderTabContent(tab, dish, c){
-    if(tab === 'qc') return renderQcTab(dish, c);
     if(tab === 'assembly') return renderStageTab('assembly', 'Assembly', dish, c);
     if(tab === 'dispatch') return renderStageTab('dispatch', 'Dispatch', dish, c);
-    if(tab === 'ingredients') return renderIngredientsTab(dish, c);
-    if(tab === 'photo') return renderPhotoTab(dish, c);
-    return '';
+    // Fallback: QC (photo + ingredients + temp + weight + notes — one combined view)
+    return renderQcTab(dish, c);
 }
 
 function renderQcTab(dish, c){
     const tAvg=avg(c.temperatures), wAvg=avg(c.weights);
     const wDelta = wAvg!=null && dish.theoreticalWeight ? ((wAvg-dish.theoreticalWeight)/dish.theoreticalWeight*100) : null;
     const cls=isCold(dish)?'cold':'hot';
+    const ingredients=dish.dishIngredients||[];
+    const selected=new Set(c.selectedIngredients||[]);
+    const checkedCount = ingredients.filter(ing=>selected.has(ing.name)).length;
     return `
+        <!-- Photo: reference + today's capture -->
+        <div class="section-mini">Photo · reference vs. today</div>
+        <div class="photo-row">
+            <div class="photo">
+                ${dish.dishImage?`<img src="${escapeAttr(dish.dishImage)}" alt="Reference"/>`:`<div class="photo-empty"><div style="color:var(--mute);font-size:13px">No reference image</div></div>`}
+                <div class="photo-label">Reference</div>
+            </div>
+            <div class="photo">
+                ${c.capturedImage
+                    ? `<img src="${escapeAttr(c.capturedImage)}" alt="Today's capture"/>
+                       <div class="photo-label">Today</div>
+                       <label class="photo-action"><input type="file" accept="image/*" capture="environment" id="photo-input"/>Retake</label>`
+                    : `<div class="photo-empty">
+                         <div style="font-weight:600;color:var(--ink-2);font-size:13px">No capture today</div>
+                         <label class="camera-btn"><input type="file" accept="image/*" capture="environment" id="photo-input"/>
+                           <svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                           Take photo
+                         </label>
+                       </div>`
+                }
+            </div>
+        </div>
+
+        <!-- Ingredients checklist -->
+        <div class="section-mini">Ingredients check ${ingredients.length?`· ${checkedCount} / ${ingredients.length} confirmed`:''}</div>
+        ${ingredients.length === 0
+            ? `<div style="color:var(--mute);padding:14px;text-align:center;font-size:13px;background:var(--bg-3);border-radius:8px">No ingredients in menu data for this dish.</div>`
+            : `<div class="ing-list">
+                ${ingredients.map(ing=>{
+                    const present=selected.has(ing.name);
+                    return `<div class="ing ${present?'checked':'unchecked'}" data-ing="${escapeAttr(ing.name)}"><span style="display:flex;align-items:center"><span class="check">${present?'✓':''}</span><span class="ing-name">${escapeHtml(ing.name)}</span></span><span class="ing-weight">${escapeHtml(ing.weight||'')}</span></div>`;
+                }).join('')}
+              </div>`
+        }
+
+        <!-- Temperature -->
         <div class="section-mini">Temperature samples · spec ${isCold(dish)?`≤${COLD_MAX}`:`≥${HOT_MIN}`}°C</div>
         <div class="samples">
             ${[0,1,2].map(i=>{
@@ -1096,6 +1131,7 @@ function renderQcTab(dish, c){
             <span class="delta">${tAvg!=null?(isCold(dish)?(tAvg<=COLD_MAX?`+${(COLD_MAX-tAvg).toFixed(1)} headroom`:`+${(tAvg-COLD_MAX).toFixed(1)} over spec`):(tAvg>=HOT_MIN?`+${(tAvg-HOT_MIN).toFixed(1)} above min`:`-${(HOT_MIN-tAvg).toFixed(1)} below min`)):'—'}</span>
         </div>
 
+        <!-- Weight -->
         <div class="section-mini">Weight samples${dish.theoreticalWeight?' · theoretical '+dish.theoreticalWeight+'g':' · no target set'}</div>
         <div class="samples">
             ${[0,1,2].map(i=>{
@@ -1110,8 +1146,10 @@ function renderQcTab(dish, c){
             <span class="delta">${wDelta!=null?`${wDelta>=0?'+':''}${wDelta.toFixed(1)}% vs theoretical`:'—'}</span>
         </div>
 
+        <!-- Notes -->
         <div class="section-mini">Chef's note</div>
         <textarea id="modal-comment" class="comment-area" placeholder="What should the next shift know?">${escapeHtml(c.comment||'')}</textarea>
+        <div style="font-size:12px;color:var(--mute);margin-top:6px">Photo is resized to ~1024px and stored as JPEG. Everything auto-saves on blur.</div>
     `;
 }
 
@@ -1191,37 +1229,27 @@ function bindTabHandlers(tab, dish){
     const overlay=document.getElementById('modal-overlay');
     const letter=modalState.letter;
     if(tab === 'qc'){
+        // Temp + weight samples
         overlay.querySelectorAll('input[data-modal]').forEach(inp=>{
             inp.addEventListener('keydown', e=>{ if(e.key==='Enter'){ e.preventDefault(); inp.blur(); } });
             inp.addEventListener('blur', saveModalSamples);
         });
+        // Chef note
         overlay.querySelector('#modal-comment')?.addEventListener('blur', saveModalComment);
-    }
-    if(tab === 'assembly' || tab === 'dispatch'){
-        overlay.querySelectorAll('input[data-stage-input], textarea[data-stage-input]').forEach(inp=>{
-            inp.addEventListener('keydown', e=>{ if(e.key==='Enter' && inp.tagName==='INPUT'){ e.preventDefault(); inp.blur(); } });
-            inp.addEventListener('blur', ()=>saveStageFromForm(tab));
-            inp.addEventListener('change', ()=>saveStageFromForm(tab));
-        });
-        overlay.querySelector('[data-stage-now]')?.addEventListener('click', ()=>{
-            const el=overlay.querySelector('input[data-stage-input="time"]');
-            if(el){ el.value=nowHHMM(); saveStageFromForm(tab); }
-        });
-    }
-    if(tab === 'ingredients'){
+        // Ingredients checklist (now lives inside the QC tab)
         overlay.querySelectorAll('.ing').forEach(el=>{
             el.addEventListener('click', async ()=>{
                 el.classList.toggle('checked');
                 el.classList.toggle('unchecked');
-                el.querySelector('.check').textContent = el.classList.contains('checked') ? '✓' : '';
+                const tick=el.querySelector('.check');
+                if(tick) tick.textContent = el.classList.contains('checked') ? '✓' : '';
                 await saveModalIngredients();
             });
         });
-    }
-    if(tab === 'photo'){
-        const inp=overlay.querySelector('#photo-input');
-        if(inp){
-            inp.addEventListener('change', async (e)=>{
+        // Photo input (now lives inside the QC tab)
+        const photoInp=overlay.querySelector('#photo-input');
+        if(photoInp){
+            photoInp.addEventListener('change', async (e)=>{
                 const file=e.target.files?.[0];
                 if(!file) return;
                 try{
@@ -1233,6 +1261,17 @@ function bindTabHandlers(tab, dish){
                 }catch(err){ toast('Photo save failed','fail'); console.error(err); }
             });
         }
+    }
+    if(tab === 'assembly' || tab === 'dispatch'){
+        overlay.querySelectorAll('input[data-stage-input], textarea[data-stage-input]').forEach(inp=>{
+            inp.addEventListener('keydown', e=>{ if(e.key==='Enter' && inp.tagName==='INPUT'){ e.preventDefault(); inp.blur(); } });
+            inp.addEventListener('blur', ()=>saveStageFromForm(tab));
+            inp.addEventListener('change', ()=>saveStageFromForm(tab));
+        });
+        overlay.querySelector('[data-stage-now]')?.addEventListener('click', ()=>{
+            const el=overlay.querySelector('input[data-stage-input="time"]');
+            if(el){ el.value=nowHHMM(); saveStageFromForm(tab); }
+        });
     }
 }
 

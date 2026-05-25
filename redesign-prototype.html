@@ -755,7 +755,12 @@ function shiftIso(iso,days){ const d=parseIso(iso); d.setDate(d.getDate()+days);
 function nowHHMM(){ const d=new Date(); return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`; }
 
 /* === Status logic === */
-function avg(arr){ if(!arr||!arr.length) return null; const n=arr.map(Number).filter(x=>Number.isFinite(x)); return n.length?n.reduce((a,b)=>a+b,0)/n.length:null; }
+function avg(arr){
+    if(!arr||!arr.length) return null;
+    // Treat null/undefined as missing (not as 0)
+    const n=arr.filter(x=>x!=null).map(Number).filter(x=>Number.isFinite(x));
+    return n.length?n.reduce((a,b)=>a+b,0)/n.length:null;
+}
 function isCold(dish){ return (dish?.dishType||'').toLowerCase().includes('cold'); }
 function tempStatus(v, dish){
     if(v==null||v===''||v===undefined) return 'empty';

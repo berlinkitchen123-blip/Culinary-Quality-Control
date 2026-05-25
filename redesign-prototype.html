@@ -1001,22 +1001,17 @@ function renderStageTile(dish){
             <div class="tile-spec">${stageLabel(stage)} spec ${specHint} · target ${dish.theoreticalWeight ? dish.theoreticalWeight+'g' : '—'}</div>
 
             <div class="read-row">
-                <label class="read-cell is-${tStat}">
+                <label class="read-cell is-${tStat}" style="flex:1">
                     <span class="lbl">${stageLabel(stage)} temp</span>
                     <input type="number" step="0.1" inputmode="decimal" data-edit="stage-temp" data-letter="${escapeHtml(dish.dishLetter)}" value="${t!=null?t:''}" placeholder="—" />
                     <span class="unit">°C</span>
                     <span class="save-pulse"></span>
                 </label>
-                <label class="time-cell">
-                    <span class="lbl">Time</span>
-                    <input type="time" data-edit="stage-time" data-letter="${escapeHtml(dish.dishLetter)}" value="${escapeAttr(time)}" />
-                    <button class="time-now" type="button" data-action="now" data-letter="${escapeHtml(dish.dishLetter)}">Now</button>
-                </label>
             </div>
 
             <div class="status-bar">
                 <span class="pill is-${s}">${statusLabel(s)}</span>
-                <span style="font-size:11px;color:var(--mute);font-weight:500">${time||(t!=null?'logged':'')}</span>
+                <span style="font-size:11px;color:var(--mute);font-weight:500">${time?`Logged ${time}`:(t!=null?'logged':'')}</span>
             </div>
         </article>
     `;
@@ -1026,18 +1021,7 @@ function bindTiles(){
     document.querySelectorAll('[data-action="open"]').forEach(btn=>{
         btn.addEventListener('click', e=>{ e.stopPropagation(); openModal(btn.getAttribute('data-letter')); });
     });
-    document.querySelectorAll('[data-action="now"]').forEach(btn=>{
-        btn.addEventListener('click', async e=>{
-            e.preventDefault(); e.stopPropagation();
-            const letter=btn.getAttribute('data-letter');
-            const timeInp = document.querySelector(`input[data-edit="stage-time"][data-letter="${letter}"]`);
-            if(timeInp){ timeInp.value = nowHHMM(); }
-            try{
-                await saveStage(letter, state.stage, { time: nowHHMM() });
-                toast('Time stamped', 'ok');
-            }catch(err){ toast('Save failed','fail'); console.error(err); }
-        });
-    });
+    // (Manual "Now" stamping removed — time is auto-stamped on save.)
     document.querySelectorAll('.tile').forEach(tile=>{
         tile.addEventListener('click', e=>{
             if(e.target.closest('input, button, label.read-cell, label.time-cell')) return;
@@ -1069,12 +1053,8 @@ function bindTiles(){
                 const num=v===''?null:Number(v);
                 if(v!=='' && Number.isNaN(num)) return;
                 try{
-                    await saveStage(letter, state.stage, { temp: num });
-                    flashSave(el); toast('Saved','ok');
-                }catch(e){ toast('Save failed','fail'); }
-            } else if(kind === 'stage-time'){
-                try{
-                    await saveStage(letter, state.stage, { time: v });
+                    // Auto-stamp time when a temp is entered (clear time when temp is cleared)
+                    await saveStage(letter, state.stage, num==null ? { temp: null, time: null } : { temp: num, time: nowHHMM() });
                     flashSave(el); toast('Saved','ok');
                 }catch(e){ toast('Save failed','fail'); }
             }
@@ -1093,7 +1073,7 @@ function flashSave(el){
 /* === Summary table === */
 function renderSummary(){
     const tbody=document.getElementById('summary-body');
-    document.getElementById('summary-date').textContent=humanDate(state.selectedDate);
+    document.getElementById('summary-date').textContent = `${humanDate(state.selectedDate)} · viewed ${nowHHMM()}`;
     if(!state.menu){ tbody.innerHTML=`<tr><td colspan="7" style="text-align:center;padding:32px;color:var(--mute)">No menu for this week.</td></tr>`; return; }
     const dishes=state.menu.dishes||[];
     const cold=dishes.filter(d=>isCold(d));
@@ -1104,18 +1084,20 @@ function renderSummary(){
         const c = s==='pass'?'var(--pass)':s==='watch'?'var(--watch)':s==='hold'?'var(--hold)':'var(--ink)';
         return `<span class="cell-num" style="color:${c}">${Number(v).toFixed(1)}°</span>`;
     };
+    const stampUnder = (time) => time ? `<div style="font-size:10px;color:var(--mute);font-weight:500;margin-top:2px">⏱ ${escapeHtml(time)}</div>` : '';
     const rowsFor=(list,cls)=>list.map(d=>{
         const c=state.checks[d.dishLetter]||{};
         const t=avg(c.temperatures), w=avg(c.weights);
         const aT = c.assembly?.temp;
         const dT = c.dispatch?.temp;
+        const aTime = c.assembly?.time, qTime = c.qcTime, dTime = c.dispatch?.time;
         return `
             <tr class="row-data ${cls}" data-letter="${escapeHtml(d.dishLetter)}">
                 <td><span class="cell-letter">${escapeHtml(d.dishLetter)}</span></td>
                 <td><span class="cell-name">${escapeHtml(d.dishName)}</span></td>
-                <td>${cellTemp(aT, d)}</td>
-                <td>${cellTemp(t, d)}</td>
-                <td>${cellTemp(dT, d)}</td>
+                <td>${cellTemp(aT, d)}${stampUnder(aTime)}</td>
+                <td>${cellTemp(t, d)}${stampUnder(qTime)}</td>
+                <td>${cellTemp(dT, d)}${stampUnder(dTime)}</td>
                 <td><span class="cell-num">${w!=null?`${Math.round(w)}${d.theoreticalWeight?' / '+d.theoreticalWeight+'g':'g'}`:(d.theoreticalWeight?`— / ${d.theoreticalWeight}g`:'—')}</span></td>
                 <td class="cell-note">${escapeHtml(c.comment||'—')}</td>
             </tr>
@@ -1208,6 +1190,7 @@ function renderModal(){
     const hasQc = (c.temperatures||[]).some(v=>v!=null);
     const hasIng = (c.selectedIngredients||[]).length > 0;
     const hasPhoto = !!c.capturedImage;
+    const lastTime = mostRecentTime(c);
     overlay.innerHTML=`
         <div class="modal-panel">
             <div class="modal-head ${cls}">
@@ -1218,6 +1201,7 @@ function renderModal(){
                     <span class="pill" style="text-transform:none;letter-spacing:0;color:${cls==='cold'?'var(--cold)':'var(--hot)'};background:${cls==='cold'?'var(--cold-soft)':'var(--hot-soft)'};border-color:${cls==='cold'?'var(--cold-line)':'var(--hot-line)'}">${cls==='cold'?'Cold':'Hot'} dish</span>
                     <span class="pill" style="text-transform:none;letter-spacing:0">${dish.theoreticalWeight?'Theo '+dish.theoreticalWeight+'g':'No weight target'}</span>
                 </div>
+                <div class="modal-stamp" id="modal-stamp" style="position:absolute;top:14px;right:54px;font-size:12px;font-weight:700;color:var(--mute);letter-spacing:0.02em;background:var(--bg-2);border:1px solid var(--line);padding:5px 10px;border-radius:99px">${lastTime ? '⏱ Logged ' + escapeHtml(lastTime) : '⏱ Not logged yet'}</div>
                 <button class="modal-close" aria-label="Close" onclick="window.__qc.closeModal()">×</button>
             </div>
             <div class="modal-tabs">
@@ -1332,16 +1316,17 @@ function renderQcTab(dish, c){
 
 function renderStageTab(stage, label, dish, c){
     const data = c[stage] || {};
+    const isDispatch = stage === 'dispatch';
+    const cls = isCold(dish) ? 'cold' : 'hot';
+    const specHint = isCold(dish) ? `≤${COLD_MAX}°C` : `≥${HOT_MIN}°C`;
     return `
+        <div class="section-mini">${label} · spec ${specHint}${data.time?` · last logged ${data.time}`:''}</div>
         <div class="stage-form">
-            <div class="field">
+            <div class="field${isDispatch ? ' full' : ''}">
                 <label class="label">Temperature (°C)</label>
                 <input class="num" type="number" step="0.1" inputmode="decimal" data-stage-input="temp" value="${data.temp!=null?data.temp:''}" placeholder="—" />
             </div>
-            <div class="field">
-                <label class="label">Time</label>
-                <input type="time" data-stage-input="time" value="${escapeAttr(data.time||'')}" />
-            </div>
+            ${isDispatch ? '' : `
             <div class="field">
                 <label class="label">Weight (optional, g)</label>
                 <input class="num" type="number" step="1" inputmode="numeric" data-stage-input="weight" value="${data.weight!=null?data.weight:''}" placeholder="—" />
@@ -1353,11 +1338,9 @@ function renderStageTab(stage, label, dish, c){
             <div class="field full">
                 <label class="label">Note</label>
                 <textarea data-stage-input="note" placeholder="What was noted at this stage?">${escapeHtml(data.note||'')}</textarea>
-            </div>
+            </div>`}
         </div>
-        <div style="text-align:right">
-            <button class="btn btn-sm" data-stage-now>Stamp current time</button>
-        </div>
+        <div style="font-size:12px;color:var(--mute);margin-top:8px">⏱ Time is recorded automatically — no need to type it.</div>
     `;
 }
 
@@ -1436,7 +1419,7 @@ function bindTabHandlers(tab, dish){
                 try{
                     toast('Processing photo…');
                     const dataUrl=await resizeImageToDataUrl(file, 1024, 0.85);
-                    await saveCheckField(letter, { capturedImage: dataUrl });
+                    await saveCheckField(letter, { capturedImage: dataUrl, qcTime: nowHHMM() });
                     toast('Photo saved','ok');
                     renderModal();
                 }catch(err){ toast('Photo save failed','fail'); console.error(err); }
@@ -1449,10 +1432,6 @@ function bindTabHandlers(tab, dish){
             inp.addEventListener('blur', ()=>saveStageFromForm(tab));
             inp.addEventListener('change', ()=>saveStageFromForm(tab));
         });
-        overlay.querySelector('[data-stage-now]')?.addEventListener('click', ()=>{
-            const el=overlay.querySelector('input[data-stage-input="time"]');
-            if(el){ el.value=nowHHMM(); saveStageFromForm(tab); }
-        });
     }
 }
 
@@ -1461,39 +1440,72 @@ async function saveModalSamples(){
     const ovr=document.getElementById('modal-overlay');
     const temps=[0,1,2].map(i=>{ const el=ovr.querySelector(`input[data-modal="temp"][data-idx="${i}"]`); const v=el?.value.trim(); return v===''||v==null?null:Number(v); });
     const weights=[0,1,2].map(i=>{ const el=ovr.querySelector(`input[data-modal="weight"][data-idx="${i}"]`); const v=el?.value.trim(); return v===''||v==null?null:Number(v); });
+    const hasAny = temps.some(v=>v!=null) || weights.some(v=>v!=null);
     try{
         await saveCheckField(letter, {
             temperatures: temps.some(v=>v!=null) ? temps.map(v=>v==null?null:v) : null,
-            weights: weights.some(v=>v!=null) ? weights.map(v=>v==null?null:v) : null
+            weights: weights.some(v=>v!=null) ? weights.map(v=>v==null?null:v) : null,
+            qcTime: hasAny ? nowHHMM() : null
         });
         flashSaved();
+        bumpStamp();
     }catch(e){ toast('Save failed','fail'); console.error(e); }
 }
 async function saveModalIngredients(){
     const letter=modalState.letter;
     const ovr=document.getElementById('modal-overlay');
     const list=Array.from(ovr.querySelectorAll('.ing.checked')).map(el=>el.getAttribute('data-ing'));
-    try{ await saveCheckField(letter, { selectedIngredients: list }); flashSaved(); }
+    try{ await saveCheckField(letter, { selectedIngredients: list, qcTime: list.length ? nowHHMM() : null }); flashSaved(); bumpStamp(); }
     catch(e){ toast('Save failed','fail'); console.error(e); }
 }
 async function saveModalComment(){
     const letter=modalState.letter;
     const val=document.getElementById('modal-comment').value;
-    try{ await saveCheckField(letter, { comment: val }); flashSaved(); }
+    try{ await saveCheckField(letter, { comment: val, qcTime: (val && val.trim()) ? nowHHMM() : (state.checks[letter]?.qcTime||null) }); flashSaved(); bumpStamp(); }
     catch(e){ toast('Save failed','fail'); console.error(e); }
+}
+
+/* Compute the most-recent local time stamp across all stages for a dish */
+function mostRecentTime(c){
+    if(!c) return null;
+    const stamps = [
+        c.assembly?.time,
+        c.qcTime,
+        c.dispatch?.time
+    ].filter(Boolean);
+    if(!stamps.length) return null;
+    // Pick the largest HH:MM (lex order works for zero-padded 24h times)
+    stamps.sort();
+    return stamps[stamps.length-1];
+}
+
+/* Refresh the modal's top-right "Logged" pill after a save */
+function bumpStamp(){
+    const letter = modalState.letter;
+    if(!letter) return;
+    const c = state.checks[letter] || {};
+    const t = mostRecentTime(c);
+    const el = document.getElementById('modal-stamp');
+    if(el) el.textContent = t ? '⏱ Logged ' + t : '⏱ Not logged yet';
 }
 async function saveStageFromForm(stage){
     const letter=modalState.letter;
     const ovr=document.getElementById('modal-overlay');
     const get=k=>ovr.querySelector(`[data-stage-input="${k}"]`)?.value || '';
-    const t=get('temp').trim(), w=get('weight').trim();
-    const payload={
-        temp: t===''?null:Number(t),
-        weight: w===''?null:Number(w),
-        time: get('time'),
-        by: get('by'),
-        note: get('note')
-    };
+    const t=get('temp').trim();
+    const w=get('weight').trim();
+    const by=get('by');
+    const note=get('note');
+    const payload = { temp: t===''?null:Number(t) };
+    if(stage !== 'dispatch'){
+        payload.weight = w===''?null:Number(w);
+        payload.by = by;
+        payload.note = note;
+    }
+    // Auto-stamp time: only when there's actually a value to log
+    const hasValue = payload.temp != null || (payload.weight != null) || (payload.note && payload.note.length) || (payload.by && payload.by.length);
+    if(hasValue) payload.time = nowHHMM();
+    else payload.time = null; // user cleared everything → clear stamp
     try{ await saveStage(letter, stage, payload); flashSaved(); }
     catch(e){ toast('Save failed','fail'); console.error(e); }
 }
@@ -1569,7 +1581,7 @@ async function openCamera(letter){
             try{
                 toast('Processing photo…');
                 const dataUrl = await resizeImageToDataUrl(file, 1024, 0.85);
-                await saveCheckField(letter, { capturedImage: dataUrl });
+                await saveCheckField(letter, { capturedImage: dataUrl, qcTime: nowHHMM() });
                 toast('Photo saved','ok');
                 closeCamera();
                 renderModal();
@@ -1643,7 +1655,7 @@ async function captureFrame(letter){
         canvas.getContext('2d').drawImage(vid, 0, 0, w, h);
         const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
         toast('Saving photo…');
-        await saveCheckField(letter, { capturedImage: dataUrl });
+        await saveCheckField(letter, { capturedImage: dataUrl, qcTime: nowHHMM() });
         toast('Photo saved','ok');
         closeCamera();
         renderModal();
@@ -1940,13 +1952,15 @@ function wire(){
     document.getElementById('btn-settings').onclick=openSettings;
     document.getElementById('btn-export-summary').onclick=()=>{
         if(!state.menu) return;
-        const lines=[`Bella & Bona QC — ${humanDate(state.selectedDate)}`,''];
+        const lines=[`Bella & Bona QC — ${humanDate(state.selectedDate)}`, `Report generated ${nowHHMM()} on ${humanDate(todayIso())}`, ''];
         for(const d of (state.menu.dishes||[])){
             const c=state.checks[d.dishLetter]||{};
             const t=avg(c.temperatures), w=avg(c.weights);
             const aT=c.assembly?.temp, dT=c.dispatch?.temp;
+            const aTime=c.assembly?.time, qTime=c.qcTime, dTime=c.dispatch?.time;
             const s=readingStatus(d,c);
-            lines.push(`[${d.dishLetter}] ${d.dishName} (${isCold(d)?'cold':'hot'}) — Assembly ${aT??'—'}° / QC ${t!=null?t.toFixed(1)+'°':'—'} / Dispatch ${dT??'—'}° · ${w!=null?Math.round(w)+'g':'—'} of ${d.theoreticalWeight}g · ${s.toUpperCase()}${c.comment?' — '+c.comment:''}`);
+            const fmt = (val, time) => val!=null ? (typeof val === 'number' ? val.toFixed(1) : val) + '°' + (time?` @${time}`:'') : '—';
+            lines.push(`[${d.dishLetter}] ${d.dishName} (${isCold(d)?'cold':'hot'}) — Assembly ${fmt(aT, aTime)} / QC ${fmt(t!=null?t.toFixed(1):null, qTime)} / Dispatch ${fmt(dT, dTime)} · ${w!=null?Math.round(w)+'g':'—'}${d.theoreticalWeight?' of '+d.theoreticalWeight+'g':''} · ${s.toUpperCase()}${c.comment?' — '+c.comment:''}`);
         }
         navigator.clipboard.writeText(lines.join('\n')).then(()=>toast('Summary copied','ok'));
     };

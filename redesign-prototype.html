@@ -2375,7 +2375,6 @@ function openSettings(){
 
                 <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px;flex-wrap:wrap">
                     <button class="btn" onclick="window.__qc.closeSettings()">Cancel</button>
-                    <button class="btn btn-ghost-danger" id="settings-clear">Clear week</button>
                     <button class="btn btn-primary" id="settings-save">Save menu</button>
                 </div>
             </div>
@@ -2418,11 +2417,6 @@ function openSettings(){
             toast(`Saved ${menuObj.dishes.length} dishes`, 'ok');
             closeSettings();
         }catch(e){ toast('Save failed','fail'); console.error(e); }
-    };
-    overlay.querySelector('#settings-clear').onclick=async()=>{
-        if(!confirm(`Clear the menu for week ${weekId}? This deletes /menus/${weekId}.`)) return;
-        try{ await set(ref(db, `menus/${weekId}`), null); state.menu=null; renderAll(); toast('Menu cleared','ok'); closeSettings(); }
-        catch(e){ toast('Clear failed','fail'); console.error(e); }
     };
     overlay.querySelector('#settings-menu-json').focus();
 }

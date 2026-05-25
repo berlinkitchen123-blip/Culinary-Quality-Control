@@ -408,8 +408,14 @@ body[data-view="stage"] .home-view{display:none}
 .home-eyebrow{text-align:center;font-size:12px;font-weight:700;color:var(--mute);letter-spacing:0.16em;text-transform:uppercase}
 .home-title{text-align:center;font-size:30px;font-weight:800;color:var(--ink);margin:6px 0 6px 0;letter-spacing:-0.02em}
 .home-sub{text-align:center;font-size:15px;color:var(--ink-2);margin-bottom:34px}
-.stage-card-grid{display:grid;grid-template-columns:repeat(3, minmax(0, 1fr));gap:18px}
-@media(max-width:760px){ .stage-card-grid{grid-template-columns:1fr; gap:12px} }
+.stage-card-grid{display:grid;grid-template-columns:repeat(4, minmax(0, 1fr));gap:18px}
+@media(max-width:1200px){ .stage-card-grid{grid-template-columns:repeat(2, minmax(0, 1fr))} }
+@media(max-width:560px){ .stage-card-grid{grid-template-columns:1fr; gap:12px} }
+.stage-card[data-stage="placement"]{border-left:6px solid var(--gold)}
+.stage-card[data-stage="placement"] .step{color:var(--gold)}
+.stage-card[data-stage="placement"]:hover{border-color:var(--gold);background:rgba(245,158,11,0.06)}
+.stage-card[data-stage="placement"] .progress-pill{background:rgba(245,158,11,0.12);color:var(--gold);border-color:rgba(245,158,11,0.4)}
+html[data-theme="dark"] .stage-card[data-stage="placement"]:hover{background:rgba(245,158,11,0.10)}
 .stage-card{display:flex;flex-direction:column;justify-content:space-between;background:var(--bg-2);border:1px solid var(--line);border-radius:20px;padding:24px;cursor:pointer;text-align:left;transition:transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease;min-height:200px;position:relative;overflow:hidden}
 .stage-card:hover{transform:translateY(-2px);box-shadow:0 10px 30px -8px rgba(0,0,0,0.10)}
 .stage-card[data-stage="assembly"]{border-left:6px solid var(--assembly)}
@@ -436,6 +442,65 @@ body[data-view="stage"] .home-view{display:none}
 .home-link{background:transparent;border:0;color:var(--ink-2);font-size:13px;font-weight:700;padding:8px 12px;border-radius:8px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;margin-right:6px}
 .home-link:hover{background:var(--bg-3);color:var(--ink)}
 body[data-view="home"] .home-link{display:none}
+
+/* === Placement view === */
+.placement-grid{display:grid;grid-template-columns:repeat(auto-fill, minmax(280px, 1fr));gap:18px;margin-top:8px}
+.warmer-card{background:var(--bg-2);border:1px solid var(--line);border-radius:14px;padding:16px;box-shadow:var(--shadow-sm)}
+.warmer-card .warmer-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.warmer-card .warmer-name{font-weight:700;font-size:15px;color:var(--ink);display:flex;align-items:center;gap:8px}
+.warmer-card .warmer-name::before{content:'';width:8px;height:8px;border-radius:2px;background:var(--gold);box-shadow:0 0 0 2px rgba(245,158,11,0.18)}
+.warmer-card .warmer-type{font-size:11px;color:var(--mute);text-transform:uppercase;letter-spacing:0.06em;font-weight:600}
+.warmer-grid{display:grid;gap:6px;background:var(--bg-3);padding:6px;border-radius:10px;border:1px solid var(--line)}
+.warmer-slot{position:relative;background:var(--bg-2);border:1px dashed var(--line);border-radius:8px;min-height:64px;display:flex;align-items:center;justify-content:center;padding:6px;cursor:pointer;transition:background 140ms ease, border-color 140ms ease, transform 140ms ease}
+.warmer-slot:hover{background:var(--bg-3);border-color:var(--mute-low)}
+.warmer-slot.filled{border-style:solid;border-color:var(--gold);background:rgba(245,158,11,0.06)}
+html[data-theme="dark"] .warmer-slot.filled{background:rgba(245,158,11,0.12)}
+.warmer-slot .slot-letter{font-size:18px;font-weight:800;color:var(--gold);letter-spacing:-0.02em;line-height:1}
+.warmer-slot .slot-letter.cold{color:var(--cold)}
+.warmer-slot .slot-letter.hot{color:var(--hot)}
+.warmer-slot .slot-name{font-size:10px;color:var(--mute);max-width:96%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:2px;text-align:center}
+.warmer-slot .slot-label{position:absolute;top:3px;left:5px;font-size:9px;color:var(--mute-low);font-weight:700;letter-spacing:0.04em;text-transform:uppercase}
+.warmer-slot .slot-clear{position:absolute;top:3px;right:3px;width:18px;height:18px;border-radius:50%;background:var(--bg-3);color:var(--mute);border:1px solid var(--line);font-size:11px;line-height:1;display:none;align-items:center;justify-content:center;cursor:pointer}
+.warmer-slot.filled .slot-clear{display:inline-flex}
+.warmer-slot .slot-clear:hover{color:var(--ink);background:var(--bg-2)}
+
+.fridge-list{display:grid;grid-template-columns:repeat(auto-fill, minmax(280px, 1fr));gap:14px;margin-top:8px}
+.fridge-card{background:var(--bg-2);border:1px solid var(--line);border-radius:14px;padding:16px;box-shadow:var(--shadow-sm);min-height:140px;display:flex;flex-direction:column;gap:10px}
+.fridge-card .fridge-name{font-weight:700;font-size:15px;color:var(--ink);display:flex;align-items:center;gap:8px}
+.fridge-card .fridge-name::before{content:'❄';color:var(--cold);font-size:16px}
+.fridge-card .fridge-bin{flex:1;border:1px dashed var(--line);border-radius:10px;padding:10px;background:var(--bg-3);min-height:70px;display:flex;flex-wrap:wrap;gap:6px;align-content:flex-start}
+.fridge-card.empty .fridge-bin::before{content:'Drop dishes here';color:var(--mute-low);font-size:12px;font-weight:600}
+.fridge-pill{background:var(--bg-2);border:1px solid var(--line);border-radius:99px;padding:4px 10px 4px 4px;font-size:12px;font-weight:600;display:inline-flex;align-items:center;gap:6px;color:var(--ink)}
+.fridge-pill .pill-letter{width:22px;height:22px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-weight:800;font-size:11px}
+.fridge-pill .pill-letter.cold{background:var(--cold-soft);color:var(--cold)}
+.fridge-pill .pill-letter.hot{background:var(--hot-soft);color:var(--hot)}
+.fridge-pill .pill-rm{margin-left:2px;color:var(--mute);font-size:11px;cursor:pointer;width:16px;height:16px;border-radius:50%;background:var(--bg-3);display:inline-flex;align-items:center;justify-content:center;border:0}
+.fridge-pill .pill-rm:hover{color:var(--ink);background:var(--bg)}
+
+.placement-empty{text-align:center;color:var(--mute);padding:48px 24px;border:1px dashed var(--line);border-radius:14px;background:var(--bg-2);margin-top:14px}
+.placement-empty .pe-title{font-weight:700;color:var(--ink);font-size:16px;margin-bottom:6px}
+.placement-empty .btn{margin-top:14px}
+
+.unplaced-strip{margin-top:18px;background:var(--bg-2);border:1px solid var(--line);border-radius:14px;padding:14px}
+.unplaced-strip .strip-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.unplaced-strip .strip-head .title{font-weight:700;font-size:14px;color:var(--ink)}
+.unplaced-strip .strip-head .hint{font-size:12px;color:var(--mute)}
+.unplaced-pills{display:flex;flex-wrap:wrap;gap:6px}
+
+/* Placement modal tab styles */
+.place-radio-row{display:flex;gap:8px;margin-bottom:14px}
+.place-radio{flex:1;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--bg-2);cursor:pointer;display:flex;align-items:center;gap:8px;font-weight:600;font-size:13px;color:var(--ink-2)}
+.place-radio:hover{background:var(--bg-3)}
+.place-radio.is-active{border-color:var(--gold);background:rgba(245,158,11,0.10);color:var(--gold)}
+
+/* Settings storage block */
+.storage-block{margin-top:18px;padding:14px;border:1px solid var(--line);border-radius:12px;background:var(--bg-3)}
+.storage-block h4{margin:0 0 10px 0;font-size:14px;color:var(--ink)}
+.storage-row{display:flex;gap:8px;align-items:center;padding:8px 10px;background:var(--bg-2);border:1px solid var(--line);border-radius:8px;margin-bottom:6px}
+.storage-row input, .storage-row select{flex:1;padding:6px 8px;border:1px solid var(--line);border-radius:6px;background:var(--bg)}
+.storage-row .storage-rm{background:transparent;border:0;color:var(--hold);cursor:pointer;padding:4px 8px;font-weight:600;font-size:12px}
+.add-storage{display:inline-flex;align-items:center;gap:6px;background:transparent;border:1px dashed var(--mute-low);border-radius:8px;padding:8px 12px;color:var(--ink-2);font-weight:600;font-size:13px;cursor:pointer;margin-top:4px}
+.add-storage:hover{background:var(--bg-2);color:var(--ink);border-color:var(--ink-2)}
 
 /* Home meta row (week + date) */
 .home-meta{display:flex;align-items:center;justify-content:center;gap:14px;flex-wrap:wrap;margin-top:24px;color:var(--mute);font-size:13px}
@@ -566,7 +631,7 @@ body[data-view="home"] .home-link{display:none}
 <section class="home-view" id="home-view">
     <div class="home-eyebrow">Daily quality control</div>
     <h1 class="home-title">Pick a stage to log readings</h1>
-    <div class="home-sub">Three stations work the dishes through the day. Tap the one you're on now.</div>
+    <div class="home-sub">Four stations work the dishes through the day. Tap the one you're on now.</div>
     <div class="stage-card-grid" id="home-stage-grid">
         <button class="stage-card" data-stage="assembly" type="button">
             <div>
@@ -604,6 +669,18 @@ body[data-view="home"] .home-link{display:none}
             </div>
             <div class="stage-arrow">→</div>
         </button>
+        <button class="stage-card" data-stage="placement" type="button">
+            <div>
+                <div class="step">④ Placement</div>
+                <div class="stage-name">Placement</div>
+                <div class="stage-desc">Where each dish lives: warmer compartment or fridge. Tap a slot to assign a dish.</div>
+            </div>
+            <div class="stage-progress">
+                <span class="progress-pill" id="home-count-placement">—</span>
+                <span>placed today</span>
+            </div>
+            <div class="stage-arrow">→</div>
+        </button>
     </div>
     <div class="home-meta">
         <span class="home-meta-pill" id="home-week">—</span>
@@ -635,9 +712,20 @@ body[data-view="home"] .home-link{display:none}
                 <span class="tab-label-short">Dsp</span>
                 <span class="stage-count" id="count-dispatch">—</span>
             </button>
+            <button class="stage-tab" data-stage="placement" role="tab" aria-selected="false">
+                <span class="stage-emoji">④</span>
+                <span class="tab-label-full">Placement</span>
+                <span class="tab-label-short">Pls</span>
+                <span class="stage-count" id="count-placement">—</span>
+            </button>
         </div>
     </div>
 </nav>
+
+<style>
+.stage-tab.is-active[data-stage=placement]{color:var(--gold);border-bottom-color:var(--gold);background:rgba(245,158,11,0.10)}
+.stage-tab.is-active[data-stage=placement] .stage-count{background:var(--bg-2);color:var(--gold);border-color:rgba(245,158,11,0.4)}
+</style>
 
 <main class="container">
 
@@ -728,11 +816,23 @@ const state = {
     menu: null,
     checks: {},
     filter: 'all',
-    stage: 'qc',     // 'assembly' | 'qc' | 'dispatch'
+    stage: 'qc',     // 'assembly' | 'qc' | 'dispatch' | 'placement'
     view: 'home',    // 'home' | 'stage'
-    _unsub: null
+    storage: { warmers: [], fridges: [] }, // configured kitchen storage
+    _unsub: null,
+    _unsubStorage: null
 };
 const modalState = { letter: null, tab: 'qc' };
+
+/* Compartment layouts for warmers. Each entry: { id, label } */
+const WARMER_LAYOUTS = {
+    'h-2x2':  { name:'2 × 2 (4 slots)',           rows:2, cols:2, cells:['tl','tr','bl','br'],
+                labels:{tl:'Top L', tr:'Top R', bl:'Bot L', br:'Bot R'} },
+    'h-2x3':  { name:'2 × 3 horizontal (6 slots)', rows:2, cols:3, cells:['tl','tm','tr','bl','bm','br'],
+                labels:{tl:'Top L', tm:'Top M', tr:'Top R', bl:'Bot L', bm:'Bot M', br:'Bot R'} },
+    'v-3x2':  { name:'3 × 2 vertical (6 slots)',   rows:3, cols:2, cells:['tl','tr','ml','mr','bl','br'],
+                labels:{tl:'Top L', tr:'Top R', ml:'Mid L', mr:'Mid R', bl:'Bot L', br:'Bot R'} }
+};
 
 /* === Date helpers === */
 function todayIso(){ const d=new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
@@ -824,6 +924,36 @@ function stageLabel(s){ return s==='assembly'?'Assembly':s==='qc'?'QC Check':s==
 async function loadMenuForWeek(weekId){ const s=await get(ref(db,`menus/${weekId}`)); return s.val(); }
 function listenChecks(date){ return onValue(ref(db,`quality-checks/${date}`), snap=>{ state.checks=snap.val()||{}; renderAll(); }); }
 
+/* === Storage (warmers + fridges) === */
+function listenStorage(){
+    return onValue(ref(db, 'storage'), snap => {
+        const v = snap.val() || {};
+        // Normalise to arrays sorted by `order`
+        const toArr = obj => Object.entries(obj || {}).map(([id, o]) => ({ id, ...o }))
+            .sort((a,b) => (a.order||0) - (b.order||0) || (a.name||'').localeCompare(b.name||''));
+        state.storage = { warmers: toArr(v.warmers), fridges: toArr(v.fridges) };
+        if(state.view === 'stage' && state.stage === 'placement') renderAll();
+    });
+}
+async function saveWarmer(warmer){
+    if(!warmer.id) warmer.id = 'w-' + Math.random().toString(36).slice(2,8);
+    const { id, ...rest } = warmer;
+    await update(ref(db, `storage/warmers/${id}`), rest);
+}
+async function deleteWarmer(id){ await set(ref(db, `storage/warmers/${id}`), null); }
+async function saveFridge(fridge){
+    if(!fridge.id) fridge.id = 'f-' + Math.random().toString(36).slice(2,8);
+    const { id, ...rest } = fridge;
+    await update(ref(db, `storage/fridges/${id}`), rest);
+}
+async function deleteFridge(id){ await set(ref(db, `storage/fridges/${id}`), null); }
+
+/* Per-dish placement (lives inside the day's quality-checks record) */
+async function savePlacement(letter, placement){
+    // placement = { type:'warmer'|'fridge', containerId, compartment?, ts? }
+    await saveCheckField(letter, { placement: placement ? { ...placement, ts: serverTimestamp() } : null });
+}
+
 async function saveCheckField(dishLetter, partial){
     const path=`quality-checks/${state.selectedDate}/${dishLetter}`;
     await update(ref(db, path), { ...partial, date: state.selectedDate, dishLetter, timestamp: serverTimestamp() });
@@ -845,6 +975,8 @@ function countLoggedForStage(stage){
         if(!c) continue;
         if(stage === 'qc'){
             if(avg(c.temperatures) != null) logged++;
+        } else if(stage === 'placement'){
+            if(c.placement && c.placement.containerId) logged++;
         } else {
             if(hasStageData(c, stage)) logged++;
         }
@@ -1222,19 +1354,262 @@ function renderSummary(){
     });
 }
 
+/* === Placement view ===
+   Shows every configured warmer as a grid of compartments and every fridge as
+   a drop-bin. Each compartment/bin shows the dish letter currently placed
+   there for today's selected date. Tapping a compartment opens a dish picker.
+*/
+function dishByLetter(letter){
+    if(!state.menu) return null;
+    return (state.menu.dishes || []).find(d => d.dishLetter === letter) || null;
+}
+function placementOf(letter){
+    return state.checks?.[letter]?.placement || null;
+}
+function dishesInContainer(containerId, compartment){
+    // Returns letters of dishes whose placement matches
+    if(!state.menu) return [];
+    return (state.menu.dishes || []).filter(d => {
+        const p = placementOf(d.dishLetter);
+        if(!p || p.containerId !== containerId) return false;
+        if(compartment != null && p.compartment !== compartment) return false;
+        return true;
+    }).map(d => d.dishLetter);
+}
+function renderPlacementStageView(){
+    // The placement stage replaces the alert/scorecard/dishes/summary blocks.
+    const alertHost = document.getElementById('alert-host');
+    const dishArea = document.getElementById('dish-area');
+    // Hide scorecard + summary, repurpose dish-area for our layout
+    const scorecard = document.getElementById('scorecard')?.closest('section');
+    const summarySec = document.getElementById('summary-body')?.closest('section');
+    if(scorecard) scorecard.style.display = 'none';
+    if(summarySec) summarySec.style.display = 'none';
+    const sectionHead = dishArea?.parentElement?.querySelector('.section-head');
+    if(sectionHead) sectionHead.style.display = 'none';
+    if(alertHost) alertHost.innerHTML = '';
+
+    if(!dishArea) return;
+
+    const warmers = state.storage?.warmers || [];
+    const fridges = state.storage?.fridges || [];
+
+    if(!warmers.length && !fridges.length){
+        dishArea.innerHTML = `
+            <div class="placement-empty">
+                <div class="pe-title">No warmers or fridges set up yet</div>
+                <div>Add the kitchen's warmers and fridges in Settings — give each warmer a name and pick its compartment layout (2×2, 2×3 horizontal, or 3×2 vertical).</div>
+                <button class="btn btn-primary" onclick="window.__qc.openSettings()">Open Settings</button>
+            </div>
+        `;
+        return;
+    }
+
+    const unplaced = !state.menu ? [] :
+        (state.menu.dishes || []).filter(d => !placementOf(d.dishLetter));
+    const totalDishes = state.menu ? (state.menu.dishes || []).length : 0;
+    const placedCount = totalDishes - unplaced.length;
+
+    const renderWarmer = (w) => {
+        const layout = WARMER_LAYOUTS[w.layout] || WARMER_LAYOUTS['h-2x2'];
+        return `
+            <div class="warmer-card" data-warmer-id="${escapeAttr(w.id)}">
+                <div class="warmer-head">
+                    <div class="warmer-name">${escapeHtml(w.name || 'Warmer')}</div>
+                    <div class="warmer-type">${escapeHtml(layout.name)}</div>
+                </div>
+                <div class="warmer-grid" style="grid-template-columns:repeat(${layout.cols}, 1fr); grid-template-rows:repeat(${layout.rows}, 1fr)">
+                    ${layout.cells.map(cell => {
+                        const occupants = dishesInContainer(w.id, cell);
+                        const lt = occupants[0] || '';
+                        const d = lt ? dishByLetter(lt) : null;
+                        const cls = d ? (isCold(d) ? 'cold' : 'hot') : '';
+                        return `
+                            <button class="warmer-slot ${lt?'filled':''}" data-warmer="${escapeAttr(w.id)}" data-cell="${escapeAttr(cell)}" type="button" aria-label="${escapeAttr(layout.labels[cell] || cell)}">
+                                <span class="slot-label">${escapeHtml(layout.labels[cell] || cell.toUpperCase())}</span>
+                                ${lt ? `
+                                    <button class="slot-clear" type="button" data-clear="${escapeAttr(lt)}" aria-label="Remove">×</button>
+                                    <span class="slot-letter ${cls}">${escapeHtml(lt)}</span>
+                                    ${d ? `<span class="slot-name">${escapeHtml(d.dishName)}</span>` : ''}
+                                ` : `<span style="color:var(--mute-low);font-size:11px;font-weight:600">empty</span>`}
+                            </button>
+                        `;
+                    }).join('')}
+                </div>
+            </div>
+        `;
+    };
+
+    const renderFridge = (f) => {
+        const occupants = dishesInContainer(f.id, null);
+        return `
+            <div class="fridge-card ${occupants.length===0?'empty':''}" data-fridge-id="${escapeAttr(f.id)}">
+                <div class="fridge-name">${escapeHtml(f.name || 'Fridge')}</div>
+                <div class="fridge-bin">
+                    ${occupants.map(lt => {
+                        const d = dishByLetter(lt);
+                        const cls = d ? (isCold(d) ? 'cold' : 'hot') : '';
+                        return `
+                            <span class="fridge-pill">
+                                <span class="pill-letter ${cls}">${escapeHtml(lt)}</span>
+                                ${escapeHtml(d?.dishName || '')}
+                                <button class="pill-rm" data-clear="${escapeAttr(lt)}" type="button" aria-label="Remove">×</button>
+                            </span>
+                        `;
+                    }).join('')}
+                </div>
+                <button class="btn btn-sm" type="button" data-add-to-fridge="${escapeAttr(f.id)}">+ Add dish</button>
+            </div>
+        `;
+    };
+
+    dishArea.innerHTML = `
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:10px">
+            <div>
+                <div style="font-size:22px;font-weight:800;color:var(--ink)">Placement · ${humanDate(state.selectedDate)}</div>
+                <div style="font-size:13px;color:var(--mute);margin-top:2px">${placedCount} of ${totalDishes} dishes placed · ${warmers.length} warmer${warmers.length===1?'':'s'} · ${fridges.length} fridge${fridges.length===1?'':'s'}</div>
+            </div>
+            <button class="btn" type="button" onclick="window.__qc.openSettings()">Manage warmers & fridges</button>
+        </div>
+        ${warmers.length ? `<div class="placement-grid">${warmers.map(renderWarmer).join('')}</div>` : ''}
+        ${fridges.length ? `<div class="fridge-list" style="margin-top:18px">${fridges.map(renderFridge).join('')}</div>` : ''}
+        ${unplaced.length ? `
+            <div class="unplaced-strip">
+                <div class="strip-head">
+                    <div class="title">Unplaced dishes (${unplaced.length})</div>
+                    <div class="hint">Tap a slot above, then pick a dish to assign it.</div>
+                </div>
+                <div class="unplaced-pills">
+                    ${unplaced.map(d => {
+                        const cls = isCold(d) ? 'cold' : 'hot';
+                        return `<span class="fridge-pill" data-letter="${escapeAttr(d.dishLetter)}">
+                            <span class="pill-letter ${cls}">${escapeHtml(d.dishLetter)}</span>
+                            ${escapeHtml(d.dishName)}
+                        </span>`;
+                    }).join('')}
+                </div>
+            </div>
+        ` : ''}
+    `;
+
+    bindPlacementHandlers();
+}
+
+function bindPlacementHandlers(){
+    const root = document.getElementById('dish-area');
+    if(!root) return;
+    // Click a warmer slot → open dish picker for that compartment
+    root.querySelectorAll('.warmer-slot').forEach(slot => {
+        slot.addEventListener('click', (e) => {
+            // Stop if user clicked the inline ✕
+            if(e.target.closest('[data-clear]')) return;
+            const warmer = slot.getAttribute('data-warmer');
+            const cell = slot.getAttribute('data-cell');
+            openPlacementPicker({ type:'warmer', containerId: warmer, compartment: cell });
+        });
+    });
+    // Click a fridge "+ Add dish"
+    root.querySelectorAll('[data-add-to-fridge]').forEach(btn => {
+        btn.addEventListener('click', () => {
+            openPlacementPicker({ type:'fridge', containerId: btn.getAttribute('data-add-to-fridge') });
+        });
+    });
+    // Clear buttons (slot or fridge pill)
+    root.querySelectorAll('[data-clear]').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+            e.stopPropagation();
+            const letter = btn.getAttribute('data-clear');
+            try { await savePlacement(letter, null); toast('Removed','ok'); }
+            catch(err){ toast('Save failed','fail'); console.error(err); }
+        });
+    });
+}
+
+/* Simple inline picker — re-uses the settings overlay */
+function openPlacementPicker(target){
+    const overlay = document.getElementById('settings-overlay');
+    const containerName = (target.type === 'warmer'
+        ? (state.storage.warmers.find(w => w.id === target.containerId)?.name || 'Warmer')
+        : (state.storage.fridges.find(f => f.id === target.containerId)?.name || 'Fridge'));
+    const compLabel = target.compartment
+        ? (() => {
+            const w = state.storage.warmers.find(w => w.id === target.containerId);
+            const layout = w ? WARMER_LAYOUTS[w.layout] : null;
+            return layout?.labels?.[target.compartment] || target.compartment.toUpperCase();
+          })()
+        : '';
+    const dishes = state.menu?.dishes || [];
+    overlay.innerHTML = `
+        <div class="modal-panel" style="max-width:520px">
+            <div class="modal-head">
+                <div class="eyebrow">Placement</div>
+                <h3 class="title">${escapeHtml(containerName)}${compLabel?' · '+escapeHtml(compLabel):''}</h3>
+                <button class="modal-close" aria-label="Close" onclick="window.__qc.closeSettings()">×</button>
+            </div>
+            <div class="modal-body">
+                <div style="font-size:13px;color:var(--mute);margin-bottom:10px">Pick a dish to assign to this slot</div>
+                <div style="display:flex;flex-direction:column;gap:6px;max-height:60vh;overflow-y:auto">
+                    ${dishes.map(d => {
+                        const cls = isCold(d) ? 'cold' : 'hot';
+                        const p = placementOf(d.dishLetter);
+                        const here = p && p.containerId === target.containerId && (target.compartment == null || p.compartment === target.compartment);
+                        return `
+                            <button class="btn" type="button" data-pick-letter="${escapeAttr(d.dishLetter)}" style="justify-content:flex-start;text-align:left;padding:10px 12px;gap:10px;${here?'border-color:var(--gold);background:rgba(245,158,11,0.10)':''}">
+                                <span class="pill-letter ${cls}" style="width:26px;height:26px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-weight:800;font-size:12px">${escapeHtml(d.dishLetter)}</span>
+                                <span style="flex:1;font-weight:600">${escapeHtml(d.dishName)}</span>
+                                ${here ? `<span style="font-size:11px;color:var(--gold);font-weight:700">HERE</span>` : ''}
+                            </button>
+                        `;
+                    }).join('')}
+                </div>
+            </div>
+            <div class="modal-foot">
+                <button class="btn" type="button" onclick="window.__qc.closeSettings()">Cancel</button>
+            </div>
+        </div>
+    `;
+    overlay.classList.remove('hidden');
+    overlay.querySelectorAll('[data-pick-letter]').forEach(btn => {
+        btn.addEventListener('click', async () => {
+            const letter = btn.getAttribute('data-pick-letter');
+            const placement = { type: target.type, containerId: target.containerId };
+            if(target.compartment) placement.compartment = target.compartment;
+            try {
+                await savePlacement(letter, placement);
+                toast('Placed','ok');
+                closeSettings();
+            } catch(err){ toast('Save failed','fail'); console.error(err); }
+        });
+    });
+}
+
 function renderAll(){
     renderWeekStrip();
     updateStageTabs();
     renderHome();
     if(state.view === 'stage'){
-        renderAlert(); renderScorecard(); renderDishes(); renderSummary();
+        // Restore sections that the Placement view hides
+        const dishArea = document.getElementById('dish-area');
+        const scSec = document.getElementById('scorecard')?.closest('section');
+        const sumSec = document.getElementById('summary-body')?.closest('section');
+        if(state.stage !== 'placement'){
+            if(scSec) scSec.style.display = '';
+            if(sumSec) sumSec.style.display = '';
+            const sectionHead = dishArea?.parentElement?.querySelector('.section-head');
+            if(sectionHead) sectionHead.style.display = '';
+        }
+        if(state.stage === 'placement'){
+            renderPlacementStageView();
+        } else {
+            renderAlert(); renderScorecard(); renderDishes(); renderSummary();
+        }
     }
 }
 
 /* === Home (stage chooser) view === */
 function renderHome(){
     // Per-stage progress badges
-    ['assembly','qc','dispatch'].forEach(stg=>{
+    ['assembly','qc','dispatch','placement'].forEach(stg=>{
         const { logged, total } = countLoggedForStage(stg);
         const el = document.getElementById(`home-count-${stg}`);
         if(el) el.textContent = total === 0 ? '—' : `${logged} / ${total}`;
@@ -1267,7 +1642,7 @@ function setView(view, opts){
 
 function routeFromHash(){
     const h = (location.hash || '').replace(/^#\//,'');
-    if(h === 'assembly' || h === 'qc' || h === 'dispatch'){
+    if(h === 'assembly' || h === 'qc' || h === 'dispatch' || h === 'placement'){
         state.stage = h;
         setView('stage', { skipHash: true });
     } else {
@@ -1985,6 +2360,19 @@ function openSettings(){
                     <input type="checkbox" id="settings-include-addons" />
                     <span>Include addons (drinks, snacks, sides). Off by default — only main dishes appear on the QC sheet.</span>
                 </label>
+
+                <!-- Storage: warmers + fridges -->
+                <div class="storage-block">
+                    <h4>Warmers</h4>
+                    <div id="storage-warmers-list"></div>
+                    <button class="add-storage" type="button" id="add-warmer">+ Add warmer</button>
+                </div>
+                <div class="storage-block">
+                    <h4>Fridges</h4>
+                    <div id="storage-fridges-list"></div>
+                    <button class="add-storage" type="button" id="add-fridge">+ Add fridge</button>
+                </div>
+
                 <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px;flex-wrap:wrap">
                     <button class="btn" onclick="window.__qc.closeSettings()">Cancel</button>
                     <button class="btn btn-ghost-danger" id="settings-clear">Clear week</button>
@@ -1994,6 +2382,20 @@ function openSettings(){
         </div>
     `;
     overlay.classList.remove('hidden');
+
+    // Wire storage (warmers + fridges) management
+    renderSettingsStorage(overlay);
+    overlay.querySelector('#add-warmer').onclick = async () => {
+        const order = (state.storage.warmers || []).length;
+        await saveWarmer({ name: `Warmer ${order + 1}`, layout: 'h-2x3', order });
+        renderSettingsStorage(overlay);
+    };
+    overlay.querySelector('#add-fridge').onclick = async () => {
+        const order = (state.storage.fridges || []).length;
+        await saveFridge({ name: `Fridge ${order + 1}`, order });
+        renderSettingsStorage(overlay);
+    };
+
     overlay.querySelector('#settings-save').onclick=async()=>{
         const txt=document.getElementById('settings-menu-json').value.trim();
         if(!txt){ toast('Empty JSON','fail'); return; }
@@ -2024,6 +2426,60 @@ function openSettings(){
     };
     overlay.querySelector('#settings-menu-json').focus();
 }
+function renderSettingsStorage(overlay){
+    if(!overlay) overlay = document.getElementById('settings-overlay');
+    const wHost = overlay.querySelector('#storage-warmers-list');
+    const fHost = overlay.querySelector('#storage-fridges-list');
+    if(!wHost || !fHost) return;
+    const warmers = state.storage?.warmers || [];
+    const fridges = state.storage?.fridges || [];
+    wHost.innerHTML = warmers.length === 0
+        ? `<div style="font-size:12px;color:var(--mute);padding:8px 0">No warmers yet. Add the kitchen's warmers and pick each one's compartment layout.</div>`
+        : warmers.map(w => `
+            <div class="storage-row" data-id="${escapeAttr(w.id)}">
+                <input type="text" data-w-name value="${escapeAttr(w.name||'')}" placeholder="Warmer name" />
+                <select data-w-layout>
+                    ${Object.entries(WARMER_LAYOUTS).map(([k, l]) => `<option value="${k}" ${k===(w.layout||'h-2x3')?'selected':''}>${escapeHtml(l.name)}</option>`).join('')}
+                </select>
+                <button class="storage-rm" data-w-rm type="button">Delete</button>
+            </div>
+        `).join('');
+    fHost.innerHTML = fridges.length === 0
+        ? `<div style="font-size:12px;color:var(--mute);padding:8px 0">No fridges yet. Add named fridges so dishes can be placed inside one.</div>`
+        : fridges.map(f => `
+            <div class="storage-row" data-id="${escapeAttr(f.id)}">
+                <input type="text" data-f-name value="${escapeAttr(f.name||'')}" placeholder="Fridge name" />
+                <button class="storage-rm" data-f-rm type="button">Delete</button>
+            </div>
+        `).join('');
+
+    // Wire warmers
+    wHost.querySelectorAll('.storage-row').forEach(row => {
+        const id = row.getAttribute('data-id');
+        const nameInp = row.querySelector('[data-w-name]');
+        const layoutSel = row.querySelector('[data-w-layout]');
+        const save = () => saveWarmer({ id, name: nameInp.value.trim() || 'Warmer', layout: layoutSel.value, order: warmers.findIndex(x => x.id === id) });
+        nameInp.addEventListener('blur', save);
+        layoutSel.addEventListener('change', save);
+        row.querySelector('[data-w-rm]').addEventListener('click', async () => {
+            if(!confirm('Delete this warmer? Any dishes placed there will be unassigned.')) return;
+            await deleteWarmer(id);
+            renderSettingsStorage(overlay);
+        });
+    });
+    // Wire fridges
+    fHost.querySelectorAll('.storage-row').forEach(row => {
+        const id = row.getAttribute('data-id');
+        const nameInp = row.querySelector('[data-f-name]');
+        nameInp.addEventListener('blur', () => saveFridge({ id, name: nameInp.value.trim() || 'Fridge', order: fridges.findIndex(x => x.id === id) }));
+        row.querySelector('[data-f-rm]').addEventListener('click', async () => {
+            if(!confirm('Delete this fridge? Any dishes placed there will be unassigned.')) return;
+            await deleteFridge(id);
+            renderSettingsStorage(overlay);
+        });
+    });
+}
+
 function closeSettings(){ const o=document.getElementById('settings-overlay'); o.classList.add('hidden'); o.innerHTML=''; }
 
 /* === Toast === */
@@ -2129,6 +2585,7 @@ window.__qc = {
     closeModal,
     closeSettings,
     closeCamera,
+    openSettings,
     filterToIssues:()=>{
         state.filter='issues';
         document.querySelectorAll('.filter button').forEach(b=>b.classList.toggle('is-active', b.getAttribute('data-filter')==='issues'));
@@ -2148,7 +2605,8 @@ document.addEventListener('keydown', (e) => {
 
 wire();
 selectDate(state.selectedDate);
-routeFromHash(); // honour deep-links (#/assembly, #/qc, #/dispatch) — else show home
+state._unsubStorage = listenStorage();
+routeFromHash(); // honour deep-links (#/assembly, #/qc, #/dispatch, #/placement) — else show home
 </script>
 
 </body>

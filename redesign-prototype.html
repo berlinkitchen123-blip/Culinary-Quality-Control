@@ -328,6 +328,48 @@ table.summary tbody tr:last-child td{border-bottom:none}
 .cam-shutter{width:64px;height:64px;border-radius:50%;background:white;border:4px solid #ddd;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;box-shadow:0 0 0 4px rgba(255,255,255,0.15)}
 .cam-shutter:hover{background:#f4f4f4}
 .cam-shutter:disabled{opacity:0.5;cursor:not-allowed}
+
+/* === Home (stage chooser) view === */
+.home-view{display:none;padding:34px 20px 60px 20px;max-width:1100px;margin:0 auto}
+body[data-view="home"] .home-view{display:block}
+body[data-view="home"] .stage-bar,
+body[data-view="home"] main.container{display:none}
+body[data-view="stage"] .home-view{display:none}
+.home-eyebrow{text-align:center;font-size:12px;font-weight:700;color:var(--mute);letter-spacing:0.16em;text-transform:uppercase}
+.home-title{text-align:center;font-size:30px;font-weight:800;color:var(--ink);margin:6px 0 6px 0;letter-spacing:-0.02em}
+.home-sub{text-align:center;font-size:15px;color:var(--ink-2);margin-bottom:34px}
+.stage-card-grid{display:grid;grid-template-columns:repeat(3, minmax(0, 1fr));gap:18px}
+@media(max-width:760px){ .stage-card-grid{grid-template-columns:1fr; gap:12px} }
+.stage-card{display:flex;flex-direction:column;justify-content:space-between;background:var(--bg-2);border:1px solid var(--line);border-radius:20px;padding:24px;cursor:pointer;text-align:left;transition:transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease;min-height:200px;position:relative;overflow:hidden}
+.stage-card:hover{transform:translateY(-2px);box-shadow:0 10px 30px -8px rgba(0,0,0,0.10)}
+.stage-card[data-stage="assembly"]{border-left:6px solid var(--assembly)}
+.stage-card[data-stage="qc"]{border-left:6px solid var(--qc)}
+.stage-card[data-stage="dispatch"]{border-left:6px solid var(--dispatch)}
+.stage-card[data-stage="assembly"]:hover{border-color:var(--assembly-line);background:var(--assembly-soft)}
+.stage-card[data-stage="qc"]:hover{border-color:var(--qc-line);background:var(--qc-soft)}
+.stage-card[data-stage="dispatch"]:hover{border-color:var(--dispatch-line);background:var(--dispatch-soft)}
+.stage-card .step{font-size:13px;font-weight:700;color:var(--mute);letter-spacing:0.04em}
+.stage-card[data-stage="assembly"] .step{color:var(--assembly)}
+.stage-card[data-stage="qc"] .step{color:var(--qc)}
+.stage-card[data-stage="dispatch"] .step{color:var(--dispatch)}
+.stage-card .stage-name{font-size:28px;font-weight:800;color:var(--ink);margin-top:6px;letter-spacing:-0.01em;line-height:1.1}
+.stage-card .stage-desc{font-size:14px;color:var(--ink-2);margin-top:10px;line-height:1.5}
+.stage-card .stage-progress{display:flex;align-items:center;gap:10px;margin-top:18px;font-size:14px;font-weight:600;color:var(--ink-2)}
+.stage-card .progress-pill{font-size:13px;font-weight:700;padding:4px 12px;border-radius:99px;background:var(--bg-3);color:var(--ink);border:1px solid var(--line)}
+.stage-card[data-stage="assembly"] .progress-pill{background:var(--assembly-soft);color:var(--assembly);border-color:var(--assembly-line)}
+.stage-card[data-stage="qc"] .progress-pill{background:var(--qc-soft);color:var(--qc);border-color:var(--qc-line)}
+.stage-card[data-stage="dispatch"] .progress-pill{background:var(--dispatch-soft);color:var(--dispatch);border-color:var(--dispatch-line)}
+.stage-card .stage-arrow{position:absolute;top:24px;right:24px;width:32px;height:32px;border-radius:50%;background:var(--bg-3);display:flex;align-items:center;justify-content:center;color:var(--ink);font-size:18px;transition:transform 140ms ease}
+.stage-card:hover .stage-arrow{transform:translateX(2px)}
+
+/* Back-to-home button (lives in stage-bar) */
+.home-link{background:transparent;border:0;color:var(--ink-2);font-size:13px;font-weight:700;padding:8px 12px;border-radius:8px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;margin-right:6px}
+.home-link:hover{background:var(--bg-3);color:var(--ink)}
+body[data-view="home"] .home-link{display:none}
+
+/* Home meta row (week + date) */
+.home-meta{display:flex;align-items:center;justify-content:center;gap:14px;flex-wrap:wrap;margin-top:24px;color:var(--mute);font-size:13px}
+.home-meta .home-meta-pill{padding:5px 12px;border-radius:99px;background:var(--bg-3);border:1px solid var(--line)}
 .cam-shutter::after{content:'';width:46px;height:46px;border-radius:50%;background:white;border:1.5px solid #999}
 .cam-flip{width:42px;height:42px;border-radius:50%;background:rgba(255,255,255,0.12);border:0;cursor:pointer;color:#eee;font-size:20px;display:inline-flex;align-items:center;justify-content:center}
 .cam-flip:hover{background:rgba(255,255,255,0.22)}
@@ -446,9 +488,60 @@ table.summary tbody tr:last-child td{border-bottom:none}
     </div>
 </header>
 
-<!-- TOP-LEVEL STAGE TABS -->
+<!-- HOME (stage chooser) -->
+<section class="home-view" id="home-view">
+    <div class="home-eyebrow">Daily quality control</div>
+    <h1 class="home-title">Pick a stage to log readings</h1>
+    <div class="home-sub">Three stations work the dishes through the day. Tap the one you're on now.</div>
+    <div class="stage-card-grid" id="home-stage-grid">
+        <button class="stage-card" data-stage="assembly" type="button">
+            <div>
+                <div class="step">① Assembly</div>
+                <div class="stage-name">Assembly</div>
+                <div class="stage-desc">Plate the dish: confirm ingredients are present and stamp the temperature when it leaves the line.</div>
+            </div>
+            <div class="stage-progress">
+                <span class="progress-pill" id="home-count-assembly">—</span>
+                <span>logged today</span>
+            </div>
+            <div class="stage-arrow">→</div>
+        </button>
+        <button class="stage-card" data-stage="qc" type="button">
+            <div>
+                <div class="step">② QC Check</div>
+                <div class="stage-name">QC Check</div>
+                <div class="stage-desc">Full quality control: photo, ingredients tick-list, three temperature + weight samples, chef's note.</div>
+            </div>
+            <div class="stage-progress">
+                <span class="progress-pill" id="home-count-qc">—</span>
+                <span>logged today</span>
+            </div>
+            <div class="stage-arrow">→</div>
+        </button>
+        <button class="stage-card" data-stage="dispatch" type="button">
+            <div>
+                <div class="step">③ Dispatch</div>
+                <div class="stage-name">Dispatch</div>
+                <div class="stage-desc">Last reading before the van: confirm the dish is still in spec and stamp the dispatch time.</div>
+            </div>
+            <div class="stage-progress">
+                <span class="progress-pill" id="home-count-dispatch">—</span>
+                <span>logged today</span>
+            </div>
+            <div class="stage-arrow">→</div>
+        </button>
+    </div>
+    <div class="home-meta">
+        <span class="home-meta-pill" id="home-week">—</span>
+        <span class="home-meta-pill" id="home-date">—</span>
+        <span class="home-meta-pill" id="home-menu-count">—</span>
+    </div>
+</section>
+
+<!-- TOP-LEVEL STAGE TABS (visible inside a stage view) -->
 <nav class="stage-bar" aria-label="Stage">
     <div class="stage-bar-inner">
+        <button class="home-link" id="go-home" type="button" aria-label="Back to stage chooser">← Home</button>
         <div class="stage-tabs" role="tablist">
             <button class="stage-tab" data-stage="assembly" role="tab" aria-selected="false">
                 <span class="stage-emoji">①</span>
@@ -562,6 +655,7 @@ const state = {
     checks: {},
     filter: 'all',
     stage: 'qc',     // 'assembly' | 'qc' | 'dispatch'
+    view: 'home',    // 'home' | 'stage'
     _unsub: null
 };
 const modalState = { letter: null, tab: 'qc' };
@@ -1038,7 +1132,58 @@ function renderSummary(){
     });
 }
 
-function renderAll(){ renderWeekStrip(); updateStageTabs(); renderAlert(); renderScorecard(); renderDishes(); renderSummary(); }
+function renderAll(){
+    renderWeekStrip();
+    updateStageTabs();
+    renderHome();
+    if(state.view === 'stage'){
+        renderAlert(); renderScorecard(); renderDishes(); renderSummary();
+    }
+}
+
+/* === Home (stage chooser) view === */
+function renderHome(){
+    // Per-stage progress badges
+    ['assembly','qc','dispatch'].forEach(stg=>{
+        const { logged, total } = countLoggedForStage(stg);
+        const el = document.getElementById(`home-count-${stg}`);
+        if(el) el.textContent = total === 0 ? '—' : `${logged} / ${total}`;
+    });
+    const wkEl = document.getElementById('home-week');
+    const dEl = document.getElementById('home-date');
+    const mEl = document.getElementById('home-menu-count');
+    if(wkEl) wkEl.textContent = `Week ${isoYearWeek(state.selectedDate)}`;
+    if(dEl) dEl.textContent = humanDate(state.selectedDate);
+    if(mEl) mEl.textContent = state.menu ? `${(state.menu.dishes||[]).length} dishes on menu` : 'No menu yet';
+}
+
+/* === Routing === */
+function setView(view, opts){
+    opts = opts || {};
+    state.view = view === 'home' ? 'home' : 'stage';
+    document.body.setAttribute('data-view', state.view);
+    if(!opts.skipHash){
+        const target = state.view === 'home' ? '#/home' : `#/${state.stage}`;
+        if(location.hash !== target) history.replaceState(null, '', target);
+    }
+    renderAll();
+    if(state.view === 'stage'){
+        const el = document.getElementById('alert-host');
+        if(el) el.scrollIntoView({behavior:'smooth', block:'start'});
+    } else {
+        window.scrollTo({top:0, behavior:'smooth'});
+    }
+}
+
+function routeFromHash(){
+    const h = (location.hash || '').replace(/^#\//,'');
+    if(h === 'assembly' || h === 'qc' || h === 'dispatch'){
+        state.stage = h;
+        setView('stage', { skipHash: true });
+    } else {
+        setView('home', { skipHash: true });
+    }
+}
 
 /* === Modal === */
 function openModal(letter){
@@ -1762,8 +1907,7 @@ function setStage(stg){
     state.stage = stg;
     state.filter = 'all';
     document.querySelectorAll('.filter button').forEach(b=>b.classList.toggle('is-active', b.getAttribute('data-filter')==='all'));
-    renderAll();
-    document.getElementById('dish-area').scrollIntoView({behavior:'smooth', block:'start'});
+    setView('stage');
 }
 
 function wire(){
@@ -1772,6 +1916,15 @@ function wire(){
     document.querySelectorAll('.stage-tab').forEach(btn=>{
         btn.addEventListener('click',()=>setStage(btn.getAttribute('data-stage')));
     });
+    // Home (stage chooser) cards
+    document.querySelectorAll('#home-stage-grid .stage-card').forEach(card=>{
+        card.addEventListener('click', ()=>setStage(card.getAttribute('data-stage')));
+    });
+    // Back to home from stage view
+    const goHome = document.getElementById('go-home');
+    if(goHome) goHome.addEventListener('click', ()=>setView('home'));
+    // Hash routing — back/forward, opening a deep link
+    window.addEventListener('hashchange', routeFromHash);
     document.querySelectorAll('.filter button').forEach(btn=>{
         btn.addEventListener('click',()=>{
             document.querySelectorAll('.filter button').forEach(b=>b.classList.remove('is-active'));
@@ -1822,6 +1975,7 @@ document.addEventListener('keydown', (e) => {
 
 wire();
 selectDate(state.selectedDate);
+routeFromHash(); // honour deep-links (#/assembly, #/qc, #/dispatch) — else show home
 </script>
 
 </body>

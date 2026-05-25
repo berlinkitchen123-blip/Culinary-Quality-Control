@@ -13,6 +13,18 @@
 
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%232563eb'/%3E%3Ctext x='16' y='22' text-anchor='middle' font-family='Inter,sans-serif' font-weight='800' font-size='14' fill='white'%3EBB%3C/text%3E%3C/svg%3E">
 
+    <!-- Theme bootstrap — applied BEFORE first paint to avoid a flash -->
+    <script>
+    (function(){
+        try {
+            var saved = localStorage.getItem('bb_theme');
+            var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+            var theme = saved || (prefersDark ? 'dark' : 'light');
+            document.documentElement.setAttribute('data-theme', theme);
+        } catch(e){}
+    })();
+    </script>
+
 <style>
 :root{
   --bg:#f7f6f3; --bg-2:#ffffff; --bg-3:#f0eee9;
@@ -41,6 +53,64 @@
   --shadow-md:0 4px 12px rgba(0,0,0,0.06),0 2px 4px rgba(0,0,0,0.04);
   --shadow-lg:0 20px 40px rgba(0,0,0,0.08),0 6px 12px rgba(0,0,0,0.05);
 }
+
+/* === DARK MODE — applied via [data-theme="dark"] on <html> === */
+html[data-theme="dark"]{
+  --bg:#0f1115; --bg-2:#171a21; --bg-3:#212530;
+  --line:#2a2f3a; --line-2:#262a34;
+  --ink:#f3f4f6; --ink-2:#cbd1da; --mute:#8e95a3; --mute-low:#5d6371;
+
+  /* Brighter cold/hot so they pop against dark background */
+  --cold:#60a5fa; --cold-soft:#1e3a8a; --cold-line:#2563eb; --cold-bg:#152138;
+  --hot:#f87171;  --hot-soft:#7f1d1d;  --hot-line:#dc2626;  --hot-bg:#3a1717;
+
+  --pass:#4ade80; --pass-soft:#14532d; --pass-line:#16a34a;
+  --watch:#fb923c; --watch-soft:#7c2d12; --watch-line:#ea580c;
+  --hold:#f87171;  --hold-soft:#7f1d1d;  --hold-line:#dc2626;
+  --empty:#6b7280;
+
+  --assembly:#a78bfa; --assembly-soft:#4c1d95; --assembly-line:#7c3aed;
+  --qc:#60a5fa;       --qc-soft:#1e3a8a;       --qc-line:#2563eb;
+  --dispatch:#22d3ee; --dispatch-soft:#155e75; --dispatch-line:#0891b2;
+
+  --brand:#3b82f6; --brand-soft:#1e3a8a; --gold:#fbbf24;
+
+  --shadow-sm:0 1px 2px rgba(0,0,0,0.35),0 1px 1px rgba(0,0,0,0.25);
+  --shadow-md:0 4px 12px rgba(0,0,0,0.45),0 2px 4px rgba(0,0,0,0.3);
+  --shadow-lg:0 20px 40px rgba(0,0,0,0.55),0 6px 12px rgba(0,0,0,0.4);
+}
+html[data-theme="dark"]{ color-scheme: dark }
+html[data-theme="light"]{ color-scheme: light }
+
+/* Dark-mode specific touch-ups */
+html[data-theme="dark"] .modal-head.cold{background:linear-gradient(180deg, rgba(96,165,250,0.10), transparent)}
+html[data-theme="dark"] .modal-head.hot{background:linear-gradient(180deg, rgba(248,113,113,0.10), transparent)}
+html[data-theme="dark"] input,
+html[data-theme="dark"] textarea,
+html[data-theme="dark"] select{background:var(--bg-3);color:var(--ink);caret-color:var(--brand)}
+html[data-theme="dark"] input::placeholder,
+html[data-theme="dark"] textarea::placeholder{color:var(--mute-low)}
+html[data-theme="dark"] .day.is-active{background:var(--brand);color:#fff}
+html[data-theme="dark"] .btn-primary{color:#fff}
+html[data-theme="dark"] .stage-tab.is-active[data-stage=assembly] .stage-count,
+html[data-theme="dark"] .stage-tab.is-active[data-stage=qc] .stage-count,
+html[data-theme="dark"] .stage-tab.is-active[data-stage=dispatch] .stage-count{background:var(--bg-2)}
+html[data-theme="dark"] .photo img{filter:brightness(0.96)}
+html[data-theme="dark"] .ing.checked{background:var(--bg-3)}
+html[data-theme="dark"] .ing-name{color:var(--ink)}
+html[data-theme="dark"] .sample input{color:var(--ink)}
+html[data-theme="dark"] .alert.is-fail,
+html[data-theme="dark"] .alert.is-warn,
+html[data-theme="dark"] .alert.is-ok{color:var(--ink)}
+
+/* Theme toggle button */
+.theme-toggle{display:inline-flex;align-items:center;justify-content:center;width:38px;height:38px;border-radius:99px;border:1px solid var(--line);background:transparent;color:var(--ink-2);cursor:pointer;transition:background 160ms ease, color 160ms ease, border-color 160ms ease;padding:0}
+.theme-toggle:hover{background:var(--bg-3);color:var(--ink);border-color:var(--ink-2)}
+.theme-toggle svg{width:18px;height:18px}
+.theme-toggle .icon-sun{display:none}
+.theme-toggle .icon-moon{display:inline-flex}
+html[data-theme="dark"] .theme-toggle .icon-sun{display:inline-flex}
+html[data-theme="dark"] .theme-toggle .icon-moon{display:none}
 
 *{box-sizing:border-box}
 html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);font-family:var(--font-sans);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased;-webkit-text-size-adjust:100%}
@@ -481,6 +551,10 @@ body[data-view="home"] .home-link{display:none}
         </div>
 
         <div class="actions">
+            <button class="theme-toggle" id="btn-theme" title="Toggle dark / light" aria-label="Toggle theme">
+                <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+                <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="M4.93 4.93l1.41 1.41"/><path d="M17.66 17.66l1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="M6.34 17.66l-1.41 1.41"/><path d="M19.07 4.93l-1.41 1.41"/></svg>
+            </button>
             <button class="btn btn-icon" id="btn-settings" title="Settings · paste menu JSON" aria-label="Settings">⚙</button>
             <button class="btn" id="btn-export-summary">Copy</button>
             <button class="btn" id="btn-print">Print</button>
@@ -1950,6 +2024,21 @@ function wire(){
     window.addEventListener('keydown', e=>{ if(e.key==='Escape'){ closeModal(); closeSettings(); } });
     document.getElementById('btn-print').onclick=()=>window.print();
     document.getElementById('btn-settings').onclick=openSettings;
+    // Theme toggle
+    const themeBtn = document.getElementById('btn-theme');
+    if(themeBtn){
+        themeBtn.addEventListener('click', () => {
+            const next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', next);
+            try { localStorage.setItem('bb_theme', next); } catch(e){}
+            // Update <meta name="theme-color"> for mobile browser chrome
+            const meta = document.querySelector('meta[name="theme-color"]');
+            if(meta) meta.setAttribute('content', next === 'dark' ? '#0f1115' : '#2563eb');
+        });
+    }
+    // Sync meta theme-color on initial load too
+    const tcMeta = document.querySelector('meta[name="theme-color"]');
+    if(tcMeta) tcMeta.setAttribute('content', document.documentElement.getAttribute('data-theme') === 'dark' ? '#0f1115' : '#2563eb');
     document.getElementById('btn-export-summary').onclick=()=>{
         if(!state.menu) return;
         const lines=[`Bella & Bona QC — ${humanDate(state.selectedDate)}`, `Report generated ${nowHHMM()} on ${humanDate(todayIso())}`, ''];

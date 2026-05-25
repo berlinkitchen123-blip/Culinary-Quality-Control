@@ -819,8 +819,10 @@ const state = {
     stage: 'qc',     // 'assembly' | 'qc' | 'dispatch' | 'placement'
     view: 'home',    // 'home' | 'stage'
     storage: { warmers: [], fridges: [] }, // configured kitchen storage
+    integrations: { aiProxyUrl: '', teamsWebhookUrl: '' }, // AI + auto-report
     _unsub: null,
-    _unsubStorage: null
+    _unsubStorage: null,
+    _unsubIntegrations: null
 };
 const modalState = { letter: null, tab: 'qc' };
 
@@ -952,6 +954,22 @@ async function deleteFridge(id){ await set(ref(db, `storage/fridges/${id}`), nul
 async function savePlacement(letter, placement){
     // placement = { type:'warmer'|'fridge', containerId, compartment?, ts? }
     await saveCheckField(letter, { placement: placement ? { ...placement, ts: serverTimestamp() } : null });
+}
+
+/* === Integrations (AI proxy + Teams webhook) === */
+function listenIntegrations(){
+    return onValue(ref(db, 'integrations'), snap => {
+        const v = snap.val() || {};
+        state.integrations = { aiProxyUrl: v.aiProxyUrl || '', teamsWebhookUrl: v.teamsWebhookUrl || '' };
+    });
+}
+async function saveIntegrations(partial){
+    await update(ref(db, 'integrations'), partial);
+}
+
+/* Send the AI review result for a dish back to Firebase */
+async function saveAiReview(letter, review){
+    await saveCheckField(letter, { aiReview: review });
 }
 
 async function saveCheckField(dishLetter, partial){
@@ -1469,7 +1487,10 @@ function renderPlacementStageView(){
                 <div style="font-size:22px;font-weight:800;color:var(--ink)">Placement · ${humanDate(state.selectedDate)}</div>
                 <div style="font-size:13px;color:var(--mute);margin-top:2px">${placedCount} of ${totalDishes} dishes placed · ${warmers.length} warmer${warmers.length===1?'':'s'} · ${fridges.length} fridge${fridges.length===1?'':'s'}</div>
             </div>
-            <button class="btn" type="button" onclick="window.__qc.openSettings()">Manage warmers & fridges</button>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+                <button class="btn" type="button" onclick="window.__qc.openSettings()">Manage warmers & fridges</button>
+                <button class="btn btn-primary" type="button" id="send-teams-now">Send today's report to Teams</button>
+            </div>
         </div>
         ${warmers.length ? `<div class="placement-grid">${warmers.map(renderWarmer).join('')}</div>` : ''}
         ${fridges.length ? `<div class="fridge-list" style="margin-top:18px">${fridges.map(renderFridge).join('')}</div>` : ''}
@@ -1498,6 +1519,8 @@ function renderPlacementStageView(){
 function bindPlacementHandlers(){
     const root = document.getElementById('dish-area');
     if(!root) return;
+    const sendBtn = document.getElementById('send-teams-now');
+    if(sendBtn) sendBtn.addEventListener('click', sendReportToTeamsNow);
     // Click a warmer slot → open dish picker for that compartment
     root.querySelectorAll('.warmer-slot').forEach(slot => {
         slot.addEventListener('click', (e) => {
@@ -1747,6 +1770,22 @@ function renderQcTab(dish, c){
                 }
             </div>
         </div>
+        ${dish.dishImage && c.capturedImage ? `
+            <div class="ai-review-row" style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;padding:10px 12px;background:var(--bg-3);border:1px solid var(--line);border-radius:10px;margin-bottom:14px">
+                <div style="display:flex;flex-direction:column;gap:2px">
+                    <span style="font-weight:700;font-size:13px;color:var(--ink)">AI photo review</span>
+                    ${c.aiReview ? `
+                        <span style="font-size:12px;color:var(--mute)">Score ${c.aiReview.score != null ? c.aiReview.score + '/100' : '—'} · ${escapeHtml((c.aiReview.summary || 'No summary').slice(0, 90))} <em>(${escapeHtml(c.aiReview.ts || '')})</em></span>
+                    ` : `<span style="font-size:12px;color:var(--mute)">Click to compare today's photo with the reference using Claude vision.</span>`}
+                </div>
+                <button class="btn btn-primary btn-sm" type="button" data-ai-review-letter="${escapeAttr(dish.dishLetter)}">✨ ${c.aiReview ? 'Re-review' : 'Review with AI'}</button>
+            </div>
+            ${c.aiReview && Array.isArray(c.aiReview.differences) && c.aiReview.differences.length ? `
+                <details style="margin-bottom:14px;font-size:13px"><summary style="cursor:pointer;font-weight:600;color:var(--ink)">Differences noted (${c.aiReview.differences.length})</summary>
+                    <ul style="margin:8px 0 0 16px;padding:0;color:var(--ink-2)">${c.aiReview.differences.map(x => `<li>${escapeHtml(x)}</li>`).join('')}</ul>
+                </details>
+            ` : ''}
+        ` : ''}
 
         <!-- Ingredients checklist -->
         <div class="section-mini">Ingredients check ${ingredients.length?`· ${checkedCount} / ${ingredients.length} confirmed`:''}</div>
@@ -1919,6 +1958,10 @@ function bindTabHandlers(tab, dish){
         overlay.querySelectorAll('[data-action="open-camera"]').forEach(btn=>{
             btn.addEventListener('click', (e)=>{ e.preventDefault(); openCamera(letter); });
         });
+        // AI photo review
+        overlay.querySelectorAll('[data-ai-review-letter]').forEach(btn=>{
+            btn.addEventListener('click', () => reviewDishWithAI(btn.getAttribute('data-ai-review-letter')));
+        });
         // File-upload fallback (still inside QC tab)
         const photoInp=overlay.querySelector('#photo-input');
         if(photoInp){
@@ -1996,6 +2039,159 @@ function bumpStamp(){
     const t = mostRecentTime(c);
     const el = document.getElementById('modal-stamp');
     if(el) el.textContent = t ? '⏱ Logged ' + t : '⏱ Not logged yet';
+}
+
+/* === AI photo review ===
+   Posts the reference + today's captured photo to the configured proxy and
+   stores the verdict. The proxy is a server endpoint you control (e.g. a
+   Firebase Cloud Function) that has the Anthropic key. The browser never
+   sees the key.
+*/
+async function reviewDishWithAI(letter){
+    const url = state.integrations?.aiProxyUrl;
+    if(!url){ toast('AI proxy not configured — set it in Settings','fail'); return; }
+    const dish = (state.menu?.dishes || []).find(d => d.dishLetter === letter);
+    const c = state.checks[letter] || {};
+    if(!dish?.dishImage){ toast('No reference image for this dish','fail'); return; }
+    if(!c.capturedImage){ toast('No photo taken today','fail'); return; }
+    const btn = document.querySelector(`[data-ai-review-letter="${letter}"]`);
+    if(btn){ btn.disabled = true; btn.textContent = 'Reviewing…'; }
+    try {
+        const res = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                referenceUrl: dish.dishImage,
+                capturedDataUrl: c.capturedImage,
+                dishName: dish.dishName,
+                ingredients: (dish.dishIngredients || []).map(i => i.name)
+            })
+        });
+        if(!res.ok) throw new Error('Proxy returned ' + res.status);
+        const review = await res.json();
+        await saveAiReview(letter, { ...review, ts: nowHHMM(), date: state.selectedDate });
+        toast('AI review saved','ok');
+        if(modalState.letter === letter) renderModal();
+    } catch(err){
+        console.error('AI review failed', err);
+        toast('AI review failed','fail');
+        if(btn){ btn.disabled = false; btn.textContent = '✨ Review with AI'; }
+    }
+}
+
+/* === End-of-day report ===
+   Builds a structured report object plus a markdown / Teams-card payload.
+   The same payload is what the scheduled GitHub Action will post at 10:00.
+*/
+function buildEndOfDayReport(){
+    const date = state.selectedDate;
+    const dishes = state.menu?.dishes || [];
+    const items = dishes.map(d => {
+        const c = state.checks[d.dishLetter] || {};
+        const aT = stageTempValue(c, 'assembly');
+        const qT = avg(c.temperatures);
+        const dT = c.dispatch?.temp;
+        const w = avg(c.weights);
+        const status = readingStatus(d, c);
+        const placement = c.placement || null;
+        let placementText = '—';
+        if(placement){
+            if(placement.type === 'warmer'){
+                const w = (state.storage.warmers || []).find(x => x.id === placement.containerId);
+                const layout = w ? WARMER_LAYOUTS[w.layout] : null;
+                const compLabel = layout?.labels?.[placement.compartment] || placement.compartment || '';
+                placementText = `${w?.name || 'Warmer'} · ${compLabel}`;
+            } else if(placement.type === 'fridge'){
+                const f = (state.storage.fridges || []).find(x => x.id === placement.containerId);
+                placementText = f?.name || 'Fridge';
+            }
+        }
+        return {
+            letter: d.dishLetter, name: d.dishName, type: d.dishType, diet: d.diet || '',
+            assembly: { temp: aT, time: c.assembly?.time || null, by: c.assembly?.by || '', note: c.assembly?.note || '' },
+            qc: { temp: qT, weight: w, time: c.qcTime || null,
+                   ingredientsConfirmed: (c.selectedIngredients || []).length,
+                   ingredientsTotal: (d.dishIngredients || []).length,
+                   hasPhoto: !!c.capturedImage, comment: c.comment || '',
+                   aiReview: c.aiReview || null },
+            dispatch: { temp: dT, time: c.dispatch?.time || null },
+            placement: placementText,
+            status
+        };
+    });
+    const summary = {
+        date, totalDishes: items.length,
+        coverage: items.filter(i => i.assembly.temp != null || i.qc.temp != null || i.dispatch.temp != null).length,
+        holds: items.filter(i => i.status === 'hold').length,
+        watches: items.filter(i => i.status === 'watch').length,
+        passes: items.filter(i => i.status === 'pass').length
+    };
+    return { summary, items };
+}
+
+function reportAsMarkdown(report){
+    const lines = [];
+    lines.push(`# Bella & Bona — Culinary QC Report`);
+    lines.push(`**${humanDate(report.summary.date)}** · Generated ${nowHHMM()}`);
+    lines.push('');
+    lines.push(`**Summary:** ${report.summary.totalDishes} dishes · ${report.summary.passes} pass · ${report.summary.watches} watch · ${report.summary.holds} hold · ${report.summary.coverage} logged`);
+    lines.push('');
+    lines.push(`| Dish | Name | Asm | QC | Dispatch | Weight | Placement | AI | Status |`);
+    lines.push(`|------|------|-----|----|----------|--------|-----------|----|--------|`);
+    for(const it of report.items){
+        const f = (v, t) => v != null ? `${typeof v === 'number' ? v.toFixed(1) : v}°${t?` @${t}`:''}` : '—';
+        const aiText = it.qc.aiReview ? `${it.qc.aiReview.score != null ? it.qc.aiReview.score + '/100' : '?'} — ${(it.qc.aiReview.summary || '').slice(0, 60)}` : '—';
+        lines.push(`| ${it.letter} | ${it.name} | ${f(it.assembly.temp, it.assembly.time)} | ${f(it.qc.temp, it.qc.time)} | ${f(it.dispatch.temp, it.dispatch.time)} | ${it.qc.weight != null ? Math.round(it.qc.weight)+'g' : '—'} | ${it.placement} | ${aiText} | ${it.status.toUpperCase()} |`);
+    }
+    return lines.join('\n');
+}
+
+/* Build a Teams AdaptiveCard payload from the report */
+function reportAsTeamsCard(report){
+    const md = reportAsMarkdown(report);
+    return {
+        type: 'message',
+        attachments: [{
+            contentType: 'application/vnd.microsoft.card.adaptive',
+            contentUrl: null,
+            content: {
+                $schema: 'http://adaptivecards.io/schemas/adaptive-card.json',
+                type: 'AdaptiveCard',
+                version: '1.4',
+                body: [
+                    { type: 'TextBlock', size: 'Large', weight: 'Bolder', text: 'Bella & Bona QC Report' },
+                    { type: 'TextBlock', text: humanDate(report.summary.date) + ' · Generated ' + nowHHMM(), isSubtle: true, wrap: true },
+                    { type: 'FactSet', facts: [
+                        { title: 'Dishes', value: String(report.summary.totalDishes) },
+                        { title: 'Pass', value: String(report.summary.passes) },
+                        { title: 'Watch', value: String(report.summary.watches) },
+                        { title: 'Hold', value: String(report.summary.holds) },
+                        { title: 'Logged', value: String(report.summary.coverage) + ' / ' + report.summary.totalDishes }
+                    ]},
+                    { type: 'TextBlock', text: md, wrap: true, fontType: 'Monospace' }
+                ]
+            }
+        }]
+    };
+}
+
+async function sendReportToTeamsNow(){
+    const url = state.integrations?.teamsWebhookUrl;
+    if(!url){ toast('Teams webhook not configured — set it in Settings','fail'); return; }
+    const report = buildEndOfDayReport();
+    try {
+        toast('Sending to Teams…');
+        const res = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(reportAsTeamsCard(report))
+        });
+        if(!res.ok && res.status !== 202) throw new Error('Teams returned ' + res.status);
+        toast('Report sent to Teams','ok');
+    } catch(err){
+        console.error('Teams send failed', err);
+        toast('Send failed — check webhook URL','fail');
+    }
 }
 async function saveStageFromForm(stage){
     const letter=modalState.letter;
@@ -2373,6 +2569,18 @@ function openSettings(){
                     <button class="add-storage" type="button" id="add-fridge">+ Add fridge</button>
                 </div>
 
+                <!-- Integrations: AI proxy + Teams webhook -->
+                <div class="storage-block">
+                    <h4>Integrations</h4>
+                    <div style="font-size:12px;color:var(--mute);margin-bottom:8px">Optional endpoints for AI photo review and the 10:00 AM auto-report. See SETUP-AUTOMATION.md for how to set these up.</div>
+                    <div class="storage-row" style="flex-wrap:wrap">
+                        <input type="text" id="integ-ai-proxy" value="${escapeAttr(state.integrations?.aiProxyUrl || '')}" placeholder="AI proxy URL (e.g. https://your-region-yourproj.cloudfunctions.net/aiReview)" style="flex:1;min-width:240px" />
+                    </div>
+                    <div class="storage-row" style="flex-wrap:wrap;margin-top:6px">
+                        <input type="text" id="integ-teams-webhook" value="${escapeAttr(state.integrations?.teamsWebhookUrl || '')}" placeholder="MS Teams Power Automate webhook URL" style="flex:1;min-width:240px" />
+                    </div>
+                </div>
+
                 <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px;flex-wrap:wrap">
                     <button class="btn" onclick="window.__qc.closeSettings()">Cancel</button>
                     <button class="btn btn-primary" id="settings-save">Save menu</button>
@@ -2394,6 +2602,11 @@ function openSettings(){
         await saveFridge({ name: `Fridge ${order + 1}`, order });
         renderSettingsStorage(overlay);
     };
+    // Integrations auto-save on blur
+    const aiInp = overlay.querySelector('#integ-ai-proxy');
+    const teamsInp = overlay.querySelector('#integ-teams-webhook');
+    if(aiInp) aiInp.addEventListener('blur', () => saveIntegrations({ aiProxyUrl: aiInp.value.trim() }));
+    if(teamsInp) teamsInp.addEventListener('blur', () => saveIntegrations({ teamsWebhookUrl: teamsInp.value.trim() }));
 
     overlay.querySelector('#settings-save').onclick=async()=>{
         const txt=document.getElementById('settings-menu-json').value.trim();
@@ -2600,6 +2813,7 @@ document.addEventListener('keydown', (e) => {
 wire();
 selectDate(state.selectedDate);
 state._unsubStorage = listenStorage();
+state._unsubIntegrations = listenIntegrations();
 routeFromHash(); // honour deep-links (#/assembly, #/qc, #/dispatch, #/placement) — else show home
 </script>
 

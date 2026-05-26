@@ -1220,7 +1220,7 @@ function renderLetterTile(dish){
         ? readingStatus(dish, c)
         : (state.stage === 'placement')
             ? (c.placement && c.placement.containerId ? 'pass' : 'empty')
-            : tempStatus(stageTempValue(c, state.stage) ?? (state.stage === 'dispatch' ? c.dispatch?.temp : null), dish);
+            : tempStatus(stageTempValue(c, state.stage), dish);
     const lastTime = mostRecentTime(c) || '';
     const hasA = hasStageData(c, 'assembly');
     const hasQ = avg(c.temperatures) != null;
@@ -1286,17 +1286,13 @@ function bindTiles(){
                 const num=v===''?null:Number(v);
                 if(v!=='' && Number.isNaN(num)) return;
                 try{
-                    // Auto-stamp time when a temp is entered (clear time when temp is cleared)
-                    // Assembly uses temps[] (3 samples) — write single value to all 3 slots for quick entry.
-                    // Dispatch uses scalar temp.
-                    let payload;
-                    if(state.stage === 'assembly'){
-                        payload = num==null
-                            ? { temps: null, temp: null, time: null }
-                            : { temps: [num, num, num], temp: null, time: nowHHMM() };
-                    } else {
-                        payload = num==null ? { temp: null, time: null } : { temp: num, time: nowHHMM() };
-                    }
+                    // Both Assembly and Dispatch use temps[] (3 samples). Inline
+                    // quick-entry writes the single value to all 3 slots so
+                    // anyone can log fast. Open the modal to enter 3 distinct
+                    // readings.
+                    const payload = num==null
+                        ? { temps: null, temp: null, time: null }
+                        : { temps: [num, num, num], temp: null, time: nowHHMM() };
                     await saveStage(letter, state.stage, payload);
                     flashSave(el); toast('Saved','ok');
                 }catch(e){ toast('Save failed','fail'); }
@@ -1332,7 +1328,7 @@ function renderSummary(){
         const c=state.checks[d.dishLetter]||{};
         const t=avg(c.temperatures), w=avg(c.weights);
         const aT = stageTempValue(c, 'assembly');
-        const dT = c.dispatch?.temp;
+        const dT = stageTempValue(c, 'dispatch');
         const aTime = c.assembly?.time, qTime = c.qcTime, dTime = c.dispatch?.time;
         return `
             <tr class="row-data ${cls}" data-letter="${escapeHtml(d.dishLetter)}">
@@ -1812,7 +1808,7 @@ function renderQcTab(dish, c){
             ${[0,1,2].map(i=>{
                 const v=c.temperatures?.[i];
                 const ss=tempStatus(v, dish);
-                return `<div class="sample is-${ss}"><input data-modal="temp" data-idx="${i}" type="number" step="0.1" value="${v!=null?v:''}" placeholder="—" inputmode="decimal"/><div class="unit">°C · ${i+1}</div></div>`;
+                return `<div class="sample is-${ss}"><input data-modal="temp" data-idx="${i}" type="number" step="0.01" value="${v!=null?v:''}" placeholder="—" inputmode="decimal"/><div class="unit">°C · ${i+1}</div></div>`;
             }).join('')}
         </div>
         <div class="avg-row ${cls}">
@@ -1847,56 +1843,47 @@ function renderStageTab(stage, label, dish, c){
     const data = c[stage] || {};
     const isDispatch = stage === 'dispatch';
     const isAssembly = stage === 'assembly';
+    const isDispatch = stage === 'dispatch';
     const cls = isCold(dish) ? 'cold' : 'hot';
     const specHint = isCold(dish) ? `≤${COLD_MAX}°C` : `≥${HOT_MIN}°C`;
-    // Assembly: 3-sample temperature
-    if(isAssembly){
-        // Read from temps[] preferred, fall back to scalar temp for legacy
-        let temps = Array.isArray(data.temps) ? data.temps.slice(0,3) : (data.temp!=null ? [data.temp,null,null] : [null,null,null]);
-        while(temps.length < 3) temps.push(null);
-        const tAvg = avg(temps);
-        return `
-            <div class="section-mini">${label} · temperature samples · spec ${specHint}${data.time?` · last logged ${data.time}`:''}</div>
-            <div class="samples">
-                ${[0,1,2].map(i=>{
-                    const v=temps[i];
-                    const ss=tempStatus(v, dish);
-                    return `<div class="sample is-${ss}"><input data-stage-input="temp-${i}" type="number" step="0.1" value="${v!=null?v:''}" placeholder="—" inputmode="decimal"/><div class="unit">°C · ${i+1}</div></div>`;
-                }).join('')}
+    // Both Assembly and Dispatch take 3 temperature samples. Read from temps[]
+    // preferred, fall back to scalar `temp` for legacy data.
+    let temps = Array.isArray(data.temps) ? data.temps.slice(0,3) : (data.temp!=null ? [data.temp,null,null] : [null,null,null]);
+    while(temps.length < 3) temps.push(null);
+    const tAvg = avg(temps);
+    const samplesBlock = `
+        <div class="section-mini">${label} · temperature samples · spec ${specHint}${data.time?` · last logged ${data.time}`:''}</div>
+        <div class="samples">
+            ${[0,1,2].map(i=>{
+                const v=temps[i];
+                const ss=tempStatus(v, dish);
+                return `<div class="sample is-${ss}"><input data-stage-input="temp-${i}" type="number" step="0.01" value="${v!=null?v:''}" placeholder="—" inputmode="decimal"/><div class="unit">°C · ${i+1}</div></div>`;
+            }).join('')}
+        </div>
+        <div class="avg-row ${cls}">
+            <span class="lbl">Avg</span>
+            <span class="val">${tAvg!=null?tAvg.toFixed(2)+'°C':'—'}</span>
+            <span class="delta">${tAvg!=null?(isCold(dish)?(tAvg<=COLD_MAX?`+${(COLD_MAX-tAvg).toFixed(2)} headroom`:`+${(tAvg-COLD_MAX).toFixed(2)} over spec`):(tAvg>=HOT_MIN?`+${(tAvg-HOT_MIN).toFixed(2)} above min`:`-${(HOT_MIN-tAvg).toFixed(2)} below min`)):'—'}</span>
+        </div>
+    `;
+    // Assembly has weight + by + note. Dispatch is temperature-only.
+    const extras = isAssembly ? `
+        <div class="stage-form" style="margin-top:14px">
+            <div class="field">
+                <label class="label">Weight (optional, g)</label>
+                <input class="num" type="number" step="1" inputmode="numeric" data-stage-input="weight" value="${data.weight!=null?data.weight:''}" placeholder="—" />
             </div>
-            <div class="avg-row ${cls}">
-                <span class="lbl">Avg</span>
-                <span class="val">${tAvg!=null?tAvg.toFixed(1)+'°C':'—'}</span>
-                <span class="delta">${tAvg!=null?(isCold(dish)?(tAvg<=COLD_MAX?`+${(COLD_MAX-tAvg).toFixed(1)} headroom`:`+${(tAvg-COLD_MAX).toFixed(1)} over spec`):(tAvg>=HOT_MIN?`+${(tAvg-HOT_MIN).toFixed(1)} above min`:`-${(HOT_MIN-tAvg).toFixed(1)} below min`)):'—'}</span>
+            <div class="field">
+                <label class="label">Logged by (optional)</label>
+                <input type="text" data-stage-input="by" value="${escapeAttr(data.by||'')}" placeholder="Initials" />
             </div>
-            <div class="stage-form" style="margin-top:14px">
-                <div class="field">
-                    <label class="label">Weight (optional, g)</label>
-                    <input class="num" type="number" step="1" inputmode="numeric" data-stage-input="weight" value="${data.weight!=null?data.weight:''}" placeholder="—" />
-                </div>
-                <div class="field">
-                    <label class="label">Logged by (optional)</label>
-                    <input type="text" data-stage-input="by" value="${escapeAttr(data.by||'')}" placeholder="Initials" />
-                </div>
-                <div class="field full">
-                    <label class="label">Note</label>
-                    <textarea data-stage-input="note" placeholder="What was noted at this stage?">${escapeHtml(data.note||'')}</textarea>
-                </div>
-            </div>
-            <div style="font-size:12px;color:var(--mute);margin-top:8px">⏱ Time is recorded automatically when you save a sample — no need to type it.</div>
-        `;
-    }
-    // Dispatch: temperature only
-    return `
-        <div class="section-mini">${label} · spec ${specHint}${data.time?` · last logged ${data.time}`:''}</div>
-        <div class="stage-form">
             <div class="field full">
-                <label class="label">Temperature (°C)</label>
-                <input class="num" type="number" step="0.1" inputmode="decimal" data-stage-input="temp" value="${data.temp!=null?data.temp:''}" placeholder="—" />
+                <label class="label">Note</label>
+                <textarea data-stage-input="note" placeholder="What was noted at this stage?">${escapeHtml(data.note||'')}</textarea>
             </div>
         </div>
-        <div style="font-size:12px;color:var(--mute);margin-top:8px">⏱ Time is recorded automatically — no need to type it.</div>
-    `;
+    ` : '';
+    return `${samplesBlock}${extras}<div style="font-size:12px;color:var(--mute);margin-top:8px">⏱ Time is recorded automatically when you save a sample — no need to type it.</div>`;
 }
 
 function renderIngredientsTab(dish, c){
@@ -2097,7 +2084,7 @@ function buildEndOfDayReport(){
         const c = state.checks[d.dishLetter] || {};
         const aT = stageTempValue(c, 'assembly');
         const qT = avg(c.temperatures);
-        const dT = c.dispatch?.temp;
+        const dT = stageTempValue(c, 'dispatch');
         const w = avg(c.weights);
         const status = readingStatus(d, c);
         const placement = c.placement || null;
@@ -2205,28 +2192,30 @@ async function saveStageFromForm(stage){
     const ovr=document.getElementById('modal-overlay');
     const get=k=>ovr.querySelector(`[data-stage-input="${k}"]`)?.value || '';
     let payload = {};
+    // Both Assembly and Dispatch use the same 3-sample temp pattern.
+    const temps = [0,1,2].map(i => {
+        const v = get(`temp-${i}`).trim();
+        return v==='' ? null : Number(v);
+    });
+    const hasAnyTemp = temps.some(v => v != null);
     if(stage === 'assembly'){
-        // 3 temperature samples
-        const temps = [0,1,2].map(i => {
-            const v = get(`temp-${i}`).trim();
-            return v==='' ? null : Number(v);
-        });
-        const hasAnyTemp = temps.some(v => v != null);
-        const w=get('weight').trim();
-        const by=get('by');
-        const note=get('note');
+        const w = get('weight').trim();
+        const by = get('by');
+        const note = get('note');
         payload = {
             temps: hasAnyTemp ? temps : null,
             temp: null, // clear legacy scalar so we always read from temps[]
-            weight: w===''?null:Number(w),
+            weight: w==='' ? null : Number(w),
             by, note
         };
         const hasValue = hasAnyTemp || payload.weight != null || (note && note.length) || (by && by.length);
         payload.time = hasValue ? nowHHMM() : null;
     } else if(stage === 'dispatch'){
-        const t=get('temp').trim();
-        payload = { temp: t===''?null:Number(t) };
-        payload.time = payload.temp != null ? nowHHMM() : null;
+        payload = {
+            temps: hasAnyTemp ? temps : null,
+            temp: null
+        };
+        payload.time = hasAnyTemp ? nowHHMM() : null;
     }
     try{ await saveStage(letter, stage, payload); flashSaved(); bumpStamp(); }
     catch(e){ toast('Save failed','fail'); console.error(e); }

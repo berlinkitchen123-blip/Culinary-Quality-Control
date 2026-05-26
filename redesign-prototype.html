@@ -371,13 +371,17 @@ table.summary tbody tr:last-child td{border-bottom:none}
 .cell-note{color:var(--mute);font-size:13px}
 
 /* Modal */
-.modal-overlay{position:fixed;inset:0;background:rgba(26,24,21,0.6);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;padding:16px;z-index:80}
+.modal-overlay{position:fixed;inset:0;background:rgba(26,24,21,0.6);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;padding:16px;z-index:80;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
 .modal-overlay.hidden{display:none}
 .modal-panel{width:100%;max-width:880px;background:var(--bg-2);border:1px solid var(--line);border-radius:var(--radius-lg);overflow:hidden;box-shadow:var(--shadow-lg);max-height:94vh;display:flex;flex-direction:column}
 @media(max-width:640px){
-    .modal-overlay{padding:0;align-items:flex-end}
-    .modal-panel{max-height:96vh;border-radius:18px 18px 0 0;border-bottom:0}
+    /* On phones: behave like a proper full-screen view, not a popup. */
+    .modal-overlay{padding:0;align-items:stretch;background:var(--bg);backdrop-filter:none}
+    .modal-panel{max-height:none;height:100vh;height:100dvh;border-radius:0;border:0;box-shadow:none;max-width:100%}
 }
+/* Body scroll lock — applied while a modal is open so background never scrolls */
+body.modal-open{overflow:hidden;position:fixed;width:100%;left:0;right:0}
+.modal-body{overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
 .modal-head{position:relative;padding:20px 22px 14px 22px;border-bottom:1px solid var(--line)}
 .modal-head.cold{background:var(--cold-bg)}
 .modal-head.hot{background:var(--hot-bg)}
@@ -1573,6 +1577,7 @@ function openPlacementPicker(target){
         </div>
     `;
     overlay.classList.remove('hidden');
+    lockBodyScroll();
     overlay.querySelectorAll('[data-pick-letter]').forEach(btn => {
         btn.addEventListener('click', async () => {
             const letter = btn.getAttribute('data-pick-letter');
@@ -1655,13 +1660,34 @@ function routeFromHash(){
 }
 
 /* === Modal === */
+let _savedScrollY = 0;
+function lockBodyScroll(){
+    if(document.body.classList.contains('modal-open')) return;
+    _savedScrollY = window.scrollY || document.documentElement.scrollTop || 0;
+    document.body.classList.add('modal-open');
+    document.body.style.top = `-${_savedScrollY}px`;
+}
+function unlockBodyScroll(){
+    if(!document.body.classList.contains('modal-open')) return;
+    document.body.classList.remove('modal-open');
+    document.body.style.top = '';
+    // Restore the page scroll position so the user doesn't lose their place
+    window.scrollTo(0, _savedScrollY);
+}
+
 function openModal(letter){
     modalState.letter=letter;
     modalState.tab=state.stage; // open to the current top-level stage
     renderModal();
     document.getElementById('modal-overlay').classList.remove('hidden');
+    lockBodyScroll();
 }
-function closeModal(){ document.getElementById('modal-overlay').classList.add('hidden'); document.getElementById('modal-overlay').innerHTML=''; }
+function closeModal(){
+    const ovr = document.getElementById('modal-overlay');
+    ovr.classList.add('hidden');
+    ovr.innerHTML='';
+    unlockBodyScroll();
+}
 
 function renderModal(){
     const letter=modalState.letter;
@@ -2570,6 +2596,7 @@ function openSettings(){
         </div>
     `;
     overlay.classList.remove('hidden');
+    lockBodyScroll();
 
     // Wire storage (warmers + fridges) management
     renderSettingsStorage(overlay);
@@ -2668,7 +2695,12 @@ function renderSettingsStorage(overlay){
     });
 }
 
-function closeSettings(){ const o=document.getElementById('settings-overlay'); o.classList.add('hidden'); o.innerHTML=''; }
+function closeSettings(){
+    const o=document.getElementById('settings-overlay');
+    o.classList.add('hidden');
+    o.innerHTML='';
+    unlockBodyScroll();
+}
 
 /* === Toast === */
 function toast(msg, kind){

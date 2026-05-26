@@ -247,9 +247,42 @@ input,textarea,select{font-family:inherit;font-size:16px}
 .score.dispatch{border-left:4px solid var(--dispatch)}
 .score.dispatch .rate{color:var(--dispatch)}
 
-.dish-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px}
-.dish-grid.stage{grid-template-columns:repeat(auto-fill,minmax(300px,1fr))}
-@media(max-width:560px){.dish-grid,.dish-grid.stage{grid-template-columns:1fr;gap:10px}}
+/* Compact letter-grid (replaces the verbose tile layout). All inputs
+   moved to the modal — tile is just a tap-target with letter + status.
+   Mobile: 4 cols on phones, 6 on small tablets, 8+ on desktop. */
+.dish-grid{display:grid;grid-template-columns:repeat(auto-fill, minmax(120px, 1fr));gap:10px}
+.dish-grid.stage{grid-template-columns:repeat(auto-fill, minmax(120px, 1fr))}
+@media(max-width:560px){.dish-grid,.dish-grid.stage{grid-template-columns:repeat(4, minmax(0,1fr));gap:8px}}
+@media(max-width:380px){.dish-grid,.dish-grid.stage{grid-template-columns:repeat(3, minmax(0,1fr))}}
+
+.lt-tile{display:flex;flex-direction:column;align-items:center;justify-content:flex-start;background:var(--bg-2);border:1px solid var(--line);border-radius:14px;padding:12px 8px 10px 8px;cursor:pointer;position:relative;transition:transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease;min-height:124px;text-align:center}
+.lt-tile:hover{transform:translateY(-1px);box-shadow:var(--shadow-md)}
+.lt-tile.cold{border-color:var(--cold-line);background:var(--cold-bg)}
+.lt-tile.hot{border-color:var(--hot-line);background:var(--hot-bg)}
+html[data-theme="dark"] .lt-tile.cold{background:rgba(96,165,250,0.10)}
+html[data-theme="dark"] .lt-tile.hot{background:rgba(248,113,113,0.10)}
+.lt-tile .lt-letter{font-size:34px;font-weight:800;color:var(--ink);letter-spacing:-0.03em;line-height:1;margin-top:2px}
+.lt-tile.cold .lt-letter{color:var(--cold)}
+.lt-tile.hot .lt-letter{color:var(--hot)}
+.lt-tile .lt-name{font-size:11px;font-weight:600;color:var(--ink-2);margin-top:6px;line-height:1.2;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;text-overflow:ellipsis;max-height:2.4em;word-break:break-word}
+.lt-tile .lt-time{font-size:10px;font-weight:600;color:var(--mute);margin-top:5px;letter-spacing:0.02em}
+.lt-tile .lt-pip{position:absolute;top:6px;right:6px;width:10px;height:10px;border-radius:50%;background:var(--mute-low);box-shadow:0 0 0 2px var(--bg-2)}
+.lt-tile.cold .lt-pip,.lt-tile.hot .lt-pip{box-shadow:0 0 0 2px var(--bg-2)}
+.lt-tile .lt-pip.is-pass{background:var(--pass)}
+.lt-tile .lt-pip.is-watch{background:var(--watch)}
+.lt-tile .lt-pip.is-hold{background:var(--hold)}
+.lt-tile .lt-pip.is-empty{background:var(--mute-low)}
+.lt-tile .lt-stages{display:flex;gap:3px;margin-top:6px}
+.lt-tile .lt-stages span{width:6px;height:6px;border-radius:50%;background:var(--mute-low);opacity:0.4}
+.lt-tile .lt-stages span.is-set{opacity:1}
+.lt-tile .lt-stages span[data-stage=assembly].is-set{background:var(--assembly)}
+.lt-tile .lt-stages span[data-stage=qc].is-set{background:var(--qc)}
+.lt-tile .lt-stages span[data-stage=dispatch].is-set{background:var(--dispatch)}
+@media(max-width:560px){
+    .lt-tile{min-height:108px;padding:10px 6px 8px 6px}
+    .lt-tile .lt-letter{font-size:28px}
+    .lt-tile .lt-name{font-size:10px;-webkit-line-clamp:2}
+}
 
 .cat-title{display:flex;align-items:center;gap:12px;margin:18px 0 10px 0;font-weight:700;font-size:15px}
 .cat-title.cold{color:var(--cold)}
@@ -1172,98 +1205,40 @@ function renderDishes(){
     bindTiles();
 }
 
-function renderQcTile(dish){
-    const c=state.checks[dish.dishLetter]||{};
-    const s=readingStatus(dish, c);
-    const t=avg(c.temperatures), w=avg(c.weights);
-    const tStat=t==null?'empty':tempStatus(t, dish);
-    const wStat=w==null?'empty':weightStatus(w, dish);
-    const cls=isCold(dish)?'cold':'hot';
-    const specHint = isCold(dish)?`≤${COLD_MAX}°C`:`≥${HOT_MIN}°C`;
-    const hasAssembly = hasStageData(c, 'assembly');
-    const hasDispatch = hasStageData(c, 'dispatch');
+/* Compact letter-only tile — replaces the verbose tile across all stages.
+   The tile shows: letter, dish name, status pip, recent timestamp, and
+   3 stage-presence dots. Everything else (inputs, photos, etc.) lives
+   inside the modal that opens on tap. */
+function renderLetterTile(dish){
+    const c = state.checks[dish.dishLetter] || {};
+    const cls = isCold(dish) ? 'cold' : 'hot';
+    const s = (state.stage === 'qc')
+        ? readingStatus(dish, c)
+        : (state.stage === 'placement')
+            ? (c.placement && c.placement.containerId ? 'pass' : 'empty')
+            : tempStatus(stageTempValue(c, state.stage) ?? (state.stage === 'dispatch' ? c.dispatch?.temp : null), dish);
+    const lastTime = mostRecentTime(c) || '';
+    const hasA = hasStageData(c, 'assembly');
+    const hasQ = avg(c.temperatures) != null;
+    const hasD = hasStageData(c, 'dispatch');
     return `
-        <article class="tile ${cls} ${s==='empty'?'is-empty':''}" data-letter="${escapeHtml(dish.dishLetter)}">
-            <div class="tile-head">
-                <div class="tile-meta">
-                    <span class="tile-letter">${escapeHtml(dish.dishLetter)}</span>
-                    <div style="min-width:0;flex:1">
-                        <div class="tile-name" title="${escapeHtml(dish.dishName)}">${escapeHtml(dish.dishName)}</div>
-                    </div>
-                </div>
-                <button class="tile-more" data-action="open" data-letter="${escapeHtml(dish.dishLetter)}" aria-label="Open ${escapeHtml(dish.dishName)}">⋯</button>
-            </div>
-            <div class="tile-spec">Spec ${specHint} · target ${dish.theoreticalWeight ? dish.theoreticalWeight+'g' : '—'}</div>
-            <div class="read-row">
-                <label class="read-cell is-${tStat}">
-                    <span class="lbl">Avg temp</span>
-                    <input type="number" step="0.1" inputmode="decimal" data-edit="qc-temp" data-letter="${escapeHtml(dish.dishLetter)}" value="${t!=null?t.toFixed(1):''}" placeholder="—" />
-                    <span class="unit">°C</span>
-                    <span class="save-pulse"></span>
-                </label>
-                <label class="read-cell is-${wStat}">
-                    <span class="lbl">Avg weight</span>
-                    <input type="number" step="1" inputmode="numeric" data-edit="qc-weight" data-letter="${escapeHtml(dish.dishLetter)}" value="${w!=null?w.toFixed(0):''}" placeholder="—" />
-                    <span class="unit">g</span>
-                    <span class="save-pulse"></span>
-                </label>
-            </div>
-            <div class="stage-strip">
-                <span class="stage-badge ${hasAssembly?'is-set':''}" data-stage="assembly">Assembly</span>
-                <span class="stage-badge ${t!=null?'is-set':''}" data-stage="qc">QC</span>
-                <span class="stage-badge ${hasDispatch?'is-set':''}" data-stage="dispatch">Dispatch</span>
-            </div>
-            <div class="status-bar">
-                <span class="pill is-${s}">${statusLabel(s)}</span>
-                <span style="font-size:11px;color:var(--mute);font-weight:500">${c.timestamp?fmtTime(c.timestamp):''}</span>
-            </div>
+        <article class="lt-tile ${cls}" data-letter="${escapeHtml(dish.dishLetter)}" data-action="open" role="button" tabindex="0" aria-label="Open ${escapeHtml(dish.dishName)}">
+            <span class="lt-pip is-${s}" aria-hidden="true"></span>
+            <span class="lt-letter">${escapeHtml(dish.dishLetter)}</span>
+            <span class="lt-name">${escapeHtml(dish.dishName)}</span>
+            <span class="lt-stages" aria-hidden="true">
+                <span data-stage="assembly" class="${hasA?'is-set':''}"></span>
+                <span data-stage="qc" class="${hasQ?'is-set':''}"></span>
+                <span data-stage="dispatch" class="${hasD?'is-set':''}"></span>
+            </span>
+            ${lastTime ? `<span class="lt-time">⏱ ${escapeHtml(lastTime)}</span>` : ''}
         </article>
     `;
 }
-
-function renderStageTile(dish){
-    const stage = state.stage; // assembly or dispatch
-    const c=state.checks[dish.dishLetter]||{};
-    const data = c[stage] || {};
-    const isAssembly = stage === 'assembly';
-    // Assembly uses temps[] (3 samples), Dispatch uses scalar temp
-    const t = isAssembly ? stageTempValue(c, 'assembly') : (data.temp ?? null);
-    const sampleCount = isAssembly && Array.isArray(data.temps) ? data.temps.filter(v=>v!=null).length : 0;
-    const w = data.weight;
-    const time = data.time || '';
-    const tStat = tempStatus(t, dish);
-    const cls=isCold(dish)?'cold':'hot';
-    const specHint = isCold(dish)?`≤${COLD_MAX}°C`:`≥${HOT_MIN}°C`;
-    const s = tStat;
-    return `
-        <article class="tile ${cls} ${s==='empty'?'is-empty':''}" data-letter="${escapeHtml(dish.dishLetter)}">
-            <div class="tile-head">
-                <div class="tile-meta">
-                    <span class="tile-letter">${escapeHtml(dish.dishLetter)}</span>
-                    <div style="min-width:0;flex:1">
-                        <div class="tile-name" title="${escapeHtml(dish.dishName)}">${escapeHtml(dish.dishName)}</div>
-                    </div>
-                </div>
-                <button class="tile-more" data-action="open" data-letter="${escapeHtml(dish.dishLetter)}" aria-label="Open ${escapeHtml(dish.dishName)}">⋯</button>
-            </div>
-            <div class="tile-spec">${stageLabel(stage)} spec ${specHint} · target ${dish.theoreticalWeight ? dish.theoreticalWeight+'g' : '—'}</div>
-
-            <div class="read-row">
-                <label class="read-cell is-${tStat}" style="flex:1">
-                    <span class="lbl">${isAssembly?'Avg temp':stageLabel(stage)+' temp'}</span>
-                    <input type="number" step="0.1" inputmode="decimal" data-edit="stage-temp" data-letter="${escapeHtml(dish.dishLetter)}" value="${t!=null?(isAssembly?Number(t).toFixed(1):t):''}" placeholder="—" />
-                    <span class="unit">°C</span>
-                    <span class="save-pulse"></span>
-                </label>
-            </div>
-
-            <div class="status-bar">
-                <span class="pill is-${s}">${statusLabel(s)}</span>
-                <span style="font-size:11px;color:var(--mute);font-weight:500">${isAssembly && sampleCount>0 ? `${sampleCount}/3 samples${time?' · '+time:''}` : (time?`Logged ${time}`:(t!=null?'logged':''))}</span>
-            </div>
-        </article>
-    `;
-}
+// Keep the old names but route them to the same compact tile so callers
+// (renderDishes, scorecard etc.) don't need changes.
+const renderQcTile = renderLetterTile;
+const renderStageTile = renderLetterTile;
 
 function bindTiles(){
     document.querySelectorAll('[data-action="open"]').forEach(btn=>{
@@ -1275,6 +1250,12 @@ function bindTiles(){
             if(e.target.closest('input, button, label.read-cell, label.time-cell')) return;
             openModal(tile.getAttribute('data-letter'));
         });
+    });
+    // Compact letter-tile: tap anywhere opens the modal; Enter / Space too.
+    document.querySelectorAll('.lt-tile').forEach(tile=>{
+        const open = () => openModal(tile.getAttribute('data-letter'));
+        tile.addEventListener('click', open);
+        tile.addEventListener('keydown', e => { if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); open(); } });
     });
     document.querySelectorAll('[data-edit]').forEach(el=>{
         el.addEventListener('keydown', e=>{ if(e.key==='Enter' && el.type !== 'time'){ e.preventDefault(); el.blur(); } });

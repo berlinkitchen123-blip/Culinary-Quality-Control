@@ -1,0 +1,33 @@
+name: Daily QC report (10:00 Berlin)
+
+on:
+  schedule:
+    # GitHub Actions cron is UTC. Berlin = UTC+2 (CEST) in summer, UTC+1 (CET) in winter.
+    # Fire at both candidate hours; the script bails if it's not 10:00 local.
+    - cron: '0 8 * * 1-5'   # 10:00 CEST (summer)
+    - cron: '0 9 * * 1-5'   # 10:00 CET (winter)
+  workflow_dispatch: {}     # allow manual "Run workflow" from the Actions tab
+
+jobs:
+  send:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install deps
+        working-directory: scripts
+        run: npm i --omit=dev
+
+      - name: Build + send today's QC report
+        working-directory: scripts
+        env:
+          FIREBASE_DATABASE_URL: ${{ secrets.FIREBASE_DATABASE_URL }}
+          FIREBASE_DB_SECRET:    ${{ secrets.FIREBASE_DB_SECRET }}
+          ANTHROPIC_API_KEY:     ${{ secrets.ANTHROPIC_API_KEY }}
+          TEAMS_WEBHOOK_URL:     ${{ secrets.TEAMS_WEBHOOK_URL }}
+          TZ: Europe/Berlin
+        run: node daily-report.mjs

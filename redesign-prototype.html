@@ -1841,7 +1841,6 @@ function renderQcTab(dish, c){
 
 function renderStageTab(stage, label, dish, c){
     const data = c[stage] || {};
-    const isDispatch = stage === 'dispatch';
     const isAssembly = stage === 'assembly';
     const isDispatch = stage === 'dispatch';
     const cls = isCold(dish) ? 'cold' : 'hot';

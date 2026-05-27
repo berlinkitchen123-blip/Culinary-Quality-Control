@@ -370,6 +370,51 @@ table.summary tbody tr:last-child td{border-bottom:none}
 .cell-num{font-weight:600;font-variant-numeric:tabular-nums}
 .cell-note{color:var(--mute);font-size:13px}
 
+/* === Drawer / side navigation === */
+.app-corner{position:fixed;top:0;left:0;z-index:60;display:flex;align-items:center;gap:6px;padding:10px 12px;background:linear-gradient(180deg, var(--bg-2) 70%, transparent);pointer-events:none}
+.app-corner > *{pointer-events:auto}
+.menu-btn{display:inline-flex;align-items:center;justify-content:center;width:42px;height:42px;border-radius:12px;background:var(--bg-2);border:1px solid var(--line);color:var(--ink);cursor:pointer;box-shadow:var(--shadow-sm)}
+.menu-btn:hover{background:var(--bg-3)}
+.menu-btn svg{width:20px;height:20px}
+.menu-back{padding:0 14px;height:42px;border-radius:12px;background:var(--bg-2);border:1px solid var(--line);color:var(--ink);font-size:13px;font-weight:600;display:inline-flex;align-items:center;gap:8px;cursor:pointer;box-shadow:var(--shadow-sm)}
+.menu-back:hover{background:var(--bg-3)}
+body[data-view="home"] .menu-back{display:none}
+
+.drawer-scrim{position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:90;opacity:0;pointer-events:none;transition:opacity 220ms ease}
+.drawer-scrim.open{opacity:1;pointer-events:auto}
+.drawer{position:fixed;top:0;left:0;bottom:0;width:320px;max-width:88vw;background:var(--bg-2);border-right:1px solid var(--line);box-shadow:var(--shadow-lg);z-index:91;transform:translateX(-100%);transition:transform 240ms cubic-bezier(.2,.7,.2,1);display:flex;flex-direction:column;overflow-y:auto;overscroll-behavior:contain}
+.drawer.open{transform:translateX(0)}
+.drawer-head{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--line);background:var(--bg-2);position:sticky;top:0;z-index:1}
+.drawer-head .drawer-brand{font-weight:800;font-size:16px;color:var(--ink);letter-spacing:-0.01em;display:flex;align-items:center;gap:10px}
+.drawer-head .drawer-brand .mark{width:30px;height:30px;border-radius:7px;background:var(--brand);color:white;display:inline-flex;align-items:center;justify-content:center;font-weight:800;font-size:12px}
+.drawer-head .drawer-x{width:34px;height:34px;border-radius:50%;background:transparent;border:1px solid var(--line);color:var(--mute);cursor:pointer;font-size:16px;display:inline-flex;align-items:center;justify-content:center}
+.drawer-head .drawer-x:hover{background:var(--bg-3);color:var(--ink)}
+.drawer-section{padding:16px 14px 6px 14px}
+.drawer-section .label{font-size:11px;font-weight:700;color:var(--mute);text-transform:uppercase;letter-spacing:0.08em;padding:0 6px;margin-bottom:8px}
+.drawer-item{display:flex;align-items:center;gap:12px;padding:12px 12px;border-radius:10px;color:var(--ink);cursor:pointer;background:transparent;border:0;width:100%;font-size:14px;font-weight:600;text-align:left;transition:background 140ms ease}
+.drawer-item:hover{background:var(--bg-3)}
+.drawer-item.is-active{background:var(--bg-3)}
+.drawer-item[data-stage="assembly"].is-active{background:var(--assembly-soft);color:var(--assembly)}
+.drawer-item[data-stage="qc"].is-active{background:var(--qc-soft);color:var(--qc)}
+.drawer-item[data-stage="dispatch"].is-active{background:var(--dispatch-soft);color:var(--dispatch)}
+.drawer-item[data-stage="placement"].is-active{background:rgba(245,158,11,0.12);color:var(--gold)}
+.drawer-item .glyph{width:30px;height:30px;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;flex-shrink:0;background:var(--bg-3);color:var(--mute)}
+.drawer-item[data-stage="assembly"] .glyph{background:var(--assembly-soft);color:var(--assembly)}
+.drawer-item[data-stage="qc"] .glyph{background:var(--qc-soft);color:var(--qc)}
+.drawer-item[data-stage="dispatch"] .glyph{background:var(--dispatch-soft);color:var(--dispatch)}
+.drawer-item[data-stage="placement"] .glyph{background:rgba(245,158,11,0.12);color:var(--gold)}
+.drawer-item .name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.drawer-item .badge{font-size:11px;font-weight:700;background:var(--bg-3);color:var(--ink-2);padding:3px 8px;border-radius:99px;border:1px solid var(--line)}
+.drawer-divider{height:1px;background:var(--line);margin:6px 14px}
+.drawer-footer{padding:14px 18px 18px 18px;color:var(--mute);font-size:12px}
+
+/* Hide the old inline stage-tabs row (drawer replaces it as primary nav) */
+.stage-bar{display:none !important}
+
+/* Make app-header leave room for the corner cluster on the left */
+.app-header-inner{padding-left:120px}
+@media(max-width:560px){.app-header-inner{padding-left:60px}}
+
 /* Modal */
 .modal-overlay{position:fixed;inset:0;background:rgba(26,24,21,0.6);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;padding:16px;z-index:80;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
 .modal-overlay.hidden{display:none}
@@ -631,6 +676,73 @@ html[data-theme="dark"] .warmer-slot.filled{background:rgba(245,158,11,0.12)}
 </style>
 </head>
 <body>
+
+<!-- Always-visible top-left corner: hamburger menu + back-to-home -->
+<div class="app-corner">
+    <button class="menu-btn" id="menu-open" type="button" aria-label="Open menu">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    </button>
+    <button class="menu-back" id="menu-home" type="button" aria-label="Back to home">
+        ← Home
+    </button>
+</div>
+
+<!-- Slide-out navigation drawer -->
+<div class="drawer-scrim" id="drawer-scrim" aria-hidden="true"></div>
+<aside class="drawer" id="drawer" aria-hidden="true" aria-label="Navigation">
+    <div class="drawer-head">
+        <div class="drawer-brand"><span class="mark">BB</span><span>Bella &amp; Bona</span></div>
+        <button class="drawer-x" id="drawer-close" aria-label="Close menu">✕</button>
+    </div>
+    <div class="drawer-section">
+        <div class="label">Navigate</div>
+        <button class="drawer-item" data-go="home" type="button">
+            <span class="glyph">⌂</span>
+            <span class="name">Home</span>
+        </button>
+        <button class="drawer-item" data-go="stage" data-stage="assembly" type="button">
+            <span class="glyph">①</span>
+            <span class="name">Assembly</span>
+            <span class="badge" id="drawer-count-assembly">—</span>
+        </button>
+        <button class="drawer-item" data-go="stage" data-stage="qc" type="button">
+            <span class="glyph">②</span>
+            <span class="name">QC Check</span>
+            <span class="badge" id="drawer-count-qc">—</span>
+        </button>
+        <button class="drawer-item" data-go="stage" data-stage="dispatch" type="button">
+            <span class="glyph">③</span>
+            <span class="name">Dispatch</span>
+            <span class="badge" id="drawer-count-dispatch">—</span>
+        </button>
+        <button class="drawer-item" data-go="stage" data-stage="placement" type="button">
+            <span class="glyph">④</span>
+            <span class="name">Placement</span>
+            <span class="badge" id="drawer-count-placement">—</span>
+        </button>
+    </div>
+    <div class="drawer-divider"></div>
+    <div class="drawer-section">
+        <div class="label">Tools</div>
+        <button class="drawer-item" data-go="settings" type="button">
+            <span class="glyph">⚙</span>
+            <span class="name">Settings · paste menu, warmers, integrations</span>
+        </button>
+        <button class="drawer-item" data-go="theme" type="button">
+            <span class="glyph">◐</span>
+            <span class="name" id="drawer-theme-label">Toggle dark / light</span>
+        </button>
+        <button class="drawer-item" data-go="copy" type="button">
+            <span class="glyph">⧉</span>
+            <span class="name">Copy today's summary</span>
+        </button>
+        <button class="drawer-item" data-go="print" type="button">
+            <span class="glyph">⎙</span>
+            <span class="name">Print</span>
+        </button>
+    </div>
+    <div class="drawer-footer">Bella &amp; Bona Culinary Ops · Firebase project <code style="font-family:ui-monospace,monospace;font-size:11px;background:var(--bg-3);padding:1px 6px;border-radius:4px">quality-control-24</code></div>
+</aside>
 
 <div class="helper-banner">
     <span><strong>Quick log:</strong> pick a stage tab above the dishes — <span style="color:var(--assembly);font-weight:700">Assembly</span>, <span style="color:var(--qc);font-weight:700">QC Check</span>, or <span style="color:var(--dispatch);font-weight:700">Dispatch</span>. Tap any number to enter; the save is instant. Tap ⋯ for photos, ingredients &amp; full file.</span>
@@ -894,6 +1006,17 @@ function shiftIso(iso,days){ const d=parseIso(iso); d.setDate(d.getDate()+days);
 function nowHHMM(){ const d=new Date(); return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`; }
 
 /* === Status logic === */
+/* Parse a user-typed decimal that may use either "." or "," as the separator
+   (German locale digital probes / mobile keyboards). Returns null for empty,
+   NaN for malformed, finite number otherwise. */
+function parseDecimal(v){
+    if(v==null) return null;
+    const s = String(v).trim().replace(',', '.');
+    if(s === '') return null;
+    const n = Number(s);
+    return Number.isFinite(n) ? n : NaN;
+}
+
 function avg(arr){
     if(!arr||!arr.length) return null;
     // Treat null/undefined as missing (not as 0)
@@ -1655,6 +1778,36 @@ function routeFromHash(){
     }
 }
 
+/* === Drawer === */
+function openDrawer(){
+    document.getElementById('drawer').classList.add('open');
+    document.getElementById('drawer-scrim').classList.add('open');
+    document.getElementById('drawer').setAttribute('aria-hidden','false');
+    refreshDrawer();
+}
+function closeDrawer(){
+    document.getElementById('drawer').classList.remove('open');
+    document.getElementById('drawer-scrim').classList.remove('open');
+    document.getElementById('drawer').setAttribute('aria-hidden','true');
+}
+function refreshDrawer(){
+    ['assembly','qc','dispatch','placement'].forEach(stg=>{
+        const { logged, total } = countLoggedForStage(stg);
+        const el = document.getElementById(`drawer-count-${stg}`);
+        if(el) el.textContent = total === 0 ? '—' : `${logged}/${total}`;
+    });
+    // Mark active item
+    document.querySelectorAll('.drawer-item').forEach(b => b.classList.remove('is-active'));
+    const active = state.view === 'stage'
+        ? document.querySelector(`.drawer-item[data-stage="${state.stage}"]`)
+        : document.querySelector('.drawer-item[data-go="home"]');
+    if(active) active.classList.add('is-active');
+    // Theme label
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    const tl = document.getElementById('drawer-theme-label');
+    if(tl) tl.textContent = isDark ? 'Switch to light mode' : 'Switch to dark mode';
+}
+
 /* === Modal === */
 let _savedScrollY = 0;
 function lockBodyScroll(){
@@ -1808,7 +1961,7 @@ function renderQcTab(dish, c){
             ${[0,1,2].map(i=>{
                 const v=c.temperatures?.[i];
                 const ss=tempStatus(v, dish);
-                return `<div class="sample is-${ss}"><input data-modal="temp" data-idx="${i}" type="number" step="0.01" value="${v!=null?v:''}" placeholder="—" inputmode="decimal"/><div class="unit">°C · ${i+1}</div></div>`;
+                return `<div class="sample is-${ss}"><input data-modal="temp" data-idx="${i}" type="text" pattern="[0-9]*[.,]?[0-9]*" value="${v!=null?v:''}" placeholder="—" inputmode="decimal" autocomplete="off"/><div class="unit">°C · ${i+1}</div></div>`;
             }).join('')}
         </div>
         <div class="avg-row ${cls}">
@@ -1856,7 +2009,7 @@ function renderStageTab(stage, label, dish, c){
             ${[0,1,2].map(i=>{
                 const v=temps[i];
                 const ss=tempStatus(v, dish);
-                return `<div class="sample is-${ss}"><input data-stage-input="temp-${i}" type="number" step="0.01" value="${v!=null?v:''}" placeholder="—" inputmode="decimal"/><div class="unit">°C · ${i+1}</div></div>`;
+                return `<div class="sample is-${ss}"><input data-stage-input="temp-${i}" type="text" pattern="[0-9]*[.,]?[0-9]*" value="${v!=null?v:''}" placeholder="—" inputmode="decimal" autocomplete="off"/><div class="unit">°C · ${i+1}</div></div>`;
             }).join('')}
         </div>
         <div class="avg-row ${cls}">
@@ -1983,8 +2136,8 @@ function bindTabHandlers(tab, dish){
 async function saveModalSamples(){
     const letter=modalState.letter;
     const ovr=document.getElementById('modal-overlay');
-    const temps=[0,1,2].map(i=>{ const el=ovr.querySelector(`input[data-modal="temp"][data-idx="${i}"]`); const v=el?.value.trim(); return v===''||v==null?null:Number(v); });
-    const weights=[0,1,2].map(i=>{ const el=ovr.querySelector(`input[data-modal="weight"][data-idx="${i}"]`); const v=el?.value.trim(); return v===''||v==null?null:Number(v); });
+    const temps=[0,1,2].map(i=>{ const el=ovr.querySelector(`input[data-modal="temp"][data-idx="${i}"]`); const n=parseDecimal(el?.value); return Number.isNaN(n)?null:n; });
+    const weights=[0,1,2].map(i=>{ const el=ovr.querySelector(`input[data-modal="weight"][data-idx="${i}"]`); const n=parseDecimal(el?.value); return Number.isNaN(n)?null:n; });
     const hasAny = temps.some(v=>v!=null) || weights.some(v=>v!=null);
     try{
         await saveCheckField(letter, {
@@ -2193,18 +2346,18 @@ async function saveStageFromForm(stage){
     let payload = {};
     // Both Assembly and Dispatch use the same 3-sample temp pattern.
     const temps = [0,1,2].map(i => {
-        const v = get(`temp-${i}`).trim();
-        return v==='' ? null : Number(v);
+        const n = parseDecimal(get(`temp-${i}`));
+        return Number.isNaN(n) ? null : n;
     });
     const hasAnyTemp = temps.some(v => v != null);
     if(stage === 'assembly'){
-        const w = get('weight').trim();
+        const wNum = parseDecimal(get('weight'));
         const by = get('by');
         const note = get('note');
         payload = {
             temps: hasAnyTemp ? temps : null,
             temp: null, // clear legacy scalar so we always read from temps[]
-            weight: w==='' ? null : Number(w),
+            weight: Number.isNaN(wNum) ? null : wNum,
             by, note
         };
         const hasValue = hasAnyTemp || payload.weight != null || (note && note.length) || (by && by.length);
@@ -2779,7 +2932,7 @@ function wire(){
         for(const d of (state.menu.dishes||[])){
             const c=state.checks[d.dishLetter]||{};
             const t=avg(c.temperatures), w=avg(c.weights);
-            const aT=stageTempValue(c,'assembly'), dT=c.dispatch?.temp;
+            const aT=stageTempValue(c,'assembly'), dT=stageTempValue(c, 'dispatch');
             const aTime=c.assembly?.time, qTime=c.qcTime, dTime=c.dispatch?.time;
             const s=readingStatus(d,c);
             const fmt = (val, time) => val!=null ? (typeof val === 'number' ? val.toFixed(1) : val) + '°' + (time?` @${time}`:'') : '—';
@@ -2787,6 +2940,24 @@ function wire(){
         }
         navigator.clipboard.writeText(lines.join('\n')).then(()=>toast('Summary copied','ok'));
     };
+
+    // Drawer wiring
+    document.getElementById('menu-open').addEventListener('click', openDrawer);
+    document.getElementById('menu-home').addEventListener('click', () => { closeDrawer(); setView('home'); });
+    document.getElementById('drawer-close').addEventListener('click', closeDrawer);
+    document.getElementById('drawer-scrim').addEventListener('click', closeDrawer);
+    window.addEventListener('keydown', e => { if(e.key === 'Escape') closeDrawer(); });
+    document.querySelectorAll('.drawer-item').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const action = btn.getAttribute('data-go');
+            if(action === 'home'){ setView('home'); closeDrawer(); }
+            else if(action === 'stage'){ setStage(btn.getAttribute('data-stage')); closeDrawer(); }
+            else if(action === 'settings'){ closeDrawer(); openSettings(); }
+            else if(action === 'theme'){ document.getElementById('btn-theme').click(); refreshDrawer(); }
+            else if(action === 'copy'){ document.getElementById('btn-export-summary').click(); closeDrawer(); }
+            else if(action === 'print'){ closeDrawer(); window.print(); }
+        });
+    });
 }
 
 window.__qc = {

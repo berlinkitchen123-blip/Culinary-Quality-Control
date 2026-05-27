@@ -878,16 +878,7 @@ html[data-theme="dark"] .warmer-slot.filled{background:rgba(245,158,11,0.12)}
 
 <main class="container">
 
-    <div id="alert-host"></div>
-
-    <section class="section">
-        <div class="section-head">
-            <div class="title" id="scorecard-title">—</div>
-            <div style="font-size:13px;color:var(--mute);font-weight:500" id="scorecard-date">—</div>
-        </div>
-        <div class="scorecard" id="scorecard"></div>
-    </section>
-
+    <!-- 1) Dish letters first — cold then hot, full grid on top of the page -->
     <section class="section">
         <div class="section-head">
             <div class="title" id="dish-section-title">Dishes <span class="count" id="pass-count">—</span></div>
@@ -903,6 +894,19 @@ html[data-theme="dark"] .warmer-slot.filled{background:rgba(245,158,11,0.12)}
         </div>
     </section>
 
+    <!-- 2) Alert banner — only renders when there's something to flag -->
+    <div id="alert-host"></div>
+
+    <!-- 3) Compliance scorecard -->
+    <section class="section">
+        <div class="section-head">
+            <div class="title" id="scorecard-title">—</div>
+            <div style="font-size:13px;color:var(--mute);font-weight:500" id="scorecard-date">—</div>
+        </div>
+        <div class="scorecard" id="scorecard"></div>
+    </section>
+
+    <!-- 4) Daily summary table -->
     <section class="section">
         <div class="section-head">
             <div class="title">Daily summary</div>

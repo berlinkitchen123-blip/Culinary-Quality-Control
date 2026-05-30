@@ -1592,15 +1592,18 @@ function renderPlacementStageView(){
                         const lt = occupants[0] || '';
                         const d = lt ? dishByLetter(lt) : null;
                         const cls = d ? (isCold(d) ? 'cold' : 'hot') : '';
+                        // NB: outer slot is a <div role="button"> so the inner
+                        // ✕ <button> isn't nested inside another <button> —
+                        // browsers reparse nested buttons and hoist content out.
                         return `
-                            <button class="warmer-slot ${lt?'filled '+cls:''}" data-warmer="${escapeAttr(w.id)}" data-cell="${escapeAttr(cell)}" type="button" aria-label="${escapeAttr(layout.labels[cell] || cell)}">
+                            <div class="warmer-slot ${lt?'filled '+cls:''}" data-warmer="${escapeAttr(w.id)}" data-cell="${escapeAttr(cell)}" role="button" tabindex="0" aria-label="${escapeAttr((layout.labels[cell] || cell) + (d ? ': ' + d.dishName : ': empty'))}">
                                 <span class="slot-label">${escapeHtml(layout.labels[cell] || cell.toUpperCase())}</span>
                                 ${lt ? `
                                     <button class="slot-clear" type="button" data-clear="${escapeAttr(lt)}" data-warmer="${escapeAttr(w.id)}" data-cell="${escapeAttr(cell)}" aria-label="Remove">×</button>
                                     <span class="slot-letter ${cls}">${escapeHtml(lt)}</span>
                                     ${d ? `<span class="slot-name">${escapeHtml(d.dishName)}</span>` : ''}
                                 ` : `<span style="color:var(--mute-low);font-size:11px;font-weight:600">empty</span>`}
-                            </button>
+                            </div>
                         `;
                     }).join('')}
                 </div>
@@ -1673,12 +1676,17 @@ function bindPlacementHandlers(){
     if(sendBtn) sendBtn.addEventListener('click', sendReportToTeamsNow);
     // Click a warmer slot → open dish picker for that compartment
     root.querySelectorAll('.warmer-slot').forEach(slot => {
-        slot.addEventListener('click', (e) => {
+        const open = (e) => {
             // Stop if user clicked the inline ✕
-            if(e.target.closest('[data-clear]')) return;
+            if(e && e.target && e.target.closest('[data-clear]')) return;
             const warmer = slot.getAttribute('data-warmer');
             const cell = slot.getAttribute('data-cell');
             openPlacementPicker({ type:'warmer', containerId: warmer, compartment: cell });
+        };
+        slot.addEventListener('click', open);
+        // Keyboard activation for div role="button"
+        slot.addEventListener('keydown', e => {
+            if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); open(e); }
         });
     });
     // Click a fridge "+ Add dish"

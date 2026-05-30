@@ -533,16 +533,20 @@ body[data-view="home"] .home-link{display:none}
 .warmer-card .warmer-name::before{content:'';width:8px;height:8px;border-radius:2px;background:var(--gold);box-shadow:0 0 0 2px rgba(245,158,11,0.18)}
 .warmer-card .warmer-type{font-size:11px;color:var(--mute);text-transform:uppercase;letter-spacing:0.06em;font-weight:600}
 .warmer-grid{display:grid;gap:6px;background:var(--bg-3);padding:6px;border-radius:10px;border:1px solid var(--line)}
-.warmer-slot{position:relative;background:var(--bg-2);border:1px dashed var(--line);border-radius:8px;min-height:64px;display:flex;align-items:center;justify-content:center;padding:6px;cursor:pointer;transition:background 140ms ease, border-color 140ms ease, transform 140ms ease}
+.warmer-slot{position:relative;background:var(--bg-2);border:1px dashed var(--line);border-radius:8px;min-height:96px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:22px 6px 8px 6px;cursor:pointer;transition:background 140ms ease, border-color 140ms ease, transform 140ms ease;overflow:hidden}
 .warmer-slot:hover{background:var(--bg-3);border-color:var(--mute-low)}
 .warmer-slot.filled{border-style:solid;border-color:var(--gold);background:rgba(245,158,11,0.06)}
-html[data-theme="dark"] .warmer-slot.filled{background:rgba(245,158,11,0.12)}
-.warmer-slot .slot-letter{font-size:18px;font-weight:800;color:var(--gold);letter-spacing:-0.02em;line-height:1}
+.warmer-slot.filled.cold{border-color:var(--cold-line);background:var(--cold-bg)}
+.warmer-slot.filled.hot{border-color:var(--hot-line);background:var(--hot-bg)}
+html[data-theme="dark"] .warmer-slot.filled{background:rgba(245,158,11,0.10)}
+html[data-theme="dark"] .warmer-slot.filled.cold{background:rgba(96,165,250,0.10)}
+html[data-theme="dark"] .warmer-slot.filled.hot{background:rgba(248,113,113,0.10)}
+.warmer-slot .slot-letter{font-size:24px;font-weight:800;color:var(--gold);letter-spacing:-0.02em;line-height:1}
 .warmer-slot .slot-letter.cold{color:var(--cold)}
 .warmer-slot .slot-letter.hot{color:var(--hot)}
-.warmer-slot .slot-name{font-size:10px;color:var(--mute);max-width:96%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:2px;text-align:center}
-.warmer-slot .slot-label{position:absolute;top:3px;left:5px;font-size:9px;color:var(--mute-low);font-weight:700;letter-spacing:0.04em;text-transform:uppercase}
-.warmer-slot .slot-clear{position:absolute;top:3px;right:3px;width:18px;height:18px;border-radius:50%;background:var(--bg-3);color:var(--mute);border:1px solid var(--line);font-size:11px;line-height:1;display:none;align-items:center;justify-content:center;cursor:pointer}
+.warmer-slot .slot-name{font-size:11px;font-weight:600;color:var(--ink-2);width:100%;line-height:1.15;text-align:center;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;word-break:break-word;hyphens:auto;padding:0 2px}
+.warmer-slot .slot-label{position:absolute;top:4px;left:6px;font-size:9px;color:var(--mute-low);font-weight:700;letter-spacing:0.04em;text-transform:uppercase}
+.warmer-slot .slot-clear{position:absolute;top:4px;right:4px;width:20px;height:20px;border-radius:50%;background:var(--bg-2);color:var(--mute);border:1px solid var(--line);font-size:12px;line-height:1;display:none;align-items:center;justify-content:center;cursor:pointer}
 .warmer-slot.filled .slot-clear{display:inline-flex}
 .warmer-slot .slot-clear:hover{color:var(--ink);background:var(--bg-2)}
 
@@ -1114,10 +1118,40 @@ async function saveFridge(fridge){
 }
 async function deleteFridge(id){ await set(ref(db, `storage/fridges/${id}`), null); }
 
-/* Per-dish placement (lives inside the day's quality-checks record) */
-async function savePlacement(letter, placement){
-    // placement = { type:'warmer'|'fridge', containerId, compartment?, ts? }
-    await saveCheckField(letter, { placement: placement ? { ...placement, ts: serverTimestamp() } : null });
+/* Per-dish placements — now an array so the same dish can sit in many
+   warmer compartments and/or fridges at once (e.g. a 500-portion item
+   spread across multiple slots). Backward compatible with the old
+   single `placement` field (treated as a 1-element array on read). */
+function placementsOf(letter){
+    const c = state.checks?.[letter];
+    if(!c) return [];
+    if(Array.isArray(c.placements)) return c.placements;
+    if(c.placement) return [c.placement];
+    return [];
+}
+async function addPlacement(letter, placement){
+    // placement = { type:'warmer'|'fridge', containerId, compartment? }
+    const current = placementsOf(letter);
+    const next = [
+        ...current,
+        { type: placement.type, containerId: placement.containerId,
+          ...(placement.compartment ? { compartment: placement.compartment } : {}),
+          ts: nowHHMM() }
+    ];
+    await saveCheckField(letter, { placements: next, placement: null });
+}
+async function removePlacementAt(letter, target){
+    const current = placementsOf(letter);
+    const next = current.filter(p => !(
+        p.containerId === target.containerId &&
+        (target.compartment == null
+            ? (p.compartment == null)
+            : (p.compartment === target.compartment))
+    ));
+    await saveCheckField(letter, { placements: next.length ? next : null, placement: null });
+}
+async function clearAllPlacements(letter){
+    await saveCheckField(letter, { placements: null, placement: null });
 }
 
 /* === Integrations (AI proxy + Teams webhook) === */
@@ -1490,17 +1524,25 @@ function dishByLetter(letter){
     return (state.menu.dishes || []).find(d => d.dishLetter === letter) || null;
 }
 function placementOf(letter){
-    return state.checks?.[letter]?.placement || null;
+    // Back-compat shim — first placement, or legacy single field
+    const arr = placementsOf(letter);
+    return arr[0] || null;
 }
 function dishesInContainer(containerId, compartment){
-    // Returns letters of dishes whose placement matches
+    // Returns letters of dishes whose placement(s) match. A dish can be in
+    // many slots at once, so a single dish may appear in multiple containers.
     if(!state.menu) return [];
     return (state.menu.dishes || []).filter(d => {
-        const p = placementOf(d.dishLetter);
-        if(!p || p.containerId !== containerId) return false;
-        if(compartment != null && p.compartment !== compartment) return false;
-        return true;
+        const all = placementsOf(d.dishLetter);
+        return all.some(p => {
+            if(!p || p.containerId !== containerId) return false;
+            if(compartment != null && p.compartment !== compartment) return false;
+            return true;
+        });
     }).map(d => d.dishLetter);
+}
+function isDishPlaced(letter){
+    return placementsOf(letter).length > 0;
 }
 function renderPlacementStageView(){
     // The placement stage replaces the alert/scorecard/dishes/summary blocks.
@@ -1532,7 +1574,7 @@ function renderPlacementStageView(){
     }
 
     const unplaced = !state.menu ? [] :
-        (state.menu.dishes || []).filter(d => !placementOf(d.dishLetter));
+        (state.menu.dishes || []).filter(d => !isDishPlaced(d.dishLetter));
     const totalDishes = state.menu ? (state.menu.dishes || []).length : 0;
     const placedCount = totalDishes - unplaced.length;
 
@@ -1551,10 +1593,10 @@ function renderPlacementStageView(){
                         const d = lt ? dishByLetter(lt) : null;
                         const cls = d ? (isCold(d) ? 'cold' : 'hot') : '';
                         return `
-                            <button class="warmer-slot ${lt?'filled':''}" data-warmer="${escapeAttr(w.id)}" data-cell="${escapeAttr(cell)}" type="button" aria-label="${escapeAttr(layout.labels[cell] || cell)}">
+                            <button class="warmer-slot ${lt?'filled '+cls:''}" data-warmer="${escapeAttr(w.id)}" data-cell="${escapeAttr(cell)}" type="button" aria-label="${escapeAttr(layout.labels[cell] || cell)}">
                                 <span class="slot-label">${escapeHtml(layout.labels[cell] || cell.toUpperCase())}</span>
                                 ${lt ? `
-                                    <button class="slot-clear" type="button" data-clear="${escapeAttr(lt)}" aria-label="Remove">×</button>
+                                    <button class="slot-clear" type="button" data-clear="${escapeAttr(lt)}" data-warmer="${escapeAttr(w.id)}" data-cell="${escapeAttr(cell)}" aria-label="Remove">×</button>
                                     <span class="slot-letter ${cls}">${escapeHtml(lt)}</span>
                                     ${d ? `<span class="slot-name">${escapeHtml(d.dishName)}</span>` : ''}
                                 ` : `<span style="color:var(--mute-low);font-size:11px;font-weight:600">empty</span>`}
@@ -1579,7 +1621,7 @@ function renderPlacementStageView(){
                             <span class="fridge-pill">
                                 <span class="pill-letter ${cls}">${escapeHtml(lt)}</span>
                                 ${escapeHtml(d?.dishName || '')}
-                                <button class="pill-rm" data-clear="${escapeAttr(lt)}" type="button" aria-label="Remove">×</button>
+                                <button class="pill-rm" data-clear="${escapeAttr(lt)}" data-fridge="${escapeAttr(f.id)}" type="button" aria-label="Remove">×</button>
                             </span>
                         `;
                     }).join('')}
@@ -1645,12 +1687,18 @@ function bindPlacementHandlers(){
             openPlacementPicker({ type:'fridge', containerId: btn.getAttribute('data-add-to-fridge') });
         });
     });
-    // Clear buttons (slot or fridge pill)
+    // Clear buttons — remove just this one placement, not the dish everywhere.
     root.querySelectorAll('[data-clear]').forEach(btn => {
         btn.addEventListener('click', async (e) => {
             e.stopPropagation();
             const letter = btn.getAttribute('data-clear');
-            try { await savePlacement(letter, null); toast('Removed','ok'); }
+            const warmer = btn.getAttribute('data-warmer');
+            const cell = btn.getAttribute('data-cell');
+            const fridge = btn.getAttribute('data-fridge');
+            const target = warmer
+                ? { containerId: warmer, compartment: cell }
+                : { containerId: fridge, compartment: null };
+            try { await removePlacementAt(letter, target); toast('Removed','ok'); }
             catch(err){ toast('Save failed','fail'); console.error(err); }
         });
     });
@@ -1678,24 +1726,25 @@ function openPlacementPicker(target){
                 <button class="modal-close" aria-label="Close" onclick="window.__qc.closeSettings()">×</button>
             </div>
             <div class="modal-body">
-                <div style="font-size:13px;color:var(--mute);margin-bottom:10px">Pick a dish to assign to this slot</div>
+                <div style="font-size:13px;color:var(--mute);margin-bottom:10px">Pick a dish. A dish can sit in many slots at once — pick the same one again later for another slot.</div>
                 <div style="display:flex;flex-direction:column;gap:6px;max-height:60vh;overflow-y:auto">
                     ${dishes.map(d => {
                         const cls = isCold(d) ? 'cold' : 'hot';
-                        const p = placementOf(d.dishLetter);
-                        const here = p && p.containerId === target.containerId && (target.compartment == null || p.compartment === target.compartment);
+                        const all = placementsOf(d.dishLetter);
+                        const here = all.some(p => p.containerId === target.containerId && (target.compartment == null || p.compartment === target.compartment));
+                        const otherCount = all.length - (here ? 1 : 0);
                         return `
                             <button class="btn" type="button" data-pick-letter="${escapeAttr(d.dishLetter)}" style="justify-content:flex-start;text-align:left;padding:10px 12px;gap:10px;${here?'border-color:var(--gold);background:rgba(245,158,11,0.10)':''}">
                                 <span class="pill-letter ${cls}" style="width:26px;height:26px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-weight:800;font-size:12px">${escapeHtml(d.dishLetter)}</span>
                                 <span style="flex:1;font-weight:600">${escapeHtml(d.dishName)}</span>
-                                ${here ? `<span style="font-size:11px;color:var(--gold);font-weight:700">HERE</span>` : ''}
+                                ${here ? `<span style="font-size:11px;color:var(--gold);font-weight:700">HERE</span>` : (otherCount ? `<span style="font-size:11px;color:var(--mute);font-weight:600">in ${otherCount} other ${otherCount===1?'slot':'slots'}</span>` : '')}
                             </button>
                         `;
                     }).join('')}
                 </div>
             </div>
             <div class="modal-foot">
-                <button class="btn" type="button" onclick="window.__qc.closeSettings()">Cancel</button>
+                <button class="btn" type="button" onclick="window.__qc.closeSettings()">Done</button>
             </div>
         </div>
     `;
@@ -1704,10 +1753,25 @@ function openPlacementPicker(target){
     overlay.querySelectorAll('[data-pick-letter]').forEach(btn => {
         btn.addEventListener('click', async () => {
             const letter = btn.getAttribute('data-pick-letter');
-            const placement = { type: target.type, containerId: target.containerId };
-            if(target.compartment) placement.compartment = target.compartment;
+            // For warmer compartments only one dish at a time: if a different
+            // dish is already here, remove it first so the new one takes the slot.
+            if(target.type === 'warmer'){
+                const occupants = dishesInContainer(target.containerId, target.compartment);
+                for(const occ of occupants){
+                    if(occ !== letter) await removePlacementAt(occ, { containerId: target.containerId, compartment: target.compartment });
+                }
+                // If the same dish is already in this slot, treat as no-op.
+                const here = placementsOf(letter).some(p => p.containerId === target.containerId && p.compartment === target.compartment);
+                if(here){ toast('Already in this slot','ok'); closeSettings(); return; }
+            } else {
+                // Fridge: skip if already in
+                const here = placementsOf(letter).some(p => p.containerId === target.containerId && (p.compartment == null));
+                if(here){ toast('Already in this fridge','ok'); closeSettings(); return; }
+            }
             try {
-                await savePlacement(letter, placement);
+                const placement = { type: target.type, containerId: target.containerId };
+                if(target.compartment) placement.compartment = target.compartment;
+                await addPlacement(letter, placement);
                 toast('Placed','ok');
                 closeSettings();
             } catch(err){ toast('Save failed','fail'); console.error(err); }

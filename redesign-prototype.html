@@ -553,6 +553,25 @@ html[data-theme="dark"] .warmer-slot.filled.hot{background:rgba(248,113,113,0.10
 /* Bump slot height a touch so qty + total fit cleanly */
 .warmer-slot{min-height:118px !important}
 .fridge-pill .pill-qty{font-weight:800;color:var(--ink);padding:0 4px}
+
+/* === Assembly: team chips + per-dish count === */
+.team-bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:14px 16px;background:var(--bg-2);border:1px solid var(--line);border-radius:14px;margin-bottom:14px}
+.team-bar .team-label{font-size:11px;font-weight:700;color:var(--mute);letter-spacing:0.08em;text-transform:uppercase;flex-shrink:0}
+.team-chips{display:flex;gap:8px;flex-wrap:wrap;flex:1;min-width:0}
+.team-chip{display:flex;flex-direction:column;align-items:center;justify-content:center;min-width:62px;padding:8px 10px;background:var(--bg-3);border:1px solid var(--line);border-radius:12px;cursor:pointer;transition:background 140ms ease, border-color 140ms ease;color:var(--ink-2)}
+.team-chip:hover{background:var(--bg);color:var(--ink)}
+.team-chip.is-active{background:var(--assembly-soft);border-color:var(--assembly);color:var(--assembly)}
+.team-chip .chip-init{font-size:14px;font-weight:800;letter-spacing:-0.02em;line-height:1}
+.team-chip .chip-name{font-size:11px;font-weight:600;margin-top:3px}
+.team-empty-hint{font-size:13px;color:var(--mute);font-weight:500}
+
+/* Count input on the dish tile (Assembly stage view) */
+.lt-tile .lt-count-row{margin-top:auto;width:100%;padding-top:8px;display:flex;align-items:center;gap:6px}
+.lt-tile .lt-count{flex:1;min-width:0;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg-2);color:var(--ink);font-size:16px;font-weight:800;text-align:center}
+.lt-tile.cold .lt-count{border-color:var(--cold-line)}
+.lt-tile.hot .lt-count{border-color:var(--hot-line)}
+.lt-tile .lt-count:focus{outline:2px solid var(--brand);outline-offset:1px;background:var(--bg-2)}
+.lt-tile .lt-count-total{font-size:10px;font-weight:700;color:var(--mute);padding:3px 7px;border-radius:99px;background:var(--bg-3);border:1px solid var(--line);white-space:nowrap}
 .fridge-pill .pill-total{font-size:10px;font-weight:700;color:var(--mute);background:var(--bg-3);border:1px solid var(--line);border-radius:99px;padding:1px 7px;margin-left:4px}
 .warmer-slot .slot-label{position:absolute;top:4px;left:6px;font-size:9px;color:var(--mute-low);font-weight:700;letter-spacing:0.04em;text-transform:uppercase}
 .warmer-slot .slot-clear{position:absolute;top:4px;right:4px;width:20px;height:20px;border-radius:50%;background:var(--bg-2);color:var(--mute);border:1px solid var(--line);font-size:12px;line-height:1;display:none;align-items:center;justify-content:center;cursor:pointer}
@@ -984,8 +1003,9 @@ const state = {
     filter: 'all',
     stage: 'qc',     // 'assembly' | 'qc' | 'dispatch' | 'placement'
     view: 'home',    // 'home' | 'stage'
-    storage: { warmers: [], fridges: [] }, // configured kitchen storage
+    storage: { warmers: [], fridges: [], team: [] }, // configured kitchen storage + team roster
     integrations: { aiProxyUrl: '', teamsWebhookUrl: '' }, // AI + auto-report
+    activeAssemblyMember: null, // currently-selected team chip on Assembly stage
     _unsub: null,
     _unsubStorage: null,
     _unsubIntegrations: null
@@ -1107,12 +1127,77 @@ function listenChecks(date){ return onValue(ref(db,`quality-checks/${date}`), sn
 function listenStorage(){
     return onValue(ref(db, 'storage'), snap => {
         const v = snap.val() || {};
-        // Normalise to arrays sorted by `order`
         const toArr = obj => Object.entries(obj || {}).map(([id, o]) => ({ id, ...o }))
             .sort((a,b) => (a.order||0) - (b.order||0) || (a.name||'').localeCompare(b.name||''));
-        state.storage = { warmers: toArr(v.warmers), fridges: toArr(v.fridges) };
-        if(state.view === 'stage' && state.stage === 'placement') renderAll();
+        state.storage = {
+            warmers: toArr(v.warmers),
+            fridges: toArr(v.fridges),
+            team: toArr(v.team) // team roster — same shape: {id, name, order, initials?}
+        };
+        if(state.view === 'stage' && (state.stage === 'placement' || state.stage === 'assembly')) renderAll();
     });
+}
+async function saveTeamMember(member){
+    if(!member.id) member.id = 'm-' + Math.random().toString(36).slice(2,8);
+    const { id, ...rest } = member;
+    await update(ref(db, `storage/team/${id}`), rest);
+}
+async function deleteTeamMember(id){ await set(ref(db, `storage/team/${id}`), null); }
+function teamInitials(name){
+    if(!name) return '';
+    const parts = String(name).trim().split(/\s+/);
+    return (parts[0]?.[0] || '').toUpperCase() + (parts[1]?.[0] || (parts[0]?.[1] || '')).toUpperCase();
+}
+
+/* Total dish count across all Assembly entries for a single dish. Entries
+   are { by, count, role, ts }. Backward compat: also reads a top-level
+   c.assembly.count scalar if no entries[]. */
+function assemblyCountTotal(c){
+    if(!c) return 0;
+    const a = c.assembly;
+    if(!a) return 0;
+    if(Array.isArray(a.entries) && a.entries.length){
+        return a.entries.reduce((sum, e) => sum + (Number(e.count) || 0), 0);
+    }
+    if(a.count != null) return Number(a.count) || 0;
+    return 0;
+}
+
+/* Append a count entry from the currently-active team member */
+async function addAssemblyCount(letter, count){
+    const c = state.checks[letter] || {};
+    const a = c.assembly || {};
+    const entries = Array.isArray(a.entries) ? a.entries.slice() : [];
+    // Replace the entry for the active member if one exists, else append
+    const by = state.activeAssemblyMember || '';
+    const ts = nowHHMM();
+    const idx = entries.findIndex(e => (e.by || '') === by);
+    const next = { by, count: Math.max(0, Math.round(Number(count) || 0)), ts };
+    if(idx >= 0) entries[idx] = { ...entries[idx], ...next };
+    else entries.push(next);
+    await saveStage(letter, 'assembly', { entries, count: null, time: ts });
+}
+/* Save the count as the total (replaces any per-member breakdown). Used by
+   the inline tile input which is a single number. */
+async function setAssemblyTotalCount(letter, count){
+    const n = Math.max(0, Math.round(Number(count) || 0));
+    const c = state.checks[letter] || {};
+    const a = c.assembly || {};
+    const entries = Array.isArray(a.entries) ? a.entries.slice() : [];
+    const by = state.activeAssemblyMember || '';
+    if(by){
+        // Update or create entry for the active team member; clear any
+        // prior entries from other members so the displayed total matches
+        // the typed number.
+        await saveStage(letter, 'assembly', {
+            entries: [{ by, count: n, ts: nowHHMM() }],
+            count: null,
+            time: nowHHMM()
+        });
+    } else {
+        // No active member — store as a scalar count on the assembly record.
+        await saveStage(letter, 'assembly', { count: n, entries: null, time: nowHHMM() });
+    }
 }
 async function saveWarmer(warmer){
     if(!warmer.id) warmer.id = 'w-' + Math.random().toString(36).slice(2,8);
@@ -1405,6 +1490,41 @@ function renderDishes(){
    The tile shows: letter, dish name, status pip, recent timestamp, and
    3 stage-presence dots. Everything else (inputs, photos, etc.) lives
    inside the modal that opens on tap. */
+/* Team-chip bar shown above the dish grid on the Assembly stage.
+   Mobile-first: chips wrap, big tap targets, no popup needed to switch. */
+function renderTeamBar(){
+    const dishArea = document.getElementById('dish-area');
+    if(!dishArea) return;
+    // Remove any existing team-bar before inserting a fresh one
+    document.getElementById('team-bar-host')?.remove();
+    const team = state.storage?.team || [];
+    const host = document.createElement('div');
+    host.id = 'team-bar-host';
+    host.innerHTML = `
+        <div class="team-bar" role="group" aria-label="Team — tap to select">
+            <span class="team-label">Prepared by</span>
+            ${team.length === 0
+                ? `<span class="team-empty-hint">No team yet — open ⚙ Settings to add brigade names. The dish-count input still works without a selected member.</span>`
+                : `<div class="team-chips">${team.map(m => {
+                    const isActive = state.activeAssemblyMember === m.name;
+                    return `<button class="team-chip ${isActive?'is-active':''}" data-team-name="${escapeAttr(m.name)}" type="button"><span class="chip-init">${escapeHtml(teamInitials(m.name))}</span><span class="chip-name">${escapeHtml((m.name||'').split(/\s+/)[0])}</span></button>`;
+                }).join('')}</div>`
+            }
+        </div>
+    `;
+    // Insert before the dishes section
+    const dishSection = dishArea.closest('section');
+    dishSection?.parentElement?.insertBefore(host, dishSection);
+
+    host.querySelectorAll('.team-chip').forEach(chip => {
+        chip.addEventListener('click', () => {
+            const name = chip.getAttribute('data-team-name');
+            state.activeAssemblyMember = (state.activeAssemblyMember === name) ? null : name;
+            host.querySelectorAll('.team-chip').forEach(c => c.classList.toggle('is-active', c.getAttribute('data-team-name') === state.activeAssemblyMember));
+        });
+    });
+}
+
 function renderLetterTile(dish){
     const c = state.checks[dish.dishLetter] || {};
     const cls = isCold(dish) ? 'cold' : 'hot';
@@ -1417,17 +1537,24 @@ function renderLetterTile(dish){
     const hasA = hasStageData(c, 'assembly');
     const hasQ = avg(c.temperatures) != null;
     const hasD = hasStageData(c, 'dispatch');
+    // Assembly stage: show inline "dish count" input + total tally
+    const isAssemblyStage = state.stage === 'assembly';
+    const totalCount = isAssemblyStage ? assemblyCountTotal(c) : 0;
     return `
-        <article class="lt-tile ${cls}" data-letter="${escapeHtml(dish.dishLetter)}" data-action="open" role="button" tabindex="0" aria-label="Open ${escapeHtml(dish.dishName)}">
+        <article class="lt-tile ${cls}" data-letter="${escapeHtml(dish.dishLetter)}" role="button" tabindex="0" aria-label="${escapeHtml(dish.dishName)}">
             <span class="lt-pip is-${s}" aria-hidden="true"></span>
-            <span class="lt-letter">${escapeHtml(dish.dishLetter)}</span>
-            <span class="lt-name">${escapeHtml(dish.dishName)}</span>
+            <span class="lt-letter" data-action="open">${escapeHtml(dish.dishLetter)}</span>
+            <span class="lt-name" data-action="open">${escapeHtml(dish.dishName)}</span>
             <span class="lt-stages" aria-hidden="true">
                 <span data-stage="assembly" class="${hasA?'is-set':''}"></span>
                 <span data-stage="qc" class="${hasQ?'is-set':''}"></span>
                 <span data-stage="dispatch" class="${hasD?'is-set':''}"></span>
             </span>
-            ${lastTime ? `<span class="lt-time">⏱ ${escapeHtml(lastTime)}</span>` : ''}
+            ${isAssemblyStage ? `
+                <div class="lt-count-row">
+                    <input class="lt-count" type="text" inputmode="numeric" pattern="[0-9]*" placeholder="0" value="${totalCount || ''}" data-count-letter="${escapeAttr(dish.dishLetter)}" aria-label="Dish count for ${escapeAttr(dish.dishLetter)}" />
+                </div>
+            ` : (lastTime ? `<span class="lt-time" data-action="open">⏱ ${escapeHtml(lastTime)}</span>` : '')}
         </article>
     `;
 }
@@ -1447,11 +1574,33 @@ function bindTiles(){
             openModal(tile.getAttribute('data-letter'));
         });
     });
-    // Compact letter-tile: tap anywhere opens the modal; Enter / Space too.
+    // Compact letter-tile: tap anywhere opens the modal — except the count
+    // input on Assembly stage which is for inline entry.
     document.querySelectorAll('.lt-tile').forEach(tile=>{
         const open = () => openModal(tile.getAttribute('data-letter'));
-        tile.addEventListener('click', open);
-        tile.addEventListener('keydown', e => { if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); open(); } });
+        tile.addEventListener('click', e => {
+            // Skip if user is interacting with the inline count input
+            if(e.target.closest('input, button, [data-count-letter]')) return;
+            open();
+        });
+        tile.addEventListener('keydown', e => {
+            if(e.target.closest('input, [data-count-letter]')) return;
+            if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); open(); }
+        });
+    });
+    // Inline dish-count input on the Assembly stage tile
+    document.querySelectorAll('[data-count-letter]').forEach(inp => {
+        inp.addEventListener('focus', () => inp.select());
+        inp.addEventListener('keydown', e => { if(e.key === 'Enter'){ e.preventDefault(); inp.blur(); } });
+        inp.addEventListener('blur', async () => {
+            const letter = inp.getAttribute('data-count-letter');
+            const v = inp.value.trim();
+            const n = v === '' ? 0 : Math.max(0, Math.round(parseDecimal(v) || 0));
+            try {
+                await setAssemblyTotalCount(letter, n);
+                toast('Saved', 'ok');
+            } catch(err){ toast('Save failed','fail'); console.error(err); }
+        });
     });
     document.querySelectorAll('[data-edit]').forEach(el=>{
         el.addEventListener('keydown', e=>{ if(e.key==='Enter' && el.type !== 'time'){ e.preventDefault(); el.blur(); } });
@@ -1879,10 +2028,12 @@ function renderAll(){
             const sectionHead = dishArea?.parentElement?.querySelector('.section-head');
             if(sectionHead) sectionHead.style.display = '';
         }
+        if(state.stage !== 'assembly') document.getElementById('team-bar-host')?.remove();
         if(state.stage === 'placement'){
             renderPlacementStageView();
         } else {
             renderAlert(); renderScorecard(); renderDishes(); renderSummary();
+            if(state.stage === 'assembly') renderTeamBar();
         }
     }
 }
@@ -2869,6 +3020,12 @@ function openSettings(){
                     <div id="storage-fridges-list"></div>
                     <button class="add-storage" type="button" id="add-fridge">+ Add fridge</button>
                 </div>
+                <div class="storage-block">
+                    <h4>Team members (Assembly)</h4>
+                    <div style="font-size:12px;color:var(--mute);margin-bottom:8px">Anyone who can be tagged as "Prepared by" on the Assembly stage. Tap chips at the top of the Assembly page to set who's on now.</div>
+                    <div id="storage-team-list"></div>
+                    <button class="add-storage" type="button" id="add-team">+ Add team member</button>
+                </div>
 
                 <!-- Integrations: AI proxy + Teams webhook -->
                 <div class="storage-block">
@@ -2902,6 +3059,11 @@ function openSettings(){
     overlay.querySelector('#add-fridge').onclick = async () => {
         const order = (state.storage.fridges || []).length;
         await saveFridge({ name: `Fridge ${order + 1}`, order });
+        renderSettingsStorage(overlay);
+    };
+    overlay.querySelector('#add-team').onclick = async () => {
+        const order = (state.storage.team || []).length;
+        await saveTeamMember({ name: `Team Member ${order + 1}`, order });
         renderSettingsStorage(overlay);
     };
     // Integrations auto-save on blur
@@ -2987,6 +3149,30 @@ function renderSettingsStorage(overlay){
             renderSettingsStorage(overlay);
         });
     });
+
+    // Team members
+    const tHost = overlay.querySelector('#storage-team-list');
+    const team = state.storage?.team || [];
+    if(tHost){
+        tHost.innerHTML = team.length === 0
+            ? `<div style="font-size:12px;color:var(--mute);padding:8px 0">No team members yet. Add the brigade so they can be tagged on Assembly entries.</div>`
+            : team.map(m => `
+                <div class="storage-row" data-id="${escapeAttr(m.id)}">
+                    <input type="text" data-m-name value="${escapeAttr(m.name||'')}" placeholder="Name (e.g. Joel)" />
+                    <button class="storage-rm" data-m-rm type="button">Delete</button>
+                </div>
+            `).join('');
+        tHost.querySelectorAll('.storage-row').forEach(row => {
+            const id = row.getAttribute('data-id');
+            const nameInp = row.querySelector('[data-m-name]');
+            nameInp.addEventListener('blur', () => saveTeamMember({ id, name: nameInp.value.trim() || 'Team member', order: team.findIndex(x => x.id === id) }));
+            row.querySelector('[data-m-rm]').addEventListener('click', async () => {
+                if(!confirm('Delete this team member?')) return;
+                await deleteTeamMember(id);
+                renderSettingsStorage(overlay);
+            });
+        });
+    }
 }
 
 function closeSettings(){

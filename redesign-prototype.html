@@ -545,6 +545,15 @@ html[data-theme="dark"] .warmer-slot.filled.hot{background:rgba(248,113,113,0.10
 .warmer-slot .slot-letter.cold{color:var(--cold)}
 .warmer-slot .slot-letter.hot{color:var(--hot)}
 .warmer-slot .slot-name{font-size:11px;font-weight:600;color:var(--ink-2);width:100%;line-height:1.15;text-align:center;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;word-break:break-word;hyphens:auto;padding:0 2px}
+.warmer-slot .slot-qty{font-size:14px;font-weight:800;color:var(--ink);letter-spacing:-0.01em;line-height:1;margin-top:2px}
+.warmer-slot .slot-total{font-size:10px;font-weight:700;color:var(--mute);letter-spacing:0.02em;background:var(--bg-2);border:1px solid var(--line);border-radius:99px;padding:2px 8px;margin-top:3px}
+.warmer-slot.filled .slot-total{background:rgba(245,158,11,0.10);color:var(--gold);border-color:rgba(245,158,11,0.3)}
+.warmer-slot.filled.cold .slot-total{background:rgba(96,165,250,0.10);color:var(--cold);border-color:var(--cold-line)}
+.warmer-slot.filled.hot .slot-total{background:rgba(248,113,113,0.10);color:var(--hot);border-color:var(--hot-line)}
+/* Bump slot height a touch so qty + total fit cleanly */
+.warmer-slot{min-height:118px !important}
+.fridge-pill .pill-qty{font-weight:800;color:var(--ink);padding:0 4px}
+.fridge-pill .pill-total{font-size:10px;font-weight:700;color:var(--mute);background:var(--bg-3);border:1px solid var(--line);border-radius:99px;padding:1px 7px;margin-left:4px}
 .warmer-slot .slot-label{position:absolute;top:4px;left:6px;font-size:9px;color:var(--mute-low);font-weight:700;letter-spacing:0.04em;text-transform:uppercase}
 .warmer-slot .slot-clear{position:absolute;top:4px;right:4px;width:20px;height:20px;border-radius:50%;background:var(--bg-2);color:var(--mute);border:1px solid var(--line);font-size:12px;line-height:1;display:none;align-items:center;justify-content:center;cursor:pointer}
 .warmer-slot.filled .slot-clear{display:inline-flex}
@@ -1130,15 +1139,37 @@ function placementsOf(letter){
     return [];
 }
 async function addPlacement(letter, placement){
-    // placement = { type:'warmer'|'fridge', containerId, compartment? }
+    // placement = { type:'warmer'|'fridge', containerId, compartment?, qty? }
     const current = placementsOf(letter);
     const next = [
         ...current,
         { type: placement.type, containerId: placement.containerId,
           ...(placement.compartment ? { compartment: placement.compartment } : {}),
+          qty: (placement.qty != null && placement.qty > 0) ? Number(placement.qty) : 1,
           ts: nowHHMM() }
     ];
     await saveCheckField(letter, { placements: next, placement: null });
+}
+async function updatePlacementQty(letter, target, qty){
+    const current = placementsOf(letter);
+    const next = current.map(p => {
+        const sameWarmer = p.containerId === target.containerId && p.compartment === target.compartment;
+        const sameFridge = p.containerId === target.containerId && p.compartment == null && target.compartment == null;
+        if(sameWarmer || sameFridge){
+            return { ...p, qty: (qty != null && qty > 0) ? Number(qty) : 1, ts: nowHHMM() };
+        }
+        return p;
+    });
+    await saveCheckField(letter, { placements: next, placement: null });
+}
+function totalQtyForLetter(letter){
+    return placementsOf(letter).reduce((sum, p) => sum + (p.qty != null ? Number(p.qty) : 1), 0);
+}
+function qtyInSlot(letter, target){
+    const all = placementsOf(letter);
+    const match = all.find(p => p.containerId === target.containerId
+        && (target.compartment == null ? p.compartment == null : p.compartment === target.compartment));
+    return match ? (match.qty != null ? Number(match.qty) : 1) : 0;
 }
 async function removePlacementAt(letter, target){
     const current = placementsOf(letter);
@@ -1592,16 +1623,17 @@ function renderPlacementStageView(){
                         const lt = occupants[0] || '';
                         const d = lt ? dishByLetter(lt) : null;
                         const cls = d ? (isCold(d) ? 'cold' : 'hot') : '';
-                        // NB: outer slot is a <div role="button"> so the inner
-                        // ✕ <button> isn't nested inside another <button> —
-                        // browsers reparse nested buttons and hoist content out.
+                        const slotQty = lt ? qtyInSlot(lt, { containerId: w.id, compartment: cell }) : 0;
+                        const total = lt ? totalQtyForLetter(lt) : 0;
                         return `
-                            <div class="warmer-slot ${lt?'filled '+cls:''}" data-warmer="${escapeAttr(w.id)}" data-cell="${escapeAttr(cell)}" role="button" tabindex="0" aria-label="${escapeAttr((layout.labels[cell] || cell) + (d ? ': ' + d.dishName : ': empty'))}">
+                            <div class="warmer-slot ${lt?'filled '+cls:''}" data-warmer="${escapeAttr(w.id)}" data-cell="${escapeAttr(cell)}" role="button" tabindex="0" aria-label="${escapeAttr((layout.labels[cell] || cell) + (d ? ': ' + d.dishName + ', qty ' + slotQty + ', total ' + total : ': empty'))}">
                                 <span class="slot-label">${escapeHtml(layout.labels[cell] || cell.toUpperCase())}</span>
                                 ${lt ? `
                                     <button class="slot-clear" type="button" data-clear="${escapeAttr(lt)}" data-warmer="${escapeAttr(w.id)}" data-cell="${escapeAttr(cell)}" aria-label="Remove">×</button>
                                     <span class="slot-letter ${cls}">${escapeHtml(lt)}</span>
                                     ${d ? `<span class="slot-name">${escapeHtml(d.dishName)}</span>` : ''}
+                                    <span class="slot-qty">${slotQty}</span>
+                                    <span class="slot-total">Total ${total}</span>
                                 ` : `<span style="color:var(--mute-low);font-size:11px;font-weight:600">empty</span>`}
                             </div>
                         `;
@@ -1620,10 +1652,14 @@ function renderPlacementStageView(){
                     ${occupants.map(lt => {
                         const d = dishByLetter(lt);
                         const cls = d ? (isCold(d) ? 'cold' : 'hot') : '';
+                        const q = qtyInSlot(lt, { containerId: f.id, compartment: null });
+                        const total = totalQtyForLetter(lt);
                         return `
-                            <span class="fridge-pill">
+                            <span class="fridge-pill" data-fridge-pill="${escapeAttr(f.id)}" data-letter="${escapeAttr(lt)}">
                                 <span class="pill-letter ${cls}">${escapeHtml(lt)}</span>
                                 ${escapeHtml(d?.dishName || '')}
+                                <span class="pill-qty">${q}</span>
+                                <span class="pill-total">Total ${total}</span>
                                 <button class="pill-rm" data-clear="${escapeAttr(lt)}" data-fridge="${escapeAttr(f.id)}" type="button" aria-label="Remove">×</button>
                             </span>
                         `;
@@ -1726,6 +1762,9 @@ function openPlacementPicker(target){
           })()
         : '';
     const dishes = state.menu?.dishes || [];
+    // If a dish is already in this slot/fridge, pre-fill qty from it
+    const occupantInThisSlot = dishesInContainer(target.containerId, target.compartment)[0] || null;
+    const presetQty = occupantInThisSlot ? qtyInSlot(occupantInThisSlot, { containerId: target.containerId, compartment: target.compartment }) : 1;
     overlay.innerHTML = `
         <div class="modal-panel" style="max-width:520px">
             <div class="modal-head">
@@ -1734,18 +1773,25 @@ function openPlacementPicker(target){
                 <button class="modal-close" aria-label="Close" onclick="window.__qc.closeSettings()">×</button>
             </div>
             <div class="modal-body">
-                <div style="font-size:13px;color:var(--mute);margin-bottom:10px">Pick a dish. A dish can sit in many slots at once — pick the same one again later for another slot.</div>
-                <div style="display:flex;flex-direction:column;gap:6px;max-height:60vh;overflow-y:auto">
+                <div style="font-size:13px;color:var(--mute);margin-bottom:10px">Set the quantity for this slot, then pick a dish. A dish can sit in many slots — pick the same one again later for another slot.</div>
+                <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;background:var(--bg-3);border:1px solid var(--line);border-radius:10px;padding:10px 12px">
+                    <label for="pick-qty" style="font-size:13px;font-weight:600;color:var(--ink-2)">Qty in this slot</label>
+                    <input id="pick-qty" type="number" min="1" step="1" value="${presetQty}" inputmode="numeric" style="flex:1;min-width:80px;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg-2);color:var(--ink);font-size:15px;font-weight:700;text-align:center" />
+                    ${occupantInThisSlot ? `<button class="btn btn-sm" type="button" id="pick-update-qty">Update qty only</button>` : ''}
+                </div>
+                <div style="display:flex;flex-direction:column;gap:6px;max-height:50vh;overflow-y:auto">
                     ${dishes.map(d => {
                         const cls = isCold(d) ? 'cold' : 'hot';
                         const all = placementsOf(d.dishLetter);
                         const here = all.some(p => p.containerId === target.containerId && (target.compartment == null || p.compartment === target.compartment));
+                        const total = totalQtyForLetter(d.dishLetter);
                         const otherCount = all.length - (here ? 1 : 0);
                         return `
                             <button class="btn" type="button" data-pick-letter="${escapeAttr(d.dishLetter)}" style="justify-content:flex-start;text-align:left;padding:10px 12px;gap:10px;${here?'border-color:var(--gold);background:rgba(245,158,11,0.10)':''}">
                                 <span class="pill-letter ${cls}" style="width:26px;height:26px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-weight:800;font-size:12px">${escapeHtml(d.dishLetter)}</span>
                                 <span style="flex:1;font-weight:600">${escapeHtml(d.dishName)}</span>
-                                ${here ? `<span style="font-size:11px;color:var(--gold);font-weight:700">HERE</span>` : (otherCount ? `<span style="font-size:11px;color:var(--mute);font-weight:600">in ${otherCount} other ${otherCount===1?'slot':'slots'}</span>` : '')}
+                                ${total ? `<span style="font-size:11px;color:var(--mute);font-weight:600">total ${total}</span>` : ''}
+                                ${here ? `<span style="font-size:11px;color:var(--gold);font-weight:700">HERE</span>` : (otherCount ? `<span style="font-size:11px;color:var(--mute);font-weight:600">in ${otherCount} other</span>` : '')}
                             </button>
                         `;
                     }).join('')}
@@ -1758,29 +1804,60 @@ function openPlacementPicker(target){
     `;
     overlay.classList.remove('hidden');
     lockBodyScroll();
+    const qtyInput = overlay.querySelector('#pick-qty');
+    const readQty = () => {
+        const n = parseDecimal(qtyInput?.value);
+        return (Number.isFinite(n) && n > 0) ? Math.round(n) : 1;
+    };
+    // "Update qty only" button — keeps the same dish, just updates its qty
+    const updateBtn = overlay.querySelector('#pick-update-qty');
+    if(updateBtn && occupantInThisSlot){
+        updateBtn.addEventListener('click', async () => {
+            try {
+                await updatePlacementQty(occupantInThisSlot, { containerId: target.containerId, compartment: target.compartment }, readQty());
+                toast('Quantity updated','ok');
+                closeSettings();
+            } catch(err){ toast('Save failed','fail'); console.error(err); }
+        });
+    }
     overlay.querySelectorAll('[data-pick-letter]').forEach(btn => {
         btn.addEventListener('click', async () => {
             const letter = btn.getAttribute('data-pick-letter');
+            const qty = readQty();
             // For warmer compartments only one dish at a time: if a different
             // dish is already here, remove it first so the new one takes the slot.
             if(target.type === 'warmer'){
                 const occupants = dishesInContainer(target.containerId, target.compartment);
+                // If the same dish is already in this slot, just update its qty
+                const sameDishHere = placementsOf(letter).some(p => p.containerId === target.containerId && p.compartment === target.compartment);
+                if(sameDishHere){
+                    try {
+                        await updatePlacementQty(letter, { containerId: target.containerId, compartment: target.compartment }, qty);
+                        toast(`Updated qty to ${qty}`,'ok');
+                        closeSettings();
+                    } catch(err){ toast('Save failed','fail'); console.error(err); }
+                    return;
+                }
                 for(const occ of occupants){
                     if(occ !== letter) await removePlacementAt(occ, { containerId: target.containerId, compartment: target.compartment });
                 }
-                // If the same dish is already in this slot, treat as no-op.
-                const here = placementsOf(letter).some(p => p.containerId === target.containerId && p.compartment === target.compartment);
-                if(here){ toast('Already in this slot','ok'); closeSettings(); return; }
             } else {
-                // Fridge: skip if already in
-                const here = placementsOf(letter).some(p => p.containerId === target.containerId && (p.compartment == null));
-                if(here){ toast('Already in this fridge','ok'); closeSettings(); return; }
+                // Fridge: if same dish already here, just update its qty
+                const sameDishHere = placementsOf(letter).some(p => p.containerId === target.containerId && (p.compartment == null));
+                if(sameDishHere){
+                    try {
+                        await updatePlacementQty(letter, { containerId: target.containerId, compartment: null }, qty);
+                        toast(`Updated qty to ${qty}`,'ok');
+                        closeSettings();
+                    } catch(err){ toast('Save failed','fail'); console.error(err); }
+                    return;
+                }
             }
             try {
-                const placement = { type: target.type, containerId: target.containerId };
+                const placement = { type: target.type, containerId: target.containerId, qty };
                 if(target.compartment) placement.compartment = target.compartment;
                 await addPlacement(letter, placement);
-                toast('Placed','ok');
+                toast(`Placed (qty ${qty})`,'ok');
                 closeSettings();
             } catch(err){ toast('Save failed','fail'); console.error(err); }
         });

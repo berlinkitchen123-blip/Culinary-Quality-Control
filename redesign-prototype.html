@@ -3148,102 +3148,307 @@ async function generatePdfReport(range){
     });
     y = pdf.lastAutoTable.finalY + 18;
 
-    // Per-day sections
+    // ---------- Per-day overview table (compact, top-of-day) ----------
+    const pageH = pdf.internal.pageSize.getHeight();
+    const ensure = (need) => { if(y + need > pageH - 36){ pdf.addPage(); y = 50; } };
+
+    const statusColor = (s) => s==='hold' ? [185,28,28] : s==='watch' ? [234,88,12] : s==='pass' ? [22,163,74] : [110,116,128];
+
     for(const date of dates){
         const checks = checksByDate[date] || {};
         const menu = menusByWeek[isoYearWeek(date)];
         const dishes = menu?.dishes || [];
-        if(y > pdf.internal.pageSize.getHeight() - 80){ pdf.addPage(); y = 50; }
 
-        pdf.setFont('helvetica','bold').setFontSize(13).setTextColor(31, 41, 55);
-        pdf.text(`${humanDate(date)}`, margin, y); y += 14;
+        ensure(40);
+        pdf.setFillColor(37,99,235);
+        pdf.rect(margin, y - 12, pageW - margin*2, 22, 'F');
+        pdf.setFont('helvetica','bold').setFontSize(13).setTextColor(255,255,255);
+        pdf.text(humanDate(date), margin + 8, y + 3);
+        pdf.setFont('helvetica','normal').setFontSize(10);
+        pdf.text(`${dishes.length} dish${dishes.length===1?'':'es'} on menu`, pageW - margin - 8, y + 3, { align:'right' });
+        y += 22;
+
         if(!dishes.length){
             pdf.setFont('helvetica','italic').setFontSize(10).setTextColor(110,116,128);
-            pdf.text('No menu recorded for this date.', margin, y); y += 16; continue;
+            pdf.text('No menu recorded for this date.', margin, y); y += 20; continue;
         }
 
-        // Per-dish data table
-        const rows = dishes.map(d => {
+        // Compact one-line-per-dish overview for the day
+        const overviewRows = dishes.map(d => {
             const c = checks[d.dishLetter] || {};
             const aT = stageTempValue(c, 'assembly');
             const qT = avg(c.temperatures);
             const dT = stageTempValue(c, 'dispatch');
             const w = avg(c.weights);
-            const placements = placementsOf(d.dishLetter);
-            const placeText = placements.length
-                ? placements.map(p => {
-                    const w = (storage.warmers||[]).find(x => x.id === p.containerId);
-                    const f = (storage.fridges||[]).find(x => x.id === p.containerId);
-                    if(w){
-                        const layout = WARMER_LAYOUTS[w.layout] || {};
-                        return `${w.name||'Warmer'} ${layout.labels?.[p.compartment] || p.compartment || ''}${p.qty?` x${p.qty}`:''}`;
-                    }
-                    if(f) return `${f.name||'Fridge'}${p.qty?` x${p.qty}`:''}`;
-                    return '';
-                }).filter(Boolean).join(' / ')
-                : '—';
-            const entries = assemblyEntries(c);
-            const assemblyText = entries.length
-                ? entries.map(e => {
-                    const who = Array.isArray(e.by) ? e.by.join('+') : (e.by || '?');
-                    return `${who}=${e.count}${e.ts?' @'+e.ts:''}`;
-                }).join('; ')
-                : '—';
-            const aiText = c.aiReview
-                ? `${c.aiReview.score!=null?c.aiReview.score+'/100':'?'} ${c.aiReview.summary||''}`.slice(0,60)
-                : '—';
             return [
                 d.dishLetter,
                 d.dishName,
                 isCold(d) ? 'Cold' : 'Hot',
-                aT != null ? aT.toFixed(2)+'°' : '—',
-                qT != null ? qT.toFixed(2)+'°' : '—',
-                dT != null ? dT.toFixed(2)+'°' : '—',
+                aT != null ? aT.toFixed(1)+'°' : '—',
+                qT != null ? qT.toFixed(1)+'°' : '—',
+                dT != null ? dT.toFixed(1)+'°' : '—',
                 w != null ? Math.round(w)+'g' : '—',
                 (c.selectedIngredients||[]).length + '/' + (d.dishIngredients||[]).length,
                 c.capturedImage ? 'Y' : 'N',
-                aiText,
-                placeText,
-                assemblyText,
-                (c.comment || '').slice(0, 80),
+                c.aiReview && c.aiReview.score != null ? c.aiReview.score + '/100' : '—',
                 readingStatus(d, c).toUpperCase()
             ];
         });
         pdf.autoTable({
             startY: y,
-            head: [['Letter','Name','Type','Asm','QC','Dsp','Wt','Ing','Photo','AI','Placement','Assembly entries','Note','Status']],
-            body: rows,
+            head: [['L','Dish','Type','Asm°','QC°','Dsp°','Weight','Ing','Photo','AI','Status']],
+            body: overviewRows,
             margin: { left: margin, right: margin },
-            styles: { fontSize: 7, cellPadding: 3, overflow: 'linebreak' },
-            headStyles: { fillColor: [124, 58, 237], textColor: 255, fontSize: 7.5, fontStyle: 'bold' },
-            alternateRowStyles: { fillColor: [247, 247, 250] },
+            styles: { fontSize: 8, cellPadding: 3, overflow: 'linebreak' },
+            headStyles: { fillColor: [243,244,246], textColor: [55,65,81], fontSize: 8, fontStyle:'bold' },
+            alternateRowStyles: { fillColor: [250,250,253] },
             columnStyles: {
-                0: { cellWidth: 28, halign:'center', fontStyle:'bold' },
-                1: { cellWidth: 90 },
-                2: { cellWidth: 28, halign:'center' },
-                3: { cellWidth: 30, halign:'right' },
-                4: { cellWidth: 30, halign:'right' },
-                5: { cellWidth: 30, halign:'right' },
-                6: { cellWidth: 28, halign:'right' },
-                7: { cellWidth: 26, halign:'center' },
-                8: { cellWidth: 24, halign:'center' },
-                9: { cellWidth: 64 },
-                10:{ cellWidth: 70 },
-                11:{ cellWidth: 88 },
-                12:{ cellWidth: 70 },
-                13:{ cellWidth: 36, halign:'center', fontStyle:'bold' }
+                0:{cellWidth:22, halign:'center', fontStyle:'bold'},
+                1:{cellWidth:170},
+                2:{cellWidth:34, halign:'center'},
+                3:{cellWidth:42, halign:'right'},
+                4:{cellWidth:42, halign:'right'},
+                5:{cellWidth:42, halign:'right'},
+                6:{cellWidth:50, halign:'right'},
+                7:{cellWidth:38, halign:'center'},
+                8:{cellWidth:38, halign:'center'},
+                9:{cellWidth:48, halign:'center'},
+                10:{cellWidth:'auto', halign:'center', fontStyle:'bold'}
             },
             didParseCell: (data) => {
-                if(data.section === 'body' && data.column.index === 13){
-                    const v = (data.cell.raw || '').toUpperCase();
-                    if(v === 'HOLD') data.cell.styles.textColor = [185,28,28];
-                    else if(v === 'WATCH') data.cell.styles.textColor = [234,88,12];
-                    else if(v === 'PASS') data.cell.styles.textColor = [22,163,74];
-                    else data.cell.styles.textColor = [110,116,128];
+                if(data.section === 'body' && data.column.index === 10){
+                    const v = (data.cell.raw || '').toLowerCase();
+                    data.cell.styles.textColor = statusColor(v);
                 }
             }
         });
-        y = pdf.lastAutoTable.finalY + 18;
+        y = pdf.lastAutoTable.finalY + 14;
+
+        // ---------- Per-dish full detail blocks ----------
+        for(const d of dishes){
+            const c = checks[d.dishLetter] || {};
+            const status = readingStatus(d, c);
+            const aT = stageTempValue(c, 'assembly');
+            const qT = avg(c.temperatures);
+            const dT = stageTempValue(c, 'dispatch');
+            const w = avg(c.weights);
+
+            ensure(60);
+            // Dish header bar
+            const headColor = isCold(d) ? [6,182,212] : [220,38,38];
+            pdf.setFillColor(headColor[0],headColor[1],headColor[2]);
+            pdf.rect(margin, y - 11, pageW - margin*2, 20, 'F');
+            pdf.setFont('helvetica','bold').setFontSize(11).setTextColor(255,255,255);
+            pdf.text(`[${d.dishLetter}]  ${d.dishName}`, margin + 8, y + 3);
+            pdf.setFont('helvetica','normal').setFontSize(9);
+            const headRight = `${isCold(d)?'Cold':'Hot'} · target ${d.theoreticalWeight?d.theoreticalWeight+'g':'—'} · STATUS: ${status.toUpperCase()}`;
+            pdf.text(headRight, pageW - margin - 8, y + 3, { align:'right' });
+            y += 22;
+
+            // Two-column key/value summary (Assembly | QC | Dispatch | Placements)
+            const colW = (pageW - margin*2 - 10) / 2;
+            const leftX = margin;
+            const rightX = margin + colW + 10;
+            const blockStartY = y;
+
+            // ----- LEFT COLUMN: Assembly + Dispatch + Placements -----
+            let ly = y;
+            pdf.setFont('helvetica','bold').setFontSize(9).setTextColor(124,58,237);
+            pdf.text('ASSEMBLY', leftX, ly); ly += 10;
+            pdf.setFont('helvetica','normal').setFontSize(9).setTextColor(31,41,55);
+            const entries = assemblyEntries(c);
+            if(entries.length){
+                const rows = entries.map(e => {
+                    const who = Array.isArray(e.by) ? e.by.join(' + ') : (e.by || '?');
+                    return [who, String(e.count), e.ts || '—'];
+                });
+                rows.push(['TOTAL', String(rows.reduce((s,r)=>s+(Number(r[1])||0),0)), '']);
+                pdf.autoTable({
+                    startY: ly,
+                    head: [['Contributor','Count','Time']],
+                    body: rows,
+                    margin: { left: leftX, right: pageW - leftX - colW },
+                    tableWidth: colW,
+                    styles: { fontSize: 8, cellPadding: 2.5 },
+                    headStyles: { fillColor: [237,233,254], textColor: [76,29,149], fontSize: 8 },
+                    columnStyles: { 1:{halign:'right', cellWidth: 50}, 2:{halign:'right', cellWidth: 60} },
+                    didParseCell: (data) => {
+                        if(data.section === 'body' && data.row.index === rows.length - 1){
+                            data.cell.styles.fontStyle = 'bold';
+                            data.cell.styles.fillColor = [245,243,255];
+                        }
+                    }
+                });
+                ly = pdf.lastAutoTable.finalY + 4;
+            } else {
+                pdf.setFont('helvetica','italic').setTextColor(140,140,150);
+                pdf.text('No assembly entries.', leftX, ly); ly += 12;
+            }
+
+            // Assembly stage temps (the 3 samples from assembly tab if any)
+            const asmTemps = c.assembly?.temps || (c.assembly?.temp != null ? [c.assembly.temp] : []);
+            if(asmTemps.some(v=>v!=null)){
+                pdf.setFont('helvetica','bold').setFontSize(8).setTextColor(76,29,149);
+                pdf.text('Assembly temps:', leftX, ly);
+                pdf.setFont('helvetica','normal').setTextColor(31,41,55);
+                const tStr = asmTemps.map(v => v==null?'—':Number(v).toFixed(1)+'°').join('  /  ');
+                pdf.text(`${tStr}  ·  avg ${aT!=null?aT.toFixed(2)+'°':'—'}${c.assembly?.time?'  ·  '+c.assembly.time:''}`, leftX + 75, ly);
+                ly += 11;
+            }
+
+            ly += 4;
+            pdf.setFont('helvetica','bold').setFontSize(9).setTextColor(8,145,178);
+            pdf.text('DISPATCH', leftX, ly); ly += 10;
+            const dspTemps = c.dispatch?.temps || (c.dispatch?.temp != null ? [c.dispatch.temp] : []);
+            if(dspTemps.some(v=>v!=null)){
+                pdf.setFont('helvetica','normal').setFontSize(9).setTextColor(31,41,55);
+                const tStr = dspTemps.map(v => v==null?'—':Number(v).toFixed(1)+'°').join('  /  ');
+                pdf.text(`${tStr}  ·  avg ${dT!=null?dT.toFixed(2)+'°':'—'}${c.dispatch?.time?'  ·  '+c.dispatch.time:''}`, leftX, ly);
+                ly += 11;
+                if(c.dispatch?.by){
+                    pdf.setFontSize(8).setTextColor(110,116,128);
+                    pdf.text(`Logged by: ${c.dispatch.by}`, leftX, ly); ly += 10;
+                }
+            } else {
+                pdf.setFont('helvetica','italic').setFontSize(9).setTextColor(140,140,150);
+                pdf.text('Not logged.', leftX, ly); ly += 11;
+            }
+
+            ly += 4;
+            pdf.setFont('helvetica','bold').setFontSize(9).setTextColor(245,158,11);
+            pdf.text('PLACEMENTS', leftX, ly); ly += 10;
+            const placements = c.placements || (c.placement ? [c.placement] : []);
+            if(Array.isArray(placements) && placements.length){
+                const pRows = placements.map(p => {
+                    const wr = (storage.warmers||[]).find(x => x.id === p.containerId);
+                    const fr = (storage.fridges||[]).find(x => x.id === p.containerId);
+                    if(wr){
+                        const layout = WARMER_LAYOUTS[wr.layout] || {};
+                        return ['Warmer', wr.name||'—', (layout.labels && layout.labels[p.compartment]) || p.compartment || '—', String(p.qty || '—')];
+                    }
+                    if(fr) return ['Fridge', fr.name||'—', '—', String(p.qty || '—')];
+                    return ['?', p.containerId || '—', p.compartment || '—', String(p.qty || '—')];
+                });
+                pdf.autoTable({
+                    startY: ly,
+                    head: [['Type','Container','Slot','Qty']],
+                    body: pRows,
+                    margin: { left: leftX, right: pageW - leftX - colW },
+                    tableWidth: colW,
+                    styles: { fontSize: 8, cellPadding: 2.5 },
+                    headStyles: { fillColor: [254,243,199], textColor: [146,64,14], fontSize: 8 },
+                    columnStyles: { 0:{cellWidth: 50}, 3:{halign:'right', cellWidth: 40} }
+                });
+                ly = pdf.lastAutoTable.finalY + 4;
+            } else {
+                pdf.setFont('helvetica','italic').setFontSize(9).setTextColor(140,140,150);
+                pdf.text('No placements.', leftX, ly); ly += 11;
+            }
+
+            // ----- RIGHT COLUMN: QC (temps + weights + ingredients + photo + AI + note) -----
+            let ry = blockStartY;
+            pdf.setFont('helvetica','bold').setFontSize(9).setTextColor(37,99,235);
+            pdf.text('QC CHECK', rightX, ry); ry += 10;
+
+            // 3 temps + 3 weights side-by-side
+            const temps3 = (c.temperatures||[null,null,null]);
+            const wts3 = (c.weights||[null,null,null]);
+            pdf.autoTable({
+                startY: ry,
+                head: [['Sample','Temp','Weight']],
+                body: [
+                    ['1', temps3[0]!=null?Number(temps3[0]).toFixed(1)+'°':'—', wts3[0]!=null?Math.round(wts3[0])+'g':'—'],
+                    ['2', temps3[1]!=null?Number(temps3[1]).toFixed(1)+'°':'—', wts3[1]!=null?Math.round(wts3[1])+'g':'—'],
+                    ['3', temps3[2]!=null?Number(temps3[2]).toFixed(1)+'°':'—', wts3[2]!=null?Math.round(wts3[2])+'g':'—'],
+                    ['AVG', qT!=null?qT.toFixed(2)+'°':'—', w!=null?Math.round(w)+'g':'—']
+                ],
+                margin: { left: rightX, right: margin },
+                tableWidth: colW,
+                styles: { fontSize: 8, cellPadding: 2.5 },
+                headStyles: { fillColor: [219,234,254], textColor: [30,64,175], fontSize: 8 },
+                columnStyles: { 0:{halign:'center', cellWidth: 50, fontStyle:'bold'}, 1:{halign:'right'}, 2:{halign:'right'} },
+                didParseCell: (data) => {
+                    if(data.section === 'body' && data.row.index === 3){
+                        data.cell.styles.fontStyle = 'bold';
+                        data.cell.styles.fillColor = [239,246,255];
+                    }
+                }
+            });
+            ry = pdf.lastAutoTable.finalY + 6;
+
+            // Ingredients
+            pdf.setFont('helvetica','bold').setFontSize(8).setTextColor(37,99,235);
+            const totalIng = (d.dishIngredients||[]).length;
+            const selected = new Set(c.selectedIngredients||[]);
+            pdf.text(`INGREDIENTS  ${selected.size}/${totalIng} confirmed`, rightX, ry); ry += 10;
+            pdf.setFont('helvetica','normal').setFontSize(7.5).setTextColor(31,41,55);
+            if(totalIng){
+                const list = (d.dishIngredients||[]).map(ing => `${selected.has(ing)?'[Y]':'[ ]'} ${ing}`);
+                const wrapped = pdf.splitTextToSize(list.join('   '), colW);
+                pdf.text(wrapped, rightX, ry);
+                ry += wrapped.length * 9 + 4;
+                const missing = (d.dishIngredients||[]).filter(ing => !selected.has(ing));
+                if(missing.length){
+                    pdf.setFont('helvetica','bold').setFontSize(7.5).setTextColor(185,28,28);
+                    pdf.text(`Missing (${missing.length}): `, rightX, ry);
+                    pdf.setFont('helvetica','normal').setTextColor(31,41,55);
+                    const mw = pdf.splitTextToSize(missing.join(', '), colW - 50);
+                    pdf.text(mw, rightX + 50, ry);
+                    ry += mw.length * 9 + 2;
+                }
+            } else {
+                pdf.setFont('helvetica','italic').setTextColor(140,140,150);
+                pdf.text('No ingredient list recorded.', rightX, ry); ry += 10;
+            }
+
+            // Photo + AI review
+            ry += 2;
+            pdf.setFont('helvetica','bold').setFontSize(8).setTextColor(37,99,235);
+            pdf.text(`PHOTO  ${c.capturedImage ? '[Y] captured' : '[ ] not taken'}${c.qcTime?'  · '+c.qcTime:''}`, rightX, ry); ry += 10;
+
+            if(c.aiReview){
+                pdf.setFont('helvetica','bold').setFontSize(8).setTextColor(37,99,235);
+                pdf.text(`AI REVIEW  ${c.aiReview.score!=null?c.aiReview.score+'/100':''}`, rightX, ry); ry += 10;
+                if(c.aiReview.summary){
+                    pdf.setFont('helvetica','normal').setFontSize(7.5).setTextColor(31,41,55);
+                    const sw = pdf.splitTextToSize(c.aiReview.summary, colW);
+                    ensure(sw.length * 9 + 12);
+                    pdf.text(sw, rightX, ry);
+                    ry += sw.length * 9 + 2;
+                }
+                if(Array.isArray(c.aiReview.differences) && c.aiReview.differences.length){
+                    pdf.setFont('helvetica','bold').setFontSize(7.5).setTextColor(185,28,28);
+                    pdf.text(`Differences (${c.aiReview.differences.length}):`, rightX, ry); ry += 8;
+                    pdf.setFont('helvetica','normal').setTextColor(31,41,55);
+                    for(const diff of c.aiReview.differences){
+                        const dw = pdf.splitTextToSize('• ' + String(diff), colW - 4);
+                        ensure(dw.length * 9);
+                        pdf.text(dw, rightX + 4, ry);
+                        ry += dw.length * 9;
+                    }
+                    ry += 2;
+                }
+            }
+
+            // Chef's note (full text)
+            if(c.comment && c.comment.trim()){
+                ry += 2;
+                pdf.setFont('helvetica','bold').setFontSize(8).setTextColor(37,99,235);
+                pdf.text("CHEF'S NOTE", rightX, ry); ry += 10;
+                pdf.setFont('helvetica','italic').setFontSize(8).setTextColor(31,41,55);
+                const cw = pdf.splitTextToSize(c.comment, colW);
+                ensure(cw.length * 10 + 4);
+                pdf.text(cw, rightX, ry);
+                ry += cw.length * 10 + 2;
+            }
+
+            // Advance y to whichever column ended lower, plus padding & separator
+            y = Math.max(ly, ry) + 10;
+            ensure(2);
+            pdf.setDrawColor(229,231,235).setLineWidth(0.5);
+            pdf.line(margin, y - 6, pageW - margin, y - 6);
+            y += 4;
+        }
     }
 
     // Storage config snapshot at the end

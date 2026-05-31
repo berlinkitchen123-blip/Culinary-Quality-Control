@@ -583,6 +583,29 @@ html[data-theme="dark"] .warmer-slot.filled.hot{background:rgba(248,113,113,0.10
 .batch-chip{padding:7px 11px;border-radius:99px;background:var(--bg-3);border:1px solid var(--line);font-size:12px;font-weight:600;cursor:pointer;color:var(--ink-2)}
 .batch-chip.is-on{background:var(--assembly-soft);border-color:var(--assembly);color:var(--assembly)}
 
+/* Add-entry card at the bottom of the modal Assembly tab */
+.add-entry-card{margin-top:18px;padding:14px;background:var(--bg-3);border:1px solid var(--line);border-radius:12px}
+.add-entry-card .add-entry-title{font-size:13px;font-weight:800;color:var(--ink);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:10px}
+.entry-mode-row{display:flex;gap:6px;background:var(--bg-2);border:1px solid var(--line);border-radius:10px;padding:4px;margin-bottom:10px}
+.entry-mode-row .mode-btn{flex:1;padding:9px 12px;border-radius:8px;background:transparent;border:0;font-size:13px;font-weight:700;color:var(--mute);cursor:pointer;transition:background 140ms ease, color 140ms ease}
+.entry-mode-row .mode-btn:hover{color:var(--ink)}
+.entry-mode-row .mode-btn.is-active{background:var(--assembly);color:white;box-shadow:var(--shadow-sm)}
+.entry-hint{font-size:12px;color:var(--mute);margin-bottom:8px}
+.entry-chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+.entry-chip{padding:8px 12px;border-radius:99px;background:var(--bg-2);border:1px solid var(--line);font-size:13px;font-weight:600;cursor:pointer;color:var(--ink-2);transition:background 140ms ease, color 140ms ease, border-color 140ms ease}
+.entry-chip:hover{background:var(--bg);color:var(--ink)}
+.entry-chip.is-on{background:var(--assembly-soft);border-color:var(--assembly);color:var(--assembly)}
+.entry-qty-row{display:flex;gap:8px;align-items:stretch}
+.entry-qty-row .entry-qty{flex:1;min-width:0;padding:11px 14px;border:1px solid var(--line);border-radius:10px;background:var(--bg-2);color:var(--ink);font-size:16px;font-weight:700;text-align:center}
+.entry-qty-row .entry-qty:focus{outline:2px solid var(--assembly);outline-offset:1px}
+.entry-qty-row .btn-primary{padding:11px 18px;background:var(--assembly);color:white;border-color:var(--assembly);white-space:nowrap;font-weight:700}
+.entry-qty-row .btn-primary:hover{background:#6d28d9}
+@media(max-width:480px){
+    .entry-mode-row .mode-btn{font-size:12px;padding:8px 6px}
+    .entry-qty-row{flex-direction:column}
+    .entry-qty-row .btn-primary{padding:12px 18px}
+}
+
 /* Count input on the dish tile (Assembly stage view) */
 .lt-tile .lt-count-row{margin-top:auto;width:100%;padding-top:8px;display:flex;align-items:center;gap:6px}
 .lt-tile .lt-count{flex:1;min-width:0;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg-2);color:var(--ink);font-size:16px;font-weight:800;text-align:center}
@@ -1579,13 +1602,14 @@ function renderLetterTile(dish){
     const hasA = hasStageData(c, 'assembly');
     const hasQ = avg(c.temperatures) != null;
     const hasD = hasStageData(c, 'dispatch');
-    // Assembly stage: show inline count for the ACTIVE team member, plus
-    // a total badge that includes all other contributors.
+    // Assembly stage: show read-only total + contributor count. Manual
+    // per-entry input now lives at the bottom of each dish's modal.
     const isAssemblyStage = state.stage === 'assembly';
-    const activeMember = state.activeAssemblyMember || '';
-    const myCount = isAssemblyStage && activeMember ? assemblyCountForMember(c, activeMember) : 0;
     const total = isAssemblyStage ? assemblyCountTotal(c) : 0;
     const contributors = isAssemblyStage ? assemblyContributorNames(c).length : 0;
+    const assemblyBadge = isAssemblyStage && total > 0
+        ? `<span class="lt-count-total">${total}${contributors > 1 ? ` · ${contributors} ppl` : ''}</span>`
+        : '';
     return `
         <article class="lt-tile ${cls}" data-letter="${escapeHtml(dish.dishLetter)}" role="button" tabindex="0" aria-label="${escapeHtml(dish.dishName)}">
             <span class="lt-pip is-${s}" aria-hidden="true"></span>
@@ -1596,12 +1620,7 @@ function renderLetterTile(dish){
                 <span data-stage="qc" class="${hasQ?'is-set':''}"></span>
                 <span data-stage="dispatch" class="${hasD?'is-set':''}"></span>
             </span>
-            ${isAssemblyStage ? `
-                <div class="lt-count-row">
-                    <input class="lt-count" type="text" inputmode="numeric" pattern="[0-9]*" placeholder="${activeMember ? '0' : '—'}" value="${myCount || ''}" data-count-letter="${escapeAttr(dish.dishLetter)}" aria-label="${activeMember ? escapeAttr('Count for ' + activeMember + ' on ' + dish.dishLetter) : 'Tap a team member first'}" ${activeMember ? '' : 'disabled'} />
-                </div>
-                ${total > 0 ? `<span class="lt-count-total">Total ${total}${contributors > 1 ? ` · ${contributors} ppl` : ''}</span>` : ''}
-            ` : (lastTime ? `<span class="lt-time">⏱ ${escapeHtml(lastTime)}</span>` : '')}
+            ${isAssemblyStage ? assemblyBadge : (lastTime ? `<span class="lt-time">⏱ ${escapeHtml(lastTime)}</span>` : '')}
         </article>
     `;
 }
@@ -2079,12 +2098,12 @@ function renderAll(){
             const sectionHead = dishArea?.parentElement?.querySelector('.section-head');
             if(sectionHead) sectionHead.style.display = '';
         }
-        if(state.stage !== 'assembly') document.getElementById('team-bar-host')?.remove();
+        // Entry now happens in the dish modal — no team-bar above the grid
+        document.getElementById('team-bar-host')?.remove();
         if(state.stage === 'placement'){
             renderPlacementStageView();
         } else {
             renderAlert(); renderScorecard(); renderDishes(); renderSummary();
-            if(state.stage === 'assembly') renderTeamBar();
         }
     }
 }
@@ -2393,32 +2412,13 @@ function renderStageTab(stage, label, dish, c){
                 </div>`;
         };
         assemblyBlock = `
-            <div class="section-mini">Dish count · ${total} total${entries.length>1?` across ${entries.length} entries`:''}</div>
+            <div class="section-mini">Dish count · ${total} total${entries.length>0?` across ${entries.length} ${entries.length===1?'entry':'entries'}`:''}</div>
             <div class="contributors">
                 ${entries.length === 0
-                    ? `<div style="color:var(--mute);padding:10px;font-size:13px;text-align:center;background:var(--bg-3);border-radius:8px">No contributors yet. Tap a team chip on the stage page, then type a count on the dish tile — or add a shared batch below.</div>`
+                    ? `<div style="color:var(--mute);padding:10px;font-size:13px;text-align:center;background:var(--bg-3);border-radius:8px">No entries yet. Use the form at the bottom to add one.</div>`
                     : entries.map(renderEntry).join('')}
             </div>
-            <div class="batch-add" id="batch-add-host">
-                <details>
-                    <summary>+ Add shared batch (multiple people on one batch)</summary>
-                    <div class="batch-fields">
-                        <div class="field full">
-                            <label class="label">Team members (tap to include)</label>
-                            <div class="batch-chips">
-                                ${team.length === 0
-                                    ? `<span style="font-size:12px;color:var(--mute)">No team members configured — open ⚙ Settings to add them.</span>`
-                                    : team.map(m => `<button class="batch-chip" data-batch-name="${escapeAttr(m.name)}" type="button">${escapeHtml(m.name)}</button>`).join('')}
-                            </div>
-                        </div>
-                        <div class="field">
-                            <label class="label">Shared count</label>
-                            <input class="num" id="batch-count" type="text" inputmode="numeric" pattern="[0-9]*" placeholder="e.g. 30" />
-                        </div>
-                        <button class="btn btn-primary btn-sm" type="button" id="batch-save">Save batch</button>
-                    </div>
-                </details>
-            </div>
+
             <div class="stage-form" style="margin-top:14px">
                 <div class="field">
                     <label class="label">Weight (optional, g)</label>
@@ -2427,6 +2427,25 @@ function renderStageTab(stage, label, dish, c){
                 <div class="field full">
                     <label class="label">Note</label>
                     <textarea data-stage-input="note" placeholder="What was noted at this stage?">${escapeHtml(data.note||'')}</textarea>
+                </div>
+            </div>
+
+            <!-- Manual entry form: pick mode, pick name(s), enter qty -->
+            <div class="add-entry-card" id="entry-add-host">
+                <div class="add-entry-title">Add dish count</div>
+                <div class="entry-mode-row" role="group" aria-label="Entry mode">
+                    <button type="button" class="mode-btn is-active" data-mode="single">Single person</button>
+                    <button type="button" class="mode-btn" data-mode="batch">Batch (multiple people)</button>
+                </div>
+                <div class="entry-hint" id="entry-hint">Pick one person who prepared.</div>
+                <div class="entry-chips" id="entry-chips">
+                    ${team.length === 0
+                        ? `<span style="font-size:12px;color:var(--mute)">No team members configured — open ⚙ Settings → Team members.</span>`
+                        : team.map(m => `<button class="entry-chip" type="button" data-entry-name="${escapeAttr(m.name)}">${escapeHtml(m.name)}</button>`).join('')}
+                </div>
+                <div class="entry-qty-row">
+                    <input class="entry-qty" id="entry-qty" type="text" inputmode="numeric" pattern="[0-9]*" placeholder="Quantity" autocomplete="off" />
+                    <button class="btn btn-primary" type="button" id="entry-save">Add entry</button>
                 </div>
             </div>
         `;
@@ -2527,9 +2546,10 @@ function bindTabHandlers(tab, dish){
             inp.addEventListener('change', ()=>saveStageFromForm(tab));
         });
     }
-    // Assembly contributors: remove entry, add batch
+    // Assembly contributors: remove entry, add via Single/Batch form
     if(tab === 'assembly'){
         const lettr = modalState.letter;
+        // Remove an existing entry
         overlay.querySelectorAll('[data-rm-entry]').forEach(btn => {
             btn.addEventListener('click', async () => {
                 const idx = Number(btn.getAttribute('data-rm-entry'));
@@ -2537,23 +2557,66 @@ function bindTabHandlers(tab, dish){
                 catch(err){ toast('Save failed','fail'); console.error(err); }
             });
         });
-        // Batch chip multi-select
+        // Single / Batch mode toggle
+        let mode = 'single';
         const picked = new Set();
-        overlay.querySelectorAll('.batch-chip').forEach(c => {
+        const modeBtns = overlay.querySelectorAll('.entry-mode-row .mode-btn');
+        const chips = overlay.querySelectorAll('.entry-chip');
+        const hint = overlay.querySelector('#entry-hint');
+        const setMode = (next) => {
+            mode = next;
+            modeBtns.forEach(b => b.classList.toggle('is-active', b.getAttribute('data-mode') === mode));
+            // Reset selection on mode change
+            picked.clear();
+            chips.forEach(c => c.classList.remove('is-on'));
+            if(hint) hint.textContent = mode === 'single'
+                ? 'Pick one person who prepared the dishes.'
+                : 'Pick every person who worked on this batch (multi-select).';
+        };
+        modeBtns.forEach(b => b.addEventListener('click', () => setMode(b.getAttribute('data-mode'))));
+        // Chip tap: single → exclusive, batch → multi-select
+        chips.forEach(c => {
             c.addEventListener('click', () => {
-                const n = c.getAttribute('data-batch-name');
-                if(picked.has(n)){ picked.delete(n); c.classList.remove('is-on'); }
-                else { picked.add(n); c.classList.add('is-on'); }
+                const n = c.getAttribute('data-entry-name');
+                if(mode === 'single'){
+                    picked.clear();
+                    chips.forEach(x => x.classList.remove('is-on'));
+                    picked.add(n);
+                    c.classList.add('is-on');
+                } else {
+                    if(picked.has(n)){ picked.delete(n); c.classList.remove('is-on'); }
+                    else { picked.add(n); c.classList.add('is-on'); }
+                }
             });
         });
-        const saveBtn = overlay.querySelector('#batch-save');
+        const saveBtn = overlay.querySelector('#entry-save');
         if(saveBtn){
             saveBtn.addEventListener('click', async () => {
-                const count = overlay.querySelector('#batch-count')?.value;
-                try { await addBatchAssembly(lettr, [...picked], count); toast('Batch saved','ok'); renderModal(); }
-                catch(err){ toast('Save failed','fail'); console.error(err); }
+                if(picked.size === 0){ toast(mode === 'single' ? 'Pick a person' : 'Pick at least one person', 'fail'); return; }
+                const qtyEl = overlay.querySelector('#entry-qty');
+                const qty = qtyEl?.value;
+                const n = Math.max(0, Math.round(parseDecimal(qty) || 0));
+                if(n <= 0){ toast('Enter a quantity', 'fail'); qtyEl?.focus(); return; }
+                try {
+                    if(mode === 'single'){
+                        // Append a new entry for this single person (each tap of
+                        // Add entry creates a fresh row, so the same person can
+                        // record several rounds in a shift).
+                        const member = [...picked][0];
+                        const c = state.checks[lettr] || {};
+                        const entries = assemblyEntries(c).slice();
+                        entries.push({ by: member, count: n, ts: nowHHMM() });
+                        await saveStage(lettr, 'assembly', { entries, count: null, time: nowHHMM() });
+                    } else {
+                        await addBatchAssembly(lettr, [...picked], n);
+                    }
+                    toast(`Saved ${n}`, 'ok');
+                    renderModal();
+                } catch(err){ toast('Save failed','fail'); console.error(err); }
             });
         }
+        // Default mode hint on first render
+        if(hint) hint.textContent = 'Pick one person who prepared the dishes.';
     }
 }
 

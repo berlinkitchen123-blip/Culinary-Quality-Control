@@ -1598,7 +1598,7 @@ function renderLetterTile(dish){
             </span>
             ${isAssemblyStage ? `
                 <div class="lt-count-row">
-                    <input class="lt-count" type="text" inputmode="numeric" pattern="[0-9]*" placeholder="${activeMember ? '0' : '—'}" value="${myCount || ''}" data-count-letter="${escapeAttr(dish.dishLetter)}" aria-label="${activeMember ? escapeAttr(activeMember + '\\'s count for ' + dish.dishLetter) : 'Tap a team member first'}" ${activeMember ? '' : 'disabled'} />
+                    <input class="lt-count" type="text" inputmode="numeric" pattern="[0-9]*" placeholder="${activeMember ? '0' : '—'}" value="${myCount || ''}" data-count-letter="${escapeAttr(dish.dishLetter)}" aria-label="${activeMember ? escapeAttr('Count for ' + activeMember + ' on ' + dish.dishLetter) : 'Tap a team member first'}" ${activeMember ? '' : 'disabled'} />
                 </div>
                 ${total > 0 ? `<span class="lt-count-total">Total ${total}${contributors > 1 ? ` · ${contributors} ppl` : ''}</span>` : ''}
             ` : (lastTime ? `<span class="lt-time">⏱ ${escapeHtml(lastTime)}</span>` : '')}

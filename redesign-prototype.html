@@ -3035,7 +3035,7 @@ function openReportDialog(){
                         ` : ''}
                         <div class="report-summary">
                             ${range.start && range.end ? `<strong>${humanDate(range.start)}</strong> → <strong>${humanDate(range.end)}</strong> · ${days} day${days===1?'':'s'} included` : 'Pick a date range to include in the report.'}<br/>
-                            The PDF contains <strong>every reading</strong> for the range: assembly entries (per contributor with timestamps), QC samples (three temperatures + weights, ingredients confirmed, photo presence, AI verdict, chef's notes), dispatch readings, and placements (warmer compartments + fridges). Plus the storage configuration snapshot.
+                            The PDF contains <strong>every reading</strong> for the range — per-dish detail blocks (Assembly contributors + temps, QC samples + weights + ingredients + photo + chef's note, Dispatch temps + time, every Placement compartment), plus an audit summary at the end: compliance by category, daily coverage, every out-of-spec reading, coverage gaps, repeat-issue dishes, contributor leaderboard, and a sign-off block.
                         </div>
                         <button class="report-go" type="button" id="rep-download" ${days===0?'disabled':''}>
                             <span class="spinner"></span>
@@ -3180,6 +3180,14 @@ async function generatePdfReport(range){
             const qT = avg(c.temperatures);
             const dT = stageTempValue(c, 'dispatch');
             const w = avg(c.weights);
+            // Stage coverage: A=Assembly, Q=QC temps, D=Dispatch, P=Placement, I=Ingredients, F=Foto
+            const hasA = assemblyEntries(c).length > 0 || hasStageData(c, 'assembly');
+            const hasQ = avg(c.temperatures) != null;
+            const hasD = hasStageData(c, 'dispatch');
+            const hasP = (c.placements && c.placements.length) || c.placement;
+            const logged = (hasA?'A':'·') + (hasQ?'Q':'·') + (hasD?'D':'·') + (hasP?'P':'·');
+            const status = readingStatus(d, c);
+            const statusLabel = status === 'empty' ? 'NO DATA' : status.toUpperCase();
             return [
                 d.dishLetter,
                 d.dishName,
@@ -3190,13 +3198,13 @@ async function generatePdfReport(range){
                 w != null ? Math.round(w)+'g' : '—',
                 (c.selectedIngredients||[]).length + '/' + (d.dishIngredients||[]).length,
                 c.capturedImage ? 'Y' : 'N',
-                c.aiReview && c.aiReview.score != null ? c.aiReview.score + '/100' : '—',
-                readingStatus(d, c).toUpperCase()
+                logged,
+                statusLabel
             ];
         });
         pdf.autoTable({
             startY: y,
-            head: [['L','Dish','Type','Asm°','QC°','Dsp°','Weight','Ing','Photo','AI','Status']],
+            head: [['L','Dish','Type','Asm°','QC°','Dsp°','Weight','Ing','Photo','Logged','Status']],
             body: overviewRows,
             margin: { left: margin, right: margin },
             styles: { fontSize: 8, cellPadding: 3, overflow: 'linebreak' },
@@ -3212,13 +3220,14 @@ async function generatePdfReport(range){
                 6:{cellWidth:50, halign:'right'},
                 7:{cellWidth:38, halign:'center'},
                 8:{cellWidth:38, halign:'center'},
-                9:{cellWidth:48, halign:'center'},
+                9:{cellWidth:54, halign:'center', font:'courier', fontStyle:'bold'},
                 10:{cellWidth:'auto', halign:'center', fontStyle:'bold'}
             },
             didParseCell: (data) => {
                 if(data.section === 'body' && data.column.index === 10){
                     const v = (data.cell.raw || '').toLowerCase();
-                    data.cell.styles.textColor = statusColor(v);
+                    if(v === 'no data') data.cell.styles.textColor = [156,163,175];
+                    else data.cell.styles.textColor = statusColor(v);
                 }
             }
         });
@@ -3451,39 +3460,323 @@ async function generatePdfReport(range){
         }
     }
 
-    // Storage config snapshot at the end
-    if(y > pdf.internal.pageSize.getHeight() - 120) { pdf.addPage(); y = 50; }
-    pdf.setFont('helvetica','bold').setFontSize(13).setTextColor(31, 41, 55);
-    pdf.text('Storage configuration · snapshot', margin, y); y += 16;
-    if((storage.warmers||[]).length || (storage.fridges||[]).length){
+    // ========== AUDIT SUMMARY (the useful end-of-report section) ==========
+    // Build cross-range audit data so the auditor / kitchen manager can see at a glance:
+    //  • compliance rate, by category
+    //  • every out-of-spec temp / weight reading (HACCP-style violation log)
+    //  • dishes that were never logged (coverage gaps)
+    //  • daily completion %
+    //  • contributor leaderboard (who logged what)
+    //  • repeat-offender dishes (had issues on multiple days)
+    const audit = {
+        byCat: { hot: { dishes:0, pass:0, watch:0, hold:0, empty:0 }, cold: { dishes:0, pass:0, watch:0, hold:0, empty:0 } },
+        byDay: {},                  // date -> { dishes, logged, pass, watch, hold, empty }
+        violations: [],             // {date, letter, name, stage, kind, value, target, status}
+        gaps: [],                   // {date, letter, name, why}
+        contributors: new Map(),    // name -> count
+        repeats: new Map(),         // letter -> { name, hold:0, watch:0 }
+        photos: 0, photosNeeded: 0,
+        ingComplete: 0, ingPartial:0, ingMissing:0
+    };
+
+    const HOT_MIN = 65, COLD_MAX = 8;
+    const tempTargetText = (dish) => isCold(dish) ? `≤${COLD_MAX}°` : `≥${HOT_MIN}°`;
+
+    for(const date of dates){
+        const checks = checksByDate[date] || {};
+        const menu = menusByWeek[isoYearWeek(date)];
+        const dishes = menu?.dishes || [];
+        const day = audit.byDay[date] = { dishes: dishes.length, logged:0, pass:0, watch:0, hold:0, empty:0 };
+        for(const dish of dishes){
+            const c = checks[dish.dishLetter] || {};
+            const cat = isCold(dish) ? 'cold' : 'hot';
+            audit.byCat[cat].dishes++;
+            const status = readingStatus(dish, c);
+            audit.byCat[cat][status] = (audit.byCat[cat][status]||0) + 1;
+            day[status] = (day[status]||0) + 1;
+
+            const anyLogged = assemblyEntries(c).length || hasStageData(c,'assembly') || avg(c.temperatures)!=null || hasStageData(c,'dispatch') || (c.placements && c.placements.length);
+            if(anyLogged) day.logged++;
+            else audit.gaps.push({ date, letter: dish.dishLetter, name: dish.dishName, why: 'No readings on any stage' });
+
+            // Status counters for repeat-offenders
+            if(status === 'hold' || status === 'watch'){
+                const r = audit.repeats.get(dish.dishLetter) || { name: dish.dishName, hold:0, watch:0 };
+                r[status]++;
+                audit.repeats.set(dish.dishLetter, r);
+            }
+
+            // Violations — check each stage's temp + weights
+            const checkTemp = (stage, value) => {
+                if(value == null) return;
+                const st = tempStatus(value, dish);
+                if(st === 'watch' || st === 'hold'){
+                    audit.violations.push({
+                        date, letter: dish.dishLetter, name: dish.dishName,
+                        stage, kind: 'Temperature', value: value.toFixed(1)+'°',
+                        target: tempTargetText(dish), status: st
+                    });
+                }
+            };
+            const asmT = stageTempValue(c, 'assembly');
+            if(asmT != null) checkTemp('Assembly', asmT);
+            const qcT = avg(c.temperatures);
+            if(qcT != null) checkTemp('QC', qcT);
+            const dspT = stageTempValue(c, 'dispatch');
+            if(dspT != null) checkTemp('Dispatch', dspT);
+
+            // Individual weight outliers
+            if(dish.theoreticalWeight && Array.isArray(c.weights)){
+                c.weights.forEach((w,i) => {
+                    if(w == null) return;
+                    const st = weightStatus(w, dish);
+                    if(st === 'watch' || st === 'hold'){
+                        const pct = ((w - dish.theoreticalWeight) / dish.theoreticalWeight * 100).toFixed(0);
+                        audit.violations.push({
+                            date, letter: dish.dishLetter, name: dish.dishName,
+                            stage: `QC sample ${i+1}`, kind: 'Weight',
+                            value: Math.round(w)+'g ('+(pct>=0?'+':'')+pct+'%)',
+                            target: dish.theoreticalWeight+'g ±8%', status: st
+                        });
+                    }
+                });
+            }
+
+            // Photo + ingredient stats
+            audit.photosNeeded++;
+            if(c.capturedImage) audit.photos++;
+            const ingTot = (dish.dishIngredients||[]).length;
+            const ingHas = (c.selectedIngredients||[]).length;
+            if(ingTot){
+                if(ingHas === 0) audit.ingMissing++;
+                else if(ingHas < ingTot) audit.ingPartial++;
+                else audit.ingComplete++;
+            }
+
+            // Contributor counts
+            for(const e of assemblyEntries(c)){
+                const names = Array.isArray(e.by) ? e.by : [e.by||'?'];
+                for(const n of names){
+                    audit.contributors.set(n, (audit.contributors.get(n)||0) + Number(e.count||0));
+                }
+            }
+        }
+    }
+
+    if(y > pageH - 140){ pdf.addPage(); y = 50; }
+    pdf.setFillColor(31,41,55);
+    pdf.rect(margin, y - 14, pageW - margin*2, 26, 'F');
+    pdf.setFont('helvetica','bold').setFontSize(15).setTextColor(255,255,255);
+    pdf.text('AUDIT & COMPLIANCE SUMMARY', margin + 10, y + 4);
+    pdf.setFont('helvetica','normal').setFontSize(10);
+    pdf.text(`${humanDate(range.start)} → ${humanDate(range.end)} · ${dates.length} day${dates.length===1?'':'s'}`, pageW - margin - 10, y + 4, { align:'right' });
+    y += 28;
+
+    // ----- Compliance by category -----
+    const catRow = (cat, label) => {
+        const c = audit.byCat[cat];
+        const completed = c.pass + c.watch + c.hold;
+        const rate = completed > 0 ? Math.round(c.pass/completed*100)+'%' : '—';
+        return [label, c.dishes, c.pass, c.watch, c.hold, c.empty, rate];
+    };
+    pdf.setFont('helvetica','bold').setFontSize(11).setTextColor(31,41,55);
+    pdf.text('Compliance by category', margin, y); y += 8;
+    pdf.autoTable({
+        startY: y,
+        head: [['Category','Dishes scheduled','Pass','Watch','Hold','No data','Pass rate (of logged)']],
+        body: [ catRow('hot', 'Hot dishes'), catRow('cold', 'Cold dishes') ],
+        margin: { left: margin, right: margin },
+        styles: { fontSize: 9, cellPadding: 4 },
+        headStyles: { fillColor: [37,99,235], textColor: 255, fontStyle:'bold' },
+        columnStyles: {
+            0:{fontStyle:'bold'},
+            2:{halign:'right', textColor:[22,163,74]},
+            3:{halign:'right', textColor:[234,88,12]},
+            4:{halign:'right', textColor:[185,28,28]},
+            5:{halign:'right', textColor:[110,116,128]},
+            6:{halign:'right', fontStyle:'bold'}
+        }
+    });
+    y = pdf.lastAutoTable.finalY + 14;
+
+    // ----- Daily completion -----
+    ensure(60);
+    pdf.setFont('helvetica','bold').setFontSize(11).setTextColor(31,41,55);
+    pdf.text('Daily logging completion', margin, y); y += 8;
+    pdf.autoTable({
+        startY: y,
+        head: [['Date','Dishes','Logged','Pass','Watch','Hold','No data','Coverage']],
+        body: dates.map(d => {
+            const x = audit.byDay[d] || { dishes:0, logged:0, pass:0, watch:0, hold:0, empty:0 };
+            const cov = x.dishes > 0 ? Math.round(x.logged/x.dishes*100)+'%' : '—';
+            return [humanDate(d), x.dishes, x.logged, x.pass, x.watch, x.hold, x.empty, cov];
+        }),
+        margin: { left: margin, right: margin },
+        styles: { fontSize: 9, cellPadding: 3 },
+        headStyles: { fillColor: [243,244,246], textColor: [55,65,81], fontStyle:'bold' },
+        alternateRowStyles: { fillColor: [250,250,253] },
+        columnStyles: {
+            1:{halign:'right'}, 2:{halign:'right'},
+            3:{halign:'right', textColor:[22,163,74]},
+            4:{halign:'right', textColor:[234,88,12]},
+            5:{halign:'right', textColor:[185,28,28]},
+            6:{halign:'right', textColor:[110,116,128]},
+            7:{halign:'right', fontStyle:'bold'}
+        }
+    });
+    y = pdf.lastAutoTable.finalY + 14;
+
+    // ----- Photo & ingredient coverage -----
+    ensure(56);
+    const photoPct = audit.photosNeeded > 0 ? Math.round(audit.photos/audit.photosNeeded*100) : 0;
+    pdf.setFont('helvetica','bold').setFontSize(11).setTextColor(31,41,55);
+    pdf.text('Documentation coverage', margin, y); y += 8;
+    pdf.autoTable({
+        startY: y,
+        head: [['Documentation','Count','Of total','%']],
+        body: [
+            ['Photos captured', audit.photos, audit.photosNeeded, photoPct+'%'],
+            ['Ingredients complete', audit.ingComplete, audit.photosNeeded, audit.photosNeeded ? Math.round(audit.ingComplete/audit.photosNeeded*100)+'%' : '—'],
+            ['Ingredients partial', audit.ingPartial, audit.photosNeeded, audit.photosNeeded ? Math.round(audit.ingPartial/audit.photosNeeded*100)+'%' : '—'],
+            ['Ingredients not checked', audit.ingMissing, audit.photosNeeded, audit.photosNeeded ? Math.round(audit.ingMissing/audit.photosNeeded*100)+'%' : '—']
+        ],
+        margin: { left: margin, right: margin },
+        styles: { fontSize: 9, cellPadding: 4 },
+        headStyles: { fillColor: [243,244,246], textColor: [55,65,81], fontStyle:'bold' },
+        columnStyles: { 0:{fontStyle:'bold'}, 1:{halign:'right'}, 2:{halign:'right'}, 3:{halign:'right', fontStyle:'bold'} }
+    });
+    y = pdf.lastAutoTable.finalY + 14;
+
+    // ----- Out-of-spec readings log (the HACCP violation log) -----
+    ensure(60);
+    pdf.setFont('helvetica','bold').setFontSize(11).setTextColor(31,41,55);
+    pdf.text(`Out-of-spec readings (${audit.violations.length})`, margin, y); y += 8;
+    if(audit.violations.length){
         pdf.autoTable({
             startY: y,
-            head: [['Type','Name','Layout / details']],
-            body: [
-                ...(storage.warmers||[]).map(w => ['Warmer', w.name||'—', (WARMER_LAYOUTS[w.layout]||{}).name || w.layout || '—']),
-                ...(storage.fridges||[]).map(f => ['Fridge', f.name||'—', '—']),
-            ],
+            head: [['Date','L','Dish','Stage','Reading','Target','Status']],
+            body: audit.violations.map(v => [humanDate(v.date), v.letter, v.name, v.stage + ' · ' + v.kind, v.value, v.target, v.status.toUpperCase()]),
             margin: { left: margin, right: margin },
-            styles: { fontSize: 9, cellPadding: 4 },
-            headStyles: { fillColor: [245, 158, 11], textColor: 255, fontStyle: 'bold' }
+            styles: { fontSize: 8.5, cellPadding: 3, overflow:'linebreak' },
+            headStyles: { fillColor: [254,226,226], textColor: [127,29,29], fontStyle:'bold' },
+            alternateRowStyles: { fillColor: [254,242,242] },
+            columnStyles: {
+                1:{halign:'center', fontStyle:'bold', cellWidth: 22},
+                4:{halign:'right'},
+                5:{halign:'right'},
+                6:{halign:'center', fontStyle:'bold'}
+            },
+            didParseCell: (data) => {
+                if(data.section === 'body' && data.column.index === 6){
+                    const v = (data.cell.raw || '').toLowerCase();
+                    data.cell.styles.textColor = statusColor(v);
+                }
+            }
+        });
+        y = pdf.lastAutoTable.finalY + 14;
+    } else {
+        pdf.setFont('helvetica','italic').setFontSize(10).setTextColor(22,163,74);
+        pdf.text('No out-of-spec readings recorded in this range.', margin, y); y += 16;
+    }
+
+    // ----- Coverage gaps (dishes that were never logged) -----
+    ensure(60);
+    pdf.setFont('helvetica','bold').setFontSize(11).setTextColor(31,41,55);
+    pdf.text(`Coverage gaps (${audit.gaps.length})`, margin, y); y += 8;
+    if(audit.gaps.length){
+        pdf.autoTable({
+            startY: y,
+            head: [['Date','L','Dish','Why']],
+            body: audit.gaps.map(g => [humanDate(g.date), g.letter, g.name, g.why]),
+            margin: { left: margin, right: margin },
+            styles: { fontSize: 8.5, cellPadding: 3, overflow:'linebreak' },
+            headStyles: { fillColor: [255,237,213], textColor: [124,45,18], fontStyle:'bold' },
+            alternateRowStyles: { fillColor: [255,250,240] },
+            columnStyles: { 1:{halign:'center', fontStyle:'bold', cellWidth: 22} }
+        });
+        y = pdf.lastAutoTable.finalY + 14;
+    } else {
+        pdf.setFont('helvetica','italic').setFontSize(10).setTextColor(22,163,74);
+        pdf.text('No coverage gaps — every scheduled dish was logged.', margin, y); y += 16;
+    }
+
+    // ----- Repeat-offender dishes -----
+    const repeats = Array.from(audit.repeats.entries())
+        .map(([letter, r]) => ({ letter, ...r, total: r.hold + r.watch }))
+        .filter(r => r.total >= 2)
+        .sort((a,b) => b.hold*10 + b.watch - (a.hold*10 + a.watch));
+    if(repeats.length){
+        ensure(60);
+        pdf.setFont('helvetica','bold').setFontSize(11).setTextColor(31,41,55);
+        pdf.text(`Repeat-issue dishes (${repeats.length})`, margin, y); y += 8;
+        pdf.autoTable({
+            startY: y,
+            head: [['L','Dish','Hold days','Watch days','Total issues']],
+            body: repeats.map(r => [r.letter, r.name, r.hold, r.watch, r.total]),
+            margin: { left: margin, right: margin },
+            styles: { fontSize: 9, cellPadding: 3 },
+            headStyles: { fillColor: [243,244,246], textColor: [55,65,81], fontStyle:'bold' },
+            alternateRowStyles: { fillColor: [250,250,253] },
+            columnStyles: {
+                0:{halign:'center', fontStyle:'bold', cellWidth: 22},
+                2:{halign:'right', textColor:[185,28,28]},
+                3:{halign:'right', textColor:[234,88,12]},
+                4:{halign:'right', fontStyle:'bold'}
+            }
         });
         y = pdf.lastAutoTable.finalY + 14;
     }
-    if((storage.team||[]).length){
-        pdf.setFont('helvetica','bold').setFontSize(11).setTextColor(31, 41, 55);
-        pdf.text('Team (Assembly)', margin, y); y += 12;
-        pdf.setFont('helvetica','normal').setFontSize(9).setTextColor(60,60,60);
-        const teamLine = (storage.team||[]).map(m => m.name).join(' · ');
-        const wrapped = pdf.splitTextToSize(teamLine, pageW - margin*2);
-        pdf.text(wrapped, margin, y); y += wrapped.length * 12 + 4;
+
+    // ----- Contributor leaderboard -----
+    const contributors = Array.from(audit.contributors.entries())
+        .map(([name, count]) => ({ name, count }))
+        .sort((a,b) => b.count - a.count);
+    if(contributors.length){
+        ensure(60);
+        pdf.setFont('helvetica','bold').setFontSize(11).setTextColor(31,41,55);
+        pdf.text(`Assembly contributors (${contributors.length})`, margin, y); y += 8;
+        const totalAssembled = contributors.reduce((s,c)=>s+c.count, 0);
+        pdf.autoTable({
+            startY: y,
+            head: [['Rank','Contributor','Dishes assembled','% of total']],
+            body: contributors.map((c,i) => [i+1, c.name, c.count, totalAssembled>0?Math.round(c.count/totalAssembled*100)+'%':'—']),
+            margin: { left: margin, right: margin },
+            styles: { fontSize: 9, cellPadding: 3 },
+            headStyles: { fillColor: [237,233,254], textColor: [76,29,149], fontStyle:'bold' },
+            alternateRowStyles: { fillColor: [250,250,253] },
+            columnStyles: {
+                0:{halign:'center', cellWidth: 36, fontStyle:'bold'},
+                1:{fontStyle:'bold'},
+                2:{halign:'right'},
+                3:{halign:'right', fontStyle:'bold'}
+            }
+        });
+        y = pdf.lastAutoTable.finalY + 14;
     }
 
-    // Page footer with page numbers
+    // ----- Sign-off block -----
+    ensure(70);
+    pdf.setDrawColor(31,41,55).setLineWidth(0.8);
+    pdf.rect(margin, y, pageW - margin*2, 60);
+    pdf.setFont('helvetica','bold').setFontSize(10).setTextColor(31,41,55);
+    pdf.text('REVIEWED & APPROVED', margin + 10, y + 14);
+    pdf.setFont('helvetica','normal').setFontSize(9).setTextColor(110,116,128);
+    pdf.text('Head chef signature:', margin + 10, y + 32);
+    pdf.text('________________________________', margin + 110, y + 32);
+    pdf.text('Date:', margin + 320, y + 32);
+    pdf.text('______________', margin + 350, y + 32);
+    pdf.text('QC manager signature:', margin + 10, y + 48);
+    pdf.text('________________________________', margin + 110, y + 48);
+    pdf.text('Date:', margin + 320, y + 48);
+    pdf.text('______________', margin + 350, y + 48);
+    y += 70;
+
+    // ----- Footer with page numbers and timestamp -----
     const total = pdf.getNumberOfPages();
     for(let p = 1; p <= total; p++){
         pdf.setPage(p);
         pdf.setFont('helvetica','normal').setFontSize(8).setTextColor(140,140,150);
-        const txt = `Bella & Bona · ${humanDate(range.start)} → ${humanDate(range.end)} · Page ${p} of ${total}`;
+        const txt = `Bella & Bona · QC report ${humanDate(range.start)} → ${humanDate(range.end)} · Generated ${humanDate(todayIso())} ${nowHHMM()} · Page ${p} of ${total}`;
         pdf.text(txt, pageW/2, pdf.internal.pageSize.getHeight() - 18, { align:'center' });
     }
 

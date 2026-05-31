@@ -3386,22 +3386,29 @@ async function generatePdfReport(range){
             ry = pdf.lastAutoTable.finalY + 6;
 
             // Ingredients
+            // dishIngredients is an array of objects {name, weight?} — selectedIngredients holds the names
             pdf.setFont('helvetica','bold').setFontSize(8).setTextColor(37,99,235);
-            const totalIng = (d.dishIngredients||[]).length;
+            const ingList = (d.dishIngredients||[]).map(ing => typeof ing === 'string' ? { name: ing, weight: '' } : ing);
+            const totalIng = ingList.length;
             const selected = new Set(c.selectedIngredients||[]);
-            pdf.text(`INGREDIENTS  ${selected.size}/${totalIng} confirmed`, rightX, ry); ry += 10;
+            const checkedCount = ingList.filter(ing => selected.has(ing.name)).length;
+            pdf.text(`INGREDIENTS  ${checkedCount}/${totalIng} confirmed`, rightX, ry); ry += 10;
             pdf.setFont('helvetica','normal').setFontSize(7.5).setTextColor(31,41,55);
             if(totalIng){
-                const list = (d.dishIngredients||[]).map(ing => `${selected.has(ing)?'[Y]':'[ ]'} ${ing}`);
-                const wrapped = pdf.splitTextToSize(list.join('   '), colW);
+                const lines = ingList.map(ing => {
+                    const mark = selected.has(ing.name) ? '[Y]' : '[ ]';
+                    const w = ing.weight ? ' (' + ing.weight + ')' : '';
+                    return mark + ' ' + ing.name + w;
+                });
+                const wrapped = pdf.splitTextToSize(lines.join('   '), colW);
                 pdf.text(wrapped, rightX, ry);
                 ry += wrapped.length * 9 + 4;
-                const missing = (d.dishIngredients||[]).filter(ing => !selected.has(ing));
+                const missing = ingList.filter(ing => !selected.has(ing.name));
                 if(missing.length){
                     pdf.setFont('helvetica','bold').setFontSize(7.5).setTextColor(185,28,28);
                     pdf.text(`Missing (${missing.length}): `, rightX, ry);
                     pdf.setFont('helvetica','normal').setTextColor(31,41,55);
-                    const mw = pdf.splitTextToSize(missing.join(', '), colW - 50);
+                    const mw = pdf.splitTextToSize(missing.map(m => m.name).join(', '), colW - 50);
                     pdf.text(mw, rightX + 50, ry);
                     ry += mw.length * 9 + 2;
                 }

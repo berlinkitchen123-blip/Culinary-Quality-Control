@@ -13,6 +13,10 @@
 
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%232563eb'/%3E%3Ctext x='16' y='22' text-anchor='middle' font-family='Inter,sans-serif' font-weight='800' font-size='14' fill='white'%3EBB%3C/text%3E%3C/svg%3E">
 
+    <!-- PDF generation libraries (loaded lazily — only needed for Reports) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js" defer></script>
+
     <!-- Theme bootstrap — applied BEFORE first paint to avoid a flash -->
     <script>
     (function(){
@@ -618,6 +622,26 @@ html[data-theme="dark"] .warmer-slot.filled.hot{background:rgba(248,113,113,0.10
 .entry-chip{padding:8px 12px;border-radius:99px;background:var(--bg-2);border:1px solid var(--line);font-size:13px;font-weight:600;cursor:pointer;color:var(--ink-2);transition:background 140ms ease, color 140ms ease, border-color 140ms ease}
 .entry-chip:hover{background:var(--bg);color:var(--ink)}
 .entry-chip.is-on{background:var(--assembly-soft);border-color:var(--assembly);color:var(--assembly)}
+
+/* === Report dialog === */
+.report-block{display:flex;flex-direction:column;gap:14px;padding:6px 2px}
+.report-chips{display:flex;flex-wrap:wrap;gap:8px}
+.report-chip{flex:1 1 auto;min-width:120px;padding:14px 12px;border-radius:12px;background:var(--bg-3);border:1px solid var(--line);font-size:14px;font-weight:700;color:var(--ink-2);cursor:pointer;text-align:left;line-height:1.25;transition:background 140ms ease, color 140ms ease, border-color 140ms ease}
+.report-chip:hover{background:var(--bg-2);color:var(--ink)}
+.report-chip.is-on{background:var(--brand-soft);border-color:var(--brand);color:var(--brand)}
+.report-chip .chip-sub{display:block;font-size:11px;font-weight:600;color:var(--mute);margin-top:3px}
+.report-chip.is-on .chip-sub{color:var(--brand)}
+.report-custom{display:flex;gap:8px;flex-wrap:wrap}
+.report-custom > .field{flex:1;min-width:140px}
+.report-summary{padding:10px 12px;background:var(--bg-3);border:1px solid var(--line);border-radius:8px;font-size:13px;color:var(--ink-2);line-height:1.5}
+.report-summary strong{color:var(--ink)}
+.report-go{padding:14px 16px;font-size:15px;font-weight:800;background:var(--brand);color:white;border:0;border-radius:12px;cursor:pointer;width:100%;display:inline-flex;align-items:center;justify-content:center;gap:8px;box-shadow:var(--shadow-md)}
+.report-go:hover{background:#1d4ed8}
+.report-go:disabled{opacity:0.5;cursor:not-allowed;background:var(--mute-low)}
+.report-go .spinner{width:16px;height:16px;border:2px solid rgba(255,255,255,0.4);border-top-color:#fff;border-radius:50%;animation:rep-spin 700ms linear infinite;display:none}
+.report-go.is-loading .spinner{display:inline-block}
+.report-go.is-loading .label::after{content:' · generating…'}
+@keyframes rep-spin{to{transform:rotate(360deg)}}
 .entry-qty-row{display:flex;gap:8px;align-items:stretch}
 .entry-qty-row .entry-qty{flex:1;min-width:0;padding:11px 14px;border:1px solid var(--line);border-radius:10px;background:var(--bg-2);color:var(--ink);font-size:16px;font-weight:700;text-align:center}
 .entry-qty-row .entry-qty:focus{outline:2px solid var(--assembly);outline-offset:1px}
@@ -820,6 +844,10 @@ html[data-theme="dark"] .warmer-slot.filled.hot{background:rgba(248,113,113,0.10
     <div class="drawer-divider"></div>
     <div class="drawer-section">
         <div class="label">Tools</div>
+        <button class="drawer-item" data-go="report" type="button">
+            <span class="glyph">⎙</span>
+            <span class="name">Download PDF report</span>
+        </button>
         <button class="drawer-item" data-go="settings" type="button">
             <span class="glyph">⚙</span>
             <span class="name">Settings · paste menu, warmers, integrations</span>
@@ -2884,6 +2912,381 @@ async function sendReportToTeamsNow(){
         toast('Send failed — check webhook URL','fail');
     }
 }
+/* === PDF report (daily / weekly / monthly / custom range) ===
+   Pulls all the data — menu, checks per date, storage config — and writes
+   a multi-page PDF using jsPDF + autoTable.
+
+   Public entry point: openReportDialog() (wired to the drawer's "Download
+   PDF report" item). The dialog uses the existing settings-overlay so it
+   inherits the mobile full-screen + scroll-lock behaviour.
+*/
+function rangeForPreset(preset){
+    const today = todayIso();
+    const d = parseIso(today);
+    const isoOf = dt => `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}`;
+    if(preset === 'today') return { start: today, end: today };
+    if(preset === 'yesterday'){
+        const y = new Date(d); y.setDate(d.getDate()-1);
+        const iso = isoOf(y);
+        return { start: iso, end: iso };
+    }
+    if(preset === 'this-week'){
+        const monday = isoOfMondayOf(today);
+        const sunday = shiftIso(monday, 6);
+        return { start: monday, end: sunday };
+    }
+    if(preset === 'last-week'){
+        const monday = shiftIso(isoOfMondayOf(today), -7);
+        const sunday = shiftIso(monday, 6);
+        return { start: monday, end: sunday };
+    }
+    if(preset === 'this-month'){
+        const start = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-01`;
+        const next = new Date(d.getFullYear(), d.getMonth()+1, 0);
+        return { start, end: isoOf(next) };
+    }
+    if(preset === 'last-month'){
+        const startD = new Date(d.getFullYear(), d.getMonth()-1, 1);
+        const endD = new Date(d.getFullYear(), d.getMonth(), 0);
+        return { start: isoOf(startD), end: isoOf(endD) };
+    }
+    return { start: today, end: today };
+}
+function datesInRange(startIso, endIso){
+    const out = [];
+    let cur = startIso;
+    let guard = 0;
+    while(cur <= endIso && guard < 366){
+        out.push(cur);
+        cur = shiftIso(cur, 1);
+        guard++;
+    }
+    return out;
+}
+async function fetchChecksForRange(startIso, endIso){
+    const dates = datesInRange(startIso, endIso);
+    const result = {};
+    for(const d of dates){
+        try {
+            const snap = await get(ref(db, `quality-checks/${d}`));
+            result[d] = snap.val() || {};
+        } catch(e){ result[d] = {}; }
+    }
+    return result;
+}
+async function fetchMenusForRange(startIso, endIso){
+    // Menus are stored per ISO week (YYYY-WW). Gather every distinct week
+    // the range spans, then fetch each menu.
+    const weeks = new Set();
+    for(const d of datesInRange(startIso, endIso)) weeks.add(isoYearWeek(d));
+    const menus = {};
+    for(const wk of weeks){
+        try { const snap = await get(ref(db, `menus/${wk}`)); menus[wk] = snap.val() || null; }
+        catch(e){ menus[wk] = null; }
+    }
+    return menus;
+}
+
+function openReportDialog(){
+    const overlay = document.getElementById('settings-overlay');
+    const renderDialog = () => {
+        const r = rangeState;
+        const range = r.preset === 'custom'
+            ? { start: r.customStart, end: r.customEnd }
+            : rangeForPreset(r.preset);
+        const days = (range.start && range.end)
+            ? datesInRange(range.start, range.end).length
+            : 0;
+        overlay.innerHTML = `
+            <div class="modal-panel" style="max-width:560px">
+                <div class="modal-head">
+                    <div class="eyebrow">Report</div>
+                    <h3 class="title">Download QC report</h3>
+                    <button class="modal-close" aria-label="Close" onclick="window.__qc.closeSettings()">×</button>
+                </div>
+                <div class="modal-body">
+                    <div class="report-block">
+                        <div class="section-mini">Pick a date range</div>
+                        <div class="report-chips">
+                            ${['today','yesterday','this-week','last-week','this-month','last-month','custom'].map(p => {
+                                const labels = {
+                                    'today':['Today', humanDate(todayIso())],
+                                    'yesterday':['Yesterday', humanDate(shiftIso(todayIso(),-1))],
+                                    'this-week':['This week','Mon — Sun'],
+                                    'last-week':['Last week','previous Mon — Sun'],
+                                    'this-month':['This month','1st — end of month'],
+                                    'last-month':['Last month','previous calendar month'],
+                                    'custom':['Custom','Pick from / to']
+                                };
+                                return `<button class="report-chip ${r.preset===p?'is-on':''}" data-preset="${p}" type="button">${labels[p][0]}<span class="chip-sub">${labels[p][1]}</span></button>`;
+                            }).join('')}
+                        </div>
+                        ${r.preset==='custom' ? `
+                            <div class="report-custom">
+                                <div class="field">
+                                    <label class="label">From</label>
+                                    <input type="date" id="rep-from" value="${escapeAttr(r.customStart||todayIso())}" />
+                                </div>
+                                <div class="field">
+                                    <label class="label">To</label>
+                                    <input type="date" id="rep-to" value="${escapeAttr(r.customEnd||todayIso())}" />
+                                </div>
+                            </div>
+                        ` : ''}
+                        <div class="report-summary">
+                            ${range.start && range.end ? `<strong>${humanDate(range.start)}</strong> → <strong>${humanDate(range.end)}</strong> · ${days} day${days===1?'':'s'} included` : 'Pick a date range to include in the report.'}<br/>
+                            The PDF contains <strong>every reading</strong> for the range: assembly entries (per contributor with timestamps), QC samples (three temperatures + weights, ingredients confirmed, photo presence, AI verdict, chef's notes), dispatch readings, and placements (warmer compartments + fridges). Plus the storage configuration snapshot.
+                        </div>
+                        <button class="report-go" type="button" id="rep-download" ${days===0?'disabled':''}>
+                            <span class="spinner"></span>
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M5 21h14"/></svg>
+                            <span class="label">Download PDF</span>
+                        </button>
+                    </div>
+                </div>
+                <div class="modal-foot">
+                    <button class="btn" type="button" onclick="window.__qc.closeSettings()">Done</button>
+                </div>
+            </div>
+        `;
+        overlay.querySelectorAll('.report-chip').forEach(c => c.addEventListener('click', () => {
+            rangeState.preset = c.getAttribute('data-preset');
+            if(rangeState.preset === 'custom'){
+                rangeState.customStart = rangeState.customStart || todayIso();
+                rangeState.customEnd = rangeState.customEnd || todayIso();
+            }
+            renderDialog();
+        }));
+        const fromInp = overlay.querySelector('#rep-from');
+        const toInp = overlay.querySelector('#rep-to');
+        if(fromInp) fromInp.addEventListener('change', () => { rangeState.customStart = fromInp.value; renderDialog(); });
+        if(toInp) toInp.addEventListener('change', () => { rangeState.customEnd = toInp.value; renderDialog(); });
+        const goBtn = overlay.querySelector('#rep-download');
+        if(goBtn){
+            goBtn.addEventListener('click', async () => {
+                const rng = rangeState.preset === 'custom'
+                    ? { start: rangeState.customStart, end: rangeState.customEnd }
+                    : rangeForPreset(rangeState.preset);
+                if(!rng.start || !rng.end){ toast('Pick a date range','fail'); return; }
+                goBtn.classList.add('is-loading'); goBtn.disabled = true;
+                try {
+                    await generatePdfReport(rng);
+                } catch(err){
+                    console.error('PDF failed', err);
+                    toast(err.message || 'PDF generation failed','fail');
+                }
+                goBtn.classList.remove('is-loading'); goBtn.disabled = false;
+            });
+        }
+    };
+    window.rangeState = window.rangeState || { preset:'today', customStart:'', customEnd:'' };
+    overlay.classList.remove('hidden');
+    lockBodyScroll();
+    renderDialog();
+}
+const rangeState = (window.rangeState = window.rangeState || { preset:'today', customStart:'', customEnd:'' });
+
+async function generatePdfReport(range){
+    if(!window.jspdf){
+        toast('PDF library still loading — try again in a sec','fail');
+        return;
+    }
+    const { jsPDF } = window.jspdf;
+    if(!jsPDF){ toast('PDF library not available','fail'); return; }
+
+    toast('Fetching data…');
+    const checksByDate = await fetchChecksForRange(range.start, range.end);
+    const menusByWeek = await fetchMenusForRange(range.start, range.end);
+    const storage = state.storage || { warmers: [], fridges: [], team: [] };
+    const dates = datesInRange(range.start, range.end);
+
+    // ---------- Build the PDF ----------
+    const pdf = new jsPDF({ unit:'pt', format:'a4' });
+    const pageW = pdf.internal.pageSize.getWidth();
+    const margin = 36;
+    let y = 50;
+
+    pdf.setFont('helvetica','bold').setFontSize(20);
+    pdf.setTextColor(31, 41, 55);
+    pdf.text('Bella & Bona — Culinary QC Report', margin, y);
+    y += 22;
+    pdf.setFont('helvetica','normal').setFontSize(11).setTextColor(110,116,128);
+    pdf.text(`${humanDate(range.start)} → ${humanDate(range.end)} · ${dates.length} day${dates.length===1?'':'s'}`, margin, y);
+    y += 14;
+    pdf.text(`Generated ${nowHHMM()} on ${humanDate(todayIso())} · Firebase project quality-control-24`, margin, y);
+    y += 18;
+
+    // Summary stats across the whole range
+    let totals = { dishes:0, assemblyEntries:0, qcLogged:0, dispatchLogged:0, holds:0, watches:0, passes:0, photos:0, aiReviews:0 };
+    for(const d of dates){
+        const checks = checksByDate[d] || {};
+        const menu = menusByWeek[isoYearWeek(d)];
+        const dishes = menu?.dishes || [];
+        for(const dish of dishes){
+            totals.dishes++;
+            const c = checks[dish.dishLetter];
+            if(!c) continue;
+            totals.assemblyEntries += assemblyEntries(c).length;
+            if(avg(c.temperatures) != null) totals.qcLogged++;
+            if(hasStageData(c, 'dispatch')) totals.dispatchLogged++;
+            if(c.capturedImage) totals.photos++;
+            if(c.aiReview) totals.aiReviews++;
+            const status = readingStatus(dish, c);
+            if(status === 'hold') totals.holds++;
+            else if(status === 'watch') totals.watches++;
+            else if(status === 'pass') totals.passes++;
+        }
+    }
+    pdf.autoTable({
+        startY: y,
+        head: [['', 'Total dishes', 'Pass', 'Watch', 'Hold', 'QC logged', 'Dispatch logged', 'Photos', 'AI reviews', 'Assembly entries']],
+        body: [['Range', totals.dishes, totals.passes, totals.watches, totals.holds, totals.qcLogged, totals.dispatchLogged, totals.photos, totals.aiReviews, totals.assemblyEntries]],
+        margin: { left: margin, right: margin },
+        styles: { fontSize: 9, cellPadding: 4 },
+        headStyles: { fillColor: [37, 99, 235], textColor: 255, fontStyle: 'bold' },
+        alternateRowStyles: { fillColor: [247, 247, 250] }
+    });
+    y = pdf.lastAutoTable.finalY + 18;
+
+    // Per-day sections
+    for(const date of dates){
+        const checks = checksByDate[date] || {};
+        const menu = menusByWeek[isoYearWeek(date)];
+        const dishes = menu?.dishes || [];
+        if(y > pdf.internal.pageSize.getHeight() - 80){ pdf.addPage(); y = 50; }
+
+        pdf.setFont('helvetica','bold').setFontSize(13).setTextColor(31, 41, 55);
+        pdf.text(`${humanDate(date)}`, margin, y); y += 14;
+        if(!dishes.length){
+            pdf.setFont('helvetica','italic').setFontSize(10).setTextColor(110,116,128);
+            pdf.text('No menu recorded for this date.', margin, y); y += 16; continue;
+        }
+
+        // Per-dish data table
+        const rows = dishes.map(d => {
+            const c = checks[d.dishLetter] || {};
+            const aT = stageTempValue(c, 'assembly');
+            const qT = avg(c.temperatures);
+            const dT = stageTempValue(c, 'dispatch');
+            const w = avg(c.weights);
+            const placements = placementsOf(d.dishLetter);
+            const placeText = placements.length
+                ? placements.map(p => {
+                    const w = (storage.warmers||[]).find(x => x.id === p.containerId);
+                    const f = (storage.fridges||[]).find(x => x.id === p.containerId);
+                    if(w){
+                        const layout = WARMER_LAYOUTS[w.layout] || {};
+                        return `${w.name||'Warmer'} ${layout.labels?.[p.compartment] || p.compartment || ''}${p.qty?` x${p.qty}`:''}`;
+                    }
+                    if(f) return `${f.name||'Fridge'}${p.qty?` x${p.qty}`:''}`;
+                    return '';
+                }).filter(Boolean).join(' / ')
+                : '—';
+            const entries = assemblyEntries(c);
+            const assemblyText = entries.length
+                ? entries.map(e => {
+                    const who = Array.isArray(e.by) ? e.by.join('+') : (e.by || '?');
+                    return `${who}=${e.count}${e.ts?' @'+e.ts:''}`;
+                }).join('; ')
+                : '—';
+            const aiText = c.aiReview
+                ? `${c.aiReview.score!=null?c.aiReview.score+'/100':'?'} ${c.aiReview.summary||''}`.slice(0,60)
+                : '—';
+            return [
+                d.dishLetter,
+                d.dishName,
+                isCold(d) ? 'Cold' : 'Hot',
+                aT != null ? aT.toFixed(2)+'°' : '—',
+                qT != null ? qT.toFixed(2)+'°' : '—',
+                dT != null ? dT.toFixed(2)+'°' : '—',
+                w != null ? Math.round(w)+'g' : '—',
+                (c.selectedIngredients||[]).length + '/' + (d.dishIngredients||[]).length,
+                c.capturedImage ? 'Y' : 'N',
+                aiText,
+                placeText,
+                assemblyText,
+                (c.comment || '').slice(0, 80),
+                readingStatus(d, c).toUpperCase()
+            ];
+        });
+        pdf.autoTable({
+            startY: y,
+            head: [['Letter','Name','Type','Asm','QC','Dsp','Wt','Ing','Photo','AI','Placement','Assembly entries','Note','Status']],
+            body: rows,
+            margin: { left: margin, right: margin },
+            styles: { fontSize: 7, cellPadding: 3, overflow: 'linebreak' },
+            headStyles: { fillColor: [124, 58, 237], textColor: 255, fontSize: 7.5, fontStyle: 'bold' },
+            alternateRowStyles: { fillColor: [247, 247, 250] },
+            columnStyles: {
+                0: { cellWidth: 28, halign:'center', fontStyle:'bold' },
+                1: { cellWidth: 90 },
+                2: { cellWidth: 28, halign:'center' },
+                3: { cellWidth: 30, halign:'right' },
+                4: { cellWidth: 30, halign:'right' },
+                5: { cellWidth: 30, halign:'right' },
+                6: { cellWidth: 28, halign:'right' },
+                7: { cellWidth: 26, halign:'center' },
+                8: { cellWidth: 24, halign:'center' },
+                9: { cellWidth: 64 },
+                10:{ cellWidth: 70 },
+                11:{ cellWidth: 88 },
+                12:{ cellWidth: 70 },
+                13:{ cellWidth: 36, halign:'center', fontStyle:'bold' }
+            },
+            didParseCell: (data) => {
+                if(data.section === 'body' && data.column.index === 13){
+                    const v = (data.cell.raw || '').toUpperCase();
+                    if(v === 'HOLD') data.cell.styles.textColor = [185,28,28];
+                    else if(v === 'WATCH') data.cell.styles.textColor = [234,88,12];
+                    else if(v === 'PASS') data.cell.styles.textColor = [22,163,74];
+                    else data.cell.styles.textColor = [110,116,128];
+                }
+            }
+        });
+        y = pdf.lastAutoTable.finalY + 18;
+    }
+
+    // Storage config snapshot at the end
+    if(y > pdf.internal.pageSize.getHeight() - 120) { pdf.addPage(); y = 50; }
+    pdf.setFont('helvetica','bold').setFontSize(13).setTextColor(31, 41, 55);
+    pdf.text('Storage configuration · snapshot', margin, y); y += 16;
+    if((storage.warmers||[]).length || (storage.fridges||[]).length){
+        pdf.autoTable({
+            startY: y,
+            head: [['Type','Name','Layout / details']],
+            body: [
+                ...(storage.warmers||[]).map(w => ['Warmer', w.name||'—', (WARMER_LAYOUTS[w.layout]||{}).name || w.layout || '—']),
+                ...(storage.fridges||[]).map(f => ['Fridge', f.name||'—', '—']),
+            ],
+            margin: { left: margin, right: margin },
+            styles: { fontSize: 9, cellPadding: 4 },
+            headStyles: { fillColor: [245, 158, 11], textColor: 255, fontStyle: 'bold' }
+        });
+        y = pdf.lastAutoTable.finalY + 14;
+    }
+    if((storage.team||[]).length){
+        pdf.setFont('helvetica','bold').setFontSize(11).setTextColor(31, 41, 55);
+        pdf.text('Team (Assembly)', margin, y); y += 12;
+        pdf.setFont('helvetica','normal').setFontSize(9).setTextColor(60,60,60);
+        const teamLine = (storage.team||[]).map(m => m.name).join(' · ');
+        const wrapped = pdf.splitTextToSize(teamLine, pageW - margin*2);
+        pdf.text(wrapped, margin, y); y += wrapped.length * 12 + 4;
+    }
+
+    // Page footer with page numbers
+    const total = pdf.getNumberOfPages();
+    for(let p = 1; p <= total; p++){
+        pdf.setPage(p);
+        pdf.setFont('helvetica','normal').setFontSize(8).setTextColor(140,140,150);
+        const txt = `Bella & Bona · ${humanDate(range.start)} → ${humanDate(range.end)} · Page ${p} of ${total}`;
+        pdf.text(txt, pageW/2, pdf.internal.pageSize.getHeight() - 18, { align:'center' });
+    }
+
+    const fileName = `bb-qc-${range.start}_to_${range.end}.pdf`;
+    pdf.save(fileName);
+    toast('Report downloaded','ok');
+}
+
 async function saveStageFromForm(stage){
     const letter=modalState.letter;
     const ovr=document.getElementById('modal-overlay');
@@ -3558,6 +3961,7 @@ function wire(){
             if(action === 'home'){ setView('home'); closeDrawer(); }
             else if(action === 'stage'){ setStage(btn.getAttribute('data-stage')); closeDrawer(); }
             else if(action === 'settings'){ closeDrawer(); openSettings(); }
+            else if(action === 'report'){ closeDrawer(); openReportDialog(); }
             else if(action === 'theme'){ document.getElementById('btn-theme').click(); refreshDrawer(); }
             else if(action === 'copy'){ document.getElementById('btn-export-summary').click(); closeDrawer(); }
             else if(action === 'print'){ closeDrawer(); window.print(); }

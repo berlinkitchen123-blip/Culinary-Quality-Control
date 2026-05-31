@@ -1543,8 +1543,8 @@ function renderLetterTile(dish){
     return `
         <article class="lt-tile ${cls}" data-letter="${escapeHtml(dish.dishLetter)}" role="button" tabindex="0" aria-label="${escapeHtml(dish.dishName)}">
             <span class="lt-pip is-${s}" aria-hidden="true"></span>
-            <span class="lt-letter" data-action="open">${escapeHtml(dish.dishLetter)}</span>
-            <span class="lt-name" data-action="open">${escapeHtml(dish.dishName)}</span>
+            <span class="lt-letter">${escapeHtml(dish.dishLetter)}</span>
+            <span class="lt-name">${escapeHtml(dish.dishName)}</span>
             <span class="lt-stages" aria-hidden="true">
                 <span data-stage="assembly" class="${hasA?'is-set':''}"></span>
                 <span data-stage="qc" class="${hasQ?'is-set':''}"></span>
@@ -1554,7 +1554,7 @@ function renderLetterTile(dish){
                 <div class="lt-count-row">
                     <input class="lt-count" type="text" inputmode="numeric" pattern="[0-9]*" placeholder="0" value="${totalCount || ''}" data-count-letter="${escapeAttr(dish.dishLetter)}" aria-label="Dish count for ${escapeAttr(dish.dishLetter)}" />
                 </div>
-            ` : (lastTime ? `<span class="lt-time" data-action="open">⏱ ${escapeHtml(lastTime)}</span>` : '')}
+            ` : (lastTime ? `<span class="lt-time">⏱ ${escapeHtml(lastTime)}</span>` : '')}
         </article>
     `;
 }

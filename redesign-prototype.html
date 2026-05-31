@@ -102,6 +102,29 @@ html[data-theme="dark"] .sample input{color:var(--ink)}
 html[data-theme="dark"] .alert.is-fail,
 html[data-theme="dark"] .alert.is-warn,
 html[data-theme="dark"] .alert.is-ok{color:var(--ink)}
+/* Kill every white background in dark mode so typed text stays readable */
+html[data-theme="dark"] .field input:focus,
+html[data-theme="dark"] .field textarea:focus,
+html[data-theme="dark"] .comment-area:focus,
+html[data-theme="dark"] .read-cell:focus-within,
+html[data-theme="dark"] .time-cell:focus-within,
+html[data-theme="dark"] .sample:focus-within,
+html[data-theme="dark"] .modal-close,
+html[data-theme="dark"] .photo .photo-action,
+html[data-theme="dark"] .alert.is-fail .icon,
+html[data-theme="dark"] .alert.is-warn .icon,
+html[data-theme="dark"] .alert.is-ok .icon,
+html[data-theme="dark"] .ing .check,
+html[data-theme="dark"] .settings-help code,
+html[data-theme="dark"] .settings-help pre{background:var(--bg-2);color:var(--ink)}
+html[data-theme="dark"] .modal-close{color:var(--mute)}
+/* Chrome autofill: stop the yellow-tinted white box */
+html[data-theme="dark"] input:-webkit-autofill,
+html[data-theme="dark"] textarea:-webkit-autofill{
+    -webkit-box-shadow: 0 0 0 1000px var(--bg-3) inset !important;
+    -webkit-text-fill-color: var(--ink) !important;
+    caret-color: var(--brand);
+}
 
 /* Theme toggle button */
 .theme-toggle{display:inline-flex;align-items:center;justify-content:center;width:38px;height:38px;border-radius:99px;border:1px solid var(--line);background:transparent;color:var(--ink-2);cursor:pointer;transition:background 160ms ease, color 160ms ease, border-color 160ms ease;padding:0}
@@ -2545,6 +2568,41 @@ function bindTabHandlers(tab, dish){
             inp.addEventListener('blur', ()=>saveStageFromForm(tab));
             inp.addEventListener('change', ()=>saveStageFromForm(tab));
         });
+        // Live avg update as the user types into temp samples (so the AVG
+        // row reflects the current input values immediately, without
+        // waiting for blur / re-render).
+        const dish = (state.menu?.dishes || []).find(d => d.dishLetter === modalState.letter);
+        if(dish){
+            const tempInputs = overlay.querySelectorAll('[data-stage-input^="temp-"]');
+            const updateAvg = () => {
+                const temps = [0,1,2].map(i => {
+                    const el = overlay.querySelector(`[data-stage-input="temp-${i}"]`);
+                    if(!el) return null;
+                    const n = parseDecimal(el.value);
+                    return Number.isNaN(n) ? null : n;
+                });
+                const tAvg = avg(temps);
+                const valEl = overlay.querySelector('.avg-row .val');
+                const deltaEl = overlay.querySelector('.avg-row .delta');
+                if(valEl) valEl.textContent = tAvg!=null ? tAvg.toFixed(2)+'°C' : '—';
+                if(deltaEl){
+                    deltaEl.textContent = tAvg!=null
+                        ? (isCold(dish)
+                            ? (tAvg<=COLD_MAX ? `+${(COLD_MAX-tAvg).toFixed(2)} headroom` : `+${(tAvg-COLD_MAX).toFixed(2)} over spec`)
+                            : (tAvg>=HOT_MIN ? `+${(tAvg-HOT_MIN).toFixed(2)} above min` : `-${(HOT_MIN-tAvg).toFixed(2)} below min`))
+                        : '—';
+                }
+                // Update per-sample tint as well
+                [0,1,2].forEach(i => {
+                    const el = overlay.querySelector(`[data-stage-input="temp-${i}"]`);
+                    const cell = el?.closest('.sample');
+                    if(!cell) return;
+                    cell.classList.remove('is-pass','is-watch','is-hold','is-empty');
+                    cell.classList.add('is-' + tempStatus(temps[i], dish));
+                });
+            };
+            tempInputs.forEach(inp => inp.addEventListener('input', updateAvg));
+        }
     }
     // Assembly contributors: remove entry, add via Single/Batch form
     if(tab === 'assembly'){
@@ -3046,10 +3104,30 @@ function normalizeMenu(raw, opts){
     let parsed = raw;
     // Bare array → wrap
     if(Array.isArray(parsed)) parsed = { dishes: parsed };
-    if(!parsed || !Array.isArray(parsed.dishes)) throw new Error('JSON must contain a dishes array');
+    // Some exports wrap the menu in { menu: {...} } or { data: {...} } —
+    // unwrap one or two layers automatically before giving up.
+    const findDishesArray = (obj, depth = 0) => {
+        if(!obj || typeof obj !== 'object' || depth > 3) return null;
+        if(Array.isArray(obj.dishes)) return obj;
+        for(const k of Object.keys(obj)){
+            const inner = findDishesArray(obj[k], depth + 1);
+            if(inner) return inner;
+        }
+        return null;
+    };
+    if(!Array.isArray(parsed.dishes)){
+        const found = findDishesArray(parsed);
+        if(found) parsed = found;
+    }
+    if(!parsed || !Array.isArray(parsed.dishes)){
+        console.warn('normalizeMenu: no dishes array found. Top-level keys:', parsed && Object.keys(parsed));
+        throw new Error('Could not find a dishes array. The JSON should contain dishes: [...] somewhere near the top.');
+    }
+    console.log(`normalizeMenu: found ${parsed.dishes.length} raw dishes`);
 
-    // Detect production format: dishes have variantName + stickerNo + type
-    const looksProduction = parsed.dishes.some(d => d && (d.variantName || d.stickerNo) && (d.type === 'cold' || d.type === 'hot'));
+    // Detect production format more leniently: any dish with a variantName,
+    // a stickerNo, or a type of cold/hot counts as production-style.
+    const looksProduction = parsed.dishes.some(d => d && (d.variantName || d.stickerNo || d.type === 'cold' || d.type === 'hot'));
 
     let normalized;
     if(looksProduction){
@@ -3271,7 +3349,10 @@ function openSettings(){
             console.error(e);
             return;
         }
-        if(!menuObj.dishes.length){ toast('No dishes found in JSON', 'fail'); return; }
+        if(!menuObj.dishes.length){
+            toast('No main dishes found — tick "Include addons" if you only have add-ons','fail');
+            return;
+        }
         try{
             await saveMenu(weekId, menuObj);
             state.menu = menuObj;

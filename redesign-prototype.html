@@ -565,6 +565,24 @@ html[data-theme="dark"] .warmer-slot.filled.hot{background:rgba(248,113,113,0.10
 .team-chip .chip-name{font-size:11px;font-weight:600;margin-top:3px}
 .team-empty-hint{font-size:13px;color:var(--mute);font-weight:500}
 
+/* Modal: contributor breakdown */
+.contributors{display:flex;flex-direction:column;gap:6px;margin-bottom:10px}
+.contributor-row{display:grid;grid-template-columns:1fr auto auto auto;align-items:center;gap:10px;padding:8px 12px;background:var(--bg-3);border:1px solid var(--line);border-radius:10px}
+.contributor-row .contrib-tag{font-weight:700;font-size:13px;color:var(--ink)}
+.contributor-row .contrib-tag.batch{color:var(--assembly)}
+.contributor-row .contrib-count{font-weight:800;font-size:16px;color:var(--ink);background:var(--bg-2);border:1px solid var(--line);border-radius:8px;padding:3px 10px;min-width:36px;text-align:center}
+.contributor-row .contrib-time{font-size:11px;color:var(--mute);font-weight:600}
+.contributor-row .contrib-rm{width:26px;height:26px;border-radius:50%;background:transparent;border:1px solid var(--line);color:var(--mute);font-size:14px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center}
+.contributor-row .contrib-rm:hover{color:var(--hold);border-color:var(--hold-line)}
+.batch-add{margin:6px 0 14px 0}
+.batch-add summary{cursor:pointer;font-size:13px;font-weight:700;color:var(--assembly);padding:8px 12px;background:var(--assembly-soft);border:1px dashed var(--assembly-line);border-radius:8px;list-style:none}
+.batch-add summary::-webkit-details-marker{display:none}
+.batch-add[open] summary{margin-bottom:10px}
+.batch-fields{padding:10px 12px;background:var(--bg-2);border:1px solid var(--line);border-radius:10px;display:flex;flex-direction:column;gap:10px}
+.batch-chips{display:flex;flex-wrap:wrap;gap:6px}
+.batch-chip{padding:7px 11px;border-radius:99px;background:var(--bg-3);border:1px solid var(--line);font-size:12px;font-weight:600;cursor:pointer;color:var(--ink-2)}
+.batch-chip.is-on{background:var(--assembly-soft);border-color:var(--assembly);color:var(--assembly)}
+
 /* Count input on the dish tile (Assembly stage view) */
 .lt-tile .lt-count-row{margin-top:auto;width:100%;padding-top:8px;display:flex;align-items:center;gap:6px}
 .lt-tile .lt-count{flex:1;min-width:0;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg-2);color:var(--ink);font-size:16px;font-weight:800;text-align:center}
@@ -1149,55 +1167,77 @@ function teamInitials(name){
     return (parts[0]?.[0] || '').toUpperCase() + (parts[1]?.[0] || (parts[0]?.[1] || '')).toUpperCase();
 }
 
-/* Total dish count across all Assembly entries for a single dish. Entries
-   are { by, count, role, ts }. Backward compat: also reads a top-level
-   c.assembly.count scalar if no entries[]. */
+/* Entry shape: { by: string | string[], count: number, ts: 'HH:MM' }
+   - A plain `by` string is a single contributor.
+   - `by` as an array is a shared batch: N people prepared `count` dishes
+     together. The total still counts as `count` (not count × N).
+   Backward compat: also reads a top-level c.assembly.count scalar. */
+function assemblyEntries(c){
+    if(!c?.assembly) return [];
+    if(Array.isArray(c.assembly.entries)) return c.assembly.entries;
+    if(c.assembly.count != null) return [{ by: '', count: Number(c.assembly.count) || 0, ts: c.assembly.time || '' }];
+    return [];
+}
 function assemblyCountTotal(c){
-    if(!c) return 0;
-    const a = c.assembly;
-    if(!a) return 0;
-    if(Array.isArray(a.entries) && a.entries.length){
-        return a.entries.reduce((sum, e) => sum + (Number(e.count) || 0), 0);
+    return assemblyEntries(c).reduce((sum, e) => sum + (Number(e.count) || 0), 0);
+}
+/* Count for a specific team member (single + batch contributions count). */
+function assemblyCountForMember(c, name){
+    if(!name) return 0;
+    return assemblyEntries(c)
+        .filter(e => Array.isArray(e.by) ? e.by.includes(name) : e.by === name)
+        .reduce((sum, e) => sum + (Number(e.count) || 0), 0);
+}
+/* Distinct contributor names across all entries (for the "by N people" hint) */
+function assemblyContributorNames(c){
+    const set = new Set();
+    for(const e of assemblyEntries(c)){
+        if(Array.isArray(e.by)) e.by.forEach(b => b && set.add(b));
+        else if(e.by) set.add(e.by);
     }
-    if(a.count != null) return Number(a.count) || 0;
-    return 0;
+    return [...set];
 }
 
-/* Append a count entry from the currently-active team member */
-async function addAssemblyCount(letter, count){
+/* Update OR create the entry for a single team member. Leaves every other
+   contributor's entry intact. */
+async function setMemberAssemblyCount(letter, memberName, count){
+    if(!memberName){ toast('Tap a team member first','fail'); return; }
+    const n = Math.max(0, Math.round(parseDecimal(count) || 0));
     const c = state.checks[letter] || {};
-    const a = c.assembly || {};
-    const entries = Array.isArray(a.entries) ? a.entries.slice() : [];
-    // Replace the entry for the active member if one exists, else append
-    const by = state.activeAssemblyMember || '';
+    const entries = assemblyEntries(c).slice();
+    // Find an existing single-person entry for this member (don't touch
+    // batch entries — those are shared).
+    const idx = entries.findIndex(e => !Array.isArray(e.by) && e.by === memberName);
     const ts = nowHHMM();
-    const idx = entries.findIndex(e => (e.by || '') === by);
-    const next = { by, count: Math.max(0, Math.round(Number(count) || 0)), ts };
-    if(idx >= 0) entries[idx] = { ...entries[idx], ...next };
-    else entries.push(next);
-    await saveStage(letter, 'assembly', { entries, count: null, time: ts });
-}
-/* Save the count as the total (replaces any per-member breakdown). Used by
-   the inline tile input which is a single number. */
-async function setAssemblyTotalCount(letter, count){
-    const n = Math.max(0, Math.round(Number(count) || 0));
-    const c = state.checks[letter] || {};
-    const a = c.assembly || {};
-    const entries = Array.isArray(a.entries) ? a.entries.slice() : [];
-    const by = state.activeAssemblyMember || '';
-    if(by){
-        // Update or create entry for the active team member; clear any
-        // prior entries from other members so the displayed total matches
-        // the typed number.
-        await saveStage(letter, 'assembly', {
-            entries: [{ by, count: n, ts: nowHHMM() }],
-            count: null,
-            time: nowHHMM()
-        });
+    if(n === 0){
+        if(idx >= 0) entries.splice(idx, 1);
+    } else if(idx >= 0){
+        entries[idx] = { ...entries[idx], count: n, ts };
     } else {
-        // No active member — store as a scalar count on the assembly record.
-        await saveStage(letter, 'assembly', { count: n, entries: null, time: nowHHMM() });
+        entries.push({ by: memberName, count: n, ts });
     }
+    await saveStage(letter, 'assembly', { entries: entries.length ? entries : null, count: null, time: ts });
+}
+
+/* Append a shared-batch entry: N people prepared `count` dishes together. */
+async function addBatchAssembly(letter, members, count){
+    const list = (members || []).filter(Boolean);
+    if(list.length < 1){ toast('Pick at least one team member','fail'); return; }
+    const n = Math.max(0, Math.round(parseDecimal(count) || 0));
+    if(n <= 0){ toast('Count must be greater than 0','fail'); return; }
+    const c = state.checks[letter] || {};
+    const entries = assemblyEntries(c).slice();
+    entries.push({ by: list.length === 1 ? list[0] : list, count: n, ts: nowHHMM() });
+    await saveStage(letter, 'assembly', { entries, count: null, time: nowHHMM() });
+}
+
+/* Remove the entry at the given index. */
+async function removeAssemblyEntry(letter, index){
+    const c = state.checks[letter] || {};
+    const entries = assemblyEntries(c).slice();
+    if(index < 0 || index >= entries.length) return;
+    entries.splice(index, 1);
+    await saveStage(letter, 'assembly', { entries: entries.length ? entries : null, count: null });
 }
 async function saveWarmer(warmer){
     if(!warmer.id) warmer.id = 'w-' + Math.random().toString(36).slice(2,8);
@@ -1521,6 +1561,8 @@ function renderTeamBar(){
             const name = chip.getAttribute('data-team-name');
             state.activeAssemblyMember = (state.activeAssemblyMember === name) ? null : name;
             host.querySelectorAll('.team-chip').forEach(c => c.classList.toggle('is-active', c.getAttribute('data-team-name') === state.activeAssemblyMember));
+            // Re-render dish tiles so each shows the active member's count
+            renderDishes();
         });
     });
 }
@@ -1537,9 +1579,13 @@ function renderLetterTile(dish){
     const hasA = hasStageData(c, 'assembly');
     const hasQ = avg(c.temperatures) != null;
     const hasD = hasStageData(c, 'dispatch');
-    // Assembly stage: show inline "dish count" input + total tally
+    // Assembly stage: show inline count for the ACTIVE team member, plus
+    // a total badge that includes all other contributors.
     const isAssemblyStage = state.stage === 'assembly';
-    const totalCount = isAssemblyStage ? assemblyCountTotal(c) : 0;
+    const activeMember = state.activeAssemblyMember || '';
+    const myCount = isAssemblyStage && activeMember ? assemblyCountForMember(c, activeMember) : 0;
+    const total = isAssemblyStage ? assemblyCountTotal(c) : 0;
+    const contributors = isAssemblyStage ? assemblyContributorNames(c).length : 0;
     return `
         <article class="lt-tile ${cls}" data-letter="${escapeHtml(dish.dishLetter)}" role="button" tabindex="0" aria-label="${escapeHtml(dish.dishName)}">
             <span class="lt-pip is-${s}" aria-hidden="true"></span>
@@ -1552,8 +1598,9 @@ function renderLetterTile(dish){
             </span>
             ${isAssemblyStage ? `
                 <div class="lt-count-row">
-                    <input class="lt-count" type="text" inputmode="numeric" pattern="[0-9]*" placeholder="0" value="${totalCount || ''}" data-count-letter="${escapeAttr(dish.dishLetter)}" aria-label="Dish count for ${escapeAttr(dish.dishLetter)}" />
+                    <input class="lt-count" type="text" inputmode="numeric" pattern="[0-9]*" placeholder="${activeMember ? '0' : '—'}" value="${myCount || ''}" data-count-letter="${escapeAttr(dish.dishLetter)}" aria-label="${activeMember ? escapeAttr(activeMember + '\\'s count for ' + dish.dishLetter) : 'Tap a team member first'}" ${activeMember ? '' : 'disabled'} />
                 </div>
+                ${total > 0 ? `<span class="lt-count-total">Total ${total}${contributors > 1 ? ` · ${contributors} ppl` : ''}</span>` : ''}
             ` : (lastTime ? `<span class="lt-time">⏱ ${escapeHtml(lastTime)}</span>` : '')}
         </article>
     `;
@@ -1588,17 +1635,21 @@ function bindTiles(){
             if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); open(); }
         });
     });
-    // Inline dish-count input on the Assembly stage tile
+    // Inline dish-count input on the Assembly stage tile. Updates only the
+    // active team member's entry — every other contributor's count is left
+    // intact. If no member is active, the input is disabled (placeholder
+    // says '—'); tapping it does nothing.
     document.querySelectorAll('[data-count-letter]').forEach(inp => {
         inp.addEventListener('focus', () => inp.select());
         inp.addEventListener('keydown', e => { if(e.key === 'Enter'){ e.preventDefault(); inp.blur(); } });
         inp.addEventListener('blur', async () => {
             const letter = inp.getAttribute('data-count-letter');
+            const member = state.activeAssemblyMember;
+            if(!member){ toast('Tap a team member first','fail'); return; }
             const v = inp.value.trim();
-            const n = v === '' ? 0 : Math.max(0, Math.round(parseDecimal(v) || 0));
             try {
-                await setAssemblyTotalCount(letter, n);
-                toast('Saved', 'ok');
+                await setMemberAssemblyCount(letter, member, v);
+                toast(`${member}: ${v || 0}`, 'ok');
             } catch(err){ toast('Save failed','fail'); console.error(err); }
         });
     });
@@ -2322,24 +2373,65 @@ function renderStageTab(stage, label, dish, c){
             <span class="delta">${tAvg!=null?(isCold(dish)?(tAvg<=COLD_MAX?`+${(COLD_MAX-tAvg).toFixed(2)} headroom`:`+${(tAvg-COLD_MAX).toFixed(2)} over spec`):(tAvg>=HOT_MIN?`+${(tAvg-HOT_MIN).toFixed(2)} above min`:`-${(HOT_MIN-tAvg).toFixed(2)} below min`)):'—'}</span>
         </div>
     `;
-    // Assembly has weight + by + note. Dispatch is temperature-only.
-    const extras = isAssembly ? `
-        <div class="stage-form" style="margin-top:14px">
-            <div class="field">
-                <label class="label">Weight (optional, g)</label>
-                <input class="num" type="number" step="1" inputmode="numeric" data-stage-input="weight" value="${data.weight!=null?data.weight:''}" placeholder="—" />
+    // Assembly: contributor breakdown + weight/by/note. Dispatch is temp only.
+    let assemblyBlock = '';
+    if(isAssembly){
+        const entries = assemblyEntries(c);
+        const total = assemblyCountTotal(c);
+        const team = state.storage?.team || [];
+        const renderEntry = (e, idx) => {
+            const names = Array.isArray(e.by) ? e.by : (e.by ? [e.by] : []);
+            const label = names.length === 0 ? 'Unattributed'
+                : names.length === 1 ? names[0]
+                : `Batch · ${names.join(', ')}`;
+            return `
+                <div class="contributor-row">
+                    <span class="contrib-tag ${names.length>1?'batch':''}">${escapeHtml(label)}</span>
+                    <span class="contrib-count">${e.count}</span>
+                    <span class="contrib-time">${escapeHtml(e.ts || '')}</span>
+                    <button class="contrib-rm" type="button" data-rm-entry="${idx}" aria-label="Remove">×</button>
+                </div>`;
+        };
+        assemblyBlock = `
+            <div class="section-mini">Dish count · ${total} total${entries.length>1?` across ${entries.length} entries`:''}</div>
+            <div class="contributors">
+                ${entries.length === 0
+                    ? `<div style="color:var(--mute);padding:10px;font-size:13px;text-align:center;background:var(--bg-3);border-radius:8px">No contributors yet. Tap a team chip on the stage page, then type a count on the dish tile — or add a shared batch below.</div>`
+                    : entries.map(renderEntry).join('')}
             </div>
-            <div class="field">
-                <label class="label">Logged by (optional)</label>
-                <input type="text" data-stage-input="by" value="${escapeAttr(data.by||'')}" placeholder="Initials" />
+            <div class="batch-add" id="batch-add-host">
+                <details>
+                    <summary>+ Add shared batch (multiple people on one batch)</summary>
+                    <div class="batch-fields">
+                        <div class="field full">
+                            <label class="label">Team members (tap to include)</label>
+                            <div class="batch-chips">
+                                ${team.length === 0
+                                    ? `<span style="font-size:12px;color:var(--mute)">No team members configured — open ⚙ Settings to add them.</span>`
+                                    : team.map(m => `<button class="batch-chip" data-batch-name="${escapeAttr(m.name)}" type="button">${escapeHtml(m.name)}</button>`).join('')}
+                            </div>
+                        </div>
+                        <div class="field">
+                            <label class="label">Shared count</label>
+                            <input class="num" id="batch-count" type="text" inputmode="numeric" pattern="[0-9]*" placeholder="e.g. 30" />
+                        </div>
+                        <button class="btn btn-primary btn-sm" type="button" id="batch-save">Save batch</button>
+                    </div>
+                </details>
             </div>
-            <div class="field full">
-                <label class="label">Note</label>
-                <textarea data-stage-input="note" placeholder="What was noted at this stage?">${escapeHtml(data.note||'')}</textarea>
+            <div class="stage-form" style="margin-top:14px">
+                <div class="field">
+                    <label class="label">Weight (optional, g)</label>
+                    <input class="num" type="number" step="1" inputmode="numeric" data-stage-input="weight" value="${data.weight!=null?data.weight:''}" placeholder="—" />
+                </div>
+                <div class="field full">
+                    <label class="label">Note</label>
+                    <textarea data-stage-input="note" placeholder="What was noted at this stage?">${escapeHtml(data.note||'')}</textarea>
+                </div>
             </div>
-        </div>
-    ` : '';
-    return `${samplesBlock}${extras}<div style="font-size:12px;color:var(--mute);margin-top:8px">⏱ Time is recorded automatically when you save a sample — no need to type it.</div>`;
+        `;
+    }
+    return `${samplesBlock}${assemblyBlock}<div style="font-size:12px;color:var(--mute);margin-top:8px">⏱ Time is recorded automatically when you save — no need to type it.</div>`;
 }
 
 function renderIngredientsTab(dish, c){
@@ -2434,6 +2526,34 @@ function bindTabHandlers(tab, dish){
             inp.addEventListener('blur', ()=>saveStageFromForm(tab));
             inp.addEventListener('change', ()=>saveStageFromForm(tab));
         });
+    }
+    // Assembly contributors: remove entry, add batch
+    if(tab === 'assembly'){
+        const lettr = modalState.letter;
+        overlay.querySelectorAll('[data-rm-entry]').forEach(btn => {
+            btn.addEventListener('click', async () => {
+                const idx = Number(btn.getAttribute('data-rm-entry'));
+                try { await removeAssemblyEntry(lettr, idx); toast('Entry removed','ok'); renderModal(); }
+                catch(err){ toast('Save failed','fail'); console.error(err); }
+            });
+        });
+        // Batch chip multi-select
+        const picked = new Set();
+        overlay.querySelectorAll('.batch-chip').forEach(c => {
+            c.addEventListener('click', () => {
+                const n = c.getAttribute('data-batch-name');
+                if(picked.has(n)){ picked.delete(n); c.classList.remove('is-on'); }
+                else { picked.add(n); c.classList.add('is-on'); }
+            });
+        });
+        const saveBtn = overlay.querySelector('#batch-save');
+        if(saveBtn){
+            saveBtn.addEventListener('click', async () => {
+                const count = overlay.querySelector('#batch-count')?.value;
+                try { await addBatchAssembly(lettr, [...picked], count); toast('Batch saved','ok'); renderModal(); }
+                catch(err){ toast('Save failed','fail'); console.error(err); }
+            });
+        }
     }
 }
 
@@ -2656,15 +2776,17 @@ async function saveStageFromForm(stage){
     const hasAnyTemp = temps.some(v => v != null);
     if(stage === 'assembly'){
         const wNum = parseDecimal(get('weight'));
-        const by = get('by');
         const note = get('note');
+        // Note: we no longer write a top-level `by` from this form —
+        // contributor attribution now lives in entries[]. Don't touch entries
+        // here, saveStage uses Firebase update() so it preserves siblings.
         payload = {
             temps: hasAnyTemp ? temps : null,
             temp: null, // clear legacy scalar so we always read from temps[]
             weight: Number.isNaN(wNum) ? null : wNum,
-            by, note
+            note
         };
-        const hasValue = hasAnyTemp || payload.weight != null || (note && note.length) || (by && by.length);
+        const hasValue = hasAnyTemp || payload.weight != null || (note && note.length);
         payload.time = hasValue ? nowHHMM() : null;
     } else if(stage === 'dispatch'){
         payload = {

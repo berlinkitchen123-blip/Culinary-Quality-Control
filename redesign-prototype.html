@@ -3101,7 +3101,7 @@ async function generatePdfReport(range){
     const dates = datesInRange(range.start, range.end);
 
     // ---------- Build the PDF ----------
-    const pdf = new jsPDF({ unit:'pt', format:'a4' });
+    const pdf = new jsPDF({ unit:'pt', format:'a4', orientation:'landscape' });
     const pageW = pdf.internal.pageSize.getWidth();
     const margin = 36;
     let y = 50;

@@ -2831,14 +2831,16 @@ async function callOpenAi(prompt, imageDataUrl, key){
     return JSON.parse(content);
 }
 
-async function callGemini(prompt, imageDataUrl, key){
+async function callGemini(prompt, imageDataUrl, key, opts){
     // Gemini accepts inline base64 — separate the data URL into mime + base64
     const m = /^data:([^;]+);base64,(.+)$/.exec(imageDataUrl);
     if(!m) throw new Error('Captured image is not a base64 data URL');
     const mediaType = m[1] || 'image/jpeg';
     const base64 = m[2];
     const url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=' + encodeURIComponent(key);
-    const res = await fetch(url, {
+    const onStatus = (opts && opts.onStatus) || (() => {});
+
+    const doFetch = () => fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -2856,6 +2858,18 @@ async function callGemini(prompt, imageDataUrl, key){
             }
         })
     });
+
+    // First attempt
+    let res = await doFetch();
+
+    // On 429 (per-minute rate limit), wait + retry once. Free tier is 15 RPM
+    // so a 35-second wait reliably clears the window.
+    if(res.status === 429){
+        onStatus('Rate-limited, waiting 35s…');
+        await new Promise(r => setTimeout(r, 35000));
+        onStatus('Retrying…');
+        res = await doFetch();
+    }
     if(!res.ok){
         const txt = await res.text().catch(()=>'');
         // Friendlier message for the most common Gemini errors
@@ -2936,7 +2950,9 @@ async function reviewDishWithAI(letter){
     try {
         let review;
         if(cfg.provider === 'gemini' && cfg.key){
-            review = await callGemini(buildAiPrompt(dish, c), c.capturedImage, cfg.key);
+            review = await callGemini(buildAiPrompt(dish, c), c.capturedImage, cfg.key, {
+                onStatus: (msg) => { if(btn){ btn.textContent = msg; } }
+            });
         } else if(cfg.provider === 'openai' && cfg.key){
             review = await callOpenAi(buildAiPrompt(dish, c), c.capturedImage, cfg.key);
         } else if(cfg.provider === 'anthropic' && cfg.key){
@@ -4477,7 +4493,9 @@ function openSettings(){
                 try {
                     const probe = 'Return ONLY this exact JSON object verbatim: {"ok":true,"summary":"ping"}';
                     let resp;
-                    if(provider === 'gemini') resp = await callGemini(probe, tinyPng, key);
+                    if(provider === 'gemini') resp = await callGemini(probe, tinyPng, key, {
+                        onStatus: (msg) => { aiTestBtn.textContent = msg; }
+                    });
                     else if(provider === 'openai') resp = await callOpenAi(probe, tinyPng, key);
                     else resp = await callAnthropic(probe, tinyPng, key);
                     aiTestResult.textContent = '✓ Connected · response: ' + JSON.stringify(resp).slice(0, 80);

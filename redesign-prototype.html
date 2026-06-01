@@ -445,11 +445,13 @@ body[data-view="home"] .menu-back{display:none}
 /* Modal */
 .modal-overlay{position:fixed;inset:0;background:rgba(26,24,21,0.6);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;padding:16px;z-index:80;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
 .modal-overlay.hidden{display:none}
-.modal-panel{width:100%;max-width:880px;background:var(--bg-2);border:1px solid var(--line);border-radius:var(--radius-lg);overflow:hidden;box-shadow:var(--shadow-lg);max-height:94vh;display:flex;flex-direction:column}
+.modal-panel{width:100%;max-width:880px;background:var(--bg-2);border:1px solid var(--line);border-radius:var(--radius-lg);overflow:hidden;box-shadow:var(--shadow-lg);max-height:calc(94vh - var(--kb-offset, 0px));display:flex;flex-direction:column;transition:max-height 180ms ease, height 180ms ease}
 @media(max-width:640px){
-    /* On phones: behave like a proper full-screen view, not a popup. */
+    /* On phones: behave like a proper full-screen view, not a popup.
+       --kb-offset is updated by JS from visualViewport when the on-screen
+       keyboard opens, so the panel shrinks and the save bar stays above it. */
     .modal-overlay{padding:0;align-items:stretch;background:var(--bg);backdrop-filter:none}
-    .modal-panel{max-height:none;height:100vh;height:100dvh;border-radius:0;border:0;box-shadow:none;max-width:100%}
+    .modal-panel{max-height:none;height:calc(100vh - var(--kb-offset, 0px));height:calc(100dvh - var(--kb-offset, 0px));border-radius:0;border:0;box-shadow:none;max-width:100%}
 }
 /* Body scroll lock — applied while a modal is open so background never scrolls */
 body.modal-open{overflow:hidden;position:fixed;width:100%;left:0;right:0}
@@ -2240,6 +2242,7 @@ function lockBodyScroll(){
     _savedScrollY = window.scrollY || document.documentElement.scrollTop || 0;
     document.body.classList.add('modal-open');
     document.body.style.top = `-${_savedScrollY}px`;
+    attachKbTracking();
 }
 function unlockBodyScroll(){
     if(!document.body.classList.contains('modal-open')) return;
@@ -2247,6 +2250,41 @@ function unlockBodyScroll(){
     document.body.style.top = '';
     // Restore the page scroll position so the user doesn't lose their place
     window.scrollTo(0, _savedScrollY);
+    detachKbTracking();
+}
+
+/* Keyboard-aware modal sizing.
+   On phones the on-screen keyboard reduces visualViewport.height but the
+   layout viewport (and 100dvh) often doesn't shrink — so the modal's foot
+   (Save / Done button) ends up behind the keyboard. We watch visualViewport,
+   compute the keyboard overlap, and expose it as --kb-offset so CSS shrinks
+   the modal-panel by exactly that amount. The footer naturally rises above
+   the keyboard, while the body stays scrollable for the few inputs above. */
+let _kbHandler = null;
+function _computeKbOffset(){
+    const vv = window.visualViewport;
+    if(!vv){ document.body.style.setProperty('--kb-offset', '0px'); return; }
+    const obstruction = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
+    document.body.style.setProperty('--kb-offset', obstruction + 'px');
+    // Bring the focused input into view above the keyboard
+    const ae = document.activeElement;
+    if(obstruction > 80 && ae && (ae.tagName === 'INPUT' || ae.tagName === 'TEXTAREA')){
+        try { ae.scrollIntoView({ block: 'center', behavior: 'smooth' }); } catch(_e){}
+    }
+}
+function attachKbTracking(){
+    if(_kbHandler || !window.visualViewport) return;
+    _kbHandler = () => _computeKbOffset();
+    window.visualViewport.addEventListener('resize', _kbHandler);
+    window.visualViewport.addEventListener('scroll', _kbHandler);
+    _computeKbOffset();
+}
+function detachKbTracking(){
+    if(!_kbHandler) return;
+    window.visualViewport.removeEventListener('resize', _kbHandler);
+    window.visualViewport.removeEventListener('scroll', _kbHandler);
+    _kbHandler = null;
+    document.body.style.setProperty('--kb-offset', '0px');
 }
 
 function openModal(letter){
@@ -2481,24 +2519,6 @@ function renderStageTab(stage, label, dish, c){
                 </div>
             </div>
 
-            <!-- Manual entry form: pick mode, pick name(s), enter qty -->
-            <div class="add-entry-card" id="entry-add-host">
-                <div class="add-entry-title">Add dish count</div>
-                <div class="entry-mode-row" role="group" aria-label="Entry mode">
-                    <button type="button" class="mode-btn is-active" data-mode="single">Single person</button>
-                    <button type="button" class="mode-btn" data-mode="batch">Batch (multiple people)</button>
-                </div>
-                <div class="entry-hint" id="entry-hint">Pick one person who prepared.</div>
-                <div class="entry-chips" id="entry-chips">
-                    ${team.length === 0
-                        ? `<span style="font-size:12px;color:var(--mute)">No team members configured — open ⚙ Settings → Team members.</span>`
-                        : team.map(m => `<button class="entry-chip" type="button" data-entry-name="${escapeAttr(m.name)}">${escapeHtml(m.name)}</button>`).join('')}
-                </div>
-                <div class="entry-qty-row">
-                    <input class="entry-qty" id="entry-qty" type="text" inputmode="numeric" pattern="[0-9]*" placeholder="Quantity" autocomplete="off" />
-                    <button class="btn btn-primary" type="button" id="entry-save">Add entry</button>
-                </div>
-            </div>
         `;
     }
     return `${samplesBlock}${assemblyBlock}<div style="font-size:12px;color:var(--mute);margin-top:8px">⏱ Time is recorded automatically when you save — no need to type it.</div>`;
@@ -2632,10 +2652,10 @@ function bindTabHandlers(tab, dish){
             tempInputs.forEach(inp => inp.addEventListener('input', updateAvg));
         }
     }
-    // Assembly contributors: remove entry, add via Single/Batch form
+    // Assembly contributors: only the remove-entry button remains (the manual
+    // dish-count entry form was removed per kitchen request).
     if(tab === 'assembly'){
         const lettr = modalState.letter;
-        // Remove an existing entry
         overlay.querySelectorAll('[data-rm-entry]').forEach(btn => {
             btn.addEventListener('click', async () => {
                 const idx = Number(btn.getAttribute('data-rm-entry'));
@@ -2643,66 +2663,6 @@ function bindTabHandlers(tab, dish){
                 catch(err){ toast('Save failed','fail'); console.error(err); }
             });
         });
-        // Single / Batch mode toggle
-        let mode = 'single';
-        const picked = new Set();
-        const modeBtns = overlay.querySelectorAll('.entry-mode-row .mode-btn');
-        const chips = overlay.querySelectorAll('.entry-chip');
-        const hint = overlay.querySelector('#entry-hint');
-        const setMode = (next) => {
-            mode = next;
-            modeBtns.forEach(b => b.classList.toggle('is-active', b.getAttribute('data-mode') === mode));
-            // Reset selection on mode change
-            picked.clear();
-            chips.forEach(c => c.classList.remove('is-on'));
-            if(hint) hint.textContent = mode === 'single'
-                ? 'Pick one person who prepared the dishes.'
-                : 'Pick every person who worked on this batch (multi-select).';
-        };
-        modeBtns.forEach(b => b.addEventListener('click', () => setMode(b.getAttribute('data-mode'))));
-        // Chip tap: single → exclusive, batch → multi-select
-        chips.forEach(c => {
-            c.addEventListener('click', () => {
-                const n = c.getAttribute('data-entry-name');
-                if(mode === 'single'){
-                    picked.clear();
-                    chips.forEach(x => x.classList.remove('is-on'));
-                    picked.add(n);
-                    c.classList.add('is-on');
-                } else {
-                    if(picked.has(n)){ picked.delete(n); c.classList.remove('is-on'); }
-                    else { picked.add(n); c.classList.add('is-on'); }
-                }
-            });
-        });
-        const saveBtn = overlay.querySelector('#entry-save');
-        if(saveBtn){
-            saveBtn.addEventListener('click', async () => {
-                if(picked.size === 0){ toast(mode === 'single' ? 'Pick a person' : 'Pick at least one person', 'fail'); return; }
-                const qtyEl = overlay.querySelector('#entry-qty');
-                const qty = qtyEl?.value;
-                const n = Math.max(0, Math.round(parseDecimal(qty) || 0));
-                if(n <= 0){ toast('Enter a quantity', 'fail'); qtyEl?.focus(); return; }
-                try {
-                    if(mode === 'single'){
-                        // Append a new entry for this single person (each tap of
-                        // Add entry creates a fresh row, so the same person can
-                        // record several rounds in a shift).
-                        const member = [...picked][0];
-                        const c = state.checks[lettr] || {};
-                        const entries = assemblyEntries(c).slice();
-                        entries.push({ by: member, count: n, ts: nowHHMM() });
-                        await saveStage(lettr, 'assembly', { entries, count: null, time: nowHHMM() });
-                    } else {
-                        await addBatchAssembly(lettr, [...picked], n);
-                    }
-                    toast(`Saved ${n}`, 'ok');
-                    renderModal();
-                } catch(err){ toast('Save failed','fail'); console.error(err); }
-            });
-        }
-        // Default mode hint on first render
-        if(hint) hint.textContent = 'Pick one person who prepared the dishes.';
     }
 }
 

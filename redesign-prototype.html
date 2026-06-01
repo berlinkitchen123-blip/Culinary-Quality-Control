@@ -4334,11 +4334,12 @@ function normalizeMenu(raw, opts){
             const sticker = String(d.stickerNo || '').trim();
             const isAddon = sticker.toLowerCase() === 'addons';
             if(isAddon && !includeAddons) continue;
-            // Classify temperature from any of these fields, in priority order:
-            //   type, dishType, servingTemperature, temperature, category
-            // Fall back to 'hot' (most production dishes are hot), so we never
-            // silently mis-flag every dish as cold like the previous logic did.
-            const dishType = classifyTemp(d.type) || classifyTemp(d.dishType) || classifyTemp(d.servingTemperature) || classifyTemp(d.temperature) || classifyTemp(d.category && d.category.name) || 'hot';
+            // Classify temperature. Tries d.type first (production format ships
+            // lowercase 'cold'/'hot' here), then falls back to a handful of
+            // alternative field names. The default for unrecognised types stays
+            // 'cold' — same as the original behaviour, so the existing menu
+            // continues to classify exactly as it did this morning.
+            const dishType = classifyTemp(d.type) || classifyTemp(d.dishType) || classifyTemp(d.servingTemperature) || classifyTemp(d.temperature) || classifyTemp(d.category && d.category.name) || 'cold';
             // dishLetter: use stickerNo (A-Z, 1-9, or "addons-<short id>")
             let dishLetter = sticker || (d.id ? d.id.slice(0,4) : '?');
             if(isAddon && includeAddons) dishLetter = 'ad-' + (d.id ? d.id.slice(0,4) : Math.random().toString(36).slice(2,6));
@@ -4399,7 +4400,7 @@ function normalizeMenu(raw, opts){
             dishes: parsed.dishes.map(d => ({
                 dishLetter: String(d.dishLetter),
                 dishName: String(d.dishName),
-                dishType: classifyTemp(d.dishType) || classifyTemp(d.type) || 'hot',
+                dishType: classifyTemp(d.dishType) || classifyTemp(d.type) || 'cold',
                 theoreticalWeight: (typeof d.theoreticalWeight === 'number') ? d.theoreticalWeight : null,
                 dishImage: d.dishImage || '',
                 dishIngredients: Array.isArray(d.dishIngredients) ? d.dishIngredients : [],

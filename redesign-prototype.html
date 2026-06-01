@@ -2831,6 +2831,37 @@ async function callOpenAi(prompt, imageDataUrl, key){
     return JSON.parse(content);
 }
 
+async function callGroq(prompt, imageDataUrl, key){
+    // Groq's API is OpenAI-compatible. Vision model: Llama 4 Scout (multimodal).
+    // Free tier: 30 RPM, 14,400 RPD — plenty for a kitchen.
+    const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key },
+        body: JSON.stringify({
+            model: 'meta-llama/llama-4-scout-17b-16e-instruct',
+            max_tokens: 600,
+            response_format: { type: 'json_object' },
+            messages: [{
+                role: 'user',
+                content: [
+                    { type: 'text', text: prompt + '\n\nReturn ONLY the JSON object. No prose, no code fences.' },
+                    { type: 'image_url', image_url: { url: imageDataUrl } }
+                ]
+            }]
+        })
+    });
+    if(!res.ok){
+        const txt = await res.text().catch(()=>'');
+        if(res.status === 401) throw new Error('Groq 401: API key invalid. Re-copy from console.groq.com/keys.');
+        if(res.status === 429) throw new Error('Groq 429: rate limit hit (30/min). Wait 60s.');
+        throw new Error('Groq ' + res.status + ': ' + txt.slice(0, 240));
+    }
+    const data = await res.json();
+    const content = data.choices?.[0]?.message?.content || '{}';
+    const stripped = content.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '').trim();
+    return JSON.parse(stripped);
+}
+
 async function callGemini(prompt, imageDataUrl, key, opts){
     // Gemini accepts inline base64 — separate the data URL into mime + base64
     const m = /^data:([^;]+);base64,(.+)$/.exec(imageDataUrl);
@@ -2995,7 +3026,9 @@ async function reviewDishWithAI(letter){
     if(btn){ btn.disabled = true; btn.textContent = 'Reviewing…'; }
     try {
         let review;
-        if(cfg.provider === 'gemini' && cfg.key){
+        if(cfg.provider === 'groq' && cfg.key){
+            review = await callGroq(buildAiPrompt(dish, c), c.capturedImage, cfg.key);
+        } else if(cfg.provider === 'gemini' && cfg.key){
             review = await callGemini(buildAiPrompt(dish, c), c.capturedImage, cfg.key, {
                 onStatus: (msg) => { if(btn){ btn.textContent = msg; } }
             });
@@ -4447,13 +4480,16 @@ function openSettings(){
                         Returns a 0–100 score, a one-line summary, and a list of issues.
                         <strong>Your API key is stored only on this device</strong> (browser localStorage) —
                         never written to Firebase, never leaves this device except in the request to the chosen AI provider.<br><br>
-                        <strong style="color:var(--pass)">Free option:</strong> pick <em>Google Gemini</em> and get a free key at
-                        <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener" style="color:var(--brand);text-decoration:underline">aistudio.google.com/app/apikey</a>
-                        — no credit card, 1,500 reviews/day on the free tier (you'll use ~26).
+                        <strong style="color:var(--pass)">Free options:</strong>
+                        <ul style="margin:6px 0 6px 18px;padding:0;font-size:12px">
+                            <li><strong>Groq</strong> — best free option, no credit card, no quota games. Key: <a href="https://console.groq.com/keys" target="_blank" rel="noopener" style="color:var(--brand);text-decoration:underline">console.groq.com/keys</a></li>
+                            <li><strong>Gemini</strong> — Google's API, free tier sometimes refuses on accounts with prior GCP use. Key: <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener" style="color:var(--brand);text-decoration:underline">aistudio.google.com</a></li>
+                        </ul>
                     </div>
                     <div class="storage-row" style="flex-wrap:wrap;gap:8px">
-                        <select id="ai-provider-select" style="min-width:180px;padding:9px 11px;border-radius:8px;background:var(--bg-2);color:var(--ink);border:1px solid var(--line)">
+                        <select id="ai-provider-select" style="min-width:200px;padding:9px 11px;border-radius:8px;background:var(--bg-2);color:var(--ink);border:1px solid var(--line)">
                             <option value="">— Off —</option>
+                            <option value="groq">Groq · Llama 4 Scout vision · FREE</option>
                             <option value="gemini">Google Gemini 2.0 Flash · FREE</option>
                             <option value="openai">OpenAI (GPT-4o-mini · paid)</option>
                             <option value="anthropic">Anthropic (Claude 3.5 Sonnet · paid)</option>
@@ -4539,7 +4575,8 @@ function openSettings(){
                 try {
                     const probe = 'Return ONLY this exact JSON object verbatim: {"ok":true,"summary":"ping"}';
                     let resp;
-                    if(provider === 'gemini') resp = await callGemini(probe, tinyPng, key, {
+                    if(provider === 'groq') resp = await callGroq(probe, tinyPng, key);
+                    else if(provider === 'gemini') resp = await callGemini(probe, tinyPng, key, {
                         onStatus: (msg) => { aiTestBtn.textContent = msg; }
                     });
                     else if(provider === 'openai') resp = await callOpenAi(probe, tinyPng, key);

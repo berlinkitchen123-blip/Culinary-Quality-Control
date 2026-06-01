@@ -4307,9 +4307,22 @@ function normalizeMenu(raw, opts){
     }
     console.log(`normalizeMenu: found ${parsed.dishes.length} raw dishes`);
 
+    // Case-insensitive type classifier — accepts any of:
+    //   "hot", "HOT", "Hot", "warm", "heated", "heiss", "heiß", "warmes"
+    //   "cold", "COLD", "Cold", "kalt", "chilled", "kaltes"
+    // Default when nothing matches: 'hot' (safer than always-cold which made
+    // every dish look like it had a cold-temp spec).
+    const classifyTemp = (val) => {
+        const s = String(val || '').toLowerCase().trim();
+        if(!s) return null;
+        if(/\b(cold|kalt|kaltes|chilled|cool|cooled)\b/.test(s)) return 'cold';
+        if(/\b(hot|warm|warmes|warmed|heated|heiss|heiß|hei[ßs]es)\b/.test(s)) return 'hot';
+        return null;
+    };
+
     // Detect production format more leniently: any dish with a variantName,
-    // a stickerNo, or a type of cold/hot counts as production-style.
-    const looksProduction = parsed.dishes.some(d => d && (d.variantName || d.stickerNo || d.type === 'cold' || d.type === 'hot'));
+    // a stickerNo, or a recognised type counts as production-style.
+    const looksProduction = parsed.dishes.some(d => d && (d.variantName || d.stickerNo || classifyTemp(d.type)));
 
     let normalized;
     if(looksProduction){
@@ -4321,7 +4334,11 @@ function normalizeMenu(raw, opts){
             const sticker = String(d.stickerNo || '').trim();
             const isAddon = sticker.toLowerCase() === 'addons';
             if(isAddon && !includeAddons) continue;
-            const dishType = (d.type === 'hot' || d.type === 'cold') ? d.type : 'cold';
+            // Classify temperature from any of these fields, in priority order:
+            //   type, dishType, servingTemperature, temperature, category
+            // Fall back to 'hot' (most production dishes are hot), so we never
+            // silently mis-flag every dish as cold like the previous logic did.
+            const dishType = classifyTemp(d.type) || classifyTemp(d.dishType) || classifyTemp(d.servingTemperature) || classifyTemp(d.temperature) || classifyTemp(d.category && d.category.name) || 'hot';
             // dishLetter: use stickerNo (A-Z, 1-9, or "addons-<short id>")
             let dishLetter = sticker || (d.id ? d.id.slice(0,4) : '?');
             if(isAddon && includeAddons) dishLetter = 'ad-' + (d.id ? d.id.slice(0,4) : Math.random().toString(36).slice(2,6));
@@ -4382,7 +4399,7 @@ function normalizeMenu(raw, opts){
             dishes: parsed.dishes.map(d => ({
                 dishLetter: String(d.dishLetter),
                 dishName: String(d.dishName),
-                dishType: d.dishType === 'hot' ? 'hot' : 'cold',
+                dishType: classifyTemp(d.dishType) || classifyTemp(d.type) || 'hot',
                 theoreticalWeight: (typeof d.theoreticalWeight === 'number') ? d.theoreticalWeight : null,
                 dishImage: d.dishImage || '',
                 dishIngredients: Array.isArray(d.dishIngredients) ? d.dishIngredients : [],

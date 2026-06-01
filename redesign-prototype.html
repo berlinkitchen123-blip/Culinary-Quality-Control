@@ -2858,7 +2858,22 @@ async function callGemini(prompt, imageDataUrl, key){
     });
     if(!res.ok){
         const txt = await res.text().catch(()=>'');
-        throw new Error('Gemini ' + res.status + ': ' + txt.slice(0, 200));
+        // Friendlier message for the most common Gemini errors
+        if(res.status === 429){
+            throw new Error(
+                'Gemini 429: free-tier quota hit. Either wait 60s (15 req/min limit) '
+                + 'OR your key is on a project with no free-tier quota — '
+                + 'fix: open aistudio.google.com/app/apikey, delete this key, '
+                + 'and pick "Create API key in new project" so a fresh project with free quota is used.'
+            );
+        }
+        if(res.status === 400 && /API key not valid|invalid/i.test(txt)){
+            throw new Error('Gemini 400: API key invalid. Re-copy from aistudio.google.com/app/apikey (key should start with AIzaSy).');
+        }
+        if(res.status === 403){
+            throw new Error('Gemini 403: this key is not enabled for the Generative Language API, or the project has billing/region restrictions.');
+        }
+        throw new Error('Gemini ' + res.status + ': ' + txt.slice(0, 240));
     }
     const data = await res.json();
     const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '{}';

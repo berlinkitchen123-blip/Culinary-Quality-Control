@@ -2831,6 +2831,41 @@ async function callOpenAi(prompt, imageDataUrl, key){
     return JSON.parse(content);
 }
 
+async function callGemini(prompt, imageDataUrl, key){
+    // Gemini accepts inline base64 — separate the data URL into mime + base64
+    const m = /^data:([^;]+);base64,(.+)$/.exec(imageDataUrl);
+    if(!m) throw new Error('Captured image is not a base64 data URL');
+    const mediaType = m[1] || 'image/jpeg';
+    const base64 = m[2];
+    const url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=' + encodeURIComponent(key);
+    const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            contents: [{
+                role: 'user',
+                parts: [
+                    { text: prompt + '\n\nReturn ONLY the JSON object — no markdown, no prose, no code fences.' },
+                    { inline_data: { mime_type: mediaType, data: base64 } }
+                ]
+            }],
+            generationConfig: {
+                responseMimeType: 'application/json',
+                temperature: 0.2,
+                maxOutputTokens: 600
+            }
+        })
+    });
+    if(!res.ok){
+        const txt = await res.text().catch(()=>'');
+        throw new Error('Gemini ' + res.status + ': ' + txt.slice(0, 200));
+    }
+    const data = await res.json();
+    const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '{}';
+    const stripped = text.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '').trim();
+    return JSON.parse(stripped);
+}
+
 async function callAnthropic(prompt, imageDataUrl, key){
     // Anthropic vision API needs base64 + media type (not the full data: URI)
     const m = /^data:([^;]+);base64,(.+)$/.exec(imageDataUrl);
@@ -2885,7 +2920,9 @@ async function reviewDishWithAI(letter){
     if(btn){ btn.disabled = true; btn.textContent = 'Reviewing…'; }
     try {
         let review;
-        if(cfg.provider === 'openai' && cfg.key){
+        if(cfg.provider === 'gemini' && cfg.key){
+            review = await callGemini(buildAiPrompt(dish, c), c.capturedImage, cfg.key);
+        } else if(cfg.provider === 'openai' && cfg.key){
             review = await callOpenAi(buildAiPrompt(dish, c), c.capturedImage, cfg.key);
         } else if(cfg.provider === 'anthropic' && cfg.key){
             review = await callAnthropic(buildAiPrompt(dish, c), c.capturedImage, cfg.key);
@@ -4332,15 +4369,19 @@ function openSettings(){
                         Sends today's dish photo + temp/weight/ingredients to a vision model.
                         Returns a 0–100 score, a one-line summary, and a list of issues.
                         <strong>Your API key is stored only on this device</strong> (browser localStorage) —
-                        it's never written to Firebase and never leaves this device except in the request to the AI provider.
+                        never written to Firebase, never leaves this device except in the request to the chosen AI provider.<br><br>
+                        <strong style="color:var(--pass)">Free option:</strong> pick <em>Google Gemini</em> and get a free key at
+                        <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener" style="color:var(--brand);text-decoration:underline">aistudio.google.com/app/apikey</a>
+                        — no credit card, 1,500 reviews/day on the free tier (you'll use ~26).
                     </div>
                     <div class="storage-row" style="flex-wrap:wrap;gap:8px">
                         <select id="ai-provider-select" style="min-width:180px;padding:9px 11px;border-radius:8px;background:var(--bg-2);color:var(--ink);border:1px solid var(--line)">
                             <option value="">— Off —</option>
-                            <option value="openai">OpenAI (GPT-4o-mini · cheap)</option>
-                            <option value="anthropic">Anthropic (Claude 3.5 Sonnet)</option>
+                            <option value="gemini">Google Gemini 2.0 Flash · FREE</option>
+                            <option value="openai">OpenAI (GPT-4o-mini · paid)</option>
+                            <option value="anthropic">Anthropic (Claude 3.5 Sonnet · paid)</option>
                         </select>
-                        <input type="password" id="ai-api-key" placeholder="Paste API key (sk-… or sk-ant-…)" autocomplete="off" style="flex:1;min-width:240px" />
+                        <input type="password" id="ai-api-key" placeholder="Paste API key" autocomplete="off" style="flex:1;min-width:240px" />
                         <button class="btn" type="button" id="ai-test-btn">Test</button>
                     </div>
                     <div id="ai-test-result" style="font-size:12px;color:var(--mute);margin-top:6px"></div>
@@ -4421,7 +4462,8 @@ function openSettings(){
                 try {
                     const probe = 'Return ONLY this exact JSON object verbatim: {"ok":true,"summary":"ping"}';
                     let resp;
-                    if(provider === 'openai') resp = await callOpenAi(probe, tinyPng, key);
+                    if(provider === 'gemini') resp = await callGemini(probe, tinyPng, key);
+                    else if(provider === 'openai') resp = await callOpenAi(probe, tinyPng, key);
                     else resp = await callAnthropic(probe, tinyPng, key);
                     aiTestResult.textContent = '✓ Connected · response: ' + JSON.stringify(resp).slice(0, 80);
                     aiTestResult.style.color = 'var(--pass)';

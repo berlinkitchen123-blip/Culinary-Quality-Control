@@ -2919,12 +2919,13 @@ async function callGemini(prompt, imageDataUrl, key, opts){
     if(!res.ok){
         const txt = await res.text().catch(()=>'');
         if(res.status === 429){
-            // Second 429 after retry — parse again for the specific message
-            const info = await parse429(res);
-            if(info.kind === 'per-day'){
-                throw new Error('Gemini daily quota exhausted. Create a fresh project key at aistudio.google.com/app/apikey → "Create API key in new project".');
-            }
-            throw new Error('Gemini 429 (after retry): ' + (info.ids || 'quota exceeded') + '. Try a fresh project key.');
+            // Dump the actual body so we know WHAT Google is complaining about
+            const snippet = txt.replace(/\s+/g, ' ').slice(0, 300);
+            throw new Error(
+                'Gemini 429. Most likely cause: your key is on a project with no free-tier quota. '
+                + 'Fix: aistudio.google.com/app/apikey → DELETE the key → "Create API key in NEW project" → paste the new key here. '
+                + 'Google\'s exact message: ' + snippet
+            );
         }
         if(res.status === 400 && /API key not valid|invalid/i.test(txt)){
             throw new Error('Gemini 400: API key invalid. Re-copy from aistudio.google.com/app/apikey (key should start with AIzaSy).');

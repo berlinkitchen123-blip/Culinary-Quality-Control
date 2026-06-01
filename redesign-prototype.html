@@ -2747,34 +2747,180 @@ function bumpStamp(){
    Firebase Cloud Function) that has the Anthropic key. The browser never
    sees the key.
 */
+/* AI dish analysis — bring-your-own-key.
+   Settings → Integrations stores provider + API key in localStorage (NEVER
+   in Firebase). The key is sent only to the chosen vision-model endpoint.
+   We also keep the legacy aiProxyUrl path as a fallback for users who'd
+   rather run a Cloud Function.
+*/
+const AI_KEY_STORAGE = 'bb.ai.config.v1';
+function getAiConfig(){
+    try {
+        const raw = localStorage.getItem(AI_KEY_STORAGE);
+        if(!raw) return { provider:'', key:'' };
+        const parsed = JSON.parse(raw);
+        return { provider: parsed.provider || '', key: parsed.key || '' };
+    } catch { return { provider:'', key:'' }; }
+}
+function setAiConfig(cfg){
+    try {
+        localStorage.setItem(AI_KEY_STORAGE, JSON.stringify({ provider: cfg.provider || '', key: cfg.key || '' }));
+        return true;
+    } catch { return false; }
+}
+
+function buildAiPrompt(dish, c){
+    const qT = avg(c.temperatures);
+    const w = avg(c.weights);
+    const isCold_ = isCold(dish);
+    const tempSpec = isCold_ ? `≤${COLD_MAX}°C (cold)` : `≥${HOT_MIN}°C (hot)`;
+    const ingList = (dish.dishIngredients || []).map(i => i.name + (i.weight ? ' (' + i.weight + ')' : '')).join(', ');
+    return [
+        `You are a head chef and HACCP-trained quality auditor reviewing ONE plated dish at Bella & Bona, a catering company. Be strict, factual, and brief.`,
+        ``,
+        `Dish: ${dish.dishName} (${isCold_ ? 'cold' : 'hot'} dish)`,
+        `Target weight: ${dish.theoreticalWeight ? dish.theoreticalWeight + ' g' : 'not set'}`,
+        `Measured weight (avg of 3 samples): ${w != null ? Math.round(w) + ' g' : 'not measured'}`,
+        `Temperature spec: ${tempSpec}`,
+        `Measured temperature (avg of 3 samples): ${qT != null ? qT.toFixed(1) + ' °C' : 'not measured'}`,
+        `Expected ingredients (from recipe): ${ingList || 'none specified'}`,
+        ``,
+        `You will see ONE image: the actual plated dish that was prepared today.`,
+        `Compare the photo against:`,
+        `  • the expected ingredient list (each item should be visibly present)`,
+        `  • portion appearance vs the target weight (under/over-portioned, sparse, overflowing)`,
+        `  • ingredient freshness, browning, dryness, oxidation, separation, sogginess`,
+        `  • plating quality (mess, spills, uneven distribution)`,
+        `Also factor in:`,
+        `  • whether temperature is in/out of spec (${tempSpec})`,
+        `  • whether weight is within ±8% of the target`,
+        ``,
+        `Reply with STRICT JSON only — no commentary, no code fences. Schema:`,
+        `{`,
+        `  "score": <integer 0-100, 100 = perfect>,`,
+        `  "summary": "<one sentence, ≤120 chars, friendly but honest>",`,
+        `  "differences": ["<short concrete issue 1>", "<short concrete issue 2>", ...]`,
+        `}`,
+        `If everything looks fine, return an empty differences array. NEVER invent ingredients you cannot see.`
+    ].join('\n');
+}
+
+async function callOpenAi(prompt, imageDataUrl, key){
+    const res = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key },
+        body: JSON.stringify({
+            model: 'gpt-4o-mini',
+            max_tokens: 600,
+            response_format: { type: 'json_object' },
+            messages: [{
+                role: 'user',
+                content: [
+                    { type: 'text', text: prompt },
+                    { type: 'image_url', image_url: { url: imageDataUrl, detail: 'low' } }
+                ]
+            }]
+        })
+    });
+    if(!res.ok){
+        const txt = await res.text().catch(()=>'');
+        throw new Error('OpenAI ' + res.status + ': ' + txt.slice(0, 200));
+    }
+    const data = await res.json();
+    const content = data.choices?.[0]?.message?.content || '{}';
+    return JSON.parse(content);
+}
+
+async function callAnthropic(prompt, imageDataUrl, key){
+    // Anthropic vision API needs base64 + media type (not the full data: URI)
+    const m = /^data:([^;]+);base64,(.+)$/.exec(imageDataUrl);
+    if(!m) throw new Error('Captured image is not a base64 data URL');
+    const mediaType = m[1] || 'image/jpeg';
+    const base64 = m[2];
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'x-api-key': key,
+            'anthropic-version': '2023-06-01',
+            'anthropic-dangerous-direct-browser-access': 'true'
+        },
+        body: JSON.stringify({
+            model: 'claude-3-5-sonnet-20241022',
+            max_tokens: 600,
+            messages: [{
+                role: 'user',
+                content: [
+                    { type: 'image', source: { type: 'base64', media_type: mediaType, data: base64 } },
+                    { type: 'text', text: prompt + '\n\nReturn ONLY the JSON object — no markdown, no prose.' }
+                ]
+            }]
+        })
+    });
+    if(!res.ok){
+        const txt = await res.text().catch(()=>'');
+        throw new Error('Anthropic ' + res.status + ': ' + txt.slice(0, 200));
+    }
+    const data = await res.json();
+    const text = data.content?.[0]?.text || '{}';
+    // Strip code-fence wrappers if any model accidentally added them
+    const stripped = text.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '').trim();
+    return JSON.parse(stripped);
+}
+
 async function reviewDishWithAI(letter){
-    const url = state.integrations?.aiProxyUrl;
-    if(!url){ toast('AI proxy not configured — set it in Settings','fail'); return; }
     const dish = (state.menu?.dishes || []).find(d => d.dishLetter === letter);
     const c = state.checks[letter] || {};
-    if(!dish?.dishImage){ toast('No reference image for this dish','fail'); return; }
-    if(!c.capturedImage){ toast('No photo taken today','fail'); return; }
+    if(!c.capturedImage){ toast('Take a photo first — AI rates from the picture','fail'); return; }
+    if(!dish){ toast('Dish not found in this week\'s menu','fail'); return; }
+
+    const cfg = getAiConfig();
+    const proxyUrl = state.integrations?.aiProxyUrl;
+    if(!cfg.provider && !proxyUrl){
+        toast('AI not set up — open Settings → Integrations','fail');
+        return;
+    }
+
     const btn = document.querySelector(`[data-ai-review-letter="${letter}"]`);
     if(btn){ btn.disabled = true; btn.textContent = 'Reviewing…'; }
     try {
-        const res = await fetch(url, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                referenceUrl: dish.dishImage,
-                capturedDataUrl: c.capturedImage,
-                dishName: dish.dishName,
-                ingredients: (dish.dishIngredients || []).map(i => i.name)
-            })
-        });
-        if(!res.ok) throw new Error('Proxy returned ' + res.status);
-        const review = await res.json();
-        await saveAiReview(letter, { ...review, ts: nowHHMM(), date: state.selectedDate });
-        toast('AI review saved','ok');
+        let review;
+        if(cfg.provider === 'openai' && cfg.key){
+            review = await callOpenAi(buildAiPrompt(dish, c), c.capturedImage, cfg.key);
+        } else if(cfg.provider === 'anthropic' && cfg.key){
+            review = await callAnthropic(buildAiPrompt(dish, c), c.capturedImage, cfg.key);
+        } else if(proxyUrl){
+            const res = await fetch(proxyUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    referenceUrl: dish.dishImage,
+                    capturedDataUrl: c.capturedImage,
+                    dishName: dish.dishName,
+                    ingredients: (dish.dishIngredients || []).map(i => i.name)
+                })
+            });
+            if(!res.ok) throw new Error('Proxy returned ' + res.status);
+            review = await res.json();
+        } else {
+            throw new Error('No AI provider configured');
+        }
+
+        // Normalize the response to the shape the rest of the app expects
+        const normalized = {
+            score: typeof review.score === 'number' ? Math.max(0, Math.min(100, Math.round(review.score))) : null,
+            summary: (review.summary || '').toString().slice(0, 400),
+            differences: Array.isArray(review.differences) ? review.differences.map(x => String(x).slice(0, 200)).slice(0, 12) : [],
+            provider: cfg.provider || 'proxy',
+            ts: nowHHMM(),
+            date: state.selectedDate
+        };
+        await saveAiReview(letter, normalized);
+        toast(`AI review: ${normalized.score != null ? normalized.score+'/100' : 'done'}`,'ok');
         if(modalState.letter === letter) renderModal();
     } catch(err){
         console.error('AI review failed', err);
-        toast('AI review failed','fail');
+        toast('AI review failed: ' + (err.message || 'see console').slice(0, 80),'fail');
         if(btn){ btn.disabled = false; btn.textContent = '✨ Review with AI'; }
     }
 }
@@ -4179,12 +4325,35 @@ function openSettings(){
                     <button class="add-storage" type="button" id="add-team">+ Add team member</button>
                 </div>
 
-                <!-- Integrations: AI proxy + Teams webhook -->
+                <!-- Integrations: AI dish analysis (direct OpenAI/Anthropic) + Teams webhook -->
                 <div class="storage-block">
-                    <h4>Integrations</h4>
-                    <div style="font-size:12px;color:var(--mute);margin-bottom:8px">Optional endpoints for AI photo review and the 10:00 AM auto-report. See SETUP-AUTOMATION.md for how to set these up.</div>
+                    <h4>AI dish analysis</h4>
+                    <div style="font-size:12px;color:var(--mute);margin-bottom:8px">
+                        Sends today's dish photo + temp/weight/ingredients to a vision model.
+                        Returns a 0–100 score, a one-line summary, and a list of issues.
+                        <strong>Your API key is stored only on this device</strong> (browser localStorage) —
+                        it's never written to Firebase and never leaves this device except in the request to the AI provider.
+                    </div>
+                    <div class="storage-row" style="flex-wrap:wrap;gap:8px">
+                        <select id="ai-provider-select" style="min-width:180px;padding:9px 11px;border-radius:8px;background:var(--bg-2);color:var(--ink);border:1px solid var(--line)">
+                            <option value="">— Off —</option>
+                            <option value="openai">OpenAI (GPT-4o-mini · cheap)</option>
+                            <option value="anthropic">Anthropic (Claude 3.5 Sonnet)</option>
+                        </select>
+                        <input type="password" id="ai-api-key" placeholder="Paste API key (sk-… or sk-ant-…)" autocomplete="off" style="flex:1;min-width:240px" />
+                        <button class="btn" type="button" id="ai-test-btn">Test</button>
+                    </div>
+                    <div id="ai-test-result" style="font-size:12px;color:var(--mute);margin-top:6px"></div>
+                </div>
+
+                <div class="storage-block">
+                    <h4>Other integrations</h4>
+                    <div style="font-size:12px;color:var(--mute);margin-bottom:8px">
+                        Optional: a Cloud-Function AI proxy (for users who'd rather not put a key in the browser)
+                        and the 10:00 AM auto-report Teams webhook.
+                    </div>
                     <div class="storage-row" style="flex-wrap:wrap">
-                        <input type="text" id="integ-ai-proxy" value="${escapeAttr(state.integrations?.aiProxyUrl || '')}" placeholder="AI proxy URL (e.g. https://your-region-yourproj.cloudfunctions.net/aiReview)" style="flex:1;min-width:240px" />
+                        <input type="text" id="integ-ai-proxy" value="${escapeAttr(state.integrations?.aiProxyUrl || '')}" placeholder="AI proxy URL — fallback if no direct provider key" style="flex:1;min-width:240px" />
                     </div>
                     <div class="storage-row" style="flex-wrap:wrap;margin-top:6px">
                         <input type="text" id="integ-teams-webhook" value="${escapeAttr(state.integrations?.teamsWebhookUrl || '')}" placeholder="MS Teams Power Automate webhook URL" style="flex:1;min-width:240px" />
@@ -4223,6 +4392,48 @@ function openSettings(){
     const teamsInp = overlay.querySelector('#integ-teams-webhook');
     if(aiInp) aiInp.addEventListener('blur', () => saveIntegrations({ aiProxyUrl: aiInp.value.trim() }));
     if(teamsInp) teamsInp.addEventListener('blur', () => saveIntegrations({ teamsWebhookUrl: teamsInp.value.trim() }));
+
+    // AI direct-provider config (provider + key, stored only in localStorage)
+    const aiProviderSel = overlay.querySelector('#ai-provider-select');
+    const aiKeyInp = overlay.querySelector('#ai-api-key');
+    const aiTestBtn = overlay.querySelector('#ai-test-btn');
+    const aiTestResult = overlay.querySelector('#ai-test-result');
+    if(aiProviderSel && aiKeyInp){
+        const cfg = getAiConfig();
+        aiProviderSel.value = cfg.provider || '';
+        aiKeyInp.value = cfg.key || '';
+        const persist = () => {
+            setAiConfig({ provider: aiProviderSel.value, key: aiKeyInp.value.trim() });
+        };
+        aiProviderSel.addEventListener('change', persist);
+        aiKeyInp.addEventListener('blur', persist);
+        if(aiTestBtn){
+            aiTestBtn.addEventListener('click', async () => {
+                const provider = aiProviderSel.value;
+                const key = aiKeyInp.value.trim();
+                if(!provider){ aiTestResult.textContent = 'Pick a provider first.'; aiTestResult.style.color = 'var(--hold)'; return; }
+                if(!key){ aiTestResult.textContent = 'Paste your API key first.'; aiTestResult.style.color = 'var(--hold)'; return; }
+                setAiConfig({ provider, key });
+                aiTestBtn.disabled = true; aiTestBtn.textContent = 'Testing…';
+                aiTestResult.textContent = ''; aiTestResult.style.color = 'var(--mute)';
+                // Lightweight ping: a 1x1 black PNG + tiny prompt asking only for JSON
+                const tinyPng = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkAAIAAAoAAv/lxKUAAAAASUVORK5CYII=';
+                try {
+                    const probe = 'Return ONLY this exact JSON object verbatim: {"ok":true,"summary":"ping"}';
+                    let resp;
+                    if(provider === 'openai') resp = await callOpenAi(probe, tinyPng, key);
+                    else resp = await callAnthropic(probe, tinyPng, key);
+                    aiTestResult.textContent = '✓ Connected · response: ' + JSON.stringify(resp).slice(0, 80);
+                    aiTestResult.style.color = 'var(--pass)';
+                } catch(err){
+                    aiTestResult.textContent = '✗ ' + (err.message || 'unknown error').slice(0, 200);
+                    aiTestResult.style.color = 'var(--hold)';
+                } finally {
+                    aiTestBtn.disabled = false; aiTestBtn.textContent = 'Test';
+                }
+            });
+        }
+    }
 
     overlay.querySelector('#settings-save').onclick=async()=>{
         const txt=document.getElementById('settings-menu-json').value.trim();

@@ -733,6 +733,11 @@ html[data-theme="dark"] .warmer-slot.filled.hot{background:rgba(248,113,113,0.10
 .sample .unit{font-size:10px;font-weight:700;color:var(--mute);text-transform:uppercase;letter-spacing:0.06em;margin-top:2px}
 
 .avg-row{display:flex;justify-content:space-between;align-items:center;background:var(--bg-3);border:1px solid var(--line);border-radius:var(--radius-sm);padding:10px 14px;margin-bottom:18px;font-size:13px;font-weight:600;gap:8px;flex-wrap:wrap}
+.inline-done-row{margin:14px 0 4px 0;display:flex}
+.inline-done{flex:1;background:var(--brand);color:white;border:0;border-radius:12px;padding:16px 18px;font-size:16px;font-weight:700;cursor:pointer;box-shadow:var(--shadow-sm);display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:52px}
+.inline-done:hover{filter:brightness(1.05)}
+.inline-done:active{transform:translateY(1px)}
+.inline-done .check{font-size:18px}
 .avg-row .lbl{color:var(--mute);font-size:11px;text-transform:uppercase;letter-spacing:0.06em}
 .avg-row .val{color:var(--ink);font-variant-numeric:tabular-nums}
 .avg-row .delta{color:var(--mute);font-size:12px;font-weight:500;font-variant-numeric:tabular-nums}
@@ -2433,6 +2438,15 @@ function renderQcTab(dish, c){
             <span class="delta">${tAvg!=null?(isCold(dish)?(tAvg<=COLD_MAX?`+${(COLD_MAX-tAvg).toFixed(1)} headroom`:`+${(tAvg-COLD_MAX).toFixed(1)} over spec`):(tAvg>=HOT_MIN?`+${(tAvg-HOT_MIN).toFixed(1)} above min`:`-${(HOT_MIN-tAvg).toFixed(1)} below min`)):'—'}</span>
         </div>
 
+        <!-- Inline Done — visible right after the 3 temp samples so it sits
+             above the on-screen keyboard. Temps auto-save on blur, so this
+             just closes the modal. -->
+        <div class="inline-done-row">
+            <button type="button" class="inline-done" onclick="window.__qc.closeModal()" aria-label="Done — close dish">
+                <span class="check">✓</span> Done
+            </button>
+        </div>
+
         <!-- Weight -->
         <div class="section-mini">Weight samples${dish.theoreticalWeight?' · theoretical '+dish.theoreticalWeight+'g':' · no target set'}</div>
         <div class="samples">
@@ -2521,7 +2535,19 @@ function renderStageTab(stage, label, dish, c){
 
         `;
     }
-    return `${samplesBlock}${assemblyBlock}<div style="font-size:12px;color:var(--mute);margin-top:8px">⏱ Time is recorded automatically when you save — no need to type it.</div>`;
+    // Inline Done button — sits right below the AVG / sample block so the
+    // user can dismiss the keyboard + close the modal as soon as the 3 temps
+    // are typed, without scrolling down to the modal footer. Data already
+    // auto-saves on blur, so this button just closes the modal.
+    const inlineDone = `
+        <div class="inline-done-row">
+            <button type="button" class="inline-done" onclick="window.__qc.closeModal()" aria-label="Done — close dish">
+                <span class="check">✓</span> Done
+            </button>
+        </div>
+    `;
+    const timeHint = `<div style="font-size:12px;color:var(--mute);margin-top:8px">⏱ Time is recorded automatically when you save — no need to type it.</div>`;
+    return `${samplesBlock}${inlineDone}${assemblyBlock}${timeHint}`;
 }
 
 function renderIngredientsTab(dish, c){

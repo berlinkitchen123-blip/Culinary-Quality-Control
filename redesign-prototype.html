@@ -2859,27 +2859,72 @@ async function callGemini(prompt, imageDataUrl, key, opts){
         })
     });
 
+    // Parse Google's structured 429 response so we know which quota was hit
+    // and how long Google itself says to wait.
+    const parse429 = async (response) => {
+        let body = null;
+        try { body = await response.clone().json(); } catch { body = null; }
+        const details = body?.error?.details || [];
+        const quotaFailure = details.find(d => /QuotaFailure/i.test(d['@type'] || ''));
+        const retryInfo = details.find(d => /RetryInfo/i.test(d['@type'] || ''));
+        const violations = quotaFailure?.violations || [];
+        const ids = violations.map(v => v.quotaId || v.quotaMetric || '').join('; ');
+        let kind = 'unknown';
+        if(/PerMinute/i.test(ids)) kind = 'per-minute';
+        else if(/PerDay/i.test(ids)) kind = 'per-day';
+        else if(violations.length) kind = 'project';
+        // retryDelay looks like "26s" or "1h"
+        let waitSec = 35;
+        const rd = retryInfo?.retryDelay;
+        if(typeof rd === 'string'){
+            const num = parseInt(rd, 10);
+            if(/h/.test(rd)) waitSec = num * 3600;
+            else if(/m/.test(rd) && !/ms/.test(rd)) waitSec = num * 60;
+            else waitSec = num || 35;
+        }
+        return { kind, waitSec, ids, raw: body };
+    };
+
     // First attempt
     let res = await doFetch();
 
-    // On 429 (per-minute rate limit), wait + retry once. Free tier is 15 RPM
-    // so a 35-second wait reliably clears the window.
+    // On 429, only retry if it's a SHORT per-minute wait. Daily or
+    // project-quota 429s won't clear by waiting a few seconds — show a real
+    // message immediately instead of pretending to retry.
     if(res.status === 429){
-        onStatus('Rate-limited, waiting 35s…');
-        await new Promise(r => setTimeout(r, 35000));
-        onStatus('Retrying…');
-        res = await doFetch();
+        const info = await parse429(res);
+        if(info.kind === 'per-minute' && info.waitSec <= 60){
+            onStatus(`Rate-limited (per-minute) — waiting ${info.waitSec}s…`);
+            await new Promise(r => setTimeout(r, info.waitSec * 1000 + 1000));
+            onStatus('Retrying…');
+            res = await doFetch();
+        } else if(info.kind === 'per-day'){
+            throw new Error(
+                'Gemini daily free quota (1,500/day) is exhausted for this model. '
+                + 'It resets at midnight Pacific time. '
+                + 'Workaround now: open aistudio.google.com/app/apikey → "Create API key in new project" → use that fresh key. '
+                + '(Quota is per-project, so a new project starts fresh.)'
+            );
+        } else if(info.kind === 'project'){
+            throw new Error(
+                'Gemini 429: this project has NO free-tier quota allocated. '
+                + 'Fix: open aistudio.google.com/app/apikey, delete this key, '
+                + 'then "Create API key in new project" — a fresh project always gets free quota. '
+                + 'Quota IDs hit: ' + info.ids
+            );
+        } else {
+            throw new Error('Gemini 429: ' + (info.raw?.error?.message || 'quota exceeded') + ' (quotaIds: ' + (info.ids || 'unknown') + ')');
+        }
     }
     if(!res.ok){
         const txt = await res.text().catch(()=>'');
-        // Friendlier message for the most common Gemini errors
         if(res.status === 429){
-            throw new Error(
-                'Gemini 429: free-tier quota hit. Either wait 60s (15 req/min limit) '
-                + 'OR your key is on a project with no free-tier quota — '
-                + 'fix: open aistudio.google.com/app/apikey, delete this key, '
-                + 'and pick "Create API key in new project" so a fresh project with free quota is used.'
-            );
+            // Second 429 after retry — parse again for the specific message
+            const info = await parse429(res);
+            if(info.kind === 'per-day'){
+                throw new Error('Gemini daily quota exhausted. Create a fresh project key at aistudio.google.com/app/apikey → "Create API key in new project".');
+            }
+            throw new Error('Gemini 429 (after retry): ' + (info.ids || 'quota exceeded') + '. Try a fresh project key.');
         }
         if(res.status === 400 && /API key not valid|invalid/i.test(txt)){
             throw new Error('Gemini 400: API key invalid. Re-copy from aistudio.google.com/app/apikey (key should start with AIzaSy).');

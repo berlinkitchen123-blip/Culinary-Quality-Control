@@ -649,53 +649,59 @@ html[data-theme="dark"] .warmer-slot.filled.hot{background:rgba(248,113,113,0.10
 .report-view{padding:14px 16px;font-size:15px;font-weight:700;background:var(--bg-3);color:var(--ink);border:1px solid var(--line);border-radius:12px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px}
 .report-view:hover{background:var(--bg-2)}
 
-/* === On-screen Checkpoint summary (screenshot-friendly) === */
-#report-view-host{position:fixed;inset:0;background:#ffffff;z-index:120;overflow-y:auto;-webkit-overflow-scrolling:touch}
+/* === On-screen Checkpoint summary (screenshot-friendly, fit-one-screen) === */
+#report-view-host{position:fixed;inset:0;background:#ffffff;z-index:120;overflow:hidden;display:flex;flex-direction:column}
 #report-view-host.hidden{display:none}
 html[data-theme="dark"] #report-view-host{background:#f9fafb}
-.rv-page{max-width:1080px;margin:0 auto;padding:24px 24px 48px 24px;color:#1f2937;font-family:'Inter',system-ui,-apple-system,sans-serif}
-.rv-toolbar{position:sticky;top:0;background:#ffffff;border-bottom:1px solid #e5e7eb;padding:12px 24px;display:flex;align-items:center;justify-content:space-between;gap:10px;z-index:5;max-width:1080px;margin:0 auto}
-.rv-toolbar .rv-meta{font-size:12px;color:#6b7280;line-height:1.4}
-.rv-toolbar .rv-meta strong{color:#1f2937;font-size:14px;font-weight:700;display:block;margin-bottom:1px}
-.rv-toolbar .rv-actions{display:flex;gap:8px;flex-shrink:0}
-.rv-btn{padding:9px 14px;border-radius:8px;font-size:13px;font-weight:600;border:1px solid #e5e7eb;background:#ffffff;color:#1f2937;cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+.rv-toolbar{flex-shrink:0;background:#ffffff;border-bottom:1px solid #e5e7eb;padding:8px 16px;display:flex;align-items:center;justify-content:space-between;gap:10px}
+.rv-toolbar .rv-meta{font-size:11px;color:#6b7280;line-height:1.35;min-width:0}
+.rv-toolbar .rv-meta strong{color:#1f2937;font-size:13px;font-weight:700;display:block;margin-bottom:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rv-toolbar .rv-actions{display:flex;gap:6px;flex-shrink:0}
+.rv-btn{padding:7px 12px;border-radius:7px;font-size:12px;font-weight:600;border:1px solid #e5e7eb;background:#ffffff;color:#1f2937;cursor:pointer;display:inline-flex;align-items:center;gap:6px}
 .rv-btn:hover{background:#f3f4f6}
 .rv-btn.rv-primary{background:#2563eb;color:white;border-color:#2563eb}
 .rv-btn.rv-primary:hover{background:#1d4ed8}
-.rv-section-head{display:flex;align-items:center;gap:8px;background:#f3f4f6;border:1px solid #e5e7eb;border-radius:8px 8px 0 0;padding:10px 14px;font-size:12px;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;color:#374151;margin-top:18px}
+
+/* The page area auto-scales font-size to fit the viewport. The --rv-scale
+   variable is set by JS based on the dish count vs available height. */
+.rv-page{flex:1;min-height:0;overflow:auto;padding:10px 14px 14px 14px;color:#1f2937;font-family:'Inter',system-ui,-apple-system,sans-serif;font-size:calc(13px * var(--rv-scale, 1))}
+.rv-grid{display:grid;grid-template-columns:minmax(0, 1fr) minmax(0, 1.7fr);gap:14px;align-items:start}
+@media(max-width:880px){ .rv-grid{grid-template-columns:1fr; gap:8px} }
+.rv-col{min-width:0}
+.rv-section-head{display:flex;align-items:center;gap:8px;border-radius:7px 7px 0 0;padding:6px 10px;font-size:calc(11px * var(--rv-scale, 1));font-weight:800;letter-spacing:0.06em;text-transform:uppercase;border:1px solid;border-bottom:0;line-height:1.2}
 .rv-section-head.hot{background:#fef2f2;color:#991b1b;border-color:#fecaca}
 .rv-section-head.cold{background:#eff6ff;color:#1e40af;border-color:#bfdbfe}
-.rv-section-head .rv-target{margin-left:auto;font-weight:700;color:#6b7280;text-transform:none;letter-spacing:0;font-size:12px}
-.rv-section-head.hot .rv-target{color:#b91c1c}
-.rv-section-head.cold .rv-target{color:#1d4ed8}
-.rv-table{width:100%;border-collapse:collapse;background:white;border:1px solid #e5e7eb;border-top:0;border-radius:0 0 8px 8px;overflow:hidden;font-size:14px}
-.rv-table thead th{text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:#6b7280;padding:10px 12px;background:#fafafa;border-bottom:1px solid #e5e7eb;white-space:nowrap}
+.rv-section-head .rv-target{margin-left:auto;font-weight:700;text-transform:none;letter-spacing:0;opacity:0.85}
+
+.rv-table{width:100%;border-collapse:collapse;background:white;border:1px solid #e5e7eb;border-top:0;border-radius:0 0 7px 7px;overflow:hidden;font-size:inherit;table-layout:fixed}
+.rv-table thead th{text-align:left;font-size:calc(9.5px * var(--rv-scale, 1));font-weight:700;text-transform:uppercase;letter-spacing:0.04em;color:#6b7280;padding:4px 6px;background:#fafafa;border-bottom:1px solid #e5e7eb;white-space:nowrap}
 .rv-table thead th.center{text-align:center}
-.rv-table tbody td{padding:9px 12px;border-bottom:1px solid #f3f4f6;color:#1f2937;font-variant-numeric:tabular-nums}
+.rv-table tbody td{padding:calc(3px * var(--rv-scale, 1)) 6px;border-bottom:1px solid #f3f4f6;color:#1f2937;font-variant-numeric:tabular-nums;line-height:1.15;vertical-align:middle}
 .rv-table tbody tr:last-child td{border-bottom:0}
 .rv-table tbody tr:nth-child(even) td{background:#fafafa}
-.rv-id{font-weight:800;color:#111827;text-align:center;width:32px}
-.rv-name{font-weight:600;color:#111827}
-.rv-time{color:#6b7280;text-align:center;white-space:nowrap}
-.rv-temp{font-weight:800;text-align:center;font-variant-numeric:tabular-nums;white-space:nowrap;border-radius:5px;padding:3px 8px;display:inline-block;min-width:54px}
-.rv-temp.pass{background:#dcfce7;color:#166534}
-.rv-temp.watch{background:#fef3c7;color:#92400e}
-.rv-temp.hold{background:#fee2e2;color:#7f1d1d}
-.rv-temp.empty{background:transparent;color:#9ca3af;font-weight:600}
-.rv-date-bar{background:#1f2937;color:white;padding:10px 14px;border-radius:8px;font-size:14px;font-weight:700;margin-top:24px}
-.rv-empty{padding:24px;text-align:center;color:#6b7280;font-style:italic;background:white;border:1px solid #e5e7eb;border-radius:8px}
+.rv-id{font-weight:800;color:#111827;text-align:center;width:calc(22px * var(--rv-scale, 1))}
+.rv-name{font-weight:600;color:#111827;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rv-cp{display:flex;align-items:baseline;gap:5px;justify-content:flex-end;white-space:nowrap}
+.rv-cp .rv-time{color:#6b7280;font-size:calc(10px * var(--rv-scale, 1))}
+.rv-cp .rv-temp{font-weight:800;font-variant-numeric:tabular-nums;border-radius:4px;padding:1px 6px;display:inline-block;min-width:calc(44px * var(--rv-scale, 1));text-align:center;font-size:calc(12px * var(--rv-scale, 1))}
+.rv-cp .rv-temp.pass{background:#dcfce7;color:#166534}
+.rv-cp .rv-temp.watch{background:#fef3c7;color:#92400e}
+.rv-cp .rv-temp.hold{background:#fee2e2;color:#7f1d1d}
+.rv-cp .rv-temp.empty{background:transparent;color:#9ca3af;font-weight:600}
+.rv-cp-col{width:calc(108px * var(--rv-scale, 1))}
+.rv-date-bar{background:#1f2937;color:white;padding:5px 10px;border-radius:5px;font-size:calc(11px * var(--rv-scale, 1));font-weight:700;margin:8px 0 4px 0}
+.rv-empty{padding:20px;text-align:center;color:#6b7280;font-style:italic;background:white;border:1px solid #e5e7eb;border-radius:8px}
+
 @media(max-width:640px){
-    .rv-page{padding:14px 12px 36px 12px}
-    .rv-toolbar{padding:10px 12px}
-    .rv-table{font-size:12.5px}
-    .rv-table thead th, .rv-table tbody td{padding:7px 6px}
-    .rv-temp{min-width:44px;padding:2px 5px;font-size:12px}
-    .rv-name{font-size:12.5px}
+    .rv-toolbar{padding:6px 10px}
+    .rv-page{padding:8px 8px 12px 8px}
+    .rv-grid{gap:6px}
+    .rv-cp-col{width:auto}
 }
 @media print{
     #report-view-host{position:static;background:white !important}
     .rv-toolbar{display:none}
-    .rv-page{max-width:none;padding:0}
+    .rv-page{padding:0;overflow:visible}
     .rv-section-head, .rv-table thead{background:white !important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
 }
 .entry-qty-row{display:flex;gap:8px;align-items:stretch}
@@ -4317,8 +4323,10 @@ async function showCheckpointHtml(range){
         const cls = (st === 'pass' || st === 'watch' || st === 'hold') ? st : 'empty';
         return `<span class="rv-temp ${cls}">${v.toFixed(1)}°</span>`;
     };
+    // Each CP cell shows time on the left and the temp pill on the right
+    const cpCell = (time, temp, dish) => `<td><div class="rv-cp"><span class="rv-time">${escapeHtml(time || '—')}</span>${tempPill(temp, dish)}</div></td>`;
 
-    const renderTable = (group, target) => {
+    const renderTable = (group) => {
         if(!group.length) return '';
         const rows = group.map(d => {
             const c = (group._checks || {})[d.dishLetter] || {};
@@ -4328,24 +4336,18 @@ async function showCheckpointHtml(range){
             return `<tr>
                 <td class="rv-id">${escapeHtml(d.dishLetter)}</td>
                 <td class="rv-name">${escapeHtml(d.dishName)}</td>
-                <td class="rv-time">${escapeHtml(c.assembly?.time || '—')}</td>
-                <td>${tempPill(aT, d)}</td>
-                <td class="rv-time">${escapeHtml(c.qcTime || '—')}</td>
-                <td>${tempPill(qT, d)}</td>
-                <td class="rv-time">${escapeHtml(c.dispatch?.time || '—')}</td>
-                <td>${tempPill(dT, d)}</td>
+                ${cpCell(c.assembly?.time, aT, d)}
+                ${cpCell(c.qcTime, qT, d)}
+                ${cpCell(c.dispatch?.time, dT, d)}
             </tr>`;
         }).join('');
         return `<table class="rv-table">
             <thead><tr>
-                <th>ID</th>
+                <th class="rv-id">ID</th>
                 <th>Dish</th>
-                <th class="center">CP1 Time</th>
-                <th class="center">CP1 Avg</th>
-                <th class="center">CP2 Time</th>
-                <th class="center">CP2 Avg</th>
-                <th class="center">CP3 Time</th>
-                <th class="center">CP3 Avg</th>
+                <th class="center rv-cp-col">CP1 · Assembly</th>
+                <th class="center rv-cp-col">CP2 · QC</th>
+                <th class="center rv-cp-col">CP3 · Dispatch</th>
             </tr></thead>
             <tbody>${rows}</tbody>
         </table>`;
@@ -4362,9 +4364,16 @@ async function showCheckpointHtml(range){
         const hot = dishes.filter(d => !isCold(d)); hot._checks = checks;
         const cold = dishes.filter(d => isCold(d)); cold._checks = checks;
         const dateBar = dates.length > 1 ? `<div class="rv-date-bar">${humanDate(date)}</div>` : '';
+        // Side-by-side Hot / Cold so all dishes stay visible without scrolling
         return `${dateBar}
-            ${hot.length ? `<div class="rv-section-head hot"><span>Hot dishes</span><span class="rv-target">Target ≥${HOT_MIN}°C</span></div>${renderTable(hot)}` : ''}
-            ${cold.length ? `<div class="rv-section-head cold"><span>Cold dishes</span><span class="rv-target">Target ≤${COLD_MAX}°C</span></div>${renderTable(cold)}` : ''}
+            <div class="rv-grid">
+                <div class="rv-col">
+                    ${hot.length ? `<div class="rv-section-head hot"><span>Hot dishes (${hot.length})</span><span class="rv-target">Target ≥${HOT_MIN}°C</span></div>${renderTable(hot)}` : '<div class="rv-empty">No hot dishes</div>'}
+                </div>
+                <div class="rv-col">
+                    ${cold.length ? `<div class="rv-section-head cold"><span>Cold dishes (${cold.length})</span><span class="rv-target">Target ≤${COLD_MAX}°C</span></div>${renderTable(cold)}` : '<div class="rv-empty">No cold dishes</div>'}
+                </div>
+            </div>
         `;
     };
 
@@ -4380,7 +4389,7 @@ async function showCheckpointHtml(range){
                 <button class="rv-btn rv-primary" type="button" id="rv-close">Close</button>
             </div>
         </div>
-        <div class="rv-page">
+        <div class="rv-page" id="rv-page">
             ${dates.map(renderDay).join('')}
         </div>
     `;
@@ -4388,7 +4397,29 @@ async function showCheckpointHtml(range){
     document.body.classList.add('modal-open');
     document.body.style.top = `-${window.scrollY||0}px`;
     host.scrollTop = 0;
+
+    // Auto-scale: shrink everything proportionally until the page contents
+    // fit within the visible viewport, so the user can take a single
+    // screenshot with every dish visible.
+    const fitToScreen = () => {
+        const page = host.querySelector('#rv-page');
+        if(!page) return;
+        page.style.setProperty('--rv-scale', '1');
+        // Wait one frame so the browser has applied the styles
+        requestAnimationFrame(() => {
+            const avail = page.clientHeight;
+            const needed = page.scrollHeight;
+            if(needed <= avail) return;
+            // shrink to fit, never below 0.55 (still readable)
+            const scale = Math.max(0.55, avail / needed);
+            page.style.setProperty('--rv-scale', String(scale.toFixed(3)));
+        });
+    };
+    fitToScreen();
+    window.addEventListener('resize', fitToScreen);
+
     host.querySelector('#rv-close')?.addEventListener('click', () => {
+        window.removeEventListener('resize', fitToScreen);
         host.classList.add('hidden');
         host.innerHTML = '';
         document.body.classList.remove('modal-open');

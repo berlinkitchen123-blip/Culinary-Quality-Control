@@ -644,6 +644,60 @@ html[data-theme="dark"] .warmer-slot.filled.hot{background:rgba(248,113,113,0.10
 .report-go.is-loading .spinner{display:inline-block}
 .report-go.is-loading .label::after{content:' · generating…'}
 @keyframes rep-spin{to{transform:rotate(360deg)}}
+.report-actions{display:flex;gap:10px;flex-wrap:wrap}
+.report-actions > button{flex:1 1 200px}
+.report-view{padding:14px 16px;font-size:15px;font-weight:700;background:var(--bg-3);color:var(--ink);border:1px solid var(--line);border-radius:12px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px}
+.report-view:hover{background:var(--bg-2)}
+
+/* === On-screen Checkpoint summary (screenshot-friendly) === */
+#report-view-host{position:fixed;inset:0;background:#ffffff;z-index:120;overflow-y:auto;-webkit-overflow-scrolling:touch}
+#report-view-host.hidden{display:none}
+html[data-theme="dark"] #report-view-host{background:#f9fafb}
+.rv-page{max-width:1080px;margin:0 auto;padding:24px 24px 48px 24px;color:#1f2937;font-family:'Inter',system-ui,-apple-system,sans-serif}
+.rv-toolbar{position:sticky;top:0;background:#ffffff;border-bottom:1px solid #e5e7eb;padding:12px 24px;display:flex;align-items:center;justify-content:space-between;gap:10px;z-index:5;max-width:1080px;margin:0 auto}
+.rv-toolbar .rv-meta{font-size:12px;color:#6b7280;line-height:1.4}
+.rv-toolbar .rv-meta strong{color:#1f2937;font-size:14px;font-weight:700;display:block;margin-bottom:1px}
+.rv-toolbar .rv-actions{display:flex;gap:8px;flex-shrink:0}
+.rv-btn{padding:9px 14px;border-radius:8px;font-size:13px;font-weight:600;border:1px solid #e5e7eb;background:#ffffff;color:#1f2937;cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+.rv-btn:hover{background:#f3f4f6}
+.rv-btn.rv-primary{background:#2563eb;color:white;border-color:#2563eb}
+.rv-btn.rv-primary:hover{background:#1d4ed8}
+.rv-section-head{display:flex;align-items:center;gap:8px;background:#f3f4f6;border:1px solid #e5e7eb;border-radius:8px 8px 0 0;padding:10px 14px;font-size:12px;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;color:#374151;margin-top:18px}
+.rv-section-head.hot{background:#fef2f2;color:#991b1b;border-color:#fecaca}
+.rv-section-head.cold{background:#eff6ff;color:#1e40af;border-color:#bfdbfe}
+.rv-section-head .rv-target{margin-left:auto;font-weight:700;color:#6b7280;text-transform:none;letter-spacing:0;font-size:12px}
+.rv-section-head.hot .rv-target{color:#b91c1c}
+.rv-section-head.cold .rv-target{color:#1d4ed8}
+.rv-table{width:100%;border-collapse:collapse;background:white;border:1px solid #e5e7eb;border-top:0;border-radius:0 0 8px 8px;overflow:hidden;font-size:14px}
+.rv-table thead th{text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:#6b7280;padding:10px 12px;background:#fafafa;border-bottom:1px solid #e5e7eb;white-space:nowrap}
+.rv-table thead th.center{text-align:center}
+.rv-table tbody td{padding:9px 12px;border-bottom:1px solid #f3f4f6;color:#1f2937;font-variant-numeric:tabular-nums}
+.rv-table tbody tr:last-child td{border-bottom:0}
+.rv-table tbody tr:nth-child(even) td{background:#fafafa}
+.rv-id{font-weight:800;color:#111827;text-align:center;width:32px}
+.rv-name{font-weight:600;color:#111827}
+.rv-time{color:#6b7280;text-align:center;white-space:nowrap}
+.rv-temp{font-weight:800;text-align:center;font-variant-numeric:tabular-nums;white-space:nowrap;border-radius:5px;padding:3px 8px;display:inline-block;min-width:54px}
+.rv-temp.pass{background:#dcfce7;color:#166534}
+.rv-temp.watch{background:#fef3c7;color:#92400e}
+.rv-temp.hold{background:#fee2e2;color:#7f1d1d}
+.rv-temp.empty{background:transparent;color:#9ca3af;font-weight:600}
+.rv-date-bar{background:#1f2937;color:white;padding:10px 14px;border-radius:8px;font-size:14px;font-weight:700;margin-top:24px}
+.rv-empty{padding:24px;text-align:center;color:#6b7280;font-style:italic;background:white;border:1px solid #e5e7eb;border-radius:8px}
+@media(max-width:640px){
+    .rv-page{padding:14px 12px 36px 12px}
+    .rv-toolbar{padding:10px 12px}
+    .rv-table{font-size:12.5px}
+    .rv-table thead th, .rv-table tbody td{padding:7px 6px}
+    .rv-temp{min-width:44px;padding:2px 5px;font-size:12px}
+    .rv-name{font-size:12.5px}
+}
+@media print{
+    #report-view-host{position:static;background:white !important}
+    .rv-toolbar{display:none}
+    .rv-page{max-width:none;padding:0}
+    .rv-section-head, .rv-table thead{background:white !important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+}
 .entry-qty-row{display:flex;gap:8px;align-items:stretch}
 .entry-qty-row .entry-qty{flex:1;min-width:0;padding:11px 14px;border:1px solid var(--line);border-radius:10px;background:var(--bg-2);color:var(--ink);font-size:16px;font-weight:700;text-align:center}
 .entry-qty-row .entry-qty:focus{outline:2px solid var(--assembly);outline-offset:1px}
@@ -1066,6 +1120,7 @@ html[data-theme="dark"] .warmer-slot.filled.hot{background:rgba(248,113,113,0.10
 <div id="modal-overlay" class="modal-overlay hidden"></div>
 <div id="cam-scrim" class="cam-scrim hidden" aria-hidden="true"></div>
 <div id="settings-overlay" class="modal-overlay hidden"></div>
+<div id="report-view-host" class="hidden"></div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
@@ -3318,11 +3373,19 @@ function openReportDialog(){
                                 ? `<strong>Checkpoint summary:</strong> a single clean table per day with columns <em>ID · Dish · CP1 (Assembly) Time + Avg · CP2 (QC) Time + Avg · CP3 (Dispatch) Time + Avg</em>. Hot dishes grouped under <em>TARGET ≥${HOT_MIN}°C</em>, cold under <em>TARGET ≤${COLD_MAX}°C</em>. Temperature values colour-coded green / yellow / red against spec.`
                                 : `<strong>Detailed audit:</strong> per-dish detail blocks (Assembly contributors + temps, QC samples + weights + ingredients + photo + chef's note, Dispatch temps + time, every Placement compartment), plus an audit summary at the end: compliance by category, daily coverage, every out-of-spec reading, coverage gaps, repeat-issue dishes, contributor leaderboard, and a sign-off block.`}
                         </div>
-                        <button class="report-go" type="button" id="rep-download" ${days===0?'disabled':''}>
-                            <span class="spinner"></span>
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M5 21h14"/></svg>
-                            <span class="label">Download PDF</span>
-                        </button>
+                        <div class="report-actions">
+                            ${r.format === 'checkpoint' ? `
+                                <button class="report-view" type="button" id="rep-view" ${days===0?'disabled':''}>
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>
+                                    <span>View on page</span>
+                                </button>
+                            ` : ''}
+                            <button class="report-go" type="button" id="rep-download" ${days===0?'disabled':''}>
+                                <span class="spinner"></span>
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M5 21h14"/></svg>
+                                <span class="label">Download PDF</span>
+                            </button>
+                        </div>
                     </div>
                 </div>
                 <div class="modal-foot">
@@ -3364,6 +3427,25 @@ function openReportDialog(){
                     toast(err.message || 'PDF generation failed','fail');
                 }
                 goBtn.classList.remove('is-loading'); goBtn.disabled = false;
+            });
+        }
+        const viewBtn = overlay.querySelector('#rep-view');
+        if(viewBtn){
+            viewBtn.addEventListener('click', async () => {
+                const rng = rangeState.preset === 'custom'
+                    ? { start: rangeState.customStart, end: rangeState.customEnd }
+                    : rangeForPreset(rangeState.preset);
+                if(!rng.start || !rng.end){ toast('Pick a date range','fail'); return; }
+                viewBtn.disabled = true; viewBtn.textContent = 'Loading…';
+                try {
+                    closeSettings();
+                    await showCheckpointHtml(rng);
+                } catch(err){
+                    console.error('View failed', err);
+                    toast('Could not open view','fail');
+                } finally {
+                    viewBtn.disabled = false;
+                }
             });
         }
     };
@@ -4217,6 +4299,101 @@ async function generateCheckpointPdf(range){
     const fileName = `bb-checkpoints-${range.start}_to_${range.end}.pdf`;
     pdf.save(fileName);
     toast('Report downloaded','ok');
+}
+
+/* Render the same checkpoint summary as a clean styled HTML view, perfect
+   for taking a screenshot directly off the site. Uses the same data model
+   as generateCheckpointPdf — Hot dishes grouped first, Cold second, each
+   row showing CP1/CP2/CP3 (Assembly/QC/Dispatch) Time + colour-coded Avg. */
+async function showCheckpointHtml(range){
+    toast('Fetching data…');
+    const checksByDate = await fetchChecksForRange(range.start, range.end);
+    const menusByWeek = await fetchMenusForRange(range.start, range.end);
+    const dates = datesInRange(range.start, range.end);
+
+    const tempPill = (v, dish) => {
+        if(v == null) return `<span class="rv-temp empty">—</span>`;
+        const st = tempStatus(v, dish);
+        const cls = (st === 'pass' || st === 'watch' || st === 'hold') ? st : 'empty';
+        return `<span class="rv-temp ${cls}">${v.toFixed(1)}°</span>`;
+    };
+
+    const renderTable = (group, target) => {
+        if(!group.length) return '';
+        const rows = group.map(d => {
+            const c = (group._checks || {})[d.dishLetter] || {};
+            const aT = stageTempValue(c, 'assembly');
+            const qT = avg(c.temperatures);
+            const dT = stageTempValue(c, 'dispatch');
+            return `<tr>
+                <td class="rv-id">${escapeHtml(d.dishLetter)}</td>
+                <td class="rv-name">${escapeHtml(d.dishName)}</td>
+                <td class="rv-time">${escapeHtml(c.assembly?.time || '—')}</td>
+                <td>${tempPill(aT, d)}</td>
+                <td class="rv-time">${escapeHtml(c.qcTime || '—')}</td>
+                <td>${tempPill(qT, d)}</td>
+                <td class="rv-time">${escapeHtml(c.dispatch?.time || '—')}</td>
+                <td>${tempPill(dT, d)}</td>
+            </tr>`;
+        }).join('');
+        return `<table class="rv-table">
+            <thead><tr>
+                <th>ID</th>
+                <th>Dish</th>
+                <th class="center">CP1 Time</th>
+                <th class="center">CP1 Avg</th>
+                <th class="center">CP2 Time</th>
+                <th class="center">CP2 Avg</th>
+                <th class="center">CP3 Time</th>
+                <th class="center">CP3 Avg</th>
+            </tr></thead>
+            <tbody>${rows}</tbody>
+        </table>`;
+    };
+
+    const renderDay = (date) => {
+        const checks = checksByDate[date] || {};
+        const menu = menusByWeek[isoYearWeek(date)];
+        const dishes = menu?.dishes || [];
+        if(!dishes.length){
+            const dateBar = dates.length > 1 ? `<div class="rv-date-bar">${humanDate(date)}</div>` : '';
+            return `${dateBar}<div class="rv-empty">No menu recorded for this date.</div>`;
+        }
+        const hot = dishes.filter(d => !isCold(d)); hot._checks = checks;
+        const cold = dishes.filter(d => isCold(d)); cold._checks = checks;
+        const dateBar = dates.length > 1 ? `<div class="rv-date-bar">${humanDate(date)}</div>` : '';
+        return `${dateBar}
+            ${hot.length ? `<div class="rv-section-head hot"><span>Hot dishes</span><span class="rv-target">Target ≥${HOT_MIN}°C</span></div>${renderTable(hot)}` : ''}
+            ${cold.length ? `<div class="rv-section-head cold"><span>Cold dishes</span><span class="rv-target">Target ≤${COLD_MAX}°C</span></div>${renderTable(cold)}` : ''}
+        `;
+    };
+
+    const host = document.getElementById('report-view-host');
+    host.innerHTML = `
+        <div class="rv-toolbar">
+            <div class="rv-meta">
+                <strong>Bella & Bona · QC Checkpoint Summary</strong>
+                ${humanDate(range.start)} → ${humanDate(range.end)} · ${dates.length} day${dates.length===1?'':'s'} · Generated ${humanDate(todayIso())} ${nowHHMM()}
+            </div>
+            <div class="rv-actions">
+                <button class="rv-btn" type="button" onclick="window.print()">Print</button>
+                <button class="rv-btn rv-primary" type="button" id="rv-close">Close</button>
+            </div>
+        </div>
+        <div class="rv-page">
+            ${dates.map(renderDay).join('')}
+        </div>
+    `;
+    host.classList.remove('hidden');
+    document.body.classList.add('modal-open');
+    document.body.style.top = `-${window.scrollY||0}px`;
+    host.scrollTop = 0;
+    host.querySelector('#rv-close')?.addEventListener('click', () => {
+        host.classList.add('hidden');
+        host.innerHTML = '';
+        document.body.classList.remove('modal-open');
+        document.body.style.top = '';
+    });
 }
 
 async function saveStageFromForm(stage){

@@ -3280,7 +3280,12 @@ function openReportDialog(){
                 </div>
                 <div class="modal-body">
                     <div class="report-block">
-                        <div class="section-mini">Pick a date range</div>
+                        <div class="section-mini">Report format</div>
+                        <div class="report-chips">
+                            <button class="report-chip ${r.format==='checkpoint'?'is-on':''}" data-format="checkpoint" type="button">Checkpoint summary<span class="chip-sub">Single clean table · CP1/CP2/CP3</span></button>
+                            <button class="report-chip ${r.format!=='checkpoint'?'is-on':''}" data-format="detailed" type="button">Detailed audit<span class="chip-sub">Full per-dish blocks + audit summary</span></button>
+                        </div>
+                        <div class="section-mini" style="margin-top:8px">Pick a date range</div>
                         <div class="report-chips">
                             ${['today','yesterday','this-week','last-week','this-month','last-month','custom'].map(p => {
                                 const labels = {
@@ -3309,7 +3314,9 @@ function openReportDialog(){
                         ` : ''}
                         <div class="report-summary">
                             ${range.start && range.end ? `<strong>${humanDate(range.start)}</strong> → <strong>${humanDate(range.end)}</strong> · ${days} day${days===1?'':'s'} included` : 'Pick a date range to include in the report.'}<br/>
-                            The PDF contains <strong>every reading</strong> for the range — per-dish detail blocks (Assembly contributors + temps, QC samples + weights + ingredients + photo + chef's note, Dispatch temps + time, every Placement compartment), plus an audit summary at the end: compliance by category, daily coverage, every out-of-spec reading, coverage gaps, repeat-issue dishes, contributor leaderboard, and a sign-off block.
+                            ${r.format === 'checkpoint'
+                                ? `<strong>Checkpoint summary:</strong> a single clean table per day with columns <em>ID · Dish · CP1 (Assembly) Time + Avg · CP2 (QC) Time + Avg · CP3 (Dispatch) Time + Avg</em>. Hot dishes grouped under <em>TARGET ≥${HOT_MIN}°C</em>, cold under <em>TARGET ≤${COLD_MAX}°C</em>. Temperature values colour-coded green / yellow / red against spec.`
+                                : `<strong>Detailed audit:</strong> per-dish detail blocks (Assembly contributors + temps, QC samples + weights + ingredients + photo + chef's note, Dispatch temps + time, every Placement compartment), plus an audit summary at the end: compliance by category, daily coverage, every out-of-spec reading, coverage gaps, repeat-issue dishes, contributor leaderboard, and a sign-off block.`}
                         </div>
                         <button class="report-go" type="button" id="rep-download" ${days===0?'disabled':''}>
                             <span class="spinner"></span>
@@ -3324,10 +3331,16 @@ function openReportDialog(){
             </div>
         `;
         overlay.querySelectorAll('.report-chip').forEach(c => c.addEventListener('click', () => {
-            rangeState.preset = c.getAttribute('data-preset');
-            if(rangeState.preset === 'custom'){
-                rangeState.customStart = rangeState.customStart || todayIso();
-                rangeState.customEnd = rangeState.customEnd || todayIso();
+            const fmt = c.getAttribute('data-format');
+            const preset = c.getAttribute('data-preset');
+            if(fmt){
+                rangeState.format = fmt;
+            } else if(preset){
+                rangeState.preset = preset;
+                if(rangeState.preset === 'custom'){
+                    rangeState.customStart = rangeState.customStart || todayIso();
+                    rangeState.customEnd = rangeState.customEnd || todayIso();
+                }
             }
             renderDialog();
         }));
@@ -3344,7 +3357,8 @@ function openReportDialog(){
                 if(!rng.start || !rng.end){ toast('Pick a date range','fail'); return; }
                 goBtn.classList.add('is-loading'); goBtn.disabled = true;
                 try {
-                    await generatePdfReport(rng);
+                    if(rangeState.format === 'checkpoint') await generateCheckpointPdf(rng);
+                    else await generatePdfReport(rng);
                 } catch(err){
                     console.error('PDF failed', err);
                     toast(err.message || 'PDF generation failed','fail');
@@ -3353,12 +3367,12 @@ function openReportDialog(){
             });
         }
     };
-    window.rangeState = window.rangeState || { preset:'today', customStart:'', customEnd:'' };
+    window.rangeState = window.rangeState || { preset:'today', customStart:'', customEnd:'', format:'checkpoint' };
     overlay.classList.remove('hidden');
     lockBodyScroll();
     renderDialog();
 }
-const rangeState = (window.rangeState = window.rangeState || { preset:'today', customStart:'', customEnd:'' });
+const rangeState = (window.rangeState = window.rangeState || { preset:'today', customStart:'', customEnd:'', format:'checkpoint' });
 
 async function generatePdfReport(range){
     if(!window.jspdf){
@@ -4062,6 +4076,145 @@ async function generatePdfReport(range){
     }
 
     const fileName = `bb-qc-${range.start}_to_${range.end}.pdf`;
+    pdf.save(fileName);
+    toast('Report downloaded','ok');
+}
+
+/* Checkpoint summary PDF — clean per-day table styled like the kitchen
+   manager's classic CP1 / CP2 / CP3 sheet. Hot dishes first under
+   "TARGET ≥{HOT_MIN}°C", cold under "TARGET ≤{COLD_MAX}°C". Each row shows
+   Time + Avg for the three checkpoints (Assembly / QC / Dispatch), with
+   colour-coded temperature pills (green=pass, amber=watch, red=hold). */
+async function generateCheckpointPdf(range){
+    if(!window.jspdf){ toast('PDF library still loading — try again','fail'); return; }
+    const { jsPDF } = window.jspdf;
+    if(!jsPDF){ toast('PDF library not available','fail'); return; }
+
+    toast('Fetching data…');
+    const checksByDate = await fetchChecksForRange(range.start, range.end);
+    const menusByWeek = await fetchMenusForRange(range.start, range.end);
+    const dates = datesInRange(range.start, range.end);
+
+    const pdf = new jsPDF({ unit:'pt', format:'a4', orientation:'portrait' });
+    const pageW = pdf.internal.pageSize.getWidth();
+    const pageH = pdf.internal.pageSize.getHeight();
+    const margin = 36;
+    let y = 50;
+
+    // Cover header
+    pdf.setFont('helvetica','bold').setFontSize(18).setTextColor(31,41,55);
+    pdf.text('Bella & Bona — QC Checkpoint Summary', margin, y);
+    y += 18;
+    pdf.setFont('helvetica','normal').setFontSize(10).setTextColor(110,116,128);
+    pdf.text(`${humanDate(range.start)} → ${humanDate(range.end)} · ${dates.length} day${dates.length===1?'':'s'} · Generated ${humanDate(todayIso())} ${nowHHMM()}`, margin, y);
+    y += 16;
+
+    // tempCellFmt — returns [text, fillRGB, textRGB] for autoTable cell styling
+    const tempPill = (v, dish) => {
+        if(v == null) return { text: '—', fill: null, color: [110,116,128] };
+        const txt = v.toFixed(1) + '°';
+        const st = tempStatus(v, dish);
+        if(st === 'pass')  return { text: txt, fill: [220,252,231], color: [22,101,52] };
+        if(st === 'watch') return { text: txt, fill: [254,243,199], color: [146,64,14] };
+        if(st === 'hold')  return { text: txt, fill: [254,226,226], color: [127,29,29] };
+        return { text: txt, fill: null, color: [55,65,81] };
+    };
+
+    const renderDayTables = (date) => {
+        const checks = checksByDate[date] || {};
+        const menu = menusByWeek[isoYearWeek(date)];
+        const dishes = (menu?.dishes || []).slice();
+        if(!dishes.length){
+            if(y > pageH - 60){ pdf.addPage(); y = 50; }
+            pdf.setFont('helvetica','italic').setFontSize(10).setTextColor(140,140,150);
+            pdf.text(`${humanDate(date)} — no menu recorded.`, margin, y); y += 18;
+            return;
+        }
+
+        // Multi-day reports get a date header above each day's table
+        if(dates.length > 1){
+            if(y > pageH - 80){ pdf.addPage(); y = 50; }
+            pdf.setFillColor(37,99,235);
+            pdf.rect(margin, y - 12, pageW - margin*2, 22, 'F');
+            pdf.setFont('helvetica','bold').setFontSize(12).setTextColor(255,255,255);
+            pdf.text(humanDate(date), margin + 8, y + 3);
+            y += 22;
+        }
+
+        const hot = dishes.filter(d => !isCold(d));
+        const cold = dishes.filter(d => isCold(d));
+
+        const buildRows = (group) => group.map(d => {
+            const c = checks[d.dishLetter] || {};
+            const aT = stageTempValue(c, 'assembly');
+            const qT = avg(c.temperatures);
+            const dT = stageTempValue(c, 'dispatch');
+            const aTime = c.assembly?.time || '';
+            const qTime = c.qcTime || '';
+            const dTime = c.dispatch?.time || '';
+            return [
+                d.dishLetter,
+                d.dishName,
+                aTime || '—',
+                tempPill(aT, d),
+                qTime || '—',
+                tempPill(qT, d),
+                dTime || '—',
+                tempPill(dT, d)
+            ];
+        });
+
+        const drawSection = (title, group, fillRGB) => {
+            if(!group.length) return;
+            if(y > pageH - 60){ pdf.addPage(); y = 50; }
+            pdf.autoTable({
+                startY: y,
+                head: [[
+                    { content: title, colSpan: 8, styles: { halign:'left', fillColor: fillRGB, textColor: [31,41,55], fontStyle:'bold', fontSize: 10 } }
+                ], [
+                    'ID', 'Dish', 'CP1 Time', 'CP1 Avg', 'CP2 Time', 'CP2 Avg', 'CP3 Time', 'CP3 Avg'
+                ]],
+                body: buildRows(group).map(row => row.map(cell => {
+                    if(cell && typeof cell === 'object' && 'text' in cell){
+                        return { content: cell.text, styles: { fillColor: cell.fill || undefined, textColor: cell.color, halign:'center', fontStyle:'bold' } };
+                    }
+                    return cell;
+                })),
+                margin: { left: margin, right: margin },
+                styles: { fontSize: 9, cellPadding: 4 },
+                headStyles: { fillColor: [243,244,246], textColor: [55,65,81], fontSize: 8.5, fontStyle:'bold' },
+                alternateRowStyles: { fillColor: [250,250,253] },
+                columnStyles: {
+                    0: { cellWidth: 28, halign:'center', fontStyle:'bold' },
+                    1: { cellWidth: 'auto' },
+                    2: { cellWidth: 50, halign:'center', textColor:[110,116,128] },
+                    3: { cellWidth: 50, halign:'center', fontStyle:'bold' },
+                    4: { cellWidth: 50, halign:'center', textColor:[110,116,128] },
+                    5: { cellWidth: 50, halign:'center', fontStyle:'bold' },
+                    6: { cellWidth: 50, halign:'center', textColor:[110,116,128] },
+                    7: { cellWidth: 50, halign:'center', fontStyle:'bold' }
+                }
+            });
+            y = pdf.lastAutoTable.finalY + 10;
+        };
+
+        drawSection(`HOT DISHES — TARGET ≥${HOT_MIN}°C`, hot, [254,226,226]);
+        drawSection(`COLD DISHES — TARGET ≤${COLD_MAX}°C`, cold, [219,234,254]);
+        y += 4;
+    };
+
+    for(const d of dates) renderDayTables(d);
+
+    // Footer + page numbers
+    const total = pdf.getNumberOfPages();
+    for(let p = 1; p <= total; p++){
+        pdf.setPage(p);
+        pdf.setFont('helvetica','normal').setFontSize(8).setTextColor(140,140,150);
+        const txt = `Bella & Bona · Checkpoint summary ${humanDate(range.start)} → ${humanDate(range.end)} · Page ${p} of ${total}`;
+        pdf.text(txt, pageW/2, pdf.internal.pageSize.getHeight() - 18, { align:'center' });
+    }
+
+    const fileName = `bb-checkpoints-${range.start}_to_${range.end}.pdf`;
     pdf.save(fileName);
     toast('Report downloaded','ok');
 }

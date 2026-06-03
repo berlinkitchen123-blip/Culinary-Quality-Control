@@ -1216,6 +1216,21 @@ function avg(arr){
     return n.length?n.reduce((a,b)=>a+b,0)/n.length:null;
 }
 function isCold(dish){ return (dish?.dishType||'').toLowerCase().includes('cold'); }
+
+/* Sort dishes ascending by letter (case-insensitive, numeric-aware) and
+   return a NEW menu object. Cold + hot stay mixed in the result; every
+   downstream filter (cold = filter isCold, hot = filter !isCold) preserves
+   this order — so cold dishes show alphabetically, hot dishes show
+   alphabetically, in every tab + every report. */
+function sortMenuByLetter(menu){
+    if(!menu || !Array.isArray(menu.dishes)) return menu;
+    const sorted = menu.dishes.slice().sort((a, b) => {
+        const al = String(a.dishLetter || '').toUpperCase();
+        const bl = String(b.dishLetter || '').toUpperCase();
+        return al.localeCompare(bl, 'en', { numeric: true });
+    });
+    return { ...menu, dishes: sorted };
+}
 function tempStatus(v, dish){
     if(v==null||v===''||v===undefined) return 'empty';
     const n=Number(v); if(Number.isNaN(n)) return 'empty';
@@ -3316,7 +3331,7 @@ async function fetchMenusForRange(startIso, endIso){
     for(const d of datesInRange(startIso, endIso)) weeks.add(isoYearWeek(d));
     const menus = {};
     for(const wk of weeks){
-        try { const snap = await get(ref(db, `menus/${wk}`)); menus[wk] = snap.val() || null; }
+        try { const snap = await get(ref(db, `menus/${wk}`)); menus[wk] = sortMenuByLetter(snap.val() || null); }
         catch(e){ menus[wk] = null; }
     }
     return menus;
@@ -5017,7 +5032,7 @@ function openSettings(){
         }
         try{
             await saveMenu(weekId, menuObj);
-            state.menu = menuObj;
+            state.menu = sortMenuByLetter(menuObj);
             renderAll();
             toast(`Saved ${menuObj.dishes.length} dishes`, 'ok');
             closeSettings();
@@ -5137,7 +5152,7 @@ async function selectDate(iso){
     state.selectedDate=iso;
     state.weekStartIso=isoOfMondayOf(iso);
     const wk=isoYearWeek(iso);
-    try{ state.menu=await loadMenuForWeek(wk); }catch(e){ state.menu=null; }
+    try{ state.menu = sortMenuByLetter(await loadMenuForWeek(wk)); }catch(e){ state.menu=null; }
     if(state._unsub) state._unsub();
     state._unsub=listenChecks(iso);
     renderAll();

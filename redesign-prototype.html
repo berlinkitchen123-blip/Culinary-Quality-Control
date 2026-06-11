@@ -770,19 +770,6 @@ html[data-theme="dark"] #report-view-host{background:#f9fafb}
 .home-meta{display:flex;align-items:center;justify-content:center;gap:14px;flex-wrap:wrap;margin-top:24px;color:var(--mute);font-size:13px}
 .home-meta .home-meta-pill{padding:5px 12px;border-radius:99px;background:var(--bg-3);border:1px solid var(--line)}
 
-/* Live Checkpoint summary embedded on the home page. Reuses the .rv-*
-   classes from the on-screen report; this block adds responsive layout +
-   dark-mode-friendly colours so the table fits the dashboard. */
-.home-report{margin-top:24px;background:#ffffff;border-radius:14px;border:1px solid var(--line);padding:14px;box-shadow:var(--shadow-sm)}
-html[data-theme="dark"] .home-report{background:#f8fafc}
-.home-report-head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:10px}
-.home-report-head .title{font-weight:800;font-size:15px;color:#1f2937;letter-spacing:-0.01em}
-.home-report-head .sub{font-size:12px;color:#6b7280;font-weight:500}
-.home-report-head .actions{display:flex;gap:6px}
-.home-report-head .actions .rv-btn{padding:6px 11px;font-size:12px}
-.home-report .rv-grid{grid-template-columns:minmax(0, 1fr) minmax(0, 1.7fr);gap:14px}
-@media(max-width:880px){ .home-report .rv-grid{grid-template-columns:1fr;gap:10px} }
-.home-report .rv-page{font-size:13px;padding:0;overflow:visible}
 .cam-shutter::after{content:'';width:46px;height:46px;border-radius:50%;background:white;border:1.5px solid #999}
 .cam-flip{width:42px;height:42px;border-radius:50%;background:rgba(255,255,255,0.12);border:0;cursor:pointer;color:#eee;font-size:20px;display:inline-flex;align-items:center;justify-content:center}
 .cam-flip:hover{background:rgba(255,255,255,0.22)}
@@ -1037,9 +1024,32 @@ html[data-theme="dark"] .home-report{background:#f8fafc}
         <span class="home-meta-pill" id="home-menu-count">—</span>
     </div>
 
-    <!-- Live Checkpoint summary table — same data as the on-screen report,
-         updates live as checks save, screenshot-friendly. -->
-    <div class="home-report" id="home-report"></div>
+    <!-- Daily summary table — lives only on the home page so it doesn't
+         duplicate on every stage view. Auto-updates as checks save. -->
+    <section class="section" style="margin-top:24px">
+        <div class="section-head">
+            <div class="title">Daily summary</div>
+            <div style="font-size:13px;color:var(--mute);font-weight:500" id="summary-date">—</div>
+        </div>
+        <div class="table-card">
+            <div class="table-scroll">
+                <table class="summary">
+                    <thead>
+                        <tr>
+                            <th style="width:60px">Dish</th>
+                            <th>Name</th>
+                            <th style="width:90px">Assembly</th>
+                            <th style="width:90px">QC</th>
+                            <th style="width:90px">Dispatch</th>
+                            <th style="width:150px">Weight</th>
+                            <th>Chef note</th>
+                        </tr>
+                    </thead>
+                    <tbody id="summary-body"></tbody>
+                </table>
+            </div>
+        </div>
+    </section>
 </section>
 
 <!-- TOP-LEVEL STAGE TABS (visible inside a stage view) -->
@@ -1108,32 +1118,6 @@ html[data-theme="dark"] .home-report{background:#f8fafc}
             <div style="font-size:13px;color:var(--mute);font-weight:500" id="scorecard-date">—</div>
         </div>
         <div class="scorecard" id="scorecard"></div>
-    </section>
-
-    <!-- 4) Daily summary table -->
-    <section class="section">
-        <div class="section-head">
-            <div class="title">Daily summary</div>
-            <div style="font-size:13px;color:var(--mute);font-weight:500" id="summary-date">—</div>
-        </div>
-        <div class="table-card">
-            <div class="table-scroll">
-                <table class="summary">
-                    <thead>
-                        <tr>
-                            <th style="width:60px">Dish</th>
-                            <th>Name</th>
-                            <th style="width:90px">Assembly</th>
-                            <th style="width:90px">QC</th>
-                            <th style="width:90px">Dispatch</th>
-                            <th style="width:150px">Weight</th>
-                            <th>Chef note</th>
-                        </tr>
-                    </thead>
-                    <tbody id="summary-body"></tbody>
-                </table>
-            </div>
-        </div>
     </section>
 
     <footer class="footer">
@@ -2250,7 +2234,9 @@ function renderAll(){
         if(state.stage === 'placement'){
             renderPlacementStageView();
         } else {
-            renderAlert(); renderScorecard(); renderDishes(); renderSummary();
+            // Daily summary is rendered only on the home page now,
+            // not duplicated on every stage view.
+            renderAlert(); renderScorecard(); renderDishes();
         }
     }
 }
@@ -2270,80 +2256,8 @@ function renderHome(){
     if(dEl) dEl.textContent = humanDate(state.selectedDate);
     if(mEl) mEl.textContent = state.menu ? `${(state.menu.dishes||[]).length} dishes on menu` : 'No menu yet';
 
-    renderHomeCheckpointReport();
-}
-
-/* Renders today's Checkpoint summary inline on the home page. Reuses the
-   .rv-* CSS classes from the on-screen report so the look is identical;
-   updates every time state.checks changes (via renderAll → renderHome). */
-function renderHomeCheckpointReport(){
-    const host = document.getElementById('home-report');
-    if(!host) return;
-    const dishes = state.menu?.dishes || [];
-    if(!dishes.length){
-        host.innerHTML = `<div class="home-report-head"><div class="title">Today's checkpoint summary</div></div>
-            <div class="rv-empty">No menu loaded yet for today.</div>`;
-        return;
-    }
-    const checks = state.checks || {};
-    const hot = dishes.filter(d => !isCold(d));
-    const cold = dishes.filter(d => isCold(d));
-
-    const tempPill = (v, dish) => {
-        if(v == null) return `<span class="rv-temp empty">—</span>`;
-        const st = tempStatus(v, dish);
-        const cls = (st === 'pass' || st === 'watch' || st === 'hold') ? st : 'empty';
-        return `<span class="rv-temp ${cls}">${v.toFixed(1)}°</span>`;
-    };
-    const cpCell = (time, temp, dish) => `<td><div class="rv-cp"><span class="rv-time">${escapeHtml(time || '—')}</span>${tempPill(temp, dish)}</div></td>`;
-    const renderRow = (d) => {
-        const c = checks[d.dishLetter] || {};
-        const aT = stageTempValue(c, 'assembly');
-        const qT = avg(c.temperatures);
-        const dT = stageTempValue(c, 'dispatch');
-        return `<tr>
-            <td class="rv-id">${escapeHtml(d.dishLetter)}</td>
-            <td class="rv-name">${escapeHtml(d.dishName)}</td>
-            ${cpCell(c.assembly?.time, aT, d)}
-            ${cpCell(c.qcTime, qT, d)}
-            ${cpCell(c.dispatch?.time, dT, d)}
-        </tr>`;
-    };
-    const renderTable = (group) => !group.length ? '<div class="rv-empty">No dishes</div>' : `
-        <table class="rv-table">
-            <thead><tr>
-                <th class="rv-id">ID</th>
-                <th>Dish</th>
-                <th class="center rv-cp-col">CP1 · Assembly</th>
-                <th class="center rv-cp-col">CP2 · QC</th>
-                <th class="center rv-cp-col">CP3 · Dispatch</th>
-            </tr></thead>
-            <tbody>${group.map(renderRow).join('')}</tbody>
-        </table>`;
-
-    host.innerHTML = `
-        <div class="home-report-head">
-            <div>
-                <div class="title">Today's checkpoint summary</div>
-                <div class="sub">${humanDate(state.selectedDate)} · ${dishes.length} dish${dishes.length===1?'':'es'} · auto-updates as you log</div>
-            </div>
-            <div class="actions">
-                <button class="rv-btn" type="button" onclick="window.__qc.openReportDialog()">Open full report</button>
-            </div>
-        </div>
-        <div class="rv-page" id="home-rv-page">
-            <div class="rv-grid">
-                <div class="rv-col">
-                    <div class="rv-section-head hot"><span>Hot dishes (${hot.length})</span><span class="rv-target">Target ≥${HOT_MIN}°C</span></div>
-                    ${renderTable(hot)}
-                </div>
-                <div class="rv-col">
-                    <div class="rv-section-head cold"><span>Cold dishes (${cold.length})</span><span class="rv-target">Target ≤${COLD_MAX}°C</span></div>
-                    ${renderTable(cold)}
-                </div>
-            </div>
-        </div>
-    `;
+    // Daily summary table now lives on the home page only.
+    renderSummary();
 }
 
 /* === Routing === */

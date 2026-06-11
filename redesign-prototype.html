@@ -2592,6 +2592,32 @@ function renderStageTab(stage, label, dish, c){
                     <button class="contrib-rm" type="button" data-rm-entry="${idx}" aria-label="Remove">×</button>
                 </div>`;
         };
+        // Assembly photo (no reference image — single panel + camera button).
+        // Stored separately from QC's photo at c.assembly.image so both can coexist.
+        const asmImage = c.assembly && c.assembly.image;
+        const photoBlock = `
+            <div class="section-mini" style="margin-top:14px">Assembly photo · single shot from the line</div>
+            <div class="photo-row" style="grid-template-columns:1fr">
+                <div class="photo">
+                    ${asmImage
+                        ? `<img src="${escapeAttr(asmImage)}" alt="Assembly capture"/>
+                           <div class="photo-label">Assembly</div>
+                           <button class="photo-action" type="button" data-asm-camera>Retake</button>`
+                        : `<div class="photo-empty">
+                             <div style="font-weight:600;color:var(--ink-2);font-size:13px">No photo yet</div>
+                             <button class="camera-btn" type="button" data-asm-camera>
+                               <svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                               Take photo
+                             </button>
+                             <label class="photo-action" style="position:static;margin-top:8px;background:var(--bg-3)">
+                               <input type="file" accept="image/*" capture="environment" id="asm-photo-input"/>
+                               Or upload
+                             </label>
+                           </div>`}
+                </div>
+            </div>
+        `;
+
         assemblyBlock = `
             <div class="section-mini">Dish count · ${total} total${entries.length>0?` across ${entries.length} ${entries.length===1?'entry':'entries'}`:''}</div>
             <div class="contributors">
@@ -2599,6 +2625,8 @@ function renderStageTab(stage, label, dish, c){
                     ? `<div style="color:var(--mute);padding:10px;font-size:13px;text-align:center;background:var(--bg-3);border-radius:8px">No entries yet. Use the form at the bottom to add one.</div>`
                     : entries.map(renderEntry).join('')}
             </div>
+
+            ${photoBlock}
 
             <div class="stage-form" style="margin-top:14px">
                 <div class="field">
@@ -2767,6 +2795,29 @@ function bindTabHandlers(tab, dish){
                 catch(err){ toast('Save failed','fail'); console.error(err); }
             });
         });
+
+        // Assembly photo — write to c.assembly.image via saveStage so it
+        // doesn't collide with the QC photo at c.capturedImage.
+        const saveAsmPhoto = async (dataUrl) => {
+            await saveStage(lettr, 'assembly', { image: dataUrl, time: nowHHMM() });
+        };
+        overlay.querySelectorAll('[data-asm-camera]').forEach(btn => {
+            btn.addEventListener('click', (e) => { e.preventDefault(); openCamera(lettr, { onCapture: saveAsmPhoto }); });
+        });
+        const asmInp = overlay.querySelector('#asm-photo-input');
+        if(asmInp){
+            asmInp.addEventListener('change', async (e) => {
+                const file = e.target.files?.[0];
+                if(!file) return;
+                try {
+                    toast('Processing photo…');
+                    const dataUrl = await resizeImageToDataUrl(file, 1024, 0.85);
+                    await saveAsmPhoto(dataUrl);
+                    toast('Photo saved','ok');
+                    renderModal();
+                } catch(err){ toast('Photo save failed','fail'); console.error(err); }
+            });
+        }
     }
 }
 
@@ -4512,7 +4563,16 @@ async function resizeImageToDataUrl(file, maxSide=1024, quality=0.85){
 */
 let _camState = { stream: null, facing: 'environment' };
 
-async function openCamera(letter){
+/* openCamera(letter, opts) — opts.onCapture(dataUrl) optionally overrides
+   the default save behavior. Default saves to c.capturedImage (QC tab).
+   For Assembly: pass an onCapture that writes to c.assembly.image instead. */
+async function openCamera(letter, opts){
+    opts = opts || {};
+    const saveDataUrl = opts.onCapture || (async (dataUrl) => {
+        await saveCheckField(letter, { capturedImage: dataUrl, qcTime: nowHHMM() });
+    });
+    // Stash on module state so captureFrame (top-level) can read it
+    _camState.onCapture = saveDataUrl;
     const scrim = document.getElementById('cam-scrim');
     scrim.classList.remove('hidden');
     scrim.setAttribute('aria-hidden','false');
@@ -4556,7 +4616,7 @@ async function openCamera(letter){
             try{
                 toast('Processing photo…');
                 const dataUrl = await resizeImageToDataUrl(file, 1024, 0.85);
-                await saveCheckField(letter, { capturedImage: dataUrl, qcTime: nowHHMM() });
+                await saveDataUrl(dataUrl);
                 toast('Photo saved','ok');
                 closeCamera();
                 renderModal();
@@ -4630,7 +4690,8 @@ async function captureFrame(letter){
         canvas.getContext('2d').drawImage(vid, 0, 0, w, h);
         const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
         toast('Saving photo…');
-        await saveCheckField(letter, { capturedImage: dataUrl, qcTime: nowHHMM() });
+        const onCapture = _camState.onCapture || (async (du) => saveCheckField(letter, { capturedImage: du, qcTime: nowHHMM() }));
+        await onCapture(dataUrl);
         toast('Photo saved','ok');
         closeCamera();
         renderModal();
@@ -4647,6 +4708,7 @@ function closeCamera(){
         _camState.stream.getTracks().forEach(t => t.stop());
         _camState.stream = null;
     }
+    _camState.onCapture = null;
     scrim.classList.add('hidden');
     scrim.setAttribute('aria-hidden','true');
     scrim.innerHTML = '';

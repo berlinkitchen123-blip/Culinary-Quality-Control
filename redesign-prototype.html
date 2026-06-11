@@ -492,6 +492,19 @@ body.modal-open{overflow:hidden;position:fixed;width:100%;left:0;right:0}
 .photo-empty .camera-btn input{display:none}
 .photo-empty .icon-svg{width:18px;height:18px;display:inline-flex}
 
+/* Compact photo block for the Assembly tab — a small thumbnail-sized panel
+   instead of the big square the QC reference/capture row uses. */
+.asm-photo-row{display:flex;justify-content:flex-start;margin-bottom:14px}
+.asm-photo-row .photo{aspect-ratio:auto;width:180px;height:120px;flex-shrink:0}
+.asm-photo-row .photo-empty{padding:10px;gap:6px}
+.asm-photo-row .photo-empty .camera-btn{padding:7px 12px;font-size:12px}
+.asm-photo-row .photo-empty .camera-btn .icon-svg{width:14px;height:14px}
+.asm-photo-row .photo-empty .photo-action{padding:4px 9px;font-size:11px;position:static;margin-top:4px}
+.asm-photo-row .photo-empty > div:first-child{font-size:11px}
+@media(max-width:640px){
+    .asm-photo-row .photo{width:150px;height:100px}
+}
+
 /* Camera overlay */
 .cam-scrim{position:fixed;inset:0;background:#000;z-index:100;display:flex;flex-direction:column}
 .cam-scrim.hidden{display:none}
@@ -2597,7 +2610,7 @@ function renderStageTab(stage, label, dish, c){
         const asmImage = c.assembly && c.assembly.image;
         const photoBlock = `
             <div class="section-mini" style="margin-top:14px">Assembly photo · single shot from the line</div>
-            <div class="photo-row" style="grid-template-columns:1fr">
+            <div class="asm-photo-row">
                 <div class="photo">
                     ${asmImage
                         ? `<img src="${escapeAttr(asmImage)}" alt="Assembly capture"/>

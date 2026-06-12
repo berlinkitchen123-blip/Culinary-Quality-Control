@@ -1,8 +1,8 @@
 name: QC weekly email
 # Sends the Mon–Fri summary every Friday morning.
 # 08:00 UTC ≈ 10:00 Berlin in summer (CEST), 09:00 Berlin in winter (CET).
-# (Yes, this runs alongside the daily email on Fridays — by design, so the
-# team sees both the previous day's detail and the rolling week summary.)
+# Gmail SMTP credentials are read from Firebase (Berlin project) at
+# integrations/gmail/{user,appPassword,fromName,fromAddress}.
 
 on:
   schedule:
@@ -25,13 +25,34 @@ jobs:
         working-directory: scripts
         run: npm install --no-audit --no-fund
 
+      - name: Fetch Gmail credentials from Firebase
+        id: gmail
+        run: |
+          set -euo pipefail
+          RAW=$(curl -fsSL 'https://quality-control-24-default-rtdb.europe-west1.firebasedatabase.app/integrations/gmail.json')
+          if [ -z "$RAW" ] || [ "$RAW" = "null" ]; then
+            echo "::error::No Gmail config found in Firebase. Open the app → Settings → Email reports (Gmail SMTP) and fill it in."
+            exit 1
+          fi
+          OUT=$(node -e "
+            const c = $RAW;
+            const fromName = (c.fromName || 'Bellabona Kitchen').trim();
+            const fromAddr = (c.fromAddress || c.user || '').trim();
+            const sender = fromName ? fromName + ' <' + fromAddr + '>' : fromAddr;
+            process.stdout.write([
+              'user='   + (c.user || ''),
+              'pass='   + (c.appPassword || ''),
+              'sender=' + sender
+            ].join('\n'));
+          ")
+          echo "$OUT" >> "$GITHUB_OUTPUT"
+
       - name: Generate PDF and email via Gmail SMTP
         working-directory: scripts
         env:
-          GMAIL_USER: ${{ secrets.GMAIL_USER }}
-          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
-          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
-          SENDER: 'Bella & Bona QC <Harsh@bellabona.com>'
+          GMAIL_USER: ${{ steps.gmail.outputs.user }}
+          GMAIL_APP_PASSWORD: ${{ steps.gmail.outputs.pass }}
+          SENDER: ${{ steps.gmail.outputs.sender }}
           RECIPIENT: 'Marcus@bellabona.com'
           CC: 'Matteo.cricco@bellabona.com,niccolo.lapini@bellabona.com,Abbas@bellabona.com,Roberto@bellabona.com,Dhiraj@bellabona.com'
           PRESET: 'this-week'

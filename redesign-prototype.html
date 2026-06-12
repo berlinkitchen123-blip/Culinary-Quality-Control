@@ -1654,12 +1654,20 @@ function listenIntegrations(){
             // but the Resend API key stays per-device in localStorage.
             resendSender: v.resendSender || '',
             resendTo: v.resendTo || '',
-            resendCc: v.resendCc || ''
+            resendCc: v.resendCc || '',
+            // Gmail SMTP credentials — read by the scheduled GitHub Action via
+            // the Firebase REST endpoint. Anyone who can read this database can
+            // read the password too; app passwords are revocable if leaked.
+            gmail: v.gmail || { user: '', appPassword: '', fromName: '', fromAddress: '' }
         };
     });
 }
 async function saveIntegrations(partial){
     await update(ref(db, 'integrations'), partial);
+}
+async function saveGmailConfig(partial){
+    // Stored nested so the scheduled GitHub Action can grab `gmail` in one shot.
+    await update(ref(db, 'integrations/gmail'), partial);
 }
 
 /* Send the AI review result for a dish back to Firebase */
@@ -5684,6 +5692,31 @@ function openSettings(){
                 </div>
 
                 <div class="storage-block">
+                    <h4>Email reports (Gmail SMTP) — used by the scheduled cron</h4>
+                    <div style="font-size:12px;color:var(--mute);margin-bottom:8px">
+                        The scheduled GitHub Action reads these credentials from Firebase and sends the daily / weekly QC email via Gmail's free SMTP.
+                        Auth email is your Gmail (e.g. <code>berlinkitchen123@gmail.com</code>); App password is a 16-char password from
+                        <a href="https://myaccount.google.com/apppasswords" target="_blank" rel="noopener" style="color:var(--brand);text-decoration:underline">myaccount.google.com/apppasswords</a>.<br/>
+                        <strong style="color:var(--hold)">Warning:</strong> values are saved to Firebase (publicly readable on this project). The app password is revocable in 30 sec if it leaks.
+                    </div>
+                    <div class="storage-row" style="flex-wrap:wrap;gap:8px">
+                        <input type="text" id="gmail-auth-user" value="${escapeAttr(state.integrations?.gmail?.user || '')}" placeholder="Auth Gmail (e.g. berlinkitchen123@gmail.com)" style="flex:1;min-width:240px" />
+                    </div>
+                    <div class="storage-row" style="flex-wrap:wrap;gap:8px;margin-top:6px">
+                        <input type="password" id="gmail-app-password" value="${escapeAttr(state.integrations?.gmail?.appPassword || '')}" placeholder="16-char app password (no spaces needed)" autocomplete="off" style="flex:1;min-width:240px" />
+                    </div>
+                    <div class="storage-row" style="flex-wrap:wrap;gap:8px;margin-top:6px">
+                        <input type="text" id="gmail-from-name" value="${escapeAttr(state.integrations?.gmail?.fromName || 'Bellabona Kitchen')}" placeholder="From display name (e.g. Bellabona Kitchen)" style="flex:1;min-width:240px" />
+                    </div>
+                    <div class="storage-row" style="flex-wrap:wrap;gap:8px;margin-top:6px">
+                        <input type="text" id="gmail-from-address" value="${escapeAttr(state.integrations?.gmail?.fromAddress || '')}" placeholder="From address (optional — defaults to auth email; only use a verified alias)" style="flex:1;min-width:240px" />
+                    </div>
+                    <div style="font-size:11px;color:var(--mute);margin-top:6px">
+                        After saving here, open <a href="https://github.com/berlinkitchen123-blip/Culinary-Quality-Control/actions/workflows/qc-daily-email.yml" target="_blank" rel="noopener" style="color:var(--brand);text-decoration:underline">Actions → QC daily email → Run workflow</a> to fire a test send.
+                    </div>
+                </div>
+
+                <div class="storage-block">
                     <h4>Email reports (Resend)</h4>
                     <div style="font-size:12px;color:var(--mute);margin-bottom:8px">
                         Sends the daily / weekly QC snapshot to your team automatically. Sign up at
@@ -5825,6 +5858,16 @@ function openSettings(){
             });
         }
     }
+
+    // === Gmail SMTP config (saved to Firebase for the GitHub Action cron) ===
+    const gmailUser = overlay.querySelector('#gmail-auth-user');
+    const gmailPw = overlay.querySelector('#gmail-app-password');
+    const gmailName = overlay.querySelector('#gmail-from-name');
+    const gmailFrom = overlay.querySelector('#gmail-from-address');
+    if(gmailUser) gmailUser.addEventListener('blur', () => saveGmailConfig({ user: gmailUser.value.trim() }));
+    if(gmailPw) gmailPw.addEventListener('blur', () => saveGmailConfig({ appPassword: gmailPw.value.trim() }));
+    if(gmailName) gmailName.addEventListener('blur', () => saveGmailConfig({ fromName: gmailName.value.trim() }));
+    if(gmailFrom) gmailFrom.addEventListener('blur', () => saveGmailConfig({ fromAddress: gmailFrom.value.trim() }));
 
     // === Resend email config (API key local; sender/to/cc in Firebase) ===
     const resendKeyInp = overlay.querySelector('#resend-api-key');

@@ -1319,7 +1319,7 @@ const HOT_WARN = 3;
 const COLD_WARN = 2;
 
 const state = {
-    selectedDate: todayIso(),
+    selectedDate: todayOrLastFriday(),
     weekStartIso: null,
     menu: null,
     checks: {},
@@ -1347,6 +1347,15 @@ const WARMER_LAYOUTS = {
 
 /* === Date helpers === */
 function todayIso(){ const d=new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
+/* If today is Sat or Sun, roll back to Friday — Bella & Bona only operates
+   Mon–Fri so the default landing date should always be a working day. */
+function todayOrLastFriday(){
+    const d = new Date();
+    const dow = d.getDay(); // 0 Sun, 6 Sat
+    if(dow === 0) d.setDate(d.getDate() - 2); // Sun → Fri
+    else if(dow === 6) d.setDate(d.getDate() - 1); // Sat → Fri
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
 function parseIso(iso){ return new Date(iso+'T12:00:00'); }
 function isoOfMondayOf(iso){ const d=parseIso(iso); const dow=d.getDay(); const off=dow===0?-6:1-dow; d.setDate(d.getDate()+off); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
 function isoYearWeek(iso){
@@ -1707,7 +1716,8 @@ function renderWeekStrip(){
     const strip=document.getElementById('week-strip');
     strip.querySelectorAll('.day').forEach(d=>d.remove());
     const monday=state.weekStartIso, today=todayIso();
-    const days=[0,1,2,3,4,5,6].map(o=>shiftIso(monday,o));
+    // Mon–Fri only — Bella & Bona doesn't operate weekends
+    const days=[0,1,2,3,4].map(o=>shiftIso(monday,o));
     const next=document.getElementById('week-next');
     days.forEach(iso=>{
         const d=parseIso(iso);
@@ -4112,14 +4122,15 @@ function rangeForPreset(preset){
         return { start: iso, end: iso };
     }
     if(preset === 'this-week'){
+        // Working week is Mon–Fri (Bella & Bona doesn't operate weekends)
         const monday = isoOfMondayOf(today);
-        const sunday = shiftIso(monday, 6);
-        return { start: monday, end: sunday };
+        const friday = shiftIso(monday, 4);
+        return { start: monday, end: friday };
     }
     if(preset === 'last-week'){
         const monday = shiftIso(isoOfMondayOf(today), -7);
-        const sunday = shiftIso(monday, 6);
-        return { start: monday, end: sunday };
+        const friday = shiftIso(monday, 4);
+        return { start: monday, end: friday };
     }
     if(preset === 'this-month'){
         const start = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-01`;
@@ -4134,11 +4145,14 @@ function rangeForPreset(preset){
     return { start: today, end: today };
 }
 function datesInRange(startIso, endIso){
+    // Working days only — Bella & Bona doesn't operate Sat/Sun, so every
+    // report, aggregation, and iteration skips weekends.
     const out = [];
     let cur = startIso;
     let guard = 0;
-    while(cur <= endIso && guard < 366){
-        out.push(cur);
+    while(cur <= endIso && guard < 400){
+        const dow = new Date(cur + 'T12:00:00').getDay(); // 0=Sun, 6=Sat
+        if(dow !== 0 && dow !== 6) out.push(cur);
         cur = shiftIso(cur, 1);
         guard++;
     }
@@ -4198,8 +4212,8 @@ function openReportDialog(){
                                 const labels = {
                                     'today':['Today', humanDate(todayIso())],
                                     'yesterday':['Yesterday', humanDate(shiftIso(todayIso(),-1))],
-                                    'this-week':['This week','Mon — Sun'],
-                                    'last-week':['Last week','previous Mon — Sun'],
+                                    'this-week':['This week','Mon — Fri'],
+                                    'last-week':['Last week','previous Mon — Fri'],
                                     'this-month':['This month','1st — end of month'],
                                     'last-month':['Last month','previous calendar month'],
                                     'custom':['Custom','Pick from / to']

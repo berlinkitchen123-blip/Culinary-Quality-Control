@@ -187,6 +187,14 @@ const WT_OK = 0.05, WT_WARN = 0.10;
 const pad2 = (n) => String(n).padStart(2, '0');
 const todayIso = () => { const d = new Date(); return d.getFullYear() + '-' + pad2(d.getMonth()+1) + '-' + pad2(d.getDate()); };
 const shiftIso = (iso, days) => { const d = new Date(iso + 'T12:00:00'); d.setDate(d.getDate() + days); return d.getFullYear() + '-' + pad2(d.getMonth()+1) + '-' + pad2(d.getDate()); };
+// Mon–Fri only: if today is Sat/Sun, roll back to Friday.
+const todayOrLastFriday = () => {
+    const d = new Date();
+    const dow = d.getDay(); // 0 Sun, 6 Sat
+    if(dow === 0) d.setDate(d.getDate() - 2);
+    else if(dow === 6) d.setDate(d.getDate() - 1);
+    return d.getFullYear() + '-' + pad2(d.getMonth()+1) + '-' + pad2(d.getDate());
+};
 const humanDate = (iso) => {
     const d = new Date(iso + 'T12:00:00');
     return d.toLocaleDateString('en-GB', { weekday:'short', day:'numeric', month:'short', year:'numeric' });
@@ -198,23 +206,34 @@ const isoYearWeek = (iso) => {
     const wk = Math.ceil(((d - y0) / 86400000 + 1) / 7);
     return d.getUTCFullYear() + '-' + pad2(wk);
 };
+// Mon–Fri only: every report skips Sat/Sun (no kitchen ops on weekends)
 const datesInRange = (start, end) => {
     const out = [];
     let cur = start, guard = 0;
-    while(cur <= end && guard++ < 400){ out.push(cur); cur = shiftIso(cur, 1); }
+    while(cur <= end && guard++ < 400){
+        const dow = new Date(cur + 'T12:00:00').getDay();
+        if(dow !== 0 && dow !== 6) out.push(cur);
+        cur = shiftIso(cur, 1);
+    }
     return out;
 };
 
 // Compute range from preset
 function rangeForPreset(preset){
-    const today = todayIso();
+    const today = todayOrLastFriday();
     if(preset === 'today') return { start: today, end: today };
-    if(preset === 'yesterday'){ const y = shiftIso(today, -1); return { start: y, end: y }; }
+    if(preset === 'yesterday'){
+        // "Yesterday" on a Monday = previous Friday (no weekend reports)
+        let y = shiftIso(today, -1);
+        let dow = new Date(y + 'T12:00:00').getDay();
+        while(dow === 0 || dow === 6){ y = shiftIso(y, -1); dow = new Date(y + 'T12:00:00').getDay(); }
+        return { start: y, end: y };
+    }
     const d = new Date(today + 'T12:00:00');
     const dow = (d.getDay() + 6) % 7; // 0 = Mon
     const monIso = shiftIso(today, -dow);
-    if(preset === 'this-week') return { start: monIso, end: shiftIso(monIso, 6) };
-    if(preset === 'last-week') return { start: shiftIso(monIso, -7), end: shiftIso(monIso, -1) };
+    if(preset === 'this-week') return { start: monIso, end: shiftIso(monIso, 4) };  // Mon–Fri
+    if(preset === 'last-week') return { start: shiftIso(monIso, -7), end: shiftIso(monIso, -3) };  // prev Mon–Fri
     const m1 = today.slice(0,8) + '01';
     const lastDay = new Date(d.getFullYear(), d.getMonth()+1, 0).getDate();
     const mEnd = today.slice(0,8) + pad2(lastDay);
@@ -473,8 +492,8 @@ function renderCity(data, isSingleDay){
 const params = new URLSearchParams(window.location.search);
 const rangeState = {
     preset: params.get('preset') || (params.get('date') ? 'custom' : 'today'),
-    start: params.get('date') || params.get('start') || todayIso(),
-    end: params.get('end') || params.get('date') || todayIso()
+    start: params.get('date') || params.get('start') || todayOrLastFriday(),
+    end: params.get('end') || params.get('date') || todayOrLastFriday()
 };
 
 function renderRangeBar(){
@@ -482,8 +501,8 @@ function renderRangeBar(){
     const presets = [
         { id:'today', label:'Today', sub: humanDate(todayIso()) },
         { id:'yesterday', label:'Yesterday', sub: humanDate(shiftIso(todayIso(), -1)) },
-        { id:'this-week', label:'This week', sub:'Mon–Sun' },
-        { id:'last-week', label:'Last week', sub:'previous Mon–Sun' },
+        { id:'this-week', label:'This week', sub:'Mon–Fri' },
+        { id:'last-week', label:'Last week', sub:'previous Mon–Fri' },
         { id:'this-month', label:'This month', sub:'1st–end' },
         { id:'last-month', label:'Last month', sub:'previous month' },
         { id:'custom', label:'Custom', sub:'pick from / to' }

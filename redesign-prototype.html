@@ -2876,12 +2876,10 @@ function setView(view, opts){
         if(location.hash !== target) history.replaceState(null, '', target);
     }
     renderAll();
-    if(state.view === 'stage'){
-        const el = document.getElementById('alert-host');
-        if(el) el.scrollIntoView({behavior:'smooth', block:'start'});
-    } else {
-        window.scrollTo({top:0, behavior:'smooth'});
-    }
+    // Always start a new view at the top of the page — no auto-scroll past
+    // the header. (Previously this jumped down to alert-host which felt
+    // disorienting on tablets / phones.)
+    window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 function routeFromHash(){

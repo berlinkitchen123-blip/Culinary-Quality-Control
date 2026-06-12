@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Bella & Bona — Daily QC Dashboard (Berlin + Munich)</title>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f1f5f9;color:#1f2937;line-height:1.4}
+body{padding:18px 22px 40px 22px;max-width:1280px;margin:0 auto}
+.toolbar{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:18px;gap:12px;flex-wrap:wrap}
+.title-block h1{margin:0;font-size:22px;font-weight:800;letter-spacing:-0.02em;color:#0f172a}
+.title-block .sub{font-size:12px;color:#64748b;margin-top:2px}
+.actions{display:flex;gap:8px;flex-wrap:wrap}
+.btn{padding:8px 14px;border-radius:8px;font-size:13px;font-weight:600;border:1px solid #e5e7eb;background:#fff;color:#1f2937;cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+.btn:hover{background:#f3f4f6}
+.btn.primary{background:#2563eb;color:white;border-color:#2563eb}
+.btn.primary:hover{background:#1d4ed8}
+.legend{display:grid;grid-template-columns:repeat(3, 1fr);gap:8px;margin-bottom:14px}
+.legend-cell{padding:10px 12px;border-radius:8px;text-align:center;font-size:11px}
+.legend-cell .lbl{font-size:12px;font-weight:800;letter-spacing:0.06em;text-transform:uppercase}
+.legend-cell.ok{background:#dcfce7;color:#166534}
+.legend-cell.warn{background:#fef3c7;color:#92400e}
+.legend-cell.crit{background:#fee2e2;color:#7f1d1d}
+.legend-cell .spec{color:#475569;font-weight:500;margin-top:3px}
+
+.cities{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:900px){.cities{grid-template-columns:1fr}}
+.city{background:#fff;border-radius:14px;border:1px solid #e5e7eb;padding:14px;box-shadow:0 1px 2px rgba(0,0,0,0.04)}
+.city-head{display:flex;align-items:center;gap:10px;padding-bottom:10px;margin-bottom:12px;border-bottom:1px solid #f3f4f6}
+.city-head .mark{width:38px;height:38px;border-radius:9px;color:white;font-weight:800;font-size:16px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0}
+.city-head.berlin .mark{background:#2563eb}
+.city-head.munich .mark{background:#16a34a}
+.city-head .info{flex:1;min-width:0}
+.city-head .name{font-size:18px;font-weight:800;color:#0f172a;letter-spacing:-0.01em}
+.city-head .meta{font-size:11px;color:#64748b;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.city-head .url{font-size:11px}
+.city-head .url a{color:#2563eb;text-decoration:underline}
+
+.scorecard{display:grid;grid-template-columns:repeat(3, 1fr);gap:8px;margin-bottom:14px}
+.score{padding:12px 8px;border-radius:10px;border:1.5px solid #e5e7eb;text-align:center;background:#f9fafb}
+.score.ok{background:#f0fdf4;border-color:#86efac}
+.score.warn{background:#fffbeb;border-color:#fcd34d}
+.score.crit{background:#fef2f2;border-color:#fca5a5}
+.score.na{background:#f9fafb;border-color:#e5e7eb}
+.score .pct{font-size:26px;font-weight:800;line-height:1.05;letter-spacing:-0.02em}
+.score.ok .pct{color:#16a34a}
+.score.warn .pct{color:#ea580c}
+.score.crit .pct{color:#b91c1c}
+.score.na .pct{color:#9ca3af}
+.score .lbl{font-size:11px;font-weight:700;color:#1f2937;margin-top:4px}
+.score .frac{font-size:10px;color:#64748b;margin-top:2px}
+.score .pill{display:inline-block;margin-top:5px;font-size:9px;font-weight:800;letter-spacing:0.06em;padding:2px 8px;border-radius:99px;color:white}
+.score.ok .pill{background:#16a34a}
+.score.warn .pill{background:#ea580c}
+.score.crit .pill{background:#b91c1c}
+.score.na .pill{background:#9ca3af}
+
+.overall{padding:10px 14px;border-radius:10px;background:#0f172a;color:white;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.overall .label{font-size:11px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;color:#94a3b8}
+.overall .pct-big{font-size:30px;font-weight:800;letter-spacing:-0.02em;line-height:1}
+.overall .status-tag{font-size:10px;font-weight:800;letter-spacing:0.06em;padding:3px 8px;border-radius:99px;text-transform:uppercase}
+.overall .status-tag.ok{background:#16a34a}
+.overall .status-tag.warn{background:#ea580c}
+.overall .status-tag.crit{background:#b91c1c}
+.overall .status-tag.na{background:#475569}
+
+.dish-list{margin-top:14px}
+.dish-list-head{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:#64748b;padding:6px 0;border-bottom:1px solid #e5e7eb;display:grid;grid-template-columns:24px 1fr 60px 60px 60px;gap:6px;align-items:center}
+.dish-row{display:grid;grid-template-columns:24px 1fr 60px 60px 60px;gap:6px;padding:5px 0;border-bottom:1px solid #f3f4f6;font-size:12px;align-items:center}
+.dish-row:last-child{border-bottom:0}
+.dish-row .letter{font-weight:800;color:#0f172a;text-align:center;font-size:11px}
+.dish-row .name{font-weight:600;color:#1f2937;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dish-row .temp{font-weight:700;text-align:center;border-radius:4px;padding:2px 4px;font-variant-numeric:tabular-nums;font-size:11px}
+.temp.ok{background:#dcfce7;color:#166534}
+.temp.warn{background:#fef3c7;color:#92400e}
+.temp.crit{background:#fee2e2;color:#7f1d1d}
+.temp.na{color:#9ca3af}
+.dish-list-section{font-size:10px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;color:#475569;padding:8px 0 4px 0;margin-top:6px;border-bottom:1px solid #e5e7eb}
+.dish-list-section.hot{color:#b91c1c}
+.dish-list-section.cold{color:#1d4ed8}
+
+.loading{padding:40px;text-align:center;color:#64748b;font-size:13px}
+.err{padding:20px;background:#fef2f2;color:#7f1d1d;border-radius:8px;font-size:13px;border:1px solid #fecaca}
+
+@media print{
+    body{background:white;padding:0;max-width:none}
+    .toolbar .actions{display:none}
+    .city{box-shadow:none;page-break-inside:avoid}
+    .cities{grid-template-columns:1fr 1fr}
+}
+</style>
+</head>
+<body>
+
+<div class="toolbar">
+    <div class="title-block">
+        <h1>Bella & Bona · Daily QC Snapshot</h1>
+        <div class="sub" id="sub-line">Loading…</div>
+    </div>
+    <div class="actions">
+        <button class="btn" type="button" onclick="window.location.reload()">↻ Refresh</button>
+        <button class="btn" type="button" onclick="copySummary()">📋 Copy email summary</button>
+        <button class="btn primary" type="button" onclick="window.print()">🖨️ Print / Save as PDF</button>
+    </div>
+</div>
+
+<div class="legend">
+    <div class="legend-cell ok"><div class="lbl">✓ OK</div><div class="spec">Hot ≥65°C · Cold ≤6°C · Wt ≤5%</div></div>
+    <div class="legend-cell warn"><div class="lbl">⚠ WARN</div><div class="spec">Hot 60–64°C · Cold 6–8°C · Wt 5–10%</div></div>
+    <div class="legend-cell crit"><div class="lbl">✗ CRITICAL</div><div class="spec">Hot &lt;60°C · Cold &gt;8°C · Wt &gt;10%</div></div>
+</div>
+
+<div class="cities" id="cities">
+    <div class="city"><div class="loading">Loading Berlin…</div></div>
+    <div class="city"><div class="loading">Loading Munich…</div></div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
+
+const CITIES = [
+    {
+        slug: 'berlin', name: 'Berlin', class: 'berlin',
+        config: {
+            apiKey: "AIzaSyA3O6Dw0Hj06BH_DUupZvUrufi1jjbDi0g",
+            authDomain: "quality-control-24.firebaseapp.com",
+            databaseURL: "https://quality-control-24-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "quality-control-24",
+            storageBucket: "quality-control-24.firebasestorage.app",
+            messagingSenderId: "708146875113",
+            appId: "1:708146875113:web:a318755bce78ef99ffbe78"
+        }
+    },
+    {
+        slug: 'munich', name: 'Munich', class: 'munich',
+        config: {
+            apiKey: "AIzaSyDOgS9zY5cAvBHcpzJ5eZeEwi2MsGjhG5c",
+            authDomain: "quality-control-86.firebaseapp.com",
+            databaseURL: "https://quality-control-86-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "quality-control-86",
+            storageBucket: "quality-control-86.firebasestorage.app",
+            messagingSenderId: "161960198974",
+            appId: "1:161960198974:web:7c08f784d04c47feb2a26f"
+        }
+    }
+];
+
+// ---- Helpers ----------------------------------------------------------------
+const HOT_PASS = 65, HOT_WARN_MIN = 60;
+const COLD_PASS = 6, COLD_WARN_MAX = 8;
+const WT_OK = 0.05, WT_WARN = 0.10;
+
+const todayIso = () => {
+    const d = new Date();
+    return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+};
+const humanDate = (iso) => {
+    const d = new Date(iso + 'T12:00:00');
+    return d.toLocaleDateString('en-GB', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
+};
+const isoYearWeek = (iso) => {
+    const d = new Date(iso + 'T00:00:00Z');
+    d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
+    const y0 = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+    const wk = Math.ceil(((d - y0) / 86400000 + 1) / 7);
+    return d.getUTCFullYear() + '-' + String(wk).padStart(2, '0');
+};
+const isCold = (d) => (d?.dishType || '').toLowerCase().includes('cold');
+const avg = (arr) => {
+    if(!Array.isArray(arr)) return null;
+    const nums = arr.filter(x => x != null).map(Number).filter(x => Number.isFinite(x));
+    if(!nums.length) return null;
+    return nums.reduce((s,v) => s+v, 0) / nums.length;
+};
+const hotStatus = (v) => v == null ? 'na' : v >= HOT_PASS ? 'ok' : v >= HOT_WARN_MIN ? 'warn' : 'crit';
+const coldStatus = (v) => v == null ? 'na' : v <= COLD_PASS ? 'ok' : v <= COLD_WARN_MAX ? 'warn' : 'crit';
+const wtStatus = (theo, actual) => {
+    if(!theo || actual == null) return 'na';
+    const pct = Math.abs((actual - theo) / theo);
+    return pct <= WT_OK ? 'ok' : pct <= WT_WARN ? 'warn' : 'crit';
+};
+const escapeHtml = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+// ---- Fetch + compute --------------------------------------------------------
+async function loadCity(city, dateIso){
+    const app = initializeApp(city.config, city.slug);
+    const db = getDatabase(app);
+    const wk = isoYearWeek(dateIso);
+    const [menuSnap, checksSnap] = await Promise.all([
+        get(ref(db, `menus/${wk}`)),
+        get(ref(db, `quality-checks/${dateIso}`))
+    ]);
+    const menu = menuSnap.val();
+    const checks = checksSnap.val() || {};
+    const dishes = (menu && menu.dishes) ? menu.dishes : [];
+    return { city, dishes, checks, week: wk };
+}
+
+function computeScorecard(dishes, checks){
+    const c = { hot:{total:0,pass:0}, cold:{total:0,pass:0}, wt:{total:0,pass:0} };
+    for(const d of dishes){
+        const ck = checks[d.dishLetter] || {};
+        const v = avg(ck.temperatures);
+        if(v != null){
+            if(isCold(d)){
+                c.cold.total++;
+                const st = coldStatus(v);
+                if(st === 'ok' || st === 'warn') c.cold.pass++;
+            } else {
+                c.hot.total++;
+                const st = hotStatus(v);
+                if(st === 'ok' || st === 'warn') c.hot.pass++;
+            }
+        }
+        const w = avg(ck.weights);
+        if(w != null && d.theoreticalWeight){
+            c.wt.total++;
+            const st = wtStatus(d.theoreticalWeight, w);
+            if(st === 'ok') c.wt.pass++;
+        }
+    }
+    const totalAll = c.hot.total + c.cold.total + c.wt.total;
+    const passAll = c.hot.pass + c.cold.pass + c.wt.pass;
+    const overallPct = totalAll === 0 ? null : Math.round(passAll / totalAll * 100);
+    return { ...c, overall: { total: totalAll, pass: passAll, pct: overallPct } };
+}
+
+function overallStatus(pct){
+    if(pct == null) return 'na';
+    if(pct >= 80) return 'ok';
+    if(pct >= 60) return 'warn';
+    return 'crit';
+}
+function cardStatus(rate, total){
+    if(total === 0) return 'na';
+    if(rate === 100) return 'ok';
+    if(rate >= 80) return 'warn';
+    return 'crit';
+}
+
+function renderCity(data){
+    const sc = computeScorecard(data.dishes, data.checks);
+    const hotRate = sc.hot.total === 0 ? 0 : Math.round(sc.hot.pass / sc.hot.total * 100);
+    const coldRate = sc.cold.total === 0 ? 0 : Math.round(sc.cold.pass / sc.cold.total * 100);
+    const wtRate = sc.wt.total === 0 ? 0 : Math.round(sc.wt.pass / sc.wt.total * 100);
+    const ovStatus = overallStatus(sc.overall.pct);
+
+    const hotDishes = data.dishes.filter(d => !isCold(d)).sort((a,b) => (a.dishLetter || '').localeCompare(b.dishLetter || '', 'en', { numeric: true }));
+    const coldDishes = data.dishes.filter(d => isCold(d)).sort((a,b) => (a.dishLetter || '').localeCompare(b.dishLetter || '', 'en', { numeric: true }));
+
+    const dishRow = (d, isHot) => {
+        const c = data.checks[d.dishLetter] || {};
+        const a = c.assembly && (c.assembly.temps ? avg(c.assembly.temps) : c.assembly.temp);
+        const q = avg(c.temperatures);
+        const dp = c.dispatch && (c.dispatch.temps ? avg(c.dispatch.temps) : c.dispatch.temp);
+        const tCell = (v) => {
+            if(v == null) return `<span class="temp na">—</span>`;
+            const st = isHot ? hotStatus(v) : coldStatus(v);
+            return `<span class="temp ${st}">${v.toFixed(1)}°</span>`;
+        };
+        return `<div class="dish-row">
+            <span class="letter">${escapeHtml(d.dishLetter)}</span>
+            <span class="name">${escapeHtml(d.dishName)}</span>
+            ${tCell(a)}
+            ${tCell(q)}
+            ${tCell(dp)}
+        </div>`;
+    };
+
+    const baseUrl = window.location.origin + window.location.pathname.replace(/[^/]+$/, '');
+    const cityAppUrl = `${baseUrl}redesign-prototype.html?city=${data.city.slug}`;
+
+    return `
+        <div class="city">
+            <div class="city-head ${data.city.class}">
+                <div class="mark">${data.city.name.charAt(0)}</div>
+                <div class="info">
+                    <div class="name">${data.city.name}</div>
+                    <div class="meta">${data.dishes.length} dishes · Week ${data.week}${data.dishes.length === 0 ? ' · no menu loaded' : ''}</div>
+                </div>
+                <div class="url"><a href="${cityAppUrl}" target="_blank">Open app →</a></div>
+            </div>
+
+            <div class="scorecard">
+                <div class="score ${cardStatus(hotRate, sc.hot.total)}">
+                    <div class="pct">${sc.hot.total === 0 ? '—' : hotRate + '%'}</div>
+                    <div class="lbl">Hot dishes</div>
+                    <div class="frac">${sc.hot.pass}/${sc.hot.total} pass</div>
+                    <div class="pill">${cardStatus(hotRate, sc.hot.total).toUpperCase()}</div>
+                </div>
+                <div class="score ${cardStatus(coldRate, sc.cold.total)}">
+                    <div class="pct">${sc.cold.total === 0 ? '—' : coldRate + '%'}</div>
+                    <div class="lbl">Cold dishes</div>
+                    <div class="frac">${sc.cold.pass}/${sc.cold.total} pass</div>
+                    <div class="pill">${cardStatus(coldRate, sc.cold.total).toUpperCase()}</div>
+                </div>
+                <div class="score ${cardStatus(wtRate, sc.wt.total)}">
+                    <div class="pct">${sc.wt.total === 0 ? '—' : wtRate + '%'}</div>
+                    <div class="lbl">Weight</div>
+                    <div class="frac">${sc.wt.pass}/${sc.wt.total} within 5%</div>
+                    <div class="pill">${cardStatus(wtRate, sc.wt.total).toUpperCase()}</div>
+                </div>
+            </div>
+
+            <div class="overall">
+                <div>
+                    <div class="label">Overall compliance</div>
+                    <div class="pct-big">${sc.overall.pct == null ? '—' : sc.overall.pct + '%'}</div>
+                </div>
+                <span class="status-tag ${ovStatus}">${ovStatus === 'na' ? 'No data' : ovStatus.toUpperCase()}</span>
+            </div>
+
+            <div class="dish-list">
+                <div class="dish-list-head">
+                    <span></span>
+                    <span>Dish</span>
+                    <span style="text-align:center">CP1</span>
+                    <span style="text-align:center">CP2</span>
+                    <span style="text-align:center">CP3</span>
+                </div>
+                ${hotDishes.length ? `<div class="dish-list-section hot">Hot dishes (${hotDishes.length})</div>` : ''}
+                ${hotDishes.map(d => dishRow(d, true)).join('')}
+                ${coldDishes.length ? `<div class="dish-list-section cold">Cold dishes (${coldDishes.length})</div>` : ''}
+                ${coldDishes.map(d => dishRow(d, false)).join('')}
+            </div>
+        </div>
+    `;
+}
+
+// ---- Boot ------------------------------------------------------------------
+const dateIso = (new URLSearchParams(window.location.search).get('date')) || todayIso();
+document.getElementById('sub-line').textContent = `${humanDate(dateIso)}  ·  Berlin + Munich  ·  Refreshed ${new Date().toLocaleTimeString('en-GB')}`;
+
+const host = document.getElementById('cities');
+window.__cityData = {};
+Promise.all(CITIES.map(c => loadCity(c, dateIso)
+    .then(d => { window.__cityData[c.slug] = d; return d; })
+    .catch(err => ({ city: c, dishes: [], checks: {}, week: isoYearWeek(dateIso), error: err.message || String(err) }))
+)).then(results => {
+    host.innerHTML = results.map(r => {
+        if(r.error){
+            return `<div class="city"><div class="city-head ${r.city.class}"><div class="mark">${r.city.name.charAt(0)}</div><div class="info"><div class="name">${r.city.name}</div><div class="meta">Failed to load</div></div></div><div class="err">${escapeHtml(r.error)}</div></div>`;
+        }
+        return renderCity(r);
+    }).join('');
+});
+
+window.copySummary = function(){
+    const data = window.__cityData || {};
+    const out = [];
+    out.push(`Bella & Bona — Daily QC Snapshot`);
+    out.push(`${humanDate(dateIso)}\n`);
+    for(const slug of ['berlin', 'munich']){
+        const d = data[slug];
+        if(!d){ out.push(`${slug.toUpperCase()}: failed to load`); continue; }
+        const sc = computeScorecard(d.dishes, d.checks);
+        const hotRate = sc.hot.total === 0 ? '—' : Math.round(sc.hot.pass/sc.hot.total*100) + '%';
+        const coldRate = sc.cold.total === 0 ? '—' : Math.round(sc.cold.pass/sc.cold.total*100) + '%';
+        const wtRate = sc.wt.total === 0 ? '—' : Math.round(sc.wt.pass/sc.wt.total*100) + '%';
+        const ov = sc.overall.pct == null ? '—' : sc.overall.pct + '%';
+        const status = overallStatus(sc.overall.pct).toUpperCase();
+        out.push(`*${d.city.name.toUpperCase()}* — overall ${ov} (${status})`);
+        out.push(`  Hot:    ${hotRate}  (${sc.hot.pass}/${sc.hot.total} pass)`);
+        out.push(`  Cold:   ${coldRate}  (${sc.cold.pass}/${sc.cold.total} pass)`);
+        out.push(`  Weight: ${wtRate}  (${sc.wt.pass}/${sc.wt.total} within 5%)`);
+        out.push(``);
+    }
+    out.push(`— Sent from Bella & Bona Daily QC Dashboard`);
+    const text = out.join('\n');
+    navigator.clipboard.writeText(text).then(() => {
+        alert('Summary copied — paste it into your email.');
+    }).catch(() => {
+        prompt('Copy this:', text);
+    });
+};
+</script>
+
+</body>
+</html>

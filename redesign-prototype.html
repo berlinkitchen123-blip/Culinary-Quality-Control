@@ -1704,7 +1704,17 @@ function lockSettingsNow(){
 
 /* Ask for the PIN before showing the panel. Returns true if unlocked. */
 async function promptPinIfLocked(){
-    const lock = state.settingsLock;
+    // Listener may not have fired yet on first page load — do a one-shot
+    // fetch so we never accidentally let someone in before lock state arrives.
+    let lock = state.settingsLock;
+    if(lock === undefined){
+        try {
+            const snap = await get(ref(db, 'settings-lock'));
+            const v = snap.val();
+            lock = v && v.hash ? { hash: v.hash, enabled: v.enabled !== false } : null;
+            state.settingsLock = lock;
+        } catch { lock = null; }
+    }
     if(!lock || !lock.enabled || !lock.hash) return true;     // no lock set
     if(isSettingsUnlocked()) return true;                      // already unlocked this session
     return await new Promise((resolve) => {

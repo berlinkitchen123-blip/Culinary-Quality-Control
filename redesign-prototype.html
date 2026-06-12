@@ -2311,7 +2311,7 @@ function renderIngredientsStageView(){
             </div>
         `;
     };
-    const sectionHead = (title, count, color, sub) => `
+    const ingSectionHead = (title, count, color, sub) => `
         <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:18px 0 10px 0">
             <div>
                 <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:${color}">${title} · ${count}</div>
@@ -2328,12 +2328,12 @@ function renderIngredientsStageView(){
         </div>
 
         ${cooked.length ? `
-            ${sectionHead('Cooked components — need post-cook temp', cooked.length, '#0d9488', 'Tap a card to record temperature + photo. Logged once, shared across every dish that uses it.')}
+            ${ingSectionHead('Cooked components — need post-cook temp', cooked.length, '#0d9488', 'Tap a card to record temperature + photo. Logged once, shared across every dish that uses it.')}
             <div class="ing-grid">${cooked.map(card).join('')}</div>
         ` : `<div class="rv-empty" style="margin-top:12px">No cooked components in this menu.</div>`}
 
         ${toppings.length ? `
-            ${sectionHead('Toppings & garnishes — added at the end', toppings.length, '#0891b2', 'Raw additions like fresh herbs, seeds, flakes, microgreens. No cooking temperature needed — just confirm presence.')}
+            ${ingSectionHead('Toppings & garnishes — added at the end', toppings.length, '#0891b2', 'Raw additions like fresh herbs, seeds, flakes, microgreens. No cooking temperature needed — just confirm presence.')}
             <div class="ing-grid">${toppings.map(card).join('')}</div>
         ` : ''}
     `;

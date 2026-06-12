@@ -563,6 +563,12 @@ body[data-view="stage"] .home-view{display:none}
 @media(max-width:1200px){ .stage-card-grid{grid-template-columns:repeat(2, minmax(0, 1fr))} }
 @media(max-width:560px){ .stage-card-grid{grid-template-columns:1fr; gap:12px} }
 .stage-card[data-stage="placement"]{border-left:6px solid var(--gold)}
+.stage-card[data-stage="ingredients"]{border-left:6px solid #14b8a6}
+.stage-card[data-stage="ingredients"] .step,
+.stage-card[data-stage="ingredients"] .stage-name,
+.stage-card[data-stage="ingredients"] .progress-pill{color:#0d9488}
+.stage-card[data-stage="ingredients"] .progress-pill{background:rgba(20,184,166,0.12);border-color:rgba(20,184,166,0.3)}
+.stage-card[data-stage="ingredients"] .step{color:#14b8a6}
 .stage-card[data-stage="placement"] .step{color:var(--gold)}
 .stage-card[data-stage="placement"]:hover{border-color:var(--gold);background:rgba(245,158,11,0.06)}
 .stage-card[data-stage="placement"] .progress-pill{background:rgba(245,158,11,0.12);color:var(--gold);border-color:rgba(245,158,11,0.4)}
@@ -1017,8 +1023,20 @@ html[data-theme="dark"] #report-view-host{background:#f9fafb}
 <section class="home-view" id="home-view">
     <div class="home-eyebrow">Daily quality control</div>
     <h1 class="home-title">Pick a stage to log readings</h1>
-    <div class="home-sub">Four stations work the dishes through the day. Tap the one you're on now.</div>
+    <div class="home-sub">Five stations cover the dish lifecycle. Tap the one you're on now.</div>
     <div class="stage-card-grid" id="home-stage-grid">
+        <button class="stage-card" data-stage="ingredients" type="button">
+            <div>
+                <div class="step">✦ Ingredients</div>
+                <div class="stage-name">Ingredients</div>
+                <div class="stage-desc">Raw materials after cooking: pick each ingredient, snap a photo, stamp its temperature before it goes into a dish.</div>
+            </div>
+            <div class="stage-progress">
+                <span class="progress-pill" id="home-count-ingredients">—</span>
+                <span>logged today</span>
+            </div>
+            <div class="stage-arrow">→</div>
+        </button>
         <button class="stage-card" data-stage="assembly" type="button">
             <div>
                 <div class="step">① Assembly</div>
@@ -1107,6 +1125,12 @@ html[data-theme="dark"] #report-view-host{background:#f9fafb}
     <div class="stage-bar-inner">
         <button class="home-link" id="go-home" type="button" aria-label="Back to stage chooser">← Home</button>
         <div class="stage-tabs" role="tablist">
+            <button class="stage-tab" data-stage="ingredients" role="tab" aria-selected="false">
+                <span class="stage-emoji">✦</span>
+                <span class="tab-label-full">Ingredients</span>
+                <span class="tab-label-short">Ing</span>
+                <span class="stage-count" id="count-ingredients">—</span>
+            </button>
             <button class="stage-tab" data-stage="assembly" role="tab" aria-selected="false">
                 <span class="stage-emoji">①</span>
                 <span class="tab-label-full">Assembly</span>
@@ -1138,6 +1162,8 @@ html[data-theme="dark"] #report-view-host{background:#f9fafb}
 <style>
 .stage-tab.is-active[data-stage=placement]{color:var(--gold);border-bottom-color:var(--gold);background:rgba(245,158,11,0.10)}
 .stage-tab.is-active[data-stage=placement] .stage-count{background:var(--bg-2);color:var(--gold);border-color:rgba(245,158,11,0.4)}
+.stage-tab.is-active[data-stage=ingredients]{color:#0d9488;border-bottom-color:#14b8a6;background:rgba(20,184,166,0.10)}
+.stage-tab.is-active[data-stage=ingredients] .stage-count{background:var(--bg-2);color:#0d9488;border-color:rgba(20,184,166,0.4)}
 </style>
 
 <main class="container">
@@ -2058,6 +2084,188 @@ function dishesInContainer(containerId, compartment){
 function isDishPlaced(letter){
     return placementsOf(letter).length > 0;
 }
+/* === Global ingredient logs ===
+   Stored at `ingredient-logs/{date}/{key}` = { name, temp, image, ts }.
+   Shared across all dishes that use the ingredient — log once, count
+   everywhere. */
+function listenIngredientLogs(date){
+    return onValue(ref(db, `ingredient-logs/${date}`), snap => {
+        state.ingredientLogs = snap.val() || {};
+        if(state.view === 'stage' && state.stage === 'ingredients') renderAll();
+        // Also nudge the home page so the count pill updates
+        if(state.view === 'home') renderHome();
+    });
+}
+async function saveIngredientLog(key, partial){
+    const path = `ingredient-logs/${state.selectedDate}/${key}`;
+    await update(ref(db, path), { ...partial, updatedAt: serverTimestamp() });
+}
+
+/* Collect every unique ingredient from the current menu (deduplicated by
+   name, case-insensitive). Returns [{name, weight, key, usedIn:[dishLetters]}]. */
+function collectMenuIngredients(){
+    const map = new Map();
+    const dishes = (state.menu && state.menu.dishes) || [];
+    for(const d of dishes){
+        for(const raw of (d.dishIngredients || [])){
+            const ing = typeof raw === 'string' ? { name: raw, weight: '' } : raw;
+            const name = (ing.name || '').trim();
+            if(!name) continue;
+            const key = name.toLowerCase();
+            if(!map.has(key)){
+                map.set(key, { name, weight: ing.weight || '', key: ingredientKey(name), usedIn: [] });
+            }
+            map.get(key).usedIn.push(d.dishLetter);
+        }
+    }
+    return Array.from(map.values()).sort((a,b) => a.name.localeCompare(b.name));
+}
+
+function renderIngredientsStageView(){
+    const alertHost = document.getElementById('alert-host');
+    const dishArea = document.getElementById('dish-area');
+    const scorecard = document.getElementById('scorecard')?.closest('section');
+    const summarySec = document.getElementById('summary-body')?.closest('section');
+    if(scorecard) scorecard.style.display = 'none';
+    if(summarySec) summarySec.style.display = 'none';
+    const sectionHead = dishArea?.parentElement?.querySelector('.section-head');
+    if(sectionHead) sectionHead.style.display = 'none';
+    if(alertHost) alertHost.innerHTML = '';
+    if(!dishArea) return;
+
+    const ings = collectMenuIngredients();
+    const logs = state.ingredientLogs || {};
+
+    if(!ings.length){
+        dishArea.innerHTML = `
+            <div class="placement-empty">
+                <div class="pe-title">No ingredients in this week's menu</div>
+                <div>Open Settings, paste the menu JSON (with <code>dishIngredients</code> on each dish), and Save. Then come back here to log temperatures and photos for each raw material.</div>
+                <button class="btn btn-primary" onclick="window.__qc.openSettings()">Open Settings</button>
+            </div>
+        `;
+        return;
+    }
+
+    // Detail-view (one ingredient focused)
+    if(state.focusedIngredient){
+        const focus = ings.find(i => i.key === state.focusedIngredient);
+        if(!focus){
+            state.focusedIngredient = null;
+            renderIngredientsStageView();
+            return;
+        }
+        const log = logs[focus.key] || {};
+        dishArea.innerHTML = `
+            <div class="ing-detail-head">
+                <button class="ing-back" type="button" id="ing-back-btn">← All ingredients</button>
+                <div class="ing-detail-title">${escapeHtml(focus.name)}${focus.weight?`<span class="ing-detail-weight">${escapeHtml(focus.weight)}</span>`:''}</div>
+            </div>
+            <div style="font-size:12px;color:var(--mute);margin-top:6px">Used in ${focus.usedIn.length} dish${focus.usedIn.length===1?'':'es'}: ${focus.usedIn.map(l => `<strong style="color:var(--ink-2)">${escapeHtml(l)}</strong>`).join(' · ')}</div>
+
+            <div class="section-mini" style="margin-top:18px">Photo of the cooked ingredient</div>
+            <div class="asm-photo-row">
+                <div class="photo">
+                    ${log.image
+                        ? `<img src="${escapeAttr(log.image)}" alt=""/>
+                           <button class="photo-action" type="button" id="ing-stage-camera">Retake</button>`
+                        : `<div class="photo-empty">
+                             <div style="font-weight:600;color:var(--ink-2);font-size:12px">No photo yet</div>
+                             <button class="camera-btn" type="button" id="ing-stage-camera">
+                               <svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                               Take photo
+                             </button>
+                             <label class="photo-action" style="position:static;margin-top:4px;background:var(--bg-3)">
+                               <input type="file" accept="image/*" capture="environment" id="ing-stage-photo-input"/>
+                               Or upload
+                             </label>
+                           </div>`}
+                </div>
+            </div>
+
+            <div class="section-mini" style="margin-top:16px">Temperature after cooking (°C)</div>
+            <div class="samples" style="grid-template-columns:1fr;max-width:240px">
+                <div class="sample is-empty">
+                    <input id="ing-stage-temp" type="text" pattern="[0-9]*[.,]?[0-9]*" value="${log.temp != null ? log.temp : ''}" placeholder="—" inputmode="decimal" autocomplete="off"/>
+                    <div class="unit">°C</div>
+                </div>
+            </div>
+            ${log.ts ? `<div style="font-size:11px;color:var(--mute);margin-top:6px">⏱ Last saved at ${escapeHtml(log.ts)}</div>` : ''}
+
+            <div class="inline-done-row" style="max-width:240px">
+                <button type="button" class="inline-done" id="ing-stage-done"><span class="check">✓</span> Save &amp; back</button>
+            </div>
+        `;
+
+        const back = () => { state.focusedIngredient = null; renderAll(); };
+        document.getElementById('ing-back-btn')?.addEventListener('click', back);
+        const tempEl = document.getElementById('ing-stage-temp');
+        const persistTemp = async () => {
+            if(!tempEl) return;
+            const n = parseDecimal(tempEl.value);
+            const val = Number.isNaN(n) ? null : n;
+            try { await saveIngredientLog(focus.key, { name: focus.name, temp: val, ts: nowHHMM() }); flashSaved(); }
+            catch(err){ console.error(err); toast('Save failed','fail'); }
+        };
+        if(tempEl){
+            tempEl.addEventListener('keydown', e => { if(e.key === 'Enter'){ e.preventDefault(); tempEl.blur(); } });
+            tempEl.addEventListener('blur', persistTemp);
+        }
+        document.getElementById('ing-stage-done')?.addEventListener('click', async () => { await persistTemp(); back(); });
+        const savePhoto = async (dataUrl) => { await saveIngredientLog(focus.key, { name: focus.name, image: dataUrl, ts: nowHHMM() }); };
+        document.getElementById('ing-stage-camera')?.addEventListener('click', (e) => { e.preventDefault(); openCamera(focus.key, { onCapture: savePhoto }); });
+        const inp = document.getElementById('ing-stage-photo-input');
+        if(inp){
+            inp.addEventListener('change', async (e) => {
+                const file = e.target.files?.[0]; if(!file) return;
+                try { toast('Processing photo…'); const dataUrl = await resizeImageToDataUrl(file, 1024, 0.85); await savePhoto(dataUrl); toast('Photo saved','ok'); renderAll(); }
+                catch(err){ toast('Photo save failed','fail'); console.error(err); }
+            });
+        }
+        return;
+    }
+
+    // Grid view (all ingredients)
+    const loggedCount = ings.filter(i => {
+        const l = logs[i.key]; return l && (l.image || l.temp != null);
+    }).length;
+    const card = (ing) => {
+        const log = logs[ing.key] || {};
+        const hasImg = !!log.image;
+        const hasTemp = log.temp != null;
+        const hasData = hasImg || hasTemp;
+        const tempTxt = hasTemp ? Number(log.temp).toFixed(1) + '°C' : '—';
+        return `
+            <button class="ing-card ${hasData?'has-data':''}" type="button" data-ing-stage-open="${escapeAttr(ing.key)}">
+                <div class="ing-card-thumb">
+                    ${hasImg ? `<img src="${escapeAttr(log.image)}" alt=""/>` : `<span class="ing-card-thumb-empty">📷</span>`}
+                </div>
+                <div class="ing-card-body">
+                    <div class="ing-card-name">${escapeHtml(ing.name)}</div>
+                    ${ing.weight ? `<div class="ing-card-weight">${escapeHtml(ing.weight)}</div>` : ''}
+                    <div class="ing-card-temp ${hasTemp?'is-set':''}">${tempTxt}</div>
+                    <div style="font-size:10px;color:var(--mute);margin-top:3px">Used in ${ing.usedIn.length}</div>
+                </div>
+            </button>
+        `;
+    };
+    dishArea.innerHTML = `
+        <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:14px">
+            <div>
+                <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#0d9488">Ingredients · raw-material log</div>
+                <div style="font-size:13px;color:var(--mute);margin-top:2px">${loggedCount} / ${ings.length} logged today · tap an ingredient to record its post-cooking temperature and photo. Logged once, shared across every dish that uses it.</div>
+            </div>
+        </div>
+        <div class="ing-grid">${ings.map(card).join('')}</div>
+    `;
+    document.querySelectorAll('[data-ing-stage-open]').forEach(b => {
+        b.addEventListener('click', () => {
+            state.focusedIngredient = b.getAttribute('data-ing-stage-open');
+            renderAll();
+        });
+    });
+}
+
 function renderPlacementStageView(){
     // The placement stage replaces the alert/scorecard/dishes/summary blocks.
     const alertHost = document.getElementById('alert-host');
@@ -2366,7 +2574,14 @@ function renderAll(){
         document.getElementById('team-bar-host')?.remove();
         if(state.stage === 'placement'){
             renderPlacementStageView();
+        } else if(state.stage === 'ingredients'){
+            renderIngredientsStageView();
         } else {
+            // Restore scorecard + section heading that placement/ingredients hide
+            const sc = document.getElementById('scorecard')?.closest('section');
+            if(sc) sc.style.display = '';
+            const sh = document.getElementById('dish-area')?.parentElement?.querySelector('.section-head');
+            if(sh) sh.style.display = '';
             // Daily summary is rendered only on the home page now,
             // not duplicated on every stage view.
             renderAlert(); renderScorecard(); renderDishes();
@@ -2382,6 +2597,15 @@ function renderHome(){
         const el = document.getElementById(`home-count-${stg}`);
         if(el) el.textContent = total === 0 ? '—' : `${logged} / ${total}`;
     });
+    // Ingredients: count unique ingredients in this week's menu that have a
+    // global log (temp or photo). Shared across all dishes that use them.
+    const ingEl = document.getElementById('home-count-ingredients');
+    if(ingEl){
+        const ings = collectMenuIngredients();
+        const logs = state.ingredientLogs || {};
+        const done = ings.filter(i => { const l = logs[i.key]; return l && (l.image || l.temp != null); }).length;
+        ingEl.textContent = ings.length === 0 ? '—' : `${done} / ${ings.length}`;
+    }
     const wkEl = document.getElementById('home-week');
     const dEl = document.getElementById('home-date');
     const mEl = document.getElementById('home-menu-count');
@@ -2413,7 +2637,7 @@ function setView(view, opts){
 
 function routeFromHash(){
     const h = (location.hash || '').replace(/^#\//,'');
-    if(h === 'assembly' || h === 'qc' || h === 'dispatch' || h === 'placement'){
+    if(h === 'assembly' || h === 'qc' || h === 'dispatch' || h === 'placement' || h === 'ingredients'){
         state.stage = h;
         setView('stage', { skipHash: true });
     } else {
@@ -5361,12 +5585,15 @@ async function selectDate(iso){
     try{ state.menu = sortMenuByLetter(await loadMenuForWeek(wk)); }catch(e){ state.menu=null; }
     if(state._unsub) state._unsub();
     state._unsub=listenChecks(iso);
+    if(state._unsubIng) state._unsubIng();
+    state._unsubIng = listenIngredientLogs(iso);
     renderAll();
 }
 
 function setStage(stg){
     state.stage = stg;
     state.filter = 'all';
+    state.focusedIngredient = null;
     document.querySelectorAll('.filter button').forEach(b=>b.classList.toggle('is-active', b.getAttribute('data-filter')==='all'));
     setView('stage');
 }

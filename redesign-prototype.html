@@ -511,6 +511,14 @@ html[data-theme="dark"] .ing-card.has-data{background:rgba(34,197,94,0.10)}
 .ing-card-temp.is-set{color:var(--pass);background:rgba(34,197,94,0.14)}
 .ing-card.is-topping .ing-card-temp{color:#0891b2;background:rgba(8,145,178,0.10)}
 .ing-card .ing-card-thumb-img{position:absolute;top:6px;right:6px;width:28px;height:28px;border-radius:6px;object-fit:cover;border:2px solid white;box-shadow:var(--shadow-sm)}
+/* Compact in-dish ingredient card — about half the height of the global
+   stage version (which is intentionally bigger for kitchen tablet use). */
+.ing-card-mini{min-height:52px;padding:9px 12px;gap:3px}
+.ing-card-mini .ing-card-name{font-size:14px}
+.ing-card-mini .ing-card-temp{font-size:11px;padding:2px 8px}
+.ing-card-mini .ing-card-thumb-img{width:22px;height:22px;top:4px;right:4px}
+/* Tighter grid for the compact in-dish card */
+.modal-body .ing-grid{grid-template-columns:repeat(auto-fill, minmax(140px, 1fr));gap:8px}
 
 .ing-detail-head{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
 .ing-back{background:var(--bg-3);border:1px solid var(--line);border-radius:8px;padding:7px 12px;font-size:12px;font-weight:700;color:var(--ink);cursor:pointer}
@@ -3000,18 +3008,17 @@ function renderIngredientTab(dish, c){
         const hasTemp = log.temp != null;
         const hasData = hasImg || hasTemp;
         const tempTxt = hasTemp ? Number(log.temp).toFixed(1) + '°C' : '—';
+        // Minimal in-dish ingredient card: name + small status pill only,
+        // no thumbnail, no weight. Photo (when captured) shown as a tiny
+        // corner badge so it's spottable but not space-hogging.
+        const statusPill = hasTemp
+            ? `<span class="ing-card-temp is-set">${Number(log.temp).toFixed(1)}°C</span>`
+            : `<span class="ing-card-temp">Tap to log</span>`;
         return `
-            <button class="ing-card ${hasData?'has-data':''}" type="button" data-ing-open="${escapeAttr(ing.name)}">
-                <div class="ing-card-thumb">
-                    ${hasImg
-                        ? `<img src="${escapeAttr(log.image)}" alt=""/>`
-                        : `<span class="ing-card-thumb-empty">📷</span>`}
-                </div>
-                <div class="ing-card-body">
-                    <div class="ing-card-name">${escapeHtml(ing.name)}</div>
-                    ${ing.weight ? `<div class="ing-card-weight">${escapeHtml(ing.weight)}</div>` : ''}
-                    <div class="ing-card-temp ${hasTemp?'is-set':''}">${tempTxt}</div>
-                </div>
+            <button class="ing-card ing-card-mini ${hasData?'has-data':''}" type="button" data-ing-open="${escapeAttr(ing.name)}">
+                ${hasImg ? `<img class="ing-card-thumb-img" src="${escapeAttr(log.image)}" alt=""/>` : ''}
+                <div class="ing-card-name">${escapeHtml(ing.name)}</div>
+                ${statusPill}
             </button>
         `;
     };

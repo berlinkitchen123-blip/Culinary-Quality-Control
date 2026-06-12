@@ -2123,8 +2123,9 @@ async function saveIngredientLog(key, partial){
    items the head chef confirmed should always be in this section. */
 const TOPPING_RE = new RegExp([
     // Generic markers / preparation hints
-    '\\b(sprinkle|topping|garnish|crouton|wedge|micro\\s*greens?|sprouts?)\\b',
+    '\\b(sprinkle|topping|garnish|crouton(s)?|wedge|micro\\s*greens?|sprouts?)\\b',
     '\\b(seeds?|flakes?)\\b',
+    // Dressings + sauces typically added at the end
     '\\bdressing\\b',
     '\\bvinaigrette\\b',
     '\\bbalsamic\\b',
@@ -2136,19 +2137,59 @@ const TOPPING_RE = new RegExp([
     '\\bsoy\\s*sauce\\b',
     '\\bolive\\s*oil\\b',
     '\\bcooking\\s*cream\\b',
+    '\\bsour\\s*cream\\b',
+    '\\benchilada\\s*sauce\\b',
+    '\\btomato\\s*sauce\\b',
+    '\\b(red|green)\\s*pesto\\b',
+    '\\bpesto\\b',
+    '\\bkorean\\s*(bar?beq?ue|bbq|barbecue)\\b',
+    // Onions / aromatics typically used raw or finished
     '\\bfried\\s*onion\\b',
+    '\\bred\\s*onion(s)?\\b',
     '\\bjalape[nñ]o\\b',
+    // Cheeses (typically cubed/sliced and added at the end)
     '\\bfeta\\b',
+    '\\bcheddar\\b',
+    '\\bgouda\\b',
+    '\\bgoat\\s*cheese\\b',
+    '\\bmozzarella(\\s+balls?)?\\b',
+    // Salads + leaves
     '\\bcoleslaw\\b|\\bcolslow\\b',
-    '\\barugula\\b|\\brocket\\b',
+    '\\barugula\\b|\\brocket\\b|\\brucola\\b',
+    '\\biceberg\\s*lettuce\\b|\\biceberg\\b',
+    '\\blollo(\\s+rosso|\\s+salad)?\\b',
+    '\\bbaby\\s*spinach\\b',
+    '\\bspinach\\b',
+    // Fresh produce often raw on top
     '\\bavoc?ado\\b',
     '\\bapple(s)?\\b',
+    '\\bcucumber\\b',
+    '\\btomato(es)?\\b',
+    '\\bcarrot(s)?\\b',
+    '\\bcorn\\b',
+    '\\bstrawberr(y|ies)\\b',
+    '\\bbluberr(y|ies)\\b|\\bblueberr(y|ies)\\b',
+    '\\bberries\\b',
+    // Beans / pulses (canned / pre-cooked toppings)
+    '\\bkidney\\s*beans?\\b',
+    '\\bblack\\s*beans?\\b',
+    '\\bchick\\s*peas?\\b',
+    '\\bolive(s)?\\b',
+    // Nuts
     '\\bwalnut(s)?\\b',
     '\\bpeanut(s)?\\b',
     '\\balmond(s)?\\b',
+    '\\bcashew(s)?\\b',
+    '\\bpecans?\\b',
+    // Bread / wraps (added at end, no cook step)
+    '\\bwraps?\\b',
+    '\\bsandwich\\s*(bread|whole\\s*grain)\\b',
+    '\\bwhole\\s*grain\\s*bread\\b',
+    '\\bbread\\b',
+    '\\bnaan\\b',
+    // Bella & Bona signature components called out by the head chef
     '\\bbellabona\\s+salad\\b|\\bb&b\\s+salad\\b|\\bbella\\s+bona\\s+salad\\b',
-    '\\bcucumber\\b',
-    '\\btomato(es)?\\b',
+    '\\bwild\\s*karachi\\b',
     // Fresh herbs
     '\\b(parsley|cilantro|coriander|basil|mint|dill|chives|scallion|spring\\s*onion)\\b',
     // Spice blends / dry herbs used as garnish
@@ -2172,25 +2213,51 @@ function classifyIngredient(name){
 function canonicalIngredientName(name){
     let n = String(name || '').toLowerCase().trim();
     if(!n) return n;
-    // Specific aliases — exact matches take priority
+
+    // 1) Strip qualifier suffix after " - ", " – ", " — ". Catches the very
+    //    common menu pattern "Carrots - Cubed & Steamed" → "Carrots".
+    n = n.replace(/\s+[-–—]\s+.*$/, '').trim();
+
+    // 2) Specific aliases — exact matches take priority (run after dash-strip)
     const SPECIFIC = {
         'rice-white basmati': 'basmati rice',
-        'rice - white basmati': 'basmati rice',
         'rice white basmati': 'basmati rice',
         'steamed basmati': 'basmati rice',
         'steamed basmati rice': 'basmati rice',
         'basmati': 'basmati rice',
-        'basmati rice steamed': 'basmati rice'
+        'basmati rice steamed': 'basmati rice',
+        'red onion slices': 'red onion',
+        'red onion slice': 'red onion',
+        'red onions': 'red onion',
+        'spring onion slices': 'spring onion',
+        'erbs crouton': 'crouton',
+        'erbs croutons': 'crouton',
+        'herbs crouton': 'crouton',
+        'herbs croutons': 'crouton',
+        'crouton plain': 'crouton'
     };
     if(SPECIFIC[n]) return SPECIFIC[n];
-    // Strip leading prep modifiers ("thin sliced cucumber" → "cucumber")
+
+    // 3) Strip leading prep modifiers ("thin sliced cucumber" → "cucumber")
     n = n.replace(/^(thin\s*sliced|chopped|cubed|diced|sliced|grated|shredded|minced|julienned|halved|quartered)\s+/i, '').trim();
-    // Strip trailing prep modifiers ("cucumber cubed" → "cucumber")
-    n = n.replace(/\s+(raw|cooked|boiled|steamed|grilled|fried|baked|roasted|sauteed|saut[eé]ed|dry|dried|fresh|frozen|thawed|cubed|sliced|chopped|diced|minced|shredded|julienned|halved|quartered|grated|peeled)$/i, '').trim();
-    // Handle "thin sliced" trailing too
+    // 4) Strip trailing prep modifiers ("cucumber cubed" → "cucumber")
+    n = n.replace(/\s+(raw|cooked|boiled|steamed|grilled|fried|baked|roasted|sauteed|saut[eé]ed|dry|dried|fresh|frozen|thawed|cubed|sliced|slice|slices|chopped|diced|minced|shredded|julienned|halved|quartered|grated|peeled|canned)$/i, '').trim();
     n = n.replace(/\s+thin\s*sliced$/i, '').trim();
-    // Collapse multiple spaces
-    n = n.replace(/\s+/g, ' ');
+
+    // 5) Singularise trailing plurals so "Carrots" and "Carrot" merge.
+    //    Safe rules: only for words >4 chars; avoid -ss/-us/-is/-os endings.
+    if(n.length > 4){
+        if(/ies$/.test(n))                       n = n.slice(0, -3) + 'y';   // strawberries → strawberry
+        else if(/(ss|us|is|os)$/.test(n))        { /* leave: glass, hummus, basis, tacos */ }
+        else if(/(toe|hoe|oe)s$/.test(n))        n = n.slice(0, -1);          // toes → toe
+        else if(/(tomato|potato|mango|domino)es$/.test(n)) n = n.slice(0, -2); // tomatoes → tomato
+        else if(/[aeiou]ses$/.test(n))           { /* leave: bruises, etc. */ }
+        else if(/es$/.test(n))                   n = n.slice(0, -1);          // peppers (no -es) skip, hashes → hashe (rare)
+        else if(/s$/.test(n))                    n = n.slice(0, -1);          // onions → onion, carrots → carrot
+    }
+
+    // 6) Collapse multiple spaces
+    n = n.replace(/\s+/g, ' ').trim();
     return n;
 }
 

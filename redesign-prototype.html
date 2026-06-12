@@ -1693,7 +1693,9 @@ async function setSettingsPin(pin){
     }
     const hash = await hashPin(pin);
     await set(ref(db, 'settings-lock'), { hash, enabled: true, updatedAt: serverTimestamp() });
-    sessionStorage.setItem('bb.settings.unlocked', '1');
+    // Do NOT auto-unlock — force the admin to re-enter the PIN next time so
+    // they can immediately see that the lock works.
+    sessionStorage.removeItem('bb.settings.unlocked');
 }
 function isSettingsUnlocked(){
     return sessionStorage.getItem('bb.settings.unlocked') === '1';
@@ -5769,7 +5771,10 @@ async function openSettings(){
                         <button class="btn btn-primary" type="button" id="lock-save-btn">${state.settingsLock && state.settingsLock.hash ? 'Update PIN' : 'Lock Settings'}</button>
                     </div>
                     <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">
-                        ${state.settingsLock && state.settingsLock.hash ? `<button class="btn" type="button" id="lock-remove-btn" style="color:var(--hold)">Remove lock (unlock for everyone)</button>` : ''}
+                        ${state.settingsLock && state.settingsLock.hash ? `
+                            <button class="btn" type="button" id="lock-now-btn">🔒 Lock now (close &amp; re-prompt PIN)</button>
+                            <button class="btn" type="button" id="lock-remove-btn" style="color:var(--hold)">Remove lock</button>
+                        ` : ''}
                     </div>
                     <div id="lock-msg" style="font-size:12px;margin-top:6px;min-height:14px"></div>
                 </div>
@@ -5982,12 +5987,19 @@ async function openSettings(){
             if(p1 !== p2){ lockMsg.textContent = 'The two PINs don\'t match.'; lockMsg.style.color = 'var(--hold)'; return; }
             try {
                 await setSettingsPin(p1);
-                lockMsg.textContent = '✓ Settings are now locked. New PIN saved.';
-                lockMsg.style.color = 'var(--pass)';
-                // Update header line right away
-                const row = overlay.querySelector('#lock-state-row');
-                if(row) row.textContent = '✓ PIN is set — Settings are locked.';
+                // Auto-close Settings so the admin sees the lock immediately —
+                // next tap on Settings will prompt for the new PIN.
+                toast('✓ Settings locked. PIN required to re-open.', 'ok');
+                closeSettings();
             } catch(err){ lockMsg.textContent = 'Save failed: ' + (err.message || ''); lockMsg.style.color = 'var(--hold)'; }
+        });
+    }
+    const lockNowBtn = overlay.querySelector('#lock-now-btn');
+    if(lockNowBtn){
+        lockNowBtn.addEventListener('click', () => {
+            lockSettingsNow();
+            toast('🔒 Locked. PIN required to re-open Settings.', 'ok');
+            closeSettings();
         });
     }
     if(lockRemoveBtn){

@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Bella & Bona — Daily QC Dashboard (Berlin + Munich)</title>
+<title>Bella & Bona — Daily QC Snapshot (Berlin + Munich)</title>
 <style>
 *{box-sizing:border-box}
 html,body{margin:0;padding:0;font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f1f5f9;color:#1f2937;line-height:1.4}
-body{padding:18px 22px 40px 22px;max-width:1280px;margin:0 auto}
-.toolbar{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:18px;gap:12px;flex-wrap:wrap}
+body{padding:18px 22px 40px 22px;max-width:1320px;margin:0 auto}
+.toolbar{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:14px;gap:12px;flex-wrap:wrap}
 .title-block h1{margin:0;font-size:22px;font-weight:800;letter-spacing:-0.02em;color:#0f172a}
 .title-block .sub{font-size:12px;color:#64748b;margin-top:2px}
 .actions{display:flex;gap:8px;flex-wrap:wrap}
@@ -16,6 +16,18 @@ body{padding:18px 22px 40px 22px;max-width:1280px;margin:0 auto}
 .btn:hover{background:#f3f4f6}
 .btn.primary{background:#2563eb;color:white;border-color:#2563eb}
 .btn.primary:hover{background:#1d4ed8}
+
+/* Range picker */
+.range-bar{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px;align-items:center;background:#ffffff;border:1px solid #e5e7eb;border-radius:10px;padding:8px}
+.range-chip{padding:7px 12px;border-radius:7px;font-size:13px;font-weight:600;border:1px solid transparent;background:transparent;color:#475569;cursor:pointer;line-height:1.2}
+.range-chip:hover{background:#f3f4f6;color:#1f2937}
+.range-chip.is-on{background:#2563eb;color:white}
+.range-chip .sub{display:block;font-size:10px;font-weight:500;color:rgba(255,255,255,0.78);margin-top:1px}
+.range-chip:not(.is-on) .sub{color:#94a3b8}
+.range-custom{display:flex;gap:6px;align-items:center;margin-left:auto;flex-wrap:wrap}
+.range-custom label{font-size:11px;color:#64748b;font-weight:600}
+.range-custom input{padding:6px 9px;border:1px solid #e5e7eb;border-radius:6px;font-size:13px;font-family:inherit;color:#1f2937;background:#fff}
+
 .legend{display:grid;grid-template-columns:repeat(3, 1fr);gap:8px;margin-bottom:14px}
 .legend-cell{padding:10px 12px;border-radius:8px;text-align:center;font-size:11px}
 .legend-cell .lbl{font-size:12px;font-weight:800;letter-spacing:0.06em;text-transform:uppercase}
@@ -80,12 +92,24 @@ body{padding:18px 22px 40px 22px;max-width:1280px;margin:0 auto}
 .dish-list-section.hot{color:#b91c1c}
 .dish-list-section.cold{color:#1d4ed8}
 
+/* Multi-day daily breakdown table */
+.day-breakdown{margin-top:14px}
+.day-breakdown-head{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:#64748b;padding:6px 0;border-bottom:1px solid #e5e7eb;display:grid;grid-template-columns:1.5fr 50px 50px 50px 60px;gap:6px;align-items:center}
+.day-row{display:grid;grid-template-columns:1.5fr 50px 50px 50px 60px;gap:6px;padding:6px 0;border-bottom:1px solid #f3f4f6;font-size:12px;align-items:center}
+.day-row:last-child{border-bottom:0}
+.day-row .d-date{font-weight:600;color:#1f2937}
+.day-row .d-pct{text-align:center;font-weight:700;font-variant-numeric:tabular-nums;border-radius:4px;padding:2px 4px}
+.day-row .d-pct.ok{background:#dcfce7;color:#166534}
+.day-row .d-pct.warn{background:#fef3c7;color:#92400e}
+.day-row .d-pct.crit{background:#fee2e2;color:#7f1d1d}
+.day-row .d-pct.na{color:#9ca3af}
+
 .loading{padding:40px;text-align:center;color:#64748b;font-size:13px}
 .err{padding:20px;background:#fef2f2;color:#7f1d1d;border-radius:8px;font-size:13px;border:1px solid #fecaca}
 
 @media print{
     body{background:white;padding:0;max-width:none}
-    .toolbar .actions{display:none}
+    .toolbar .actions,.range-bar{display:none}
     .city{box-shadow:none;page-break-inside:avoid}
     .cities{grid-template-columns:1fr 1fr}
 }
@@ -95,7 +119,7 @@ body{padding:18px 22px 40px 22px;max-width:1280px;margin:0 auto}
 
 <div class="toolbar">
     <div class="title-block">
-        <h1>Bella & Bona · Daily QC Snapshot</h1>
+        <h1>Bella & Bona · QC Snapshot</h1>
         <div class="sub" id="sub-line">Loading…</div>
     </div>
     <div class="actions">
@@ -105,6 +129,8 @@ body{padding:18px 22px 40px 22px;max-width:1280px;margin:0 auto}
     </div>
 </div>
 
+<div class="range-bar" id="range-bar"></div>
+
 <div class="legend">
     <div class="legend-cell ok"><div class="lbl">✓ OK</div><div class="spec">Hot ≥65°C · Cold ≤6°C · Wt ≤5%</div></div>
     <div class="legend-cell warn"><div class="lbl">⚠ WARN</div><div class="spec">Hot 60–64°C · Cold 6–8°C · Wt 5–10%</div></div>
@@ -112,8 +138,8 @@ body{padding:18px 22px 40px 22px;max-width:1280px;margin:0 auto}
 </div>
 
 <div class="cities" id="cities">
-    <div class="city"><div class="loading">Loading Berlin…</div></div>
-    <div class="city"><div class="loading">Loading Munich…</div></div>
+    <div class="city"><div class="loading">Loading…</div></div>
+    <div class="city"><div class="loading">Loading…</div></div>
 </div>
 
 <script type="module">
@@ -146,27 +172,63 @@ const CITIES = [
         }
     }
 ];
+// Cache one Firebase app per city so we don't re-init when re-rendering
+const APPS = {};
+function getDb(city){
+    if(!APPS[city.slug]) APPS[city.slug] = initializeApp(city.config, city.slug);
+    return getDatabase(APPS[city.slug]);
+}
 
 // ---- Helpers ----------------------------------------------------------------
 const HOT_PASS = 65, HOT_WARN_MIN = 60;
 const COLD_PASS = 6, COLD_WARN_MAX = 8;
 const WT_OK = 0.05, WT_WARN = 0.10;
 
-const todayIso = () => {
-    const d = new Date();
-    return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
-};
+const pad2 = (n) => String(n).padStart(2, '0');
+const todayIso = () => { const d = new Date(); return d.getFullYear() + '-' + pad2(d.getMonth()+1) + '-' + pad2(d.getDate()); };
+const shiftIso = (iso, days) => { const d = new Date(iso + 'T12:00:00'); d.setDate(d.getDate() + days); return d.getFullYear() + '-' + pad2(d.getMonth()+1) + '-' + pad2(d.getDate()); };
 const humanDate = (iso) => {
     const d = new Date(iso + 'T12:00:00');
-    return d.toLocaleDateString('en-GB', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
+    return d.toLocaleDateString('en-GB', { weekday:'short', day:'numeric', month:'short', year:'numeric' });
 };
 const isoYearWeek = (iso) => {
     const d = new Date(iso + 'T00:00:00Z');
     d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
     const y0 = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
     const wk = Math.ceil(((d - y0) / 86400000 + 1) / 7);
-    return d.getUTCFullYear() + '-' + String(wk).padStart(2, '0');
+    return d.getUTCFullYear() + '-' + pad2(wk);
 };
+const datesInRange = (start, end) => {
+    const out = [];
+    let cur = start, guard = 0;
+    while(cur <= end && guard++ < 400){ out.push(cur); cur = shiftIso(cur, 1); }
+    return out;
+};
+
+// Compute range from preset
+function rangeForPreset(preset){
+    const today = todayIso();
+    if(preset === 'today') return { start: today, end: today };
+    if(preset === 'yesterday'){ const y = shiftIso(today, -1); return { start: y, end: y }; }
+    const d = new Date(today + 'T12:00:00');
+    const dow = (d.getDay() + 6) % 7; // 0 = Mon
+    const monIso = shiftIso(today, -dow);
+    if(preset === 'this-week') return { start: monIso, end: shiftIso(monIso, 6) };
+    if(preset === 'last-week') return { start: shiftIso(monIso, -7), end: shiftIso(monIso, -1) };
+    const m1 = today.slice(0,8) + '01';
+    const lastDay = new Date(d.getFullYear(), d.getMonth()+1, 0).getDate();
+    const mEnd = today.slice(0,8) + pad2(lastDay);
+    if(preset === 'this-month') return { start: m1, end: mEnd };
+    if(preset === 'last-month'){
+        const pm = new Date(d.getFullYear(), d.getMonth()-1, 1);
+        const ld = new Date(d.getFullYear(), d.getMonth(), 0).getDate();
+        const s = pm.getFullYear()+'-'+pad2(pm.getMonth()+1)+'-01';
+        const e = pm.getFullYear()+'-'+pad2(pm.getMonth()+1)+'-'+pad2(ld);
+        return { start: s, end: e };
+    }
+    return { start: today, end: today };
+}
+
 const isCold = (d) => (d?.dishType || '').toLowerCase().includes('cold');
 const avg = (arr) => {
     if(!Array.isArray(arr)) return null;
@@ -184,21 +246,20 @@ const wtStatus = (theo, actual) => {
 const escapeHtml = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
 // ---- Fetch + compute --------------------------------------------------------
-async function loadCity(city, dateIso){
-    const app = initializeApp(city.config, city.slug);
-    const db = getDatabase(app);
-    const wk = isoYearWeek(dateIso);
-    const [menuSnap, checksSnap] = await Promise.all([
-        get(ref(db, `menus/${wk}`)),
-        get(ref(db, `quality-checks/${dateIso}`))
+async function loadCityRange(city, dates){
+    const db = getDb(city);
+    // Distinct weeks the range spans (one menu fetch per week)
+    const weeks = Array.from(new Set(dates.map(isoYearWeek)));
+    const [menusEntries, checksEntries] = await Promise.all([
+        Promise.all(weeks.map(async wk => [wk, (await get(ref(db, `menus/${wk}`))).val()])),
+        Promise.all(dates.map(async dt => [dt, (await get(ref(db, `quality-checks/${dt}`))).val() || {}]))
     ]);
-    const menu = menuSnap.val();
-    const checks = checksSnap.val() || {};
-    const dishes = (menu && menu.dishes) ? menu.dishes : [];
-    return { city, dishes, checks, week: wk };
+    const menus = Object.fromEntries(menusEntries);
+    const checks = Object.fromEntries(checksEntries);
+    return { city, menus, checks, dates, weeks };
 }
 
-function computeScorecard(dishes, checks){
+function computeDayScorecard(dishes, checks){
     const c = { hot:{total:0,pass:0}, cold:{total:0,pass:0}, wt:{total:0,pass:0} };
     for(const d of dishes){
         const ck = checks[d.dishLetter] || {};
@@ -227,6 +288,27 @@ function computeScorecard(dishes, checks){
     return { ...c, overall: { total: totalAll, pass: passAll, pct: overallPct } };
 }
 
+function computeRangeScorecard(data){
+    // Sum the daily scorecards across every day in the range
+    const sum = { hot:{total:0,pass:0}, cold:{total:0,pass:0}, wt:{total:0,pass:0} };
+    const perDay = [];
+    for(const date of data.dates){
+        const wk = isoYearWeek(date);
+        const menu = data.menus[wk];
+        const dishes = (menu && menu.dishes) || [];
+        const ck = data.checks[date] || {};
+        const sc = computeDayScorecard(dishes, ck);
+        sum.hot.total += sc.hot.total;  sum.hot.pass += sc.hot.pass;
+        sum.cold.total += sc.cold.total; sum.cold.pass += sc.cold.pass;
+        sum.wt.total += sc.wt.total;   sum.wt.pass += sc.wt.pass;
+        perDay.push({ date, scorecard: sc, dishCount: dishes.length });
+    }
+    const totalAll = sum.hot.total + sum.cold.total + sum.wt.total;
+    const passAll = sum.hot.pass + sum.cold.pass + sum.wt.pass;
+    const overallPct = totalAll === 0 ? null : Math.round(passAll / totalAll * 100);
+    return { ...sum, overall: { total: totalAll, pass: passAll, pct: overallPct }, perDay };
+}
+
 function overallStatus(pct){
     if(pct == null) return 'na';
     if(pct >= 80) return 'ok';
@@ -240,37 +322,107 @@ function cardStatus(rate, total){
     return 'crit';
 }
 
-function renderCity(data){
-    const sc = computeScorecard(data.dishes, data.checks);
+function renderCity(data, isSingleDay){
+    const sc = computeRangeScorecard(data);
     const hotRate = sc.hot.total === 0 ? 0 : Math.round(sc.hot.pass / sc.hot.total * 100);
     const coldRate = sc.cold.total === 0 ? 0 : Math.round(sc.cold.pass / sc.cold.total * 100);
     const wtRate = sc.wt.total === 0 ? 0 : Math.round(sc.wt.pass / sc.wt.total * 100);
     const ovStatus = overallStatus(sc.overall.pct);
 
-    const hotDishes = data.dishes.filter(d => !isCold(d)).sort((a,b) => (a.dishLetter || '').localeCompare(b.dishLetter || '', 'en', { numeric: true }));
-    const coldDishes = data.dishes.filter(d => isCold(d)).sort((a,b) => (a.dishLetter || '').localeCompare(b.dishLetter || '', 'en', { numeric: true }));
-
-    const dishRow = (d, isHot) => {
-        const c = data.checks[d.dishLetter] || {};
-        const a = c.assembly && (c.assembly.temps ? avg(c.assembly.temps) : c.assembly.temp);
-        const q = avg(c.temperatures);
-        const dp = c.dispatch && (c.dispatch.temps ? avg(c.dispatch.temps) : c.dispatch.temp);
-        const tCell = (v) => {
-            if(v == null) return `<span class="temp na">—</span>`;
-            const st = isHot ? hotStatus(v) : coldStatus(v);
-            return `<span class="temp ${st}">${v.toFixed(1)}°</span>`;
-        };
-        return `<div class="dish-row">
-            <span class="letter">${escapeHtml(d.dishLetter)}</span>
-            <span class="name">${escapeHtml(d.dishName)}</span>
-            ${tCell(a)}
-            ${tCell(q)}
-            ${tCell(dp)}
-        </div>`;
-    };
-
     const baseUrl = window.location.origin + window.location.pathname.replace(/[^/]+$/, '');
     const cityAppUrl = `${baseUrl}redesign-prototype.html?city=${data.city.slug}`;
+
+    // For single-day views: keep the live dish list. For multi-day: switch
+    // to a per-day breakdown table (date · hot% · cold% · wt% · overall%).
+    let bodyHtml;
+    if(isSingleDay){
+        const date = data.dates[0];
+        const wk = isoYearWeek(date);
+        const menu = data.menus[wk];
+        const dishes = (menu && menu.dishes) || [];
+        const checks = data.checks[date] || {};
+        const hotDishes = dishes.filter(d => !isCold(d)).sort((a,b) => (a.dishLetter || '').localeCompare(b.dishLetter || '', 'en', { numeric: true }));
+        const coldDishes = dishes.filter(d => isCold(d)).sort((a,b) => (a.dishLetter || '').localeCompare(b.dishLetter || '', 'en', { numeric: true }));
+        const dishRow = (d, isHot) => {
+            const c = checks[d.dishLetter] || {};
+            const a = c.assembly && (c.assembly.temps ? avg(c.assembly.temps) : c.assembly.temp);
+            const q = avg(c.temperatures);
+            const dp = c.dispatch && (c.dispatch.temps ? avg(c.dispatch.temps) : c.dispatch.temp);
+            const tCell = (v) => {
+                if(v == null) return `<span class="temp na">—</span>`;
+                const st = isHot ? hotStatus(v) : coldStatus(v);
+                return `<span class="temp ${st}">${v.toFixed(1)}°</span>`;
+            };
+            return `<div class="dish-row">
+                <span class="letter">${escapeHtml(d.dishLetter)}</span>
+                <span class="name">${escapeHtml(d.dishName)}</span>
+                ${tCell(a)}
+                ${tCell(q)}
+                ${tCell(dp)}
+            </div>`;
+        };
+        bodyHtml = `
+            <div class="dish-list">
+                <div class="dish-list-head">
+                    <span></span><span>Dish</span>
+                    <span style="text-align:center">CP1</span>
+                    <span style="text-align:center">CP2</span>
+                    <span style="text-align:center">CP3</span>
+                </div>
+                ${hotDishes.length ? `<div class="dish-list-section hot">Hot dishes (${hotDishes.length})</div>` : ''}
+                ${hotDishes.map(d => dishRow(d, true)).join('')}
+                ${coldDishes.length ? `<div class="dish-list-section cold">Cold dishes (${coldDishes.length})</div>` : ''}
+                ${coldDishes.map(d => dishRow(d, false)).join('')}
+            </div>
+        `;
+    } else {
+        const cellPct = (rate, total) => {
+            if(total === 0) return `<span class="d-pct na">—</span>`;
+            const st = cardStatus(rate, total);
+            return `<span class="d-pct ${st}">${rate}%</span>`;
+        };
+        bodyHtml = `
+            <div class="day-breakdown">
+                <div class="day-breakdown-head">
+                    <span>Date</span>
+                    <span style="text-align:center">Hot</span>
+                    <span style="text-align:center">Cold</span>
+                    <span style="text-align:center">Wt</span>
+                    <span style="text-align:center">Overall</span>
+                </div>
+                ${sc.perDay.map(p => {
+                    const s = p.scorecard;
+                    const hr = s.hot.total === 0 ? 0 : Math.round(s.hot.pass/s.hot.total*100);
+                    const cr = s.cold.total === 0 ? 0 : Math.round(s.cold.pass/s.cold.total*100);
+                    const wr = s.wt.total === 0 ? 0 : Math.round(s.wt.pass/s.wt.total*100);
+                    const ovPct = s.overall.pct;
+                    const ovSt = overallStatus(ovPct);
+                    return `<div class="day-row">
+                        <span class="d-date">${humanDate(p.date)}</span>
+                        ${cellPct(hr, s.hot.total)}
+                        ${cellPct(cr, s.cold.total)}
+                        ${cellPct(wr, s.wt.total)}
+                        <span class="d-pct ${ovSt}">${ovPct == null ? '—' : ovPct + '%'}</span>
+                    </div>`;
+                }).join('')}
+            </div>
+        `;
+    }
+
+    // City meta (count of dishes — for single day take that day, for range
+    // count distinct dishLetters across all weeks)
+    let dishCount = 0;
+    if(isSingleDay){
+        const wk = isoYearWeek(data.dates[0]);
+        dishCount = ((data.menus[wk] && data.menus[wk].dishes) || []).length;
+    } else {
+        const distinct = new Set();
+        for(const wk of data.weeks){
+            const m = data.menus[wk];
+            if(m && m.dishes) for(const d of m.dishes) distinct.add(d.dishLetter);
+        }
+        dishCount = distinct.size;
+    }
 
     return `
         <div class="city">
@@ -278,7 +430,7 @@ function renderCity(data){
                 <div class="mark">${data.city.name.charAt(0)}</div>
                 <div class="info">
                     <div class="name">${data.city.name}</div>
-                    <div class="meta">${data.dishes.length} dishes · Week ${data.week}${data.dishes.length === 0 ? ' · no menu loaded' : ''}</div>
+                    <div class="meta">${dishCount} dish${dishCount===1?'':'es'} · ${data.dates.length} day${data.dates.length===1?'':'s'} in range</div>
                 </div>
                 <div class="url"><a href="${cityAppUrl}" target="_blank">Open app →</a></div>
             </div>
@@ -306,56 +458,105 @@ function renderCity(data){
 
             <div class="overall">
                 <div>
-                    <div class="label">Overall compliance</div>
+                    <div class="label">Overall compliance${isSingleDay ? '' : ' (range)'}</div>
                     <div class="pct-big">${sc.overall.pct == null ? '—' : sc.overall.pct + '%'}</div>
                 </div>
                 <span class="status-tag ${ovStatus}">${ovStatus === 'na' ? 'No data' : ovStatus.toUpperCase()}</span>
             </div>
 
-            <div class="dish-list">
-                <div class="dish-list-head">
-                    <span></span>
-                    <span>Dish</span>
-                    <span style="text-align:center">CP1</span>
-                    <span style="text-align:center">CP2</span>
-                    <span style="text-align:center">CP3</span>
-                </div>
-                ${hotDishes.length ? `<div class="dish-list-section hot">Hot dishes (${hotDishes.length})</div>` : ''}
-                ${hotDishes.map(d => dishRow(d, true)).join('')}
-                ${coldDishes.length ? `<div class="dish-list-section cold">Cold dishes (${coldDishes.length})</div>` : ''}
-                ${coldDishes.map(d => dishRow(d, false)).join('')}
-            </div>
+            ${bodyHtml}
         </div>
     `;
 }
 
-// ---- Boot ------------------------------------------------------------------
-const dateIso = (new URLSearchParams(window.location.search).get('date')) || todayIso();
-document.getElementById('sub-line').textContent = `${humanDate(dateIso)}  ·  Berlin + Munich  ·  Refreshed ${new Date().toLocaleTimeString('en-GB')}`;
+// ---- Range state + range UI ------------------------------------------------
+const params = new URLSearchParams(window.location.search);
+const rangeState = {
+    preset: params.get('preset') || (params.get('date') ? 'custom' : 'today'),
+    start: params.get('date') || params.get('start') || todayIso(),
+    end: params.get('end') || params.get('date') || todayIso()
+};
 
-const host = document.getElementById('cities');
-window.__cityData = {};
-Promise.all(CITIES.map(c => loadCity(c, dateIso)
-    .then(d => { window.__cityData[c.slug] = d; return d; })
-    .catch(err => ({ city: c, dishes: [], checks: {}, week: isoYearWeek(dateIso), error: err.message || String(err) }))
-)).then(results => {
-    host.innerHTML = results.map(r => {
-        if(r.error){
-            return `<div class="city"><div class="city-head ${r.city.class}"><div class="mark">${r.city.name.charAt(0)}</div><div class="info"><div class="name">${r.city.name}</div><div class="meta">Failed to load</div></div></div><div class="err">${escapeHtml(r.error)}</div></div>`;
-        }
-        return renderCity(r);
-    }).join('');
-});
+function renderRangeBar(){
+    const bar = document.getElementById('range-bar');
+    const presets = [
+        { id:'today', label:'Today', sub: humanDate(todayIso()) },
+        { id:'yesterday', label:'Yesterday', sub: humanDate(shiftIso(todayIso(), -1)) },
+        { id:'this-week', label:'This week', sub:'Mon–Sun' },
+        { id:'last-week', label:'Last week', sub:'previous Mon–Sun' },
+        { id:'this-month', label:'This month', sub:'1st–end' },
+        { id:'last-month', label:'Last month', sub:'previous month' },
+        { id:'custom', label:'Custom', sub:'pick from / to' }
+    ];
+    bar.innerHTML = presets.map(p =>
+        `<button class="range-chip ${rangeState.preset===p.id?'is-on':''}" type="button" data-preset="${p.id}">${p.label}<span class="sub">${p.sub}</span></button>`
+    ).join('') + `
+        <div class="range-custom" id="range-custom-host" ${rangeState.preset==='custom'?'':'style="display:none"'}>
+            <label>From <input type="date" id="rng-from" value="${rangeState.start}"/></label>
+            <label>To <input type="date" id="rng-to" value="${rangeState.end}"/></label>
+        </div>
+    `;
+    bar.querySelectorAll('[data-preset]').forEach(btn => {
+        btn.addEventListener('click', () => {
+            rangeState.preset = btn.getAttribute('data-preset');
+            if(rangeState.preset !== 'custom'){
+                const r = rangeForPreset(rangeState.preset);
+                rangeState.start = r.start; rangeState.end = r.end;
+            }
+            renderRangeBar();
+            loadAndRender();
+        });
+    });
+    const f = document.getElementById('rng-from');
+    const t = document.getElementById('rng-to');
+    if(f) f.addEventListener('change', () => { rangeState.start = f.value; rangeState.end = rangeState.end < f.value ? f.value : rangeState.end; renderRangeBar(); loadAndRender(); });
+    if(t) t.addEventListener('change', () => { rangeState.end = t.value; renderRangeBar(); loadAndRender(); });
+}
+
+// ---- Load + render ---------------------------------------------------------
+async function loadAndRender(){
+    const r = rangeState.preset === 'custom' ? { start: rangeState.start, end: rangeState.end } : rangeForPreset(rangeState.preset);
+    if(!r.start || !r.end || r.start > r.end){
+        document.getElementById('cities').innerHTML = `<div class="err">Bad date range — adjust the dates above.</div>`;
+        return;
+    }
+    const dates = datesInRange(r.start, r.end);
+    const isSingleDay = dates.length === 1;
+    const rangeTxt = isSingleDay ? humanDate(r.start) : `${humanDate(r.start)} → ${humanDate(r.end)}  ·  ${dates.length} days`;
+    document.getElementById('sub-line').textContent = `${rangeTxt}  ·  Berlin + Munich  ·  Refreshed ${new Date().toLocaleTimeString('en-GB')}`;
+
+    const host = document.getElementById('cities');
+    host.innerHTML = `<div class="city"><div class="loading">Loading Berlin…</div></div><div class="city"><div class="loading">Loading Munich…</div></div>`;
+    window.__cityData = {};
+    try {
+        const results = await Promise.all(CITIES.map(c => loadCityRange(c, dates)
+            .then(d => { window.__cityData[c.slug] = d; return d; })
+            .catch(err => ({ city: c, dates, weeks:[], menus:{}, checks:{}, error: err.message || String(err) }))
+        ));
+        host.innerHTML = results.map(r => {
+            if(r.error){
+                return `<div class="city"><div class="city-head ${r.city.class}"><div class="mark">${r.city.name.charAt(0)}</div><div class="info"><div class="name">${r.city.name}</div><div class="meta">Failed to load</div></div></div><div class="err">${escapeHtml(r.error)}</div></div>`;
+            }
+            return renderCity(r, isSingleDay);
+        }).join('');
+    } catch(err){
+        host.innerHTML = `<div class="err">Failed to load: ${escapeHtml(err.message || String(err))}</div>`;
+    }
+}
 
 window.copySummary = function(){
     const data = window.__cityData || {};
+    const r = rangeState.preset === 'custom' ? { start: rangeState.start, end: rangeState.end } : rangeForPreset(rangeState.preset);
+    const dates = datesInRange(r.start, r.end);
+    const isSingleDay = dates.length === 1;
     const out = [];
-    out.push(`Bella & Bona — Daily QC Snapshot`);
-    out.push(`${humanDate(dateIso)}\n`);
+    out.push(`Bella & Bona — QC Snapshot`);
+    out.push(isSingleDay ? humanDate(r.start) : `${humanDate(r.start)} → ${humanDate(r.end)} (${dates.length} days)`);
+    out.push(``);
     for(const slug of ['berlin', 'munich']){
         const d = data[slug];
         if(!d){ out.push(`${slug.toUpperCase()}: failed to load`); continue; }
-        const sc = computeScorecard(d.dishes, d.checks);
+        const sc = computeRangeScorecard(d);
         const hotRate = sc.hot.total === 0 ? '—' : Math.round(sc.hot.pass/sc.hot.total*100) + '%';
         const coldRate = sc.cold.total === 0 ? '—' : Math.round(sc.cold.pass/sc.cold.total*100) + '%';
         const wtRate = sc.wt.total === 0 ? '—' : Math.round(sc.wt.pass/sc.wt.total*100) + '%';
@@ -367,7 +568,7 @@ window.copySummary = function(){
         out.push(`  Weight: ${wtRate}  (${sc.wt.pass}/${sc.wt.total} within 5%)`);
         out.push(``);
     }
-    out.push(`— Sent from Bella & Bona Daily QC Dashboard`);
+    out.push(`— Sent from Bella & Bona QC Snapshot`);
     const text = out.join('\n');
     navigator.clipboard.writeText(text).then(() => {
         alert('Summary copied — paste it into your email.');
@@ -375,6 +576,16 @@ window.copySummary = function(){
         prompt('Copy this:', text);
     });
 };
+
+// ---- Boot ------------------------------------------------------------------
+renderRangeBar();
+// If launched with a preset that's not custom, recompute start/end so the URL
+// `?preset=this-week` shows the right window.
+if(rangeState.preset !== 'custom'){
+    const r = rangeForPreset(rangeState.preset);
+    rangeState.start = r.start; rangeState.end = r.end;
+}
+loadAndRender();
 </script>
 
 </body>

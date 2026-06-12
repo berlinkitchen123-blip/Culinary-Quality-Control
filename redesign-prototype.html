@@ -156,6 +156,9 @@ input,textarea,select{font-family:inherit;font-size:16px}
 .brand{display:flex;align-items:center;gap:12px;min-width:0}
 .brand .mark{width:38px;height:38px;border-radius:9px;background:var(--brand);color:white;display:inline-flex;align-items:center;justify-content:center;font-weight:800;font-size:15px;box-shadow:var(--shadow-sm);flex-shrink:0}
 .brand .name{font-weight:700;font-size:17px;letter-spacing:-0.01em;color:var(--ink);line-height:1.1}
+.city-tag{display:inline-block;font-size:10px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;color:white;background:var(--city-accent, var(--brand));padding:2px 8px;border-radius:99px;vertical-align:middle;margin-left:6px}
+body[data-city] .brand .mark{background:var(--city-accent, var(--brand))}
+body[data-city] .drawer-brand .mark{background:var(--city-accent, var(--brand))}
 .brand .sub{font-size:11px;color:var(--mute);font-weight:500}
 
 .week-strip{display:flex;gap:2px;align-items:center;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:4px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;max-width:100%}
@@ -892,7 +895,7 @@ html[data-theme="dark"] #report-view-host{background:#f9fafb}
 <div class="drawer-scrim" id="drawer-scrim" aria-hidden="true"></div>
 <aside class="drawer" id="drawer" aria-hidden="true" aria-label="Navigation">
     <div class="drawer-head">
-        <div class="drawer-brand"><span class="mark">BB</span><span>Bella &amp; Bona</span></div>
+        <div class="drawer-brand"><span class="mark" id="drawer-mark">BB</span><span>Bella &amp; Bona <span class="city-tag" id="drawer-city-tag"></span></span></div>
         <button class="drawer-x" id="drawer-close" aria-label="Close menu">✕</button>
     </div>
     <div class="drawer-section">
@@ -946,15 +949,15 @@ html[data-theme="dark"] #report-view-host{background:#f9fafb}
             <span class="name">Print</span>
         </button>
     </div>
-    <div class="drawer-footer">Bella &amp; Bona Culinary Ops · Firebase project <code style="font-family:ui-monospace,monospace;font-size:11px;background:var(--bg-3);padding:1px 6px;border-radius:4px">quality-control-24</code></div>
+    <div class="drawer-footer">Bella &amp; Bona Culinary Ops · Firebase project <code id="drawer-fb-project" style="font-family:ui-monospace,monospace;font-size:11px;background:var(--bg-3);padding:1px 6px;border-radius:4px">—</code><br/><a href="?" id="switch-city-link" style="font-size:11px;color:var(--mute);text-decoration:underline;display:inline-block;margin-top:6px">Switch city</a></div>
 </aside>
 
 <header class="app-header">
     <div class="app-header-inner">
         <div class="brand">
-            <div class="mark">BB</div>
+            <div class="mark" id="city-mark">BB</div>
             <div>
-                <div class="name">Bella &amp; Bona</div>
+                <div class="name">Bella &amp; Bona <span class="city-tag" id="city-tag"></span></div>
                 <div class="sub">Culinary Quality Control</div>
             </div>
         </div>
@@ -1134,7 +1137,7 @@ html[data-theme="dark"] #report-view-host{background:#f9fafb}
     </section>
 
     <footer class="footer">
-        Bella &amp; Bona Culinary Ops · synced with Firebase project <code>quality-control-24</code>
+        Bella &amp; Bona Culinary Ops · synced with Firebase project <code id="footer-fb-project">—</code>
     </footer>
 </main>
 
@@ -1147,18 +1150,94 @@ html[data-theme="dark"] #report-view-host{background:#f9fafb}
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
 import { getDatabase, ref, get, onValue, set, update, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
 
-const firebaseConfig = {
-    apiKey: "AIzaSyA3O6Dw0Hj06BH_DUupZvUrufi1jjbDi0g",
-    authDomain: "quality-control-24.firebaseapp.com",
-    databaseURL: "https://quality-control-24-default-rtdb.europe-west1.firebasedatabase.app",
-    projectId: "quality-control-24",
-    storageBucket: "quality-control-24.firebasestorage.app",
-    messagingSenderId: "708146875113",
-    appId: "1:708146875113:web:a318755bce78ef99ffbe78"
+/* === Multi-city config ===
+   Each city has its own Firebase project, fully isolated data (menus,
+   checks, storage config, team roster, integrations). Pick a city by
+   visiting either:
+     ?city=berlin    → Berlin (Firebase project quality-control-24)
+     ?city=munich    → Munich (Firebase project quality-control-86)
+   Or via the in-app city picker. The chosen city is also remembered in
+   localStorage so reload + bookmarks Just Work. */
+const CITIES = {
+    berlin: {
+        slug: 'berlin',
+        name: 'Berlin',
+        accent: '#2563eb',  // brand blue
+        firebase: {
+            apiKey: "AIzaSyA3O6Dw0Hj06BH_DUupZvUrufi1jjbDi0g",
+            authDomain: "quality-control-24.firebaseapp.com",
+            databaseURL: "https://quality-control-24-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "quality-control-24",
+            storageBucket: "quality-control-24.firebasestorage.app",
+            messagingSenderId: "708146875113",
+            appId: "1:708146875113:web:a318755bce78ef99ffbe78"
+        }
+    },
+    munich: {
+        slug: 'munich',
+        name: 'Munich',
+        accent: '#16a34a',  // green to distinguish from Berlin
+        firebase: {
+            apiKey: "AIzaSyDOgS9zY5cAvBHcpzJ5eZeEwi2MsGjhG5c",
+            authDomain: "quality-control-86.firebaseapp.com",
+            databaseURL: "https://quality-control-86-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "quality-control-86",
+            storageBucket: "quality-control-86.firebasestorage.app",
+            messagingSenderId: "161960198974",
+            appId: "1:161960198974:web:7c08f784d04c47feb2a26f"
+        }
+    }
 };
 
+/* Determine the active city. Priority:
+   1. ?city= URL param (highest — explicit / bookmark)
+   2. localStorage (returning visit on a tablet that's been set once)
+   3. Show city picker (no auto-pick — we never guess) */
+function detectCity(){
+    try {
+        const params = new URLSearchParams(window.location.search);
+        const fromUrl = (params.get('city') || '').toLowerCase().trim();
+        if(CITIES[fromUrl]){
+            localStorage.setItem('bb.city', fromUrl);
+            return CITIES[fromUrl];
+        }
+        const stored = (localStorage.getItem('bb.city') || '').toLowerCase().trim();
+        if(CITIES[stored]) return CITIES[stored];
+    } catch(_){}
+    return null;
+}
+
+function showCityPicker(){
+    const html = `
+        <div style="position:fixed;inset:0;background:#0f172a;color:#fff;z-index:2000;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;font-family:'Inter',system-ui,sans-serif">
+            <div style="font-size:13px;letter-spacing:0.18em;text-transform:uppercase;color:#94a3b8;margin-bottom:10px">Bella &amp; Bona · Culinary QC</div>
+            <h1 style="font-size:28px;font-weight:800;letter-spacing:-0.02em;margin:0 0 8px 0;text-align:center">Pick your city</h1>
+            <div style="font-size:14px;color:#94a3b8;margin-bottom:28px;text-align:center;max-width:360px">Each city has its own dishes, logs, and reports. Bookmark the URL after picking — you'll never see this screen again on this device.</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;width:100%;max-width:520px">
+                ${Object.values(CITIES).map(city => `
+                    <a href="?city=${encodeURIComponent(city.slug)}" style="display:flex;flex-direction:column;align-items:center;padding:28px 16px;border-radius:14px;background:#1e293b;border:1px solid #334155;text-decoration:none;color:#fff;transition:transform 140ms ease,background 140ms ease;font-weight:700">
+                        <span style="width:46px;height:46px;border-radius:10px;background:${city.accent};display:inline-flex;align-items:center;justify-content:center;font-size:20px;font-weight:800;margin-bottom:10px">${city.name.charAt(0)}</span>
+                        <span style="font-size:18px">${city.name}</span>
+                        <span style="font-size:11px;color:#94a3b8;margin-top:4px;font-weight:500">${city.firebase.projectId}</span>
+                    </a>
+                `).join('')}
+            </div>
+        </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', html);
+}
+
+const activeCity = detectCity();
+if(!activeCity){
+    showCityPicker();
+    throw new Error('No city selected — picker shown');
+}
+
+const firebaseConfig = activeCity.firebase;
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
+// Make city accessible to the rest of the app (header label, PDF filenames, etc.)
+window.__qc_city = activeCity;
 
 const HOT_MIN = 65;
 const COLD_MAX = 8;
@@ -3570,7 +3649,7 @@ async function generatePdfReport(range){
 
     pdf.setFont('helvetica','bold').setFontSize(20);
     pdf.setTextColor(31, 41, 55);
-    pdf.text('Bella & Bona — Culinary QC Report', margin, y);
+    pdf.text(`Bella & Bona — Culinary QC Report${window.__qc_city ? ' — ' + window.__qc_city.name : ''}`, margin, y);
     y += 22;
     pdf.setFont('helvetica','normal').setFontSize(11).setTextColor(110,116,128);
     pdf.text(`${humanDate(range.start)} → ${humanDate(range.end)} · ${dates.length} day${dates.length===1?'':'s'}`, margin, y);
@@ -4249,7 +4328,8 @@ async function generatePdfReport(range){
         pdf.text(txt, pageW/2, pdf.internal.pageSize.getHeight() - 18, { align:'center' });
     }
 
-    const fileName = `bb-qc-${range.start}_to_${range.end}.pdf`;
+    const citySlug = window.__qc_city?.slug || 'city';
+    const fileName = `bb-qc-${citySlug}-${range.start}_to_${range.end}.pdf`;
     pdf.save(fileName);
     toast('Report downloaded','ok');
 }
@@ -4277,7 +4357,7 @@ async function generateCheckpointPdf(range){
 
     // Cover header
     pdf.setFont('helvetica','bold').setFontSize(18).setTextColor(31,41,55);
-    pdf.text('Bella & Bona — QC Checkpoint Summary', margin, y);
+    pdf.text(`Bella & Bona — QC Checkpoint Summary${window.__qc_city ? ' — ' + window.__qc_city.name : ''}`, margin, y);
     y += 18;
     pdf.setFont('helvetica','normal').setFontSize(10).setTextColor(110,116,128);
     pdf.text(`${humanDate(range.start)} → ${humanDate(range.end)} · ${dates.length} day${dates.length===1?'':'s'} · Generated ${humanDate(todayIso())} ${nowHHMM()}`, margin, y);
@@ -4388,7 +4468,8 @@ async function generateCheckpointPdf(range){
         pdf.text(txt, pageW/2, pdf.internal.pageSize.getHeight() - 18, { align:'center' });
     }
 
-    const fileName = `bb-checkpoints-${range.start}_to_${range.end}.pdf`;
+    const citySlug = window.__qc_city?.slug || 'city';
+    const fileName = `bb-checkpoints-${citySlug}-${range.start}_to_${range.end}.pdf`;
     pdf.save(fileName);
     toast('Report downloaded','ok');
 }
@@ -5347,6 +5428,33 @@ document.addEventListener('keydown', (e) => {
         closeCamera();
     }
 });
+
+// Apply active city to every visible piece of UI before first render
+function applyCityChrome(city){
+    if(!city) return;
+    document.body.setAttribute('data-city', city.slug);
+    document.documentElement.style.setProperty('--city-accent', city.accent);
+    document.title = `Culinary QC · ${city.name} · Bella & Bona`;
+    const upper = city.name.toUpperCase();
+    const initial = city.name.charAt(0).toUpperCase();
+    const setText = (id, txt) => { const el = document.getElementById(id); if(el) el.textContent = txt; };
+    setText('city-tag', upper);
+    setText('drawer-city-tag', upper);
+    setText('city-mark', initial + 'B');
+    setText('drawer-mark', initial + 'B');
+    setText('drawer-fb-project', city.firebase.projectId);
+    setText('footer-fb-project', city.firebase.projectId);
+    // "Switch city" link in the drawer: drop the city param so the picker shows
+    const sw = document.getElementById('switch-city-link');
+    if(sw){
+        sw.addEventListener('click', (e) => {
+            e.preventDefault();
+            try { localStorage.removeItem('bb.city'); } catch(_){}
+            window.location.search = '';
+        });
+    }
+}
+applyCityChrome(activeCity);
 
 wire();
 selectDate(state.selectedDate);

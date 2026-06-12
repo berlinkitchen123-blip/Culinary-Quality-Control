@@ -3648,696 +3648,528 @@ async function generatePdfReport(range){
     const menusByWeek = await fetchMenusForRange(range.start, range.end);
     const storage = state.storage || { warmers: [], fridges: [], team: [] };
     const dates = datesInRange(range.start, range.end);
+    const cityName = (window.__qc_city && window.__qc_city.name) || 'Berlin';
 
-    // ---------- Build the PDF ----------
-    const pdf = new jsPDF({ unit:'pt', format:'a4', orientation:'landscape' });
+    // Munich-style thresholds (slightly stricter than the app defaults).
+    // OK = green, WARN = orange, CRITICAL = red.
+    const HOT_PASS = 65, HOT_WARN_MIN = 60;
+    const COLD_PASS = 6, COLD_WARN_MAX = 8;
+    const WT_OK = 0.05, WT_WARN = 0.10;
+
+    const hotStatus = (v) => v == null ? 'na' : v >= HOT_PASS ? 'ok' : v >= HOT_WARN_MIN ? 'warn' : 'crit';
+    const coldStatus = (v) => v == null ? 'na' : v <= COLD_PASS ? 'ok' : v <= COLD_WARN_MAX ? 'warn' : 'crit';
+    const dishStatus = (d, v) => isCold(d) ? coldStatus(v) : hotStatus(v);
+    const wtStatus = (theo, actual) => {
+        if(!theo || actual == null) return 'na';
+        const pct = Math.abs((actual - theo) / theo);
+        return pct <= WT_OK ? 'ok' : pct <= WT_WARN ? 'warn' : 'crit';
+    };
+
+    // Status → RGB triplets
+    const COLOR = {
+        ok:   [22,163,74],
+        warn: [234,88,12],
+        crit: [185,28,28],
+        na:   [156,163,175],
+        ink:  [31,41,55],
+        mute: [110,116,128],
+        line: [229,231,235],
+        head: [30,41,59],
+        sub:  [148,163,184],
+        bgHot: [254,242,242],
+        bgCold: [239,246,255],
+        bgRow: [249,250,251]
+    };
+    const fillBg = { ok: [220,252,231], warn: [254,243,199], crit: [254,226,226], na: [243,244,246] };
+
+    const pdf = new jsPDF({ unit:'pt', format:'a4', orientation:'portrait' });
     const pageW = pdf.internal.pageSize.getWidth();
-    const margin = 36;
-    let y = 50;
-
-    pdf.setFont('helvetica','bold').setFontSize(20);
-    pdf.setTextColor(31, 41, 55);
-    pdf.text(`Bella & Bona — Culinary QC Report${window.__qc_city ? ' — ' + window.__qc_city.name : ''}`, margin, y);
-    y += 22;
-    pdf.setFont('helvetica','normal').setFontSize(11).setTextColor(110,116,128);
-    pdf.text(`${humanDate(range.start)} → ${humanDate(range.end)} · ${dates.length} day${dates.length===1?'':'s'}`, margin, y);
-    y += 14;
-    pdf.text(`Generated ${nowHHMM()} on ${humanDate(todayIso())} · Firebase project quality-control-24`, margin, y);
-    y += 18;
-
-    // Summary stats across the whole range
-    let totals = { dishes:0, assemblyEntries:0, qcLogged:0, dispatchLogged:0, holds:0, watches:0, passes:0, photos:0, aiReviews:0 };
-    for(const d of dates){
-        const checks = checksByDate[d] || {};
-        const menu = menusByWeek[isoYearWeek(d)];
-        const dishes = menu?.dishes || [];
-        for(const dish of dishes){
-            totals.dishes++;
-            const c = checks[dish.dishLetter];
-            if(!c) continue;
-            totals.assemblyEntries += assemblyEntries(c).length;
-            if(avg(c.temperatures) != null) totals.qcLogged++;
-            if(hasStageData(c, 'dispatch')) totals.dispatchLogged++;
-            if(c.capturedImage) totals.photos++;
-            if(c.aiReview) totals.aiReviews++;
-            const status = readingStatus(dish, c);
-            if(status === 'hold') totals.holds++;
-            else if(status === 'watch') totals.watches++;
-            else if(status === 'pass') totals.passes++;
-        }
-    }
-    pdf.autoTable({
-        startY: y,
-        head: [['', 'Total dishes', 'Pass', 'Watch', 'Hold', 'QC logged', 'Dispatch logged', 'Photos', 'AI reviews', 'Assembly entries']],
-        body: [['Range', totals.dishes, totals.passes, totals.watches, totals.holds, totals.qcLogged, totals.dispatchLogged, totals.photos, totals.aiReviews, totals.assemblyEntries]],
-        margin: { left: margin, right: margin },
-        styles: { fontSize: 9, cellPadding: 4 },
-        headStyles: { fillColor: [37, 99, 235], textColor: 255, fontStyle: 'bold' },
-        alternateRowStyles: { fillColor: [247, 247, 250] }
-    });
-    y = pdf.lastAutoTable.finalY + 18;
-
-    // ---------- Per-day overview table (compact, top-of-day) ----------
     const pageH = pdf.internal.pageSize.getHeight();
-    const ensure = (need) => { if(y + need > pageH - 36){ pdf.addPage(); y = 50; } };
+    const margin = 28;
+    const innerW = pageW - margin*2;
 
-    const statusColor = (s) => s==='hold' ? [185,28,28] : s==='watch' ? [234,88,12] : s==='pass' ? [22,163,74] : [110,116,128];
+    // ----- Helpers ---------------------------------------------------------
+    const setFill = c => pdf.setFillColor(c[0],c[1],c[2]);
+    const setText = c => pdf.setTextColor(c[0],c[1],c[2]);
+    const setDraw = c => pdf.setDrawColor(c[0],c[1],c[2]);
+    const titleBar = (text, y) => {
+        setFill(COLOR.head);
+        pdf.rect(margin, y, innerW, 22, 'F');
+        pdf.setFont('helvetica','bold').setFontSize(11);
+        setText([255,255,255]);
+        pdf.text(text, margin + 10, y + 14);
+        return y + 22;
+    };
+    const subBar = (text, y) => {
+        setFill([241,245,249]);
+        pdf.rect(margin, y, innerW, 14, 'F');
+        pdf.setFont('helvetica','normal').setFontSize(8);
+        setText(COLOR.mute);
+        pdf.text(text, margin + 10, y + 10);
+        return y + 14;
+    };
+    const legendStrip = (y) => {
+        const segW = innerW / 3;
+        const segs = [
+            { label:'OK', spec:`Hot ≥${HOT_PASS}°C | Cold ≤${COLD_PASS}°C | Wt ≤${WT_OK*100}%`, fill:[220,252,231], color:COLOR.ok },
+            { label:'WARN', spec:`Hot ${HOT_WARN_MIN}–${HOT_PASS-1}°C | Cold ${COLD_PASS}–${COLD_WARN_MAX}°C | Wt ${WT_OK*100}–${WT_WARN*100}%`, fill:[254,243,199], color:COLOR.warn },
+            { label:'CRITICAL', spec:`Hot <${HOT_WARN_MIN}°C | Cold >${COLD_WARN_MAX}°C | Wt >${WT_WARN*100}%`, fill:[254,226,226], color:COLOR.crit }
+        ];
+        segs.forEach((s, i) => {
+            setFill(s.fill);
+            pdf.rect(margin + i*segW, y, segW, 28, 'F');
+            pdf.setFont('helvetica','bold').setFontSize(10);
+            setText(s.color);
+            pdf.text(s.label, margin + i*segW + segW/2, y + 11, { align:'center' });
+            pdf.setFont('helvetica','normal').setFontSize(7);
+            setText(COLOR.mute);
+            pdf.text(s.spec, margin + i*segW + segW/2, y + 22, { align:'center' });
+        });
+        return y + 28;
+    };
 
-    for(const date of dates){
+    const scoreCard = (x, y, w, h, pct, label, sub, status) => {
+        const bg = fillBg[status] || fillBg.na;
+        setFill(bg);
+        setDraw(COLOR[status] || COLOR.na);
+        pdf.setLineWidth(1.4);
+        pdf.roundedRect(x, y, w, h, 6, 6, 'FD');
+        pdf.setFont('helvetica','bold').setFontSize(24);
+        setText(COLOR[status] || COLOR.na);
+        pdf.text(pct, x + w/2, y + h/2 - 4, { align:'center' });
+        pdf.setFont('helvetica','bold').setFontSize(9);
+        setText(COLOR.ink);
+        pdf.text(label, x + w/2, y + h/2 + 12, { align:'center' });
+        pdf.setFont('helvetica','normal').setFontSize(7.5);
+        setText(COLOR.mute);
+        pdf.text(sub, x + w/2, y + h/2 + 23, { align:'center' });
+        const tag = status === 'ok' ? 'OK' : status === 'warn' ? 'WARN' : status === 'crit' ? 'CRIT' : '—';
+        const tagColor = COLOR[status] || COLOR.na;
+        setFill(tagColor);
+        pdf.roundedRect(x + w/2 - 22, y + h - 14, 44, 11, 5, 5, 'F');
+        pdf.setFont('helvetica','bold').setFontSize(8);
+        setText([255,255,255]);
+        pdf.text(tag, x + w/2, y + h - 6, { align:'center' });
+    };
+
+    const drawGauge = (cx, cy, r, pct, status) => {
+        // Background segments: red 0-60, amber 60-80, green 80-100, drawn as
+        // pie wedges using line approximation (jsPDF lacks native arcs).
+        const segs = [
+            { from: 180, to: 180 + 0.6 * 180, color: [220,38,38] },
+            { from: 180 + 0.6 * 180, to: 180 + 0.8 * 180, color: [234,88,12] },
+            { from: 180 + 0.8 * 180, to: 360, color: [22,163,74] }
+        ];
+        const arc = (fromDeg, toDeg, color, thickness) => {
+            setDraw(color); pdf.setLineWidth(thickness);
+            const steps = 30;
+            let prev = null;
+            for(let i = 0; i <= steps; i++){
+                const t = fromDeg + (toDeg - fromDeg) * (i/steps);
+                const rad = t * Math.PI/180;
+                const px = cx + Math.cos(rad) * r;
+                const py = cy + Math.sin(rad) * r;
+                if(prev) pdf.line(prev.x, prev.y, px, py);
+                prev = { x: px, y: py };
+            }
+        };
+        segs.forEach(s => arc(s.from, s.to, s.color, 18));
+        // Needle
+        const needleDeg = 180 + Math.min(100, Math.max(0, pct)) * 1.8;
+        const rad = needleDeg * Math.PI/180;
+        setDraw([31,41,55]); pdf.setLineWidth(3);
+        pdf.line(cx, cy, cx + Math.cos(rad) * (r - 12), cy + Math.sin(rad) * (r - 12));
+        // Hub
+        setFill([31,41,55]);
+        pdf.circle(cx, cy, 4, 'F');
+        // % label below
+        pdf.setFont('helvetica','bold').setFontSize(20);
+        setText(COLOR[status] || COLOR.na);
+        pdf.text(`${Math.round(pct)}%`, cx, cy + 20, { align:'center' });
+        pdf.setFont('helvetica','bold').setFontSize(8);
+        pdf.text((status||'na').toUpperCase(), cx, cy + 32, { align:'center' });
+    };
+
+    const dishCard = (x, y, w, h, dish, c, isHotGroup) => {
+        const qT = avg(c.temperatures);
+        const status = qT == null ? 'na' : (isHotGroup ? hotStatus(qT) : coldStatus(qT));
+        const bg = fillBg[status] || fillBg.na;
+        setFill(bg);
+        setDraw(COLOR[status] || COLOR.na);
+        pdf.setLineWidth(1);
+        pdf.roundedRect(x, y, w, h, 5, 5, 'FD');
+        // Letter chip top-left
+        setFill(COLOR[status] || COLOR.na);
+        pdf.roundedRect(x + 6, y + 6, 16, 14, 3, 3, 'F');
+        pdf.setFont('helvetica','bold').setFontSize(9);
+        setText([255,255,255]);
+        pdf.text(dish.dishLetter, x + 14, y + 16, { align:'center' });
+        // Name
+        pdf.setFont('helvetica','bold').setFontSize(8);
+        setText(COLOR.ink);
+        const nameLines = pdf.splitTextToSize(dish.dishName, w - 30);
+        pdf.text(nameLines.slice(0, 2).join('\n'), x + 26, y + 14);
+        // Big avg
+        pdf.setFont('helvetica','bold').setFontSize(18);
+        setText(COLOR[status] || COLOR.na);
+        pdf.text(qT != null ? qT.toFixed(1) + '°C' : '—', x + w/2, y + h/2 + 6, { align:'center' });
+        // Three sample temps
+        const t = c.temperatures || [];
+        pdf.setFont('helvetica','normal').setFontSize(7);
+        setText(COLOR.mute);
+        const ttxt = [0,1,2].map(i => t[i] != null ? Number(t[i]).toFixed(1)+'°' : '—').join('  ');
+        pdf.text(ttxt, x + w/2, y + h - 16, { align:'center' });
+        // Bottom meta: warmer + set temp (placement-derived)
+        const places = placementsOf(dish.dishLetter);
+        const place = places.length ? (() => {
+            const p = places[0];
+            const wr = (storage.warmers||[]).find(x => x.id === p.containerId);
+            return wr ? (wr.name || 'Warmer') : '';
+        })() : '';
+        pdf.text(place || (isHotGroup ? 'Hot dish' : 'Cold dish'), x + w/2, y + h - 6, { align:'center' });
+    };
+
+    // ----- Per-day render --------------------------------------------------
+    const renderDay = (date, isFirstDay) => {
+        if(!isFirstDay) pdf.addPage();
         const checks = checksByDate[date] || {};
         const menu = menusByWeek[isoYearWeek(date)];
         const dishes = menu?.dishes || [];
+        const hot = dishes.filter(d => !isCold(d));
+        const cold = dishes.filter(d => isCold(d));
 
-        ensure(40);
-        pdf.setFillColor(37,99,235);
-        pdf.rect(margin, y - 12, pageW - margin*2, 22, 'F');
-        pdf.setFont('helvetica','bold').setFontSize(13).setTextColor(255,255,255);
-        pdf.text(humanDate(date), margin + 8, y + 3);
-        pdf.setFont('helvetica','normal').setFontSize(10);
-        pdf.text(`${dishes.length} dish${dishes.length===1?'':'es'} on menu`, pageW - margin - 8, y + 3, { align:'right' });
-        y += 22;
+        // --- Header ---
+        let y = 28;
+        setFill(COLOR.head);
+        pdf.rect(margin, y, innerW, 32, 'F');
+        pdf.setFont('helvetica','bold').setFontSize(15);
+        setText([255,255,255]);
+        pdf.text(`BB DAILY QC DASHBOARD  |  ${humanDate(date)}`, margin + 10, y + 14);
+        pdf.setFont('helvetica','normal').setFontSize(8);
+        setText(COLOR.sub);
+        const wk = isoYearWeek(date);
+        pdf.text(`Bella & Bona · ${cityName} · Dark Kitchen Operations · Week ${wk}`, margin + 10, y + 26);
+        y += 32;
 
-        if(!dishes.length){
-            pdf.setFont('helvetica','italic').setFontSize(10).setTextColor(110,116,128);
-            pdf.text('No menu recorded for this date.', margin, y); y += 20; continue;
-        }
+        // Meta line
+        const teamRoster = (storage.team || []).map(m => m.name).filter(Boolean).join(', ');
+        const meta = `${dishes.length} dishes · ${hot.length} hot · ${cold.length} cold${teamRoster ? ' · Team: ' + teamRoster : ''}`;
+        y = subBar(meta, y);
+        y += 4;
 
-        // Compact one-line-per-dish overview for the day
-        const overviewRows = dishes.map(d => {
-            const c = checks[d.dishLetter] || {};
-            const aT = stageTempValue(c, 'assembly');
-            const qT = avg(c.temperatures);
-            const dT = stageTempValue(c, 'dispatch');
-            const w = avg(c.weights);
-            // Stage coverage: A=Assembly, Q=QC temps, D=Dispatch, P=Placement, I=Ingredients, F=Foto
-            const hasA = assemblyEntries(c).length > 0 || hasStageData(c, 'assembly');
-            const hasQ = avg(c.temperatures) != null;
-            const hasD = hasStageData(c, 'dispatch');
-            const hasP = (c.placements && c.placements.length) || c.placement;
-            const logged = (hasA?'A':'·') + (hasQ?'Q':'·') + (hasD?'D':'·') + (hasP?'P':'·');
-            const status = readingStatus(d, c);
-            const statusLabel = status === 'empty' ? 'NO DATA' : status.toUpperCase();
-            return [
-                d.dishLetter,
-                d.dishName,
-                isCold(d) ? 'Cold' : 'Hot',
-                aT != null ? aT.toFixed(1)+'°' : '—',
-                qT != null ? qT.toFixed(1)+'°' : '—',
-                dT != null ? dT.toFixed(1)+'°' : '—',
-                w != null ? Math.round(w)+'g' : '—',
-                (c.selectedIngredients||[]).length + '/' + (d.dishIngredients||[]).length,
-                c.capturedImage ? 'Y' : 'N',
-                logged,
-                statusLabel
-            ];
-        });
-        pdf.autoTable({
-            startY: y,
-            head: [['L','Dish','Type','Asm°','QC°','Dsp°','Weight','Ing','Photo','Logged','Status']],
-            body: overviewRows,
-            margin: { left: margin, right: margin },
-            styles: { fontSize: 8, cellPadding: 3, overflow: 'linebreak' },
-            headStyles: { fillColor: [243,244,246], textColor: [55,65,81], fontSize: 8, fontStyle:'bold' },
-            alternateRowStyles: { fillColor: [250,250,253] },
-            columnStyles: {
-                0:{cellWidth:22, halign:'center', fontStyle:'bold'},
-                1:{cellWidth:170},
-                2:{cellWidth:34, halign:'center'},
-                3:{cellWidth:42, halign:'right'},
-                4:{cellWidth:42, halign:'right'},
-                5:{cellWidth:42, halign:'right'},
-                6:{cellWidth:50, halign:'right'},
-                7:{cellWidth:38, halign:'center'},
-                8:{cellWidth:38, halign:'center'},
-                9:{cellWidth:54, halign:'center', font:'courier', fontStyle:'bold'},
-                10:{cellWidth:'auto', halign:'center', fontStyle:'bold'}
-            },
-            didParseCell: (data) => {
-                if(data.section === 'body' && data.column.index === 10){
-                    const v = (data.cell.raw || '').toLowerCase();
-                    if(v === 'no data') data.cell.styles.textColor = [156,163,175];
-                    else data.cell.styles.textColor = statusColor(v);
-                }
-            }
-        });
-        y = pdf.lastAutoTable.finalY + 14;
+        // --- Legend strip ---
+        y = legendStrip(y) + 8;
 
-        // ---------- Per-dish full detail blocks ----------
+        // --- Section 1: Compliance scorecard ---
+        y = titleBar('1. COMPLIANCE SCORECARD — Temperature pass rate by category', y);
+        y = subBar('Pass = OK + WARN  |  Fail = CRITICAL only', y);
+        y += 4;
+        // Counters
+        const counts = {
+            hot:  { total:0, pass:0, status:'na' },
+            cold: { total:0, pass:0, status:'na' },
+            wt:   { total:0, pass:0, status:'na' }
+        };
         for(const d of dishes){
             const c = checks[d.dishLetter] || {};
-            const status = readingStatus(d, c);
-            const aT = stageTempValue(c, 'assembly');
-            const qT = avg(c.temperatures);
-            const dT = stageTempValue(c, 'dispatch');
+            const v = avg(c.temperatures);
+            if(v != null){
+                const key = isCold(d) ? 'cold' : 'hot';
+                counts[key].total++;
+                const st = isCold(d) ? coldStatus(v) : hotStatus(v);
+                if(st === 'ok' || st === 'warn') counts[key].pass++;
+            }
             const w = avg(c.weights);
-
-            ensure(60);
-            // Dish header bar
-            const headColor = isCold(d) ? [6,182,212] : [220,38,38];
-            pdf.setFillColor(headColor[0],headColor[1],headColor[2]);
-            pdf.rect(margin, y - 11, pageW - margin*2, 20, 'F');
-            pdf.setFont('helvetica','bold').setFontSize(11).setTextColor(255,255,255);
-            pdf.text(`[${d.dishLetter}]  ${d.dishName}`, margin + 8, y + 3);
-            pdf.setFont('helvetica','normal').setFontSize(9);
-            const headRight = `${isCold(d)?'Cold':'Hot'} · target ${d.theoreticalWeight?d.theoreticalWeight+'g':'—'} · STATUS: ${status.toUpperCase()}`;
-            pdf.text(headRight, pageW - margin - 8, y + 3, { align:'right' });
-            y += 22;
-
-            // Two-column key/value summary (Assembly | QC | Dispatch | Placements)
-            const colW = (pageW - margin*2 - 10) / 2;
-            const leftX = margin;
-            const rightX = margin + colW + 10;
-            const blockStartY = y;
-
-            // ----- LEFT COLUMN: Assembly + Dispatch + Placements -----
-            let ly = y;
-            pdf.setFont('helvetica','bold').setFontSize(9).setTextColor(124,58,237);
-            pdf.text('ASSEMBLY', leftX, ly); ly += 10;
-            pdf.setFont('helvetica','normal').setFontSize(9).setTextColor(31,41,55);
-            const entries = assemblyEntries(c);
-            if(entries.length){
-                const rows = entries.map(e => {
-                    const who = Array.isArray(e.by) ? e.by.join(' + ') : (e.by || '?');
-                    return [who, String(e.count), e.ts || '—'];
-                });
-                rows.push(['TOTAL', String(rows.reduce((s,r)=>s+(Number(r[1])||0),0)), '']);
-                pdf.autoTable({
-                    startY: ly,
-                    head: [['Contributor','Count','Time']],
-                    body: rows,
-                    margin: { left: leftX, right: pageW - leftX - colW },
-                    tableWidth: colW,
-                    styles: { fontSize: 8, cellPadding: 2.5 },
-                    headStyles: { fillColor: [237,233,254], textColor: [76,29,149], fontSize: 8 },
-                    columnStyles: { 1:{halign:'right', cellWidth: 50}, 2:{halign:'right', cellWidth: 60} },
-                    didParseCell: (data) => {
-                        if(data.section === 'body' && data.row.index === rows.length - 1){
-                            data.cell.styles.fontStyle = 'bold';
-                            data.cell.styles.fillColor = [245,243,255];
-                        }
-                    }
-                });
-                ly = pdf.lastAutoTable.finalY + 4;
-            } else {
-                pdf.setFont('helvetica','italic').setTextColor(140,140,150);
-                pdf.text('No assembly entries.', leftX, ly); ly += 12;
+            if(w != null && d.theoreticalWeight){
+                counts.wt.total++;
+                const st = wtStatus(d.theoreticalWeight, w);
+                if(st === 'ok') counts.wt.pass++;
             }
+        }
+        const pctTxt = (n, d) => d === 0 ? '—' : `${Math.round(n/d*100)}%`;
+        const ratePct = (n, d) => d === 0 ? 100 : Math.round(n/d*100);
+        const cardStatus = (rate, denom) => {
+            if(denom === 0) return 'na';
+            if(rate === 100) return 'ok';
+            if(rate >= 80) return 'warn';
+            return 'crit';
+        };
+        const cards = [
+            { pct: pctTxt(counts.hot.pass, counts.hot.total), label:'Hot dishes temp', sub:`${counts.hot.pass}/${counts.hot.total} pass`, status: cardStatus(ratePct(counts.hot.pass, counts.hot.total), counts.hot.total) },
+            { pct: pctTxt(counts.cold.pass, counts.cold.total), label:'Cold dishes temp', sub:`${counts.cold.pass}/${counts.cold.total} pass`, status: cardStatus(ratePct(counts.cold.pass, counts.cold.total), counts.cold.total) },
+            { pct: pctTxt(counts.wt.pass, counts.wt.total), label:'Weight checks', sub: counts.wt.total ? `${counts.wt.pass}/${counts.wt.total} within 5%` : 'no weights', status: cardStatus(ratePct(counts.wt.pass, counts.wt.total), counts.wt.total) }
+        ];
+        const cardW = (innerW - 16) / 3;
+        const cardH = 78;
+        cards.forEach((c, i) => scoreCard(margin + i*(cardW + 8), y, cardW, cardH, c.pct, c.label, c.sub, c.status));
+        y += cardH + 10;
 
-            // Assembly stage temps (the 3 samples from assembly tab if any)
-            const asmTemps = c.assembly?.temps || (c.assembly?.temp != null ? [c.assembly.temp] : []);
-            if(asmTemps.some(v=>v!=null)){
-                pdf.setFont('helvetica','bold').setFontSize(8).setTextColor(76,29,149);
-                pdf.text('Assembly temps:', leftX, ly);
-                pdf.setFont('helvetica','normal').setTextColor(31,41,55);
-                const tStr = asmTemps.map(v => v==null?'—':Number(v).toFixed(1)+'°').join('  /  ');
-                pdf.text(`${tStr}  ·  avg ${aT!=null?aT.toFixed(2)+'°':'—'}${c.assembly?.time?'  ·  '+c.assembly.time:''}`, leftX + 75, ly);
-                ly += 11;
+        // --- Section 2: Overall gauge ---
+        y = titleBar('2. OVERALL COMPLIANCE GAUGE', y);
+        y = subBar('Green 80–100% OK  |  Amber 60–80% Warn  |  Red <60% Critical', y);
+        y += 4;
+        const totals = { total: counts.hot.total + counts.cold.total + counts.wt.total,
+                         pass:  counts.hot.pass  + counts.cold.pass  + counts.wt.pass };
+        const overallPct = totals.total === 0 ? 100 : Math.round(totals.pass / totals.total * 100);
+        const overallStatus = overallPct >= 80 ? 'ok' : overallPct >= 60 ? 'warn' : 'crit';
+        // Container box
+        setDraw(COLOR.line);
+        pdf.setLineWidth(0.6);
+        pdf.rect(margin, y, innerW, 96, 'S');
+        drawGauge(margin + innerW/2, y + 78, 60, overallPct, overallStatus);
+        y += 96 + 10;
+
+        // --- Section 3: Hot dish cards ---
+        y = titleBar(`3. HOT DISH TEMPERATURES  —  ≥${HOT_PASS}°C OK  |  ${HOT_WARN_MIN}–${HOT_PASS-1}°C WARN  |  <${HOT_WARN_MIN}°C CRITICAL`, y);
+        y += 4;
+        const colsHot = 4;
+        const hotCardW = (innerW - (colsHot-1)*6) / colsHot;
+        const hotCardH = 64;
+        if(!hot.length){
+            pdf.setFont('helvetica','italic').setFontSize(9);
+            setText(COLOR.mute);
+            pdf.text('No hot dishes today.', margin + 10, y + 14);
+            y += 24;
+        } else {
+            for(let i = 0; i < hot.length; i++){
+                const col = i % colsHot;
+                const row = Math.floor(i / colsHot);
+                const x = margin + col * (hotCardW + 6);
+                const yy = y + row * (hotCardH + 6);
+                if(yy + hotCardH > pageH - 30){ break; } // safety; if overflows skip rest (rare for hot)
+                dishCard(x, yy, hotCardW, hotCardH, hot[i], checks[hot[i].dishLetter] || {}, true);
             }
+            const rowsUsed = Math.ceil(hot.length / colsHot);
+            y += rowsUsed * (hotCardH + 6) + 4;
+        }
 
-            ly += 4;
-            pdf.setFont('helvetica','bold').setFontSize(9).setTextColor(8,145,178);
-            pdf.text('DISPATCH', leftX, ly); ly += 10;
-            const dspTemps = c.dispatch?.temps || (c.dispatch?.temp != null ? [c.dispatch.temp] : []);
-            if(dspTemps.some(v=>v!=null)){
-                pdf.setFont('helvetica','normal').setFontSize(9).setTextColor(31,41,55);
-                const tStr = dspTemps.map(v => v==null?'—':Number(v).toFixed(1)+'°').join('  /  ');
-                pdf.text(`${tStr}  ·  avg ${dT!=null?dT.toFixed(2)+'°':'—'}${c.dispatch?.time?'  ·  '+c.dispatch.time:''}`, leftX, ly);
-                ly += 11;
-                if(c.dispatch?.by){
-                    pdf.setFontSize(8).setTextColor(110,116,128);
-                    pdf.text(`Logged by: ${c.dispatch.by}`, leftX, ly); ly += 10;
+        // New page for Cold + Weight if not enough room
+        if(y + 200 > pageH){ pdf.addPage(); y = 28; }
+
+        // --- Section 4: Cold dish cards ---
+        y = titleBar(`4. COLD DISH TEMPERATURES  —  ≤${COLD_PASS}°C OK  |  ${COLD_PASS}–${COLD_WARN_MAX}°C WARN  |  >${COLD_WARN_MAX}°C CRITICAL`, y);
+        y += 4;
+        const coldCardW = (innerW - (colsHot-1)*6) / colsHot;
+        const coldCardH = 64;
+        if(!cold.length){
+            pdf.setFont('helvetica','italic').setFontSize(9);
+            setText(COLOR.mute);
+            pdf.text('No cold dishes today.', margin + 10, y + 14);
+            y += 24;
+        } else {
+            for(let i = 0; i < cold.length; i++){
+                const col = i % colsHot;
+                const row = Math.floor(i / colsHot);
+                const x = margin + col * (coldCardW + 6);
+                const yy = y + row * (coldCardH + 6);
+                if(yy + coldCardH > pageH - 30){
+                    pdf.addPage();
+                    y = 28;
+                    // Reset row baseline
+                    const rebasedRow = 0;
+                    const rebX = margin + col * (coldCardW + 6);
+                    dishCard(rebX, y + rebasedRow * (coldCardH + 6), coldCardW, coldCardH, cold[i], checks[cold[i].dishLetter] || {}, false);
+                    continue;
                 }
-            } else {
-                pdf.setFont('helvetica','italic').setFontSize(9).setTextColor(140,140,150);
-                pdf.text('Not logged.', leftX, ly); ly += 11;
+                dishCard(x, yy, coldCardW, coldCardH, cold[i], checks[cold[i].dishLetter] || {}, false);
             }
+            const rowsUsed = Math.ceil(cold.length / colsHot);
+            y += rowsUsed * (coldCardH + 6) + 4;
+        }
 
-            ly += 4;
-            pdf.setFont('helvetica','bold').setFontSize(9).setTextColor(245,158,11);
-            pdf.text('PLACEMENTS', leftX, ly); ly += 10;
-            const placements = c.placements || (c.placement ? [c.placement] : []);
-            if(Array.isArray(placements) && placements.length){
-                const pRows = placements.map(p => {
-                    const wr = (storage.warmers||[]).find(x => x.id === p.containerId);
-                    const fr = (storage.fridges||[]).find(x => x.id === p.containerId);
-                    if(wr){
-                        const layout = WARMER_LAYOUTS[wr.layout] || {};
-                        return ['Warmer', wr.name||'—', (layout.labels && layout.labels[p.compartment]) || p.compartment || '—', String(p.qty || '—')];
-                    }
-                    if(fr) return ['Fridge', fr.name||'—', '—', String(p.qty || '—')];
-                    return ['?', p.containerId || '—', p.compartment || '—', String(p.qty || '—')];
-                });
-                pdf.autoTable({
-                    startY: ly,
-                    head: [['Type','Container','Slot','Qty']],
-                    body: pRows,
-                    margin: { left: leftX, right: pageW - leftX - colW },
-                    tableWidth: colW,
-                    styles: { fontSize: 8, cellPadding: 2.5 },
-                    headStyles: { fillColor: [254,243,199], textColor: [146,64,14], fontSize: 8 },
-                    columnStyles: { 0:{cellWidth: 50}, 3:{halign:'right', cellWidth: 40} }
-                });
-                ly = pdf.lastAutoTable.finalY + 4;
-            } else {
-                pdf.setFont('helvetica','italic').setFontSize(9).setTextColor(140,140,150);
-                pdf.text('No placements.', leftX, ly); ly += 11;
-            }
-
-            // ----- RIGHT COLUMN: QC (temps + weights + ingredients + photo + AI + note) -----
-            let ry = blockStartY;
-            pdf.setFont('helvetica','bold').setFontSize(9).setTextColor(37,99,235);
-            pdf.text('QC CHECK', rightX, ry); ry += 10;
-
-            // 3 temps + 3 weights side-by-side
-            const temps3 = (c.temperatures||[null,null,null]);
-            const wts3 = (c.weights||[null,null,null]);
+        // --- Section 5: Weight deviation table (all dishes, critical first) ---
+        if(y + 80 > pageH){ pdf.addPage(); y = 28; }
+        y = titleBar('5. WEIGHT DEVIATION — All dishes (sorted: Critical first)', y);
+        y = subBar('+ = over  |  − = under  |  >10% Critical  |  5–10% Warn  |  ≤5% OK', y);
+        y += 2;
+        const wtRows = dishes.map(d => {
+            const c = checks[d.dishLetter] || {};
+            const w = avg(c.weights);
+            const ws = c.weights || [];
+            if(!d.theoreticalWeight || w == null) return null;
+            const devPct = ((w - d.theoreticalWeight) / d.theoreticalWeight) * 100;
+            const st = wtStatus(d.theoreticalWeight, w);
+            return {
+                letter: d.dishLetter, name: d.dishName, type: isCold(d) ? 'Cold' : 'Hot',
+                theo: d.theoreticalWeight, avg: w, w1: ws[0], w2: ws[1], w3: ws[2],
+                devPct, status: st
+            };
+        }).filter(Boolean);
+        const stOrder = { crit: 0, warn: 1, ok: 2, na: 3 };
+        wtRows.sort((a, b) => stOrder[a.status] - stOrder[b.status] || Math.abs(b.devPct) - Math.abs(a.devPct));
+        if(!wtRows.length){
+            pdf.setFont('helvetica','italic').setFontSize(9);
+            setText(COLOR.mute);
+            pdf.text('No weight readings logged.', margin + 10, y + 14);
+            y += 20;
+        } else {
             pdf.autoTable({
-                startY: ry,
-                head: [['Sample','Temp','Weight']],
-                body: [
-                    ['1', temps3[0]!=null?Number(temps3[0]).toFixed(1)+'°':'—', wts3[0]!=null?Math.round(wts3[0])+'g':'—'],
-                    ['2', temps3[1]!=null?Number(temps3[1]).toFixed(1)+'°':'—', wts3[1]!=null?Math.round(wts3[1])+'g':'—'],
-                    ['3', temps3[2]!=null?Number(temps3[2]).toFixed(1)+'°':'—', wts3[2]!=null?Math.round(wts3[2])+'g':'—'],
-                    ['AVG', qT!=null?qT.toFixed(2)+'°':'—', w!=null?Math.round(w)+'g':'—']
-                ],
-                margin: { left: rightX, right: margin },
-                tableWidth: colW,
-                styles: { fontSize: 8, cellPadding: 2.5 },
-                headStyles: { fillColor: [219,234,254], textColor: [30,64,175], fontSize: 8 },
-                columnStyles: { 0:{halign:'center', cellWidth: 50, fontStyle:'bold'}, 1:{halign:'right'}, 2:{halign:'right'} },
+                startY: y,
+                head: [['ID','DISH','TYPE','THEO','AVG','W1','W2','W3','DEV%','STATUS']],
+                body: wtRows.map(r => [
+                    r.letter, r.name, r.type,
+                    r.theo + 'g',
+                    r.avg.toFixed(1) + 'g',
+                    r.w1 != null ? Math.round(r.w1) + 'g' : '—',
+                    r.w2 != null ? Math.round(r.w2) + 'g' : '—',
+                    r.w3 != null ? Math.round(r.w3) + 'g' : '—',
+                    (r.devPct >= 0 ? '+' : '') + r.devPct.toFixed(1) + '%',
+                    r.status.toUpperCase()
+                ]),
+                margin: { left: margin, right: margin },
+                styles: { fontSize: 8, cellPadding: 3 },
+                headStyles: { fillColor: COLOR.head, textColor: 255, fontSize: 8, fontStyle:'bold' },
+                alternateRowStyles: { fillColor: COLOR.bgRow },
+                columnStyles: {
+                    0:{halign:'center', fontStyle:'bold', cellWidth: 22},
+                    2:{halign:'center', cellWidth: 30},
+                    3:{halign:'right', cellWidth: 38},
+                    4:{halign:'right', cellWidth: 42, fontStyle:'bold'},
+                    5:{halign:'right', cellWidth: 32, textColor: COLOR.mute},
+                    6:{halign:'right', cellWidth: 32, textColor: COLOR.mute},
+                    7:{halign:'right', cellWidth: 32, textColor: COLOR.mute},
+                    8:{halign:'right', cellWidth: 50, fontStyle:'bold'},
+                    9:{halign:'center', cellWidth: 50, fontStyle:'bold'}
+                },
                 didParseCell: (data) => {
-                    if(data.section === 'body' && data.row.index === 3){
-                        data.cell.styles.fontStyle = 'bold';
-                        data.cell.styles.fillColor = [239,246,255];
+                    if(data.section === 'body' && data.column.index === 9){
+                        const v = (data.cell.raw || '').toLowerCase();
+                        const c = COLOR[v] || COLOR.na;
+                        data.cell.styles.textColor = c;
+                        const f = fillBg[v] || fillBg.na;
+                        data.cell.styles.fillColor = f;
                     }
                 }
             });
-            ry = pdf.lastAutoTable.finalY + 6;
-
-            // Ingredients
-            // dishIngredients is an array of objects {name, weight?} — selectedIngredients holds the names
-            pdf.setFont('helvetica','bold').setFontSize(8).setTextColor(37,99,235);
-            const ingList = (d.dishIngredients||[]).map(ing => typeof ing === 'string' ? { name: ing, weight: '' } : ing);
-            const totalIng = ingList.length;
-            const selected = new Set(c.selectedIngredients||[]);
-            const checkedCount = ingList.filter(ing => selected.has(ing.name)).length;
-            pdf.text(`INGREDIENTS  ${checkedCount}/${totalIng} confirmed`, rightX, ry); ry += 10;
-            pdf.setFont('helvetica','normal').setFontSize(7.5).setTextColor(31,41,55);
-            if(totalIng){
-                const lines = ingList.map(ing => {
-                    const mark = selected.has(ing.name) ? '[Y]' : '[ ]';
-                    const w = ing.weight ? ' (' + ing.weight + ')' : '';
-                    return mark + ' ' + ing.name + w;
-                });
-                const wrapped = pdf.splitTextToSize(lines.join('   '), colW);
-                pdf.text(wrapped, rightX, ry);
-                ry += wrapped.length * 9 + 4;
-                const missing = ingList.filter(ing => !selected.has(ing.name));
-                if(missing.length){
-                    pdf.setFont('helvetica','bold').setFontSize(7.5).setTextColor(185,28,28);
-                    pdf.text(`Missing (${missing.length}): `, rightX, ry);
-                    pdf.setFont('helvetica','normal').setTextColor(31,41,55);
-                    const mw = pdf.splitTextToSize(missing.map(m => m.name).join(', '), colW - 50);
-                    pdf.text(mw, rightX + 50, ry);
-                    ry += mw.length * 9 + 2;
-                }
-            } else {
-                pdf.setFont('helvetica','italic').setTextColor(140,140,150);
-                pdf.text('No ingredient list recorded.', rightX, ry); ry += 10;
-            }
-
-            // Photo + AI review
-            ry += 2;
-            pdf.setFont('helvetica','bold').setFontSize(8).setTextColor(37,99,235);
-            pdf.text(`PHOTO  ${c.capturedImage ? '[Y] captured' : '[ ] not taken'}${c.qcTime?'  · '+c.qcTime:''}`, rightX, ry); ry += 10;
-
-            if(c.aiReview){
-                pdf.setFont('helvetica','bold').setFontSize(8).setTextColor(37,99,235);
-                pdf.text(`AI REVIEW  ${c.aiReview.score!=null?c.aiReview.score+'/100':''}`, rightX, ry); ry += 10;
-                if(c.aiReview.summary){
-                    pdf.setFont('helvetica','normal').setFontSize(7.5).setTextColor(31,41,55);
-                    const sw = pdf.splitTextToSize(c.aiReview.summary, colW);
-                    ensure(sw.length * 9 + 12);
-                    pdf.text(sw, rightX, ry);
-                    ry += sw.length * 9 + 2;
-                }
-                if(Array.isArray(c.aiReview.differences) && c.aiReview.differences.length){
-                    pdf.setFont('helvetica','bold').setFontSize(7.5).setTextColor(185,28,28);
-                    pdf.text(`Differences (${c.aiReview.differences.length}):`, rightX, ry); ry += 8;
-                    pdf.setFont('helvetica','normal').setTextColor(31,41,55);
-                    for(const diff of c.aiReview.differences){
-                        const dw = pdf.splitTextToSize('• ' + String(diff), colW - 4);
-                        ensure(dw.length * 9);
-                        pdf.text(dw, rightX + 4, ry);
-                        ry += dw.length * 9;
-                    }
-                    ry += 2;
-                }
-            }
-
-            // Chef's note (full text)
-            if(c.comment && c.comment.trim()){
-                ry += 2;
-                pdf.setFont('helvetica','bold').setFontSize(8).setTextColor(37,99,235);
-                pdf.text("CHEF'S NOTE", rightX, ry); ry += 10;
-                pdf.setFont('helvetica','italic').setFontSize(8).setTextColor(31,41,55);
-                const cw = pdf.splitTextToSize(c.comment, colW);
-                ensure(cw.length * 10 + 4);
-                pdf.text(cw, rightX, ry);
-                ry += cw.length * 10 + 2;
-            }
-
-            // Advance y to whichever column ended lower, plus padding & separator
-            y = Math.max(ly, ry) + 10;
-            ensure(2);
-            pdf.setDrawColor(229,231,235).setLineWidth(0.5);
-            pdf.line(margin, y - 6, pageW - margin, y - 6);
-            y += 4;
+            y = pdf.lastAutoTable.finalY + 8;
         }
-    }
 
-    // ========== AUDIT SUMMARY (the useful end-of-report section) ==========
-    // Build cross-range audit data so the auditor / kitchen manager can see at a glance:
-    //  • compliance rate, by category
-    //  • every out-of-spec temp / weight reading (HACCP-style violation log)
-    //  • dishes that were never logged (coverage gaps)
-    //  • daily completion %
-    //  • contributor leaderboard (who logged what)
-    //  • repeat-offender dishes (had issues on multiple days)
-    const audit = {
-        byCat: { hot: { dishes:0, pass:0, watch:0, hold:0, empty:0 }, cold: { dishes:0, pass:0, watch:0, hold:0, empty:0 } },
-        byDay: {},                  // date -> { dishes, logged, pass, watch, hold, empty }
-        violations: [],             // {date, letter, name, stage, kind, value, target, status}
-        gaps: [],                   // {date, letter, name, why}
-        contributors: new Map(),    // name -> count
-        repeats: new Map(),         // letter -> { name, hold:0, watch:0 }
-        photos: 0, photosNeeded: 0,
-        ingComplete: 0, ingPartial:0, ingMissing:0
-    };
+        // --- Section 6: Dish Lifecycle Tracking (Hot only) ---
+        if(hot.length){
+            pdf.addPage();
+            y = 28;
+            // Header bar
+            setFill(COLOR.head);
+            pdf.rect(margin, y, innerW, 26, 'F');
+            pdf.setFont('helvetica','bold').setFontSize(13);
+            setText([255,255,255]);
+            pdf.text('~/ Dish Lifecycle Tracking', margin + 10, y + 12);
+            pdf.setFont('helvetica','normal').setFontSize(8);
+            setText(COLOR.sub);
+            pdf.text(`${humanDate(date)} · Week ${wk} · Assembly → Warmer → QC Check → Dispatch`, margin + 10, y + 22);
+            y += 30;
 
-    const HOT_MIN = 65, COLD_MAX = 8;
-    const tempTargetText = (dish) => isCold(dish) ? `≤${COLD_MAX}°` : `≥${HOT_MIN}°`;
-
-    for(const date of dates){
-        const checks = checksByDate[date] || {};
-        const menu = menusByWeek[isoYearWeek(date)];
-        const dishes = menu?.dishes || [];
-        const day = audit.byDay[date] = { dishes: dishes.length, logged:0, pass:0, watch:0, hold:0, empty:0 };
-        for(const dish of dishes){
-            const c = checks[dish.dishLetter] || {};
-            const cat = isCold(dish) ? 'cold' : 'hot';
-            audit.byCat[cat].dishes++;
-            const status = readingStatus(dish, c);
-            audit.byCat[cat][status] = (audit.byCat[cat][status]||0) + 1;
-            day[status] = (day[status]||0) + 1;
-
-            const anyLogged = assemblyEntries(c).length || hasStageData(c,'assembly') || avg(c.temperatures)!=null || hasStageData(c,'dispatch') || (c.placements && c.placements.length);
-            if(anyLogged) day.logged++;
-            else audit.gaps.push({ date, letter: dish.dishLetter, name: dish.dishName, why: 'No readings on any stage' });
-
-            // Status counters for repeat-offenders
-            if(status === 'hold' || status === 'watch'){
-                const r = audit.repeats.get(dish.dishLetter) || { name: dish.dishName, hold:0, watch:0 };
-                r[status]++;
-                audit.repeats.set(dish.dishLetter, r);
-            }
-
-            // Violations — check each stage's temp + weights
-            const checkTemp = (stage, value) => {
-                if(value == null) return;
-                const st = tempStatus(value, dish);
-                if(st === 'watch' || st === 'hold'){
-                    audit.violations.push({
-                        date, letter: dish.dishLetter, name: dish.dishName,
-                        stage, kind: 'Temperature', value: value.toFixed(1)+'°',
-                        target: tempTargetText(dish), status: st
-                    });
+            const boxW = (innerW - 24) / 4;
+            const boxH = 64;
+            const drawBox = (x, y, label, big, samples, time, statusTxt, statusClr) => {
+                setFill([255,255,255]);
+                setDraw(statusClr || COLOR.line);
+                pdf.setLineWidth(1.2);
+                pdf.roundedRect(x, y, boxW, boxH, 4, 4, 'FD');
+                pdf.setFont('helvetica','bold').setFontSize(7);
+                setText(COLOR.mute);
+                pdf.text(label, x + boxW/2, y + 10, { align:'center' });
+                pdf.setFont('helvetica','bold').setFontSize(16);
+                setText(statusClr || COLOR.ink);
+                pdf.text(big || '—', x + boxW/2, y + 30, { align:'center' });
+                pdf.setFont('helvetica','normal').setFontSize(7);
+                setText(COLOR.mute);
+                pdf.text(samples || '', x + boxW/2, y + 42, { align:'center' });
+                pdf.setFont('helvetica','bold').setFontSize(8);
+                setText(COLOR.ink);
+                pdf.text(time || '—', x + boxW/2, y + 53, { align:'center' });
+                if(statusTxt){
+                    setFill(fillBg[statusClr === COLOR.ok ? 'ok' : statusClr === COLOR.warn ? 'warn' : statusClr === COLOR.crit ? 'crit' : 'na'] || fillBg.na);
+                    pdf.rect(x + 4, y + boxH - 12, boxW - 8, 9, 'F');
+                    pdf.setFont('helvetica','bold').setFontSize(6.5);
+                    setText(statusClr || COLOR.mute);
+                    pdf.text(statusTxt, x + boxW/2, y + boxH - 5, { align:'center' });
                 }
             };
-            const asmT = stageTempValue(c, 'assembly');
-            if(asmT != null) checkTemp('Assembly', asmT);
-            const qcT = avg(c.temperatures);
-            if(qcT != null) checkTemp('QC', qcT);
-            const dspT = stageTempValue(c, 'dispatch');
-            if(dspT != null) checkTemp('Dispatch', dspT);
+            const colorFor = (st) => st === 'ok' ? COLOR.ok : st === 'warn' ? COLOR.warn : st === 'crit' ? COLOR.crit : COLOR.na;
+            const statusLabel = (st, target) => st === 'ok' ? 'PASS ' + target : st === 'warn' ? 'WARN ' + target : st === 'crit' ? 'CRIT ' + target : '—';
 
-            // Individual weight outliers
-            if(dish.theoreticalWeight && Array.isArray(c.weights)){
-                c.weights.forEach((w,i) => {
-                    if(w == null) return;
-                    const st = weightStatus(w, dish);
-                    if(st === 'watch' || st === 'hold'){
-                        const pct = ((w - dish.theoreticalWeight) / dish.theoreticalWeight * 100).toFixed(0);
-                        audit.violations.push({
-                            date, letter: dish.dishLetter, name: dish.dishName,
-                            stage: `QC sample ${i+1}`, kind: 'Weight',
-                            value: Math.round(w)+'g ('+(pct>=0?'+':'')+pct+'%)',
-                            target: dish.theoreticalWeight+'g ±8%', status: st
-                        });
-                    }
-                });
-            }
-
-            // Photo + ingredient stats
-            audit.photosNeeded++;
-            if(c.capturedImage) audit.photos++;
-            const ingTot = (dish.dishIngredients||[]).length;
-            const ingHas = (c.selectedIngredients||[]).length;
-            if(ingTot){
-                if(ingHas === 0) audit.ingMissing++;
-                else if(ingHas < ingTot) audit.ingPartial++;
-                else audit.ingComplete++;
-            }
-
-            // Contributor counts
-            for(const e of assemblyEntries(c)){
-                const names = Array.isArray(e.by) ? e.by : [e.by||'?'];
-                for(const n of names){
-                    audit.contributors.set(n, (audit.contributors.get(n)||0) + Number(e.count||0));
+            for(const dish of hot){
+                if(y + boxH + 30 > pageH){ pdf.addPage(); y = 28; }
+                const c = checks[dish.dishLetter] || {};
+                // Dish header
+                setFill([241,245,249]);
+                pdf.rect(margin, y, innerW, 18, 'F');
+                setFill(COLOR[hotStatus(avg(c.temperatures))] || COLOR.na);
+                pdf.roundedRect(margin + 6, y + 4, 14, 11, 2, 2, 'F');
+                pdf.setFont('helvetica','bold').setFontSize(8);
+                setText([255,255,255]);
+                pdf.text(dish.dishLetter, margin + 13, y + 12, { align:'center' });
+                pdf.setFont('helvetica','bold').setFontSize(9);
+                setText(COLOR.ink);
+                pdf.text(dish.dishName, margin + 26, y + 12);
+                const places2 = placementsOf(dish.dishLetter);
+                const placeStr = places2.length ? (() => {
+                    const p = places2[0];
+                    const wr = (storage.warmers||[]).find(x => x.id === p.containerId);
+                    return wr ? wr.name : '';
+                })() : '';
+                if(placeStr){
+                    pdf.setFont('helvetica','normal').setFontSize(8);
+                    setText(COLOR.mute);
+                    pdf.text(placeStr, pageW - margin - 6, y + 12, { align:'right' });
                 }
+                y += 20;
+
+                // Four lifecycle boxes
+                const aT = stageTempValue(c, 'assembly');
+                const qT = avg(c.temperatures);
+                const dT = stageTempValue(c, 'dispatch');
+                const asmTemps = c.assembly && Array.isArray(c.assembly.temps) ? c.assembly.temps : [c.assembly && c.assembly.temp];
+                const qcTemps = c.temperatures || [];
+                const dispTemps = c.dispatch && Array.isArray(c.dispatch.temps) ? c.dispatch.temps : [c.dispatch && c.dispatch.temp];
+                const target = `(≥${HOT_PASS}°C)`;
+
+                drawBox(margin, y, 'ASSEMBLY',
+                    aT != null ? aT.toFixed(1) + '°C' : '—',
+                    asmTemps.filter(t => t != null).map(t => Number(t).toFixed(0)+'°').join(' '),
+                    (c.assembly && c.assembly.time) || '—',
+                    aT == null ? '' : statusLabel(hotStatus(aT), target),
+                    colorFor(aT == null ? 'na' : hotStatus(aT))
+                );
+                drawBox(margin + (boxW + 8), y, 'TO WARMER',
+                    placeStr || '—', '', '—', '', COLOR.na
+                );
+                drawBox(margin + 2*(boxW + 8), y, 'QC CHECK',
+                    qT != null ? qT.toFixed(1) + '°C' : '—',
+                    qcTemps.filter(t => t != null).map(t => Number(t).toFixed(0)+'°').join(' '),
+                    c.qcTime || '—',
+                    qT == null ? '' : statusLabel(hotStatus(qT), target),
+                    colorFor(qT == null ? 'na' : hotStatus(qT))
+                );
+                drawBox(margin + 3*(boxW + 8), y, 'DISPATCH',
+                    dT != null ? dT.toFixed(1) + '°C' : '—',
+                    dispTemps.filter(t => t != null).map(t => Number(t).toFixed(0)+'°').join(' '),
+                    (c.dispatch && c.dispatch.time) || '—',
+                    dT == null ? '' : statusLabel(hotStatus(dT), target),
+                    colorFor(dT == null ? 'na' : hotStatus(dT))
+                );
+                y += boxH + 14;
             }
         }
-    }
-
-    if(y > pageH - 140){ pdf.addPage(); y = 50; }
-    pdf.setFillColor(31,41,55);
-    pdf.rect(margin, y - 14, pageW - margin*2, 26, 'F');
-    pdf.setFont('helvetica','bold').setFontSize(15).setTextColor(255,255,255);
-    pdf.text('AUDIT & COMPLIANCE SUMMARY', margin + 10, y + 4);
-    pdf.setFont('helvetica','normal').setFontSize(10);
-    pdf.text(`${humanDate(range.start)} → ${humanDate(range.end)} · ${dates.length} day${dates.length===1?'':'s'}`, pageW - margin - 10, y + 4, { align:'right' });
-    y += 28;
-
-    // ----- Compliance by category -----
-    const catRow = (cat, label) => {
-        const c = audit.byCat[cat];
-        const completed = c.pass + c.watch + c.hold;
-        const rate = completed > 0 ? Math.round(c.pass/completed*100)+'%' : '—';
-        return [label, c.dishes, c.pass, c.watch, c.hold, c.empty, rate];
     };
-    pdf.setFont('helvetica','bold').setFontSize(11).setTextColor(31,41,55);
-    pdf.text('Compliance by category', margin, y); y += 8;
-    pdf.autoTable({
-        startY: y,
-        head: [['Category','Dishes scheduled','Pass','Watch','Hold','No data','Pass rate (of logged)']],
-        body: [ catRow('hot', 'Hot dishes'), catRow('cold', 'Cold dishes') ],
-        margin: { left: margin, right: margin },
-        styles: { fontSize: 9, cellPadding: 4 },
-        headStyles: { fillColor: [37,99,235], textColor: 255, fontStyle:'bold' },
-        columnStyles: {
-            0:{fontStyle:'bold'},
-            2:{halign:'right', textColor:[22,163,74]},
-            3:{halign:'right', textColor:[234,88,12]},
-            4:{halign:'right', textColor:[185,28,28]},
-            5:{halign:'right', textColor:[110,116,128]},
-            6:{halign:'right', fontStyle:'bold'}
-        }
-    });
-    y = pdf.lastAutoTable.finalY + 14;
 
-    // ----- Daily completion -----
-    ensure(60);
-    pdf.setFont('helvetica','bold').setFontSize(11).setTextColor(31,41,55);
-    pdf.text('Daily logging completion', margin, y); y += 8;
-    pdf.autoTable({
-        startY: y,
-        head: [['Date','Dishes','Logged','Pass','Watch','Hold','No data','Coverage']],
-        body: dates.map(d => {
-            const x = audit.byDay[d] || { dishes:0, logged:0, pass:0, watch:0, hold:0, empty:0 };
-            const cov = x.dishes > 0 ? Math.round(x.logged/x.dishes*100)+'%' : '—';
-            return [humanDate(d), x.dishes, x.logged, x.pass, x.watch, x.hold, x.empty, cov];
-        }),
-        margin: { left: margin, right: margin },
-        styles: { fontSize: 9, cellPadding: 3 },
-        headStyles: { fillColor: [243,244,246], textColor: [55,65,81], fontStyle:'bold' },
-        alternateRowStyles: { fillColor: [250,250,253] },
-        columnStyles: {
-            1:{halign:'right'}, 2:{halign:'right'},
-            3:{halign:'right', textColor:[22,163,74]},
-            4:{halign:'right', textColor:[234,88,12]},
-            5:{halign:'right', textColor:[185,28,28]},
-            6:{halign:'right', textColor:[110,116,128]},
-            7:{halign:'right', fontStyle:'bold'}
-        }
-    });
-    y = pdf.lastAutoTable.finalY + 14;
-
-    // ----- Photo & ingredient coverage -----
-    ensure(56);
-    const photoPct = audit.photosNeeded > 0 ? Math.round(audit.photos/audit.photosNeeded*100) : 0;
-    pdf.setFont('helvetica','bold').setFontSize(11).setTextColor(31,41,55);
-    pdf.text('Documentation coverage', margin, y); y += 8;
-    pdf.autoTable({
-        startY: y,
-        head: [['Documentation','Count','Of total','%']],
-        body: [
-            ['Photos captured', audit.photos, audit.photosNeeded, photoPct+'%'],
-            ['Ingredients complete', audit.ingComplete, audit.photosNeeded, audit.photosNeeded ? Math.round(audit.ingComplete/audit.photosNeeded*100)+'%' : '—'],
-            ['Ingredients partial', audit.ingPartial, audit.photosNeeded, audit.photosNeeded ? Math.round(audit.ingPartial/audit.photosNeeded*100)+'%' : '—'],
-            ['Ingredients not checked', audit.ingMissing, audit.photosNeeded, audit.photosNeeded ? Math.round(audit.ingMissing/audit.photosNeeded*100)+'%' : '—']
-        ],
-        margin: { left: margin, right: margin },
-        styles: { fontSize: 9, cellPadding: 4 },
-        headStyles: { fillColor: [243,244,246], textColor: [55,65,81], fontStyle:'bold' },
-        columnStyles: { 0:{fontStyle:'bold'}, 1:{halign:'right'}, 2:{halign:'right'}, 3:{halign:'right', fontStyle:'bold'} }
-    });
-    y = pdf.lastAutoTable.finalY + 14;
-
-    // ----- Out-of-spec readings log (the HACCP violation log) -----
-    ensure(60);
-    pdf.setFont('helvetica','bold').setFontSize(11).setTextColor(31,41,55);
-    pdf.text(`Out-of-spec readings (${audit.violations.length})`, margin, y); y += 8;
-    if(audit.violations.length){
-        pdf.autoTable({
-            startY: y,
-            head: [['Date','L','Dish','Stage','Reading','Target','Status']],
-            body: audit.violations.map(v => [humanDate(v.date), v.letter, v.name, v.stage + ' · ' + v.kind, v.value, v.target, v.status.toUpperCase()]),
-            margin: { left: margin, right: margin },
-            styles: { fontSize: 8.5, cellPadding: 3, overflow:'linebreak' },
-            headStyles: { fillColor: [254,226,226], textColor: [127,29,29], fontStyle:'bold' },
-            alternateRowStyles: { fillColor: [254,242,242] },
-            columnStyles: {
-                1:{halign:'center', fontStyle:'bold', cellWidth: 22},
-                4:{halign:'right'},
-                5:{halign:'right'},
-                6:{halign:'center', fontStyle:'bold'}
-            },
-            didParseCell: (data) => {
-                if(data.section === 'body' && data.column.index === 6){
-                    const v = (data.cell.raw || '').toLowerCase();
-                    data.cell.styles.textColor = statusColor(v);
-                }
-            }
-        });
-        y = pdf.lastAutoTable.finalY + 14;
-    } else {
-        pdf.setFont('helvetica','italic').setFontSize(10).setTextColor(22,163,74);
-        pdf.text('No out-of-spec readings recorded in this range.', margin, y); y += 16;
+    // ----- Render every day in the range ----------------------------------
+    for(let i = 0; i < dates.length; i++){
+        renderDay(dates[i], i === 0);
     }
 
-    // ----- Coverage gaps (dishes that were never logged) -----
-    ensure(60);
-    pdf.setFont('helvetica','bold').setFontSize(11).setTextColor(31,41,55);
-    pdf.text(`Coverage gaps (${audit.gaps.length})`, margin, y); y += 8;
-    if(audit.gaps.length){
-        pdf.autoTable({
-            startY: y,
-            head: [['Date','L','Dish','Why']],
-            body: audit.gaps.map(g => [humanDate(g.date), g.letter, g.name, g.why]),
-            margin: { left: margin, right: margin },
-            styles: { fontSize: 8.5, cellPadding: 3, overflow:'linebreak' },
-            headStyles: { fillColor: [255,237,213], textColor: [124,45,18], fontStyle:'bold' },
-            alternateRowStyles: { fillColor: [255,250,240] },
-            columnStyles: { 1:{halign:'center', fontStyle:'bold', cellWidth: 22} }
-        });
-        y = pdf.lastAutoTable.finalY + 14;
-    } else {
-        pdf.setFont('helvetica','italic').setFontSize(10).setTextColor(22,163,74);
-        pdf.text('No coverage gaps — every scheduled dish was logged.', margin, y); y += 16;
-    }
-
-    // ----- Repeat-offender dishes -----
-    const repeats = Array.from(audit.repeats.entries())
-        .map(([letter, r]) => ({ letter, ...r, total: r.hold + r.watch }))
-        .filter(r => r.total >= 2)
-        .sort((a,b) => b.hold*10 + b.watch - (a.hold*10 + a.watch));
-    if(repeats.length){
-        ensure(60);
-        pdf.setFont('helvetica','bold').setFontSize(11).setTextColor(31,41,55);
-        pdf.text(`Repeat-issue dishes (${repeats.length})`, margin, y); y += 8;
-        pdf.autoTable({
-            startY: y,
-            head: [['L','Dish','Hold days','Watch days','Total issues']],
-            body: repeats.map(r => [r.letter, r.name, r.hold, r.watch, r.total]),
-            margin: { left: margin, right: margin },
-            styles: { fontSize: 9, cellPadding: 3 },
-            headStyles: { fillColor: [243,244,246], textColor: [55,65,81], fontStyle:'bold' },
-            alternateRowStyles: { fillColor: [250,250,253] },
-            columnStyles: {
-                0:{halign:'center', fontStyle:'bold', cellWidth: 22},
-                2:{halign:'right', textColor:[185,28,28]},
-                3:{halign:'right', textColor:[234,88,12]},
-                4:{halign:'right', fontStyle:'bold'}
-            }
-        });
-        y = pdf.lastAutoTable.finalY + 14;
-    }
-
-    // ----- Contributor leaderboard -----
-    const contributors = Array.from(audit.contributors.entries())
-        .map(([name, count]) => ({ name, count }))
-        .sort((a,b) => b.count - a.count);
-    if(contributors.length){
-        ensure(60);
-        pdf.setFont('helvetica','bold').setFontSize(11).setTextColor(31,41,55);
-        pdf.text(`Assembly contributors (${contributors.length})`, margin, y); y += 8;
-        const totalAssembled = contributors.reduce((s,c)=>s+c.count, 0);
-        pdf.autoTable({
-            startY: y,
-            head: [['Rank','Contributor','Dishes assembled','% of total']],
-            body: contributors.map((c,i) => [i+1, c.name, c.count, totalAssembled>0?Math.round(c.count/totalAssembled*100)+'%':'—']),
-            margin: { left: margin, right: margin },
-            styles: { fontSize: 9, cellPadding: 3 },
-            headStyles: { fillColor: [237,233,254], textColor: [76,29,149], fontStyle:'bold' },
-            alternateRowStyles: { fillColor: [250,250,253] },
-            columnStyles: {
-                0:{halign:'center', cellWidth: 36, fontStyle:'bold'},
-                1:{fontStyle:'bold'},
-                2:{halign:'right'},
-                3:{halign:'right', fontStyle:'bold'}
-            }
-        });
-        y = pdf.lastAutoTable.finalY + 14;
-    }
-
-    // ----- Sign-off block -----
-    ensure(70);
-    pdf.setDrawColor(31,41,55).setLineWidth(0.8);
-    pdf.rect(margin, y, pageW - margin*2, 60);
-    pdf.setFont('helvetica','bold').setFontSize(10).setTextColor(31,41,55);
-    pdf.text('REVIEWED & APPROVED', margin + 10, y + 14);
-    pdf.setFont('helvetica','normal').setFontSize(9).setTextColor(110,116,128);
-    pdf.text('Head chef signature:', margin + 10, y + 32);
-    pdf.text('________________________________', margin + 110, y + 32);
-    pdf.text('Date:', margin + 320, y + 32);
-    pdf.text('______________', margin + 350, y + 32);
-    pdf.text('QC manager signature:', margin + 10, y + 48);
-    pdf.text('________________________________', margin + 110, y + 48);
-    pdf.text('Date:', margin + 320, y + 48);
-    pdf.text('______________', margin + 350, y + 48);
-    y += 70;
-
-    // ----- Footer with page numbers and timestamp -----
+    // ----- Footer with page numbers + range -------------------------------
     const total = pdf.getNumberOfPages();
     for(let p = 1; p <= total; p++){
         pdf.setPage(p);
-        pdf.setFont('helvetica','normal').setFontSize(8).setTextColor(140,140,150);
-        const txt = `Bella & Bona · QC report ${humanDate(range.start)} → ${humanDate(range.end)} · Generated ${humanDate(todayIso())} ${nowHHMM()} · Page ${p} of ${total}`;
-        pdf.text(txt, pageW/2, pdf.internal.pageSize.getHeight() - 18, { align:'center' });
+        pdf.setFont('helvetica','normal').setFontSize(7);
+        setText(COLOR.mute);
+        pdf.text(`Bella & Bona · ${cityName} · QC Dashboard · ${humanDate(range.start)} → ${humanDate(range.end)} · Page ${p} of ${total}`, pageW/2, pageH - 14, { align:'center' });
     }
 
     const citySlug = window.__qc_city?.slug || 'city';
-    const fileName = `bb-qc-${citySlug}-${range.start}_to_${range.end}.pdf`;
+    const fileName = `bb-qc-dashboard-${citySlug}-${range.start}_to_${range.end}.pdf`;
     pdf.save(fileName);
     toast('Report downloaded','ok');
 }

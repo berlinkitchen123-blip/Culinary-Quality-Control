@@ -157,6 +157,8 @@ input,textarea,select{font-family:inherit;font-size:16px}
 .brand .mark{width:38px;height:38px;border-radius:9px;background:var(--brand);color:white;display:inline-flex;align-items:center;justify-content:center;font-weight:800;font-size:15px;box-shadow:var(--shadow-sm);flex-shrink:0}
 .brand .name{font-weight:700;font-size:17px;letter-spacing:-0.01em;color:var(--ink);line-height:1.1}
 .city-tag{display:inline-block;font-size:10px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;color:white;background:var(--city-accent, var(--brand));padding:2px 8px;border-radius:99px;vertical-align:middle;margin-left:6px}
+.city-switch-btn{margin-top:10px;padding:7px 12px;border-radius:7px;font-size:12px;font-weight:600;border:1px solid var(--line);background:var(--bg-2);color:var(--ink);cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:background 140ms ease}
+.city-switch-btn:hover{background:var(--bg-3)}
 body[data-city] .brand .mark{background:var(--city-accent, var(--brand))}
 body[data-city] .drawer-brand .mark{background:var(--city-accent, var(--brand))}
 .brand .sub{font-size:11px;color:var(--mute);font-weight:500}
@@ -949,7 +951,13 @@ html[data-theme="dark"] #report-view-host{background:#f9fafb}
             <span class="name">Print</span>
         </button>
     </div>
-    <div class="drawer-footer">Bella &amp; Bona Culinary Ops · Firebase project <code id="drawer-fb-project" style="font-family:ui-monospace,monospace;font-size:11px;background:var(--bg-3);padding:1px 6px;border-radius:4px">—</code><br/><a href="?" id="switch-city-link" style="font-size:11px;color:var(--mute);text-decoration:underline;display:inline-block;margin-top:6px">Switch city</a></div>
+    <div class="drawer-footer">
+        Bella &amp; Bona Culinary Ops · Firebase project <code id="drawer-fb-project" style="font-family:ui-monospace,monospace;font-size:11px;background:var(--bg-3);padding:1px 6px;border-radius:4px">—</code>
+        <button type="button" class="city-switch-btn" id="switch-city-link">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+            Switch city
+        </button>
+    </div>
 </aside>
 
 <header class="app-header">

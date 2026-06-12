@@ -6096,7 +6096,10 @@ async function openSettings(){
             await saveMenu(weekId, menuObj);
             state.menu = sortMenuByLetter(menuObj);
             renderAll();
-            toast(`Saved ${menuObj.dishes.length} dishes`, 'ok');
+            toast(`Saved ${menuObj.dishes.length} dishes · Settings re-locked`, 'ok');
+            // Auto re-lock the session after every menu save so PIN is
+            // required to re-open Settings (matches Save → Lock behaviour).
+            lockSettingsNow();
             closeSettings();
         }catch(e){ toast('Save failed','fail'); console.error(e); }
     };

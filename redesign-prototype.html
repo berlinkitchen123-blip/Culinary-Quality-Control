@@ -2110,18 +2110,83 @@ async function saveIngredientLog(key, partial){
     await update(ref(db, path), { ...partial, updatedAt: serverTimestamp() });
 }
 
-/* Auto-classify an ingredient as either 'cooked' (needs a post-cooking
-   temperature) or 'topping' (raw garnish/sprinkle added at the end). The
-   regex catches the usual suspects: fresh herbs, anything ending in seeds
-   or flakes, microgreens, wedges, croutons, sprinkle/topping/garnish
-   keywords, lemon/lime garnishes, and obvious raw markers. Anything that
-   doesn't match is treated as a cooked component by default — safer to
-   demand a temp than to skip one. */
-const TOPPING_RE = /\b(parsley|cilantro|coriander|basil|mint|dill|chives|scallion|spring\s*onion|micro\s*greens?|sprouts?|seeds?|flakes?|sprinkle|topping|garnish|crouton|wedge|sesame|nigella|sumac|za'?atar|pickled?|sliced?\s+(lemon|lime|onion)|dried\s+(herbs?|chil[ei]|oregano|thyme))\b/i;
+/* Auto-classify an ingredient as 'cooked' or 'topping'. Toppings cover
+   every raw / cold add-on that goes on the dish at the end: fresh herbs,
+   seeds, flakes, microgreens, wedges, sprouts, dressings, sauces poured
+   on top, mayo / cream / oils, pickled items, fresh vegetables sliced for
+   garnish, cheese cubes, croutons, and a curated list of kitchen-specific
+   items the head chef confirmed should always be in this section. */
+const TOPPING_RE = new RegExp([
+    // Generic markers / preparation hints
+    '\\b(sprinkle|topping|garnish|crouton|wedge|micro\\s*greens?|sprouts?)\\b',
+    '\\b(seeds?|flakes?)\\b',
+    '\\bdressing\\b',
+    '\\bvinaigrette\\b',
+    '\\bbalsamic\\b',
+    '\\bmayonn?aise\\b',
+    '\\bmayo\\b',
+    '\\bsriracha\\b',
+    '\\bhummus\\b',
+    '\\btzatziki\\b',
+    '\\bsoy\\s*sauce\\b',
+    '\\bolive\\s*oil\\b',
+    '\\bcooking\\s*cream\\b',
+    '\\bfried\\s*onion\\b',
+    '\\bjalape[nñ]o\\b',
+    '\\bfeta\\b',
+    '\\bcoleslaw\\b|\\bcolslow\\b',
+    '\\barugula\\b|\\brocket\\b',
+    '\\bavoc?ado\\b',
+    '\\bapple(s)?\\b',
+    '\\bwalnut(s)?\\b',
+    '\\bpeanut(s)?\\b',
+    '\\balmond(s)?\\b',
+    '\\bbellabona\\s+salad\\b|\\bb&b\\s+salad\\b|\\bbella\\s+bona\\s+salad\\b',
+    '\\bcucumber\\b',
+    '\\btomato(es)?\\b',
+    // Fresh herbs
+    '\\b(parsley|cilantro|coriander|basil|mint|dill|chives|scallion|spring\\s*onion)\\b',
+    // Spice blends / dry herbs used as garnish
+    '\\b(sumac|za\'?atar|sesame|nigella)\\b',
+    '\\bdried\\s+(herbs?|chil[ei]|oregano|thyme|mint|parsley)\\b',
+    // Pickled and raw-sliced
+    '\\bpickled?\\b',
+    '\\bsliced?\\s+(lemon|lime|onion)\\b'
+].join('|'), 'i');
+
 function classifyIngredient(name){
     const s = String(name || '').toLowerCase().trim();
     if(!s) return 'cooked';
     return TOPPING_RE.test(s) ? 'topping' : 'cooked';
+}
+
+/* Canonical name — merges trivial variations of the same ingredient so the
+   kitchen sees one card per real ingredient. "Tomato cubed" / "Tomato
+   sliced" / "Tomato" all collapse to "Tomato". "Halloumi Raw" / "Halloumi
+   grilled" → "Halloumi". The basmati family normalises to one entry. */
+function canonicalIngredientName(name){
+    let n = String(name || '').toLowerCase().trim();
+    if(!n) return n;
+    // Specific aliases — exact matches take priority
+    const SPECIFIC = {
+        'rice-white basmati': 'basmati rice',
+        'rice - white basmati': 'basmati rice',
+        'rice white basmati': 'basmati rice',
+        'steamed basmati': 'basmati rice',
+        'steamed basmati rice': 'basmati rice',
+        'basmati': 'basmati rice',
+        'basmati rice steamed': 'basmati rice'
+    };
+    if(SPECIFIC[n]) return SPECIFIC[n];
+    // Strip leading prep modifiers ("thin sliced cucumber" → "cucumber")
+    n = n.replace(/^(thin\s*sliced|chopped|cubed|diced|sliced|grated|shredded|minced|julienned|halved|quartered)\s+/i, '').trim();
+    // Strip trailing prep modifiers ("cucumber cubed" → "cucumber")
+    n = n.replace(/\s+(raw|cooked|boiled|steamed|grilled|fried|baked|roasted|sauteed|saut[eé]ed|dry|dried|fresh|frozen|thawed|cubed|sliced|chopped|diced|minced|shredded|julienned|halved|quartered|grated|peeled)$/i, '').trim();
+    // Handle "thin sliced" trailing too
+    n = n.replace(/\s+thin\s*sliced$/i, '').trim();
+    // Collapse multiple spaces
+    n = n.replace(/\s+/g, ' ');
+    return n;
 }
 
 /* Per-ingredient classification override (persisted across devices). Kitchen
@@ -2148,27 +2213,40 @@ function collectMenuIngredients(){
     for(const d of dishes){
         for(const raw of (d.dishIngredients || [])){
             const ing = typeof raw === 'string' ? { name: raw, weight: '' } : raw;
-            const name = (ing.name || '').trim();
-            if(!name) continue;
-            const key = name.toLowerCase();
-            if(!map.has(key)){
-                const k = ingredientKey(name);
+            const rawName = (ing.name || '').trim();
+            if(!rawName) continue;
+            // Group by canonical name so "Tomato" + "tomato cubed" + "Tomato
+            // sliced" all share one card and one log.
+            const canonical = canonicalIngredientName(rawName);
+            const canonicalDisplay = canonical.replace(/\b\w/g, c => c.toUpperCase());
+            const k = ingredientKey(canonical);
+            if(!map.has(canonical)){
                 const overridden = overrides[k] && overrides[k].category;
-                const auto = classifyIngredient(name);
-                map.set(key, {
-                    name,
+                // Classify using BOTH the canonical and the raw name —
+                // catches cases like "Lemon dressing" where the raw form
+                // has a topping marker that the canonical drops.
+                const autoCanonical = classifyIngredient(canonical);
+                const autoRaw = classifyIngredient(rawName);
+                const auto = (autoCanonical === 'topping' || autoRaw === 'topping') ? 'topping' : 'cooked';
+                map.set(canonical, {
+                    name: canonicalDisplay,
                     weight: ing.weight || '',
                     key: k,
-                    category: overridden || auto,  // 'cooked' | 'topping'
+                    category: overridden || auto,
                     autoCategory: auto,
                     isOverride: !!overridden && overridden !== auto,
-                    usedIn: []
+                    usedIn: [],
+                    aliases: new Set()
                 });
             }
-            map.get(key).usedIn.push(d.dishLetter);
+            const entry = map.get(canonical);
+            entry.aliases.add(rawName);
+            if(!entry.usedIn.includes(d.dishLetter)) entry.usedIn.push(d.dishLetter);
         }
     }
-    return Array.from(map.values()).sort((a,b) => a.name.localeCompare(b.name));
+    // Convert aliases Set → Array for serialization, then sort
+    const out = Array.from(map.values()).map(e => ({ ...e, aliases: Array.from(e.aliases) }));
+    return out.sort((a,b) => a.name.localeCompare(b.name));
 }
 
 function renderIngredientsStageView(){

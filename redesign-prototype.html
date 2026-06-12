@@ -1670,6 +1670,84 @@ async function saveGmailConfig(partial){
     await update(ref(db, 'integrations/gmail'), partial);
 }
 
+/* === Settings lock (PIN-protected) =================================
+   Stops accidental changes by kitchen staff. PIN hashed with SHA-256
+   before sending to Firebase. Anyone who can edit Firebase directly can
+   still bypass this — it's an "are you sure" gate, not real security. */
+async function hashPin(pin){
+    const buf = new TextEncoder().encode(String(pin || ''));
+    const hash = await crypto.subtle.digest('SHA-256', buf);
+    return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2,'0')).join('');
+}
+function listenSettingsLock(){
+    return onValue(ref(db, 'settings-lock'), snap => {
+        const v = snap.val();
+        state.settingsLock = v && v.hash ? { hash: v.hash, enabled: v.enabled !== false } : null;
+    });
+}
+async function setSettingsPin(pin){
+    if(!pin){
+        await set(ref(db, 'settings-lock'), null);
+        sessionStorage.removeItem('bb.settings.unlocked');
+        return;
+    }
+    const hash = await hashPin(pin);
+    await set(ref(db, 'settings-lock'), { hash, enabled: true, updatedAt: serverTimestamp() });
+    sessionStorage.setItem('bb.settings.unlocked', '1');
+}
+function isSettingsUnlocked(){
+    return sessionStorage.getItem('bb.settings.unlocked') === '1';
+}
+function lockSettingsNow(){
+    sessionStorage.removeItem('bb.settings.unlocked');
+}
+
+/* Ask for the PIN before showing the panel. Returns true if unlocked. */
+async function promptPinIfLocked(){
+    const lock = state.settingsLock;
+    if(!lock || !lock.enabled || !lock.hash) return true;     // no lock set
+    if(isSettingsUnlocked()) return true;                      // already unlocked this session
+    return await new Promise((resolve) => {
+        const overlay = document.createElement('div');
+        overlay.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,0.78);backdrop-filter:blur(4px);z-index:200;display:flex;align-items:center;justify-content:center;padding:20px';
+        overlay.innerHTML = `
+            <div style="background:var(--bg-2);border:1px solid var(--line);border-radius:14px;padding:22px;max-width:340px;width:100%;box-shadow:var(--shadow-lg);font-family:Inter,sans-serif">
+                <div style="font-size:13px;letter-spacing:0.06em;text-transform:uppercase;color:var(--mute);font-weight:700;margin-bottom:4px">Settings locked</div>
+                <div style="font-size:18px;font-weight:800;color:var(--ink);margin-bottom:14px;letter-spacing:-0.01em">Enter PIN to continue</div>
+                <input type="password" id="pin-input" inputmode="numeric" maxlength="12" placeholder="••••" autocomplete="off"
+                    style="width:100%;font-size:24px;text-align:center;letter-spacing:0.4em;padding:12px;border:1px solid var(--line);border-radius:10px;background:var(--bg-3);color:var(--ink);font-family:inherit;font-weight:700"/>
+                <div id="pin-err" style="font-size:12px;color:var(--hold);margin-top:8px;min-height:14px"></div>
+                <div style="display:flex;gap:8px;margin-top:10px">
+                    <button id="pin-cancel" type="button" style="flex:1;padding:10px;font-size:13px;font-weight:600;border-radius:8px;border:1px solid var(--line);background:transparent;color:var(--ink);cursor:pointer">Cancel</button>
+                    <button id="pin-ok" type="button" style="flex:1;padding:10px;font-size:13px;font-weight:700;border-radius:8px;border:0;background:var(--brand);color:white;cursor:pointer">Unlock</button>
+                </div>
+            </div>`;
+        document.body.appendChild(overlay);
+        const input = overlay.querySelector('#pin-input');
+        const err = overlay.querySelector('#pin-err');
+        const cancel = overlay.querySelector('#pin-cancel');
+        const ok = overlay.querySelector('#pin-ok');
+        const close = (result) => { overlay.remove(); resolve(result); };
+        cancel.onclick = () => close(false);
+        const attempt = async () => {
+            const pin = input.value.trim();
+            if(!pin){ err.textContent = 'PIN is empty'; return; }
+            const h = await hashPin(pin);
+            if(h === lock.hash){
+                sessionStorage.setItem('bb.settings.unlocked', '1');
+                close(true);
+            } else {
+                err.textContent = 'Wrong PIN. Try again.';
+                input.value = '';
+                input.focus();
+            }
+        };
+        ok.onclick = attempt;
+        input.addEventListener('keydown', (e) => { if(e.key === 'Enter') attempt(); if(e.key === 'Escape') close(false); });
+        setTimeout(() => input.focus(), 50);
+    });
+}
+
 /* Send the AI review result for a dish back to Firebase */
 async function saveAiReview(letter, review){
     await saveCheckField(letter, { aiReview: review });
@@ -5598,7 +5676,11 @@ function normalizeMenu(raw, opts){
 }
 
 /* === Settings modal === */
-function openSettings(){
+async function openSettings(){
+    // PIN gate — refuses to open the panel if a lock is set and the session
+    // hasn't been unlocked yet.
+    const allowed = await promptPinIfLocked();
+    if(!allowed) return;
     const overlay=document.getElementById('settings-overlay');
     const weekId=isoYearWeek(state.selectedDate);
     const existing = state.menu ? JSON.stringify(state.menu, null, 2) : '';
@@ -5661,6 +5743,25 @@ function openSettings(){
                     <div style="font-size:12px;color:var(--mute);margin-bottom:8px">Anyone who can be tagged as "Prepared by" on the Assembly stage. Tap chips at the top of the Assembly page to set who's on now.</div>
                     <div id="storage-team-list"></div>
                     <button class="add-storage" type="button" id="add-team">+ Add team member</button>
+                </div>
+
+                <!-- Settings lock — PIN gate to prevent accidental edits -->
+                <div class="storage-block">
+                    <h4>🔒 Settings lock</h4>
+                    <div style="font-size:12px;color:var(--mute);margin-bottom:8px">
+                        Protect this page with a PIN so kitchen staff can't change the menu, warmers, or any other setting by accident.
+                        Anyone opening Settings will be asked for the PIN. Choose a number you'll remember — if you forget it, you'll need to edit Firebase directly to reset.
+                    </div>
+                    <div id="lock-state-row" style="font-size:13px;color:var(--ink);font-weight:600;margin-bottom:8px">${state.settingsLock && state.settingsLock.hash ? '✓ PIN is set — Settings are locked.' : '⚠ No PIN set — Settings are open to anyone.'}</div>
+                    <div class="storage-row" style="flex-wrap:wrap;gap:8px">
+                        <input type="password" id="lock-pin-1" inputmode="numeric" maxlength="12" placeholder="${state.settingsLock && state.settingsLock.hash ? 'New PIN' : 'Set a PIN (4–8 digits)'}" autocomplete="off" style="flex:1;min-width:140px"/>
+                        <input type="password" id="lock-pin-2" inputmode="numeric" maxlength="12" placeholder="Repeat PIN" autocomplete="off" style="flex:1;min-width:140px"/>
+                        <button class="btn btn-primary" type="button" id="lock-save-btn">${state.settingsLock && state.settingsLock.hash ? 'Update PIN' : 'Lock Settings'}</button>
+                    </div>
+                    <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">
+                        ${state.settingsLock && state.settingsLock.hash ? `<button class="btn" type="button" id="lock-remove-btn" style="color:var(--hold)">Remove lock (unlock for everyone)</button>` : ''}
+                    </div>
+                    <div id="lock-msg" style="font-size:12px;margin-top:6px;min-height:14px"></div>
                 </div>
 
                 <!-- Integrations: AI dish analysis (direct OpenAI/Anthropic) + Teams webhook -->
@@ -5857,6 +5958,40 @@ function openSettings(){
                 }
             });
         }
+    }
+
+    // === Settings lock buttons ===
+    const lockSaveBtn = overlay.querySelector('#lock-save-btn');
+    const lockRemoveBtn = overlay.querySelector('#lock-remove-btn');
+    const lockMsg = overlay.querySelector('#lock-msg');
+    if(lockSaveBtn){
+        lockSaveBtn.addEventListener('click', async () => {
+            const p1 = overlay.querySelector('#lock-pin-1').value.trim();
+            const p2 = overlay.querySelector('#lock-pin-2').value.trim();
+            if(!p1 || p1.length < 4){ lockMsg.textContent = 'PIN must be at least 4 characters.'; lockMsg.style.color = 'var(--hold)'; return; }
+            if(p1 !== p2){ lockMsg.textContent = 'The two PINs don\'t match.'; lockMsg.style.color = 'var(--hold)'; return; }
+            try {
+                await setSettingsPin(p1);
+                lockMsg.textContent = '✓ Settings are now locked. New PIN saved.';
+                lockMsg.style.color = 'var(--pass)';
+                // Update header line right away
+                const row = overlay.querySelector('#lock-state-row');
+                if(row) row.textContent = '✓ PIN is set — Settings are locked.';
+            } catch(err){ lockMsg.textContent = 'Save failed: ' + (err.message || ''); lockMsg.style.color = 'var(--hold)'; }
+        });
+    }
+    if(lockRemoveBtn){
+        lockRemoveBtn.addEventListener('click', async () => {
+            if(!confirm('Remove the lock? Anyone with the URL will be able to change Settings.')) return;
+            try {
+                await setSettingsPin(null);
+                lockMsg.textContent = '✓ Lock removed.';
+                lockMsg.style.color = 'var(--mute)';
+                lockRemoveBtn.style.display = 'none';
+                const row = overlay.querySelector('#lock-state-row');
+                if(row) row.textContent = '⚠ No PIN set — Settings are open to anyone.';
+            } catch(err){ lockMsg.textContent = 'Remove failed: ' + (err.message || ''); lockMsg.style.color = 'var(--hold)'; }
+        });
     }
 
     // === Gmail SMTP config (saved to Firebase for the GitHub Action cron) ===
@@ -6212,6 +6347,7 @@ selectDate(state.selectedDate);
 state._unsubStorage = listenStorage();
 state._unsubIntegrations = listenIntegrations();
 state._unsubIngCats = listenIngredientCategories();
+state._unsubLock = listenSettingsLock();
 routeFromHash(); // honour deep-links (#/assembly, #/qc, #/dispatch, #/placement) — else show home
 </script>
 

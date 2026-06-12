@@ -80,6 +80,6 @@ jobs:
           SENDER: ${{ steps.gmail.outputs.sender }}
           RECIPIENT: 'Marcus@bellabona.com'
           CC: 'Matteo.cricco@bellabona.com,niccolo.lapini@bellabona.com,Abbas@bellabona.com,Roberto@bellabona.com,Dhiraj@bellabona.com'
-          PRESET: 'yesterday'
+          PRESET: 'today'
           SUBJECT_PREFIX: 'Quality check report'
         run: node send-snapshot.js

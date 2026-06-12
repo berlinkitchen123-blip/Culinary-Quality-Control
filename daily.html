@@ -113,6 +113,44 @@ body{padding:18px 22px 40px 22px;max-width:1320px;margin:0 auto}
     .city{box-shadow:none;page-break-inside:avoid}
     .cities{grid-template-columns:1fr 1fr}
 }
+
+/* === Compact one-page layout (activated by ?compact=1 — used by the
+       scheduled email cron so the PDF attachment is exactly one A4 page) === */
+body.compact{padding:14px 16px;max-width:1000px}
+body.compact .toolbar{margin-bottom:8px}
+body.compact .toolbar .actions,
+body.compact .range-bar{display:none}
+body.compact .title-block h1{font-size:17px}
+body.compact .title-block .sub{font-size:11px}
+body.compact .legend{grid-template-columns:repeat(3,1fr);gap:5px;margin-bottom:8px}
+body.compact .legend-cell{padding:5px 8px;font-size:9.5px}
+body.compact .legend-cell .lbl{font-size:10px}
+body.compact .legend-cell .spec{margin-top:1px;font-size:9px}
+body.compact .cities{gap:10px}
+body.compact .city{padding:9px 11px;border-radius:10px}
+body.compact .city-head{padding-bottom:6px;margin-bottom:7px;gap:8px}
+body.compact .city-head .mark{width:30px;height:30px;font-size:13px;border-radius:7px}
+body.compact .city-head .name{font-size:15px}
+body.compact .city-head .meta{font-size:10px}
+body.compact .city-head .url{display:none}
+body.compact .scorecard{gap:5px;margin-bottom:7px}
+body.compact .score{padding:7px 5px}
+body.compact .score .pct{font-size:20px}
+body.compact .score .lbl{font-size:10px;margin-top:2px}
+body.compact .score .frac{font-size:9px;margin-top:1px}
+body.compact .score .pill{font-size:8px;padding:1px 6px;margin-top:3px}
+body.compact .overall{padding:7px 10px}
+body.compact .overall .label{font-size:9px}
+body.compact .overall .pct-big{font-size:22px}
+body.compact .overall .status-tag{font-size:9px;padding:2px 6px}
+body.compact .dish-list-section{font-size:9px;padding:5px 0 2px 0;margin-top:4px}
+body.compact .dish-list-head{display:none}
+body.compact .dish-row{grid-template-columns:18px 1fr 44px 44px 44px;padding:2px 0;font-size:10.5px;gap:4px}
+body.compact .dish-row .letter{font-size:9.5px}
+body.compact .dish-row .temp{font-size:9.5px;padding:1px 3px;min-width:38px}
+body.compact .dish-row.is-ok{display:none}  /* compact mode hides OK rows */
+body.compact .footer-note{margin-top:8px;font-size:10px;color:#475569;text-align:center}
+@page{ size:A4; margin:8mm }
 </style>
 </head>
 <body>
@@ -367,12 +405,16 @@ function renderCity(data, isSingleDay){
             const a = c.assembly && (c.assembly.temps ? avg(c.assembly.temps) : c.assembly.temp);
             const q = avg(c.temperatures);
             const dp = c.dispatch && (c.dispatch.temps ? avg(c.dispatch.temps) : c.dispatch.temp);
+            // Worst status across the three checkpoints — used to hide OK
+            // rows in compact (one-page PDF) mode, where we only want to
+            // surface dishes that need attention.
+            const stOf = (v) => v == null ? 'na' : (isHot ? hotStatus(v) : coldStatus(v));
+            const worst = ['crit','warn','ok','na'].find(s => [a,q,dp].some(v => stOf(v) === s)) || 'na';
             const tCell = (v) => {
                 if(v == null) return `<span class="temp na">—</span>`;
-                const st = isHot ? hotStatus(v) : coldStatus(v);
-                return `<span class="temp ${st}">${v.toFixed(1)}°</span>`;
+                return `<span class="temp ${stOf(v)}">${v.toFixed(1)}°</span>`;
             };
-            return `<div class="dish-row">
+            return `<div class="dish-row is-${worst}">
                 <span class="letter">${escapeHtml(d.dishLetter)}</span>
                 <span class="name">${escapeHtml(d.dishName)}</span>
                 ${tCell(a)}
@@ -495,6 +537,10 @@ const rangeState = {
     start: params.get('date') || params.get('start') || todayOrLastFriday(),
     end: params.get('end') || params.get('date') || todayOrLastFriday()
 };
+// Compact mode: strips everything non-essential so the page fits one A4 sheet.
+// Used by the scheduled email cron (Puppeteer renders this URL with &compact=1).
+const COMPACT = params.get('compact') === '1';
+if(COMPACT) document.body.classList.add('compact');
 
 function renderRangeBar(){
     const bar = document.getElementById('range-bar');

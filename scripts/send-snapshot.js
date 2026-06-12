@@ -24,7 +24,7 @@ import puppeteer from 'puppeteer';
 const PRESET = process.env.PRESET || 'yesterday';
 const SUBJECT_PREFIX = process.env.SUBJECT_PREFIX || 'Quality check report';
 const BASE = process.env.SNAPSHOT_BASE_URL || 'https://berlinkitchen123-blip.github.io/Culinary-Quality-Control/daily.html';
-const URL = `${BASE}?preset=${encodeURIComponent(PRESET)}`;
+const URL = `${BASE}?preset=${encodeURIComponent(PRESET)}&compact=1`;
 const RECIPIENT = process.env.RECIPIENT || '';
 const CC = (process.env.CC || '').split(',').map(s => s.trim()).filter(Boolean);
 const SENDER = process.env.SENDER || process.env.GMAIL_USER || 'qc@bellabona.com';
@@ -80,7 +80,8 @@ try {
     const pdf = await page.pdf({
         format: 'A4',
         printBackground: true,
-        margin: { top: '10mm', right: '8mm', bottom: '12mm', left: '8mm' }
+        preferCSSPageSize: true,    // honour the @page rule from CSS (8mm margins)
+        margin: { top: '6mm', right: '6mm', bottom: '6mm', left: '6mm' }
     });
     console.log(`[snapshot] PDF size: ${pdf.length} bytes`);
 

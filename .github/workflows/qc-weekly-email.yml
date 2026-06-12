@@ -21,15 +21,17 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Install Puppeteer + Resend
+      - name: Install dependencies
         working-directory: scripts
         run: npm install --no-audit --no-fund
 
-      - name: Generate PDF and email
+      - name: Generate PDF and email via Gmail SMTP
         working-directory: scripts
         env:
+          GMAIL_USER: ${{ secrets.GMAIL_USER }}
+          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
-          SENDER: 'Harsh@bellabona.com'
+          SENDER: 'Bella & Bona QC <Harsh@bellabona.com>'
           RECIPIENT: 'Marcus@bellabona.com'
           CC: 'Matteo.cricco@bellabona.com,niccolo.lapini@bellabona.com,Abbas@bellabona.com,Roberto@bellabona.com,Dhiraj@bellabona.com'
           PRESET: 'this-week'

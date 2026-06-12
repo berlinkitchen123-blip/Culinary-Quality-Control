@@ -520,6 +520,15 @@ html[data-theme="dark"] .ing-card.has-data{background:rgba(34,197,94,0.08)}
 .ing-back:hover{background:var(--bg-2)}
 .ing-detail-title{font-weight:800;font-size:18px;letter-spacing:-0.01em;color:var(--ink);display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
 .ing-detail-weight{font-size:13px;font-weight:600;color:var(--mute);background:var(--bg-3);padding:2px 8px;border-radius:99px}
+.ing-card-wrap{position:relative;display:flex}
+.ing-card-wrap .ing-card{flex:1}
+.ing-card.is-topping{border-style:dashed;background:var(--bg-3)}
+html[data-theme="dark"] .ing-card.is-topping{background:var(--bg-2)}
+.ing-card.is-topping .ing-card-thumb{height:64px}
+.ing-card.is-topping .ing-card-thumb-empty{font-size:20px}
+.ing-flip{position:absolute;top:6px;right:6px;background:rgba(0,0,0,0.55);color:white;border:0;border-radius:99px;padding:3px 8px;font-size:10px;font-weight:700;cursor:pointer;letter-spacing:0.04em;text-transform:lowercase;backdrop-filter:blur(4px);opacity:0;transition:opacity 120ms ease}
+.ing-card-wrap:hover .ing-flip,.ing-flip:focus{opacity:1}
+@media(max-width:700px){.ing-flip{opacity:1}}
 
 .asm-photo-row{display:flex;justify-content:flex-start;margin-bottom:14px}
 .asm-photo-row .photo{aspect-ratio:auto;width:180px;height:120px;flex-shrink:0}
@@ -2101,11 +2110,41 @@ async function saveIngredientLog(key, partial){
     await update(ref(db, path), { ...partial, updatedAt: serverTimestamp() });
 }
 
+/* Auto-classify an ingredient as either 'cooked' (needs a post-cooking
+   temperature) or 'topping' (raw garnish/sprinkle added at the end). The
+   regex catches the usual suspects: fresh herbs, anything ending in seeds
+   or flakes, microgreens, wedges, croutons, sprinkle/topping/garnish
+   keywords, lemon/lime garnishes, and obvious raw markers. Anything that
+   doesn't match is treated as a cooked component by default — safer to
+   demand a temp than to skip one. */
+const TOPPING_RE = /\b(parsley|cilantro|coriander|basil|mint|dill|chives|scallion|spring\s*onion|micro\s*greens?|sprouts?|seeds?|flakes?|sprinkle|topping|garnish|crouton|wedge|sesame|nigella|sumac|za'?atar|pickled?|sliced?\s+(lemon|lime|onion)|dried\s+(herbs?|chil[ei]|oregano|thyme))\b/i;
+function classifyIngredient(name){
+    const s = String(name || '').toLowerCase().trim();
+    if(!s) return 'cooked';
+    return TOPPING_RE.test(s) ? 'topping' : 'cooked';
+}
+
+/* Per-ingredient classification override (persisted across devices). Kitchen
+   staff can flip "cooked ↔ topping" for any item and that choice stays. */
+function listenIngredientCategories(){
+    return onValue(ref(db, 'ingredient-categories'), snap => {
+        state.ingredientCategories = snap.val() || {};
+        if(state.view === 'stage' && state.stage === 'ingredients') renderAll();
+        if(state.view === 'home') renderHome();
+    });
+}
+async function setIngredientCategoryOverride(key, category){
+    const path = `ingredient-categories/${key}`;
+    if(category === null) await set(ref(db, path), null);
+    else await set(ref(db, path), { category, updatedAt: serverTimestamp() });
+}
+
 /* Collect every unique ingredient from the current menu (deduplicated by
    name, case-insensitive). Returns [{name, weight, key, usedIn:[dishLetters]}]. */
 function collectMenuIngredients(){
     const map = new Map();
     const dishes = (state.menu && state.menu.dishes) || [];
+    const overrides = state.ingredientCategories || {};
     for(const d of dishes){
         for(const raw of (d.dishIngredients || [])){
             const ing = typeof raw === 'string' ? { name: raw, weight: '' } : raw;
@@ -2113,7 +2152,18 @@ function collectMenuIngredients(){
             if(!name) continue;
             const key = name.toLowerCase();
             if(!map.has(key)){
-                map.set(key, { name, weight: ing.weight || '', key: ingredientKey(name), usedIn: [] });
+                const k = ingredientKey(name);
+                const overridden = overrides[k] && overrides[k].category;
+                const auto = classifyIngredient(name);
+                map.set(key, {
+                    name,
+                    weight: ing.weight || '',
+                    key: k,
+                    category: overridden || auto,  // 'cooked' | 'topping'
+                    autoCategory: auto,
+                    isOverride: !!overridden && overridden !== auto,
+                    usedIn: []
+                });
             }
             map.get(key).usedIn.push(d.dishLetter);
         }
@@ -2225,8 +2275,11 @@ function renderIngredientsStageView(){
         return;
     }
 
-    // Grid view (all ingredients)
-    const loggedCount = ings.filter(i => {
+    // Grid view: split into Cooked components (need a temp log) vs
+    // Toppings & garnishes (raw additions at the end — no temp required).
+    const cooked = ings.filter(i => i.category === 'cooked');
+    const toppings = ings.filter(i => i.category === 'topping');
+    const loggedCooked = cooked.filter(i => {
         const l = logs[i.key]; return l && (l.image || l.temp != null);
     }).length;
     const card = (ing) => {
@@ -2235,33 +2288,75 @@ function renderIngredientsStageView(){
         const hasTemp = log.temp != null;
         const hasData = hasImg || hasTemp;
         const tempTxt = hasTemp ? Number(log.temp).toFixed(1) + '°C' : '—';
+        const isTopping = ing.category === 'topping';
+        // Flip button: moves this ingredient between cooked ↔ topping
+        const flipTo = isTopping ? 'cooked' : 'topping';
+        const flipLabel = isTopping ? '→ cooked' : '→ topping';
         return `
-            <button class="ing-card ${hasData?'has-data':''}" type="button" data-ing-stage-open="${escapeAttr(ing.key)}">
-                <div class="ing-card-thumb">
-                    ${hasImg ? `<img src="${escapeAttr(log.image)}" alt=""/>` : `<span class="ing-card-thumb-empty">📷</span>`}
-                </div>
-                <div class="ing-card-body">
-                    <div class="ing-card-name">${escapeHtml(ing.name)}</div>
-                    ${ing.weight ? `<div class="ing-card-weight">${escapeHtml(ing.weight)}</div>` : ''}
-                    <div class="ing-card-temp ${hasTemp?'is-set':''}">${tempTxt}</div>
-                    <div style="font-size:10px;color:var(--mute);margin-top:3px">Used in ${ing.usedIn.length}</div>
-                </div>
-            </button>
+            <div class="ing-card-wrap">
+                <button class="ing-card ${hasData?'has-data':''} ${isTopping?'is-topping':''}" type="button" data-ing-stage-open="${escapeAttr(ing.key)}">
+                    <div class="ing-card-thumb">
+                        ${hasImg ? `<img src="${escapeAttr(log.image)}" alt=""/>` : `<span class="ing-card-thumb-empty">${isTopping?'🌿':'📷'}</span>`}
+                    </div>
+                    <div class="ing-card-body">
+                        <div class="ing-card-name">${escapeHtml(ing.name)}</div>
+                        ${ing.weight ? `<div class="ing-card-weight">${escapeHtml(ing.weight)}</div>` : ''}
+                        ${isTopping
+                            ? `<div class="ing-card-temp" style="color:#0891b2">Sprinkle / topping</div>`
+                            : `<div class="ing-card-temp ${hasTemp?'is-set':''}">${tempTxt}</div>`}
+                        <div style="font-size:10px;color:var(--mute);margin-top:3px">Used in ${ing.usedIn.length}</div>
+                    </div>
+                </button>
+                <button class="ing-flip" type="button" data-ing-flip="${escapeAttr(ing.key)}" data-flip-to="${flipTo}" title="Move to ${flipTo}">${flipLabel}</button>
+            </div>
         `;
     };
-    dishArea.innerHTML = `
-        <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:14px">
+    const sectionHead = (title, count, color, sub) => `
+        <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:18px 0 10px 0">
             <div>
-                <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#0d9488">Ingredients · raw-material log</div>
-                <div style="font-size:13px;color:var(--mute);margin-top:2px">${loggedCount} / ${ings.length} logged today · tap an ingredient to record its post-cooking temperature and photo. Logged once, shared across every dish that uses it.</div>
+                <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:${color}">${title} · ${count}</div>
+                <div style="font-size:13px;color:var(--mute);margin-top:2px">${sub}</div>
             </div>
         </div>
-        <div class="ing-grid">${ings.map(card).join('')}</div>
+    `;
+    dishArea.innerHTML = `
+        <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:8px">
+            <div>
+                <div style="font-size:22px;font-weight:800;color:var(--ink)">Ingredients · raw-material log</div>
+                <div style="font-size:13px;color:var(--mute);margin-top:2px">${loggedCooked} / ${cooked.length} cooked components logged · toppings &amp; garnishes don't need a temperature. Wrong section? Tap the small chip on a card to flip it.</div>
+            </div>
+        </div>
+
+        ${cooked.length ? `
+            ${sectionHead('Cooked components — need post-cook temp', cooked.length, '#0d9488', 'Tap a card to record temperature + photo. Logged once, shared across every dish that uses it.')}
+            <div class="ing-grid">${cooked.map(card).join('')}</div>
+        ` : `<div class="rv-empty" style="margin-top:12px">No cooked components in this menu.</div>`}
+
+        ${toppings.length ? `
+            ${sectionHead('Toppings & garnishes — added at the end', toppings.length, '#0891b2', 'Raw additions like fresh herbs, seeds, flakes, microgreens. No cooking temperature needed — just confirm presence.')}
+            <div class="ing-grid">${toppings.map(card).join('')}</div>
+        ` : ''}
     `;
     document.querySelectorAll('[data-ing-stage-open]').forEach(b => {
         b.addEventListener('click', () => {
             state.focusedIngredient = b.getAttribute('data-ing-stage-open');
             renderAll();
+        });
+    });
+    document.querySelectorAll('[data-ing-flip]').forEach(b => {
+        b.addEventListener('click', async (e) => {
+            e.stopPropagation();
+            const key = b.getAttribute('data-ing-flip');
+            const to = b.getAttribute('data-flip-to');
+            // If the auto-classification already matches `to`, remove any
+            // override (keeping things tidy). Otherwise persist the override.
+            const ing = ings.find(i => i.key === key);
+            if(!ing) return;
+            try {
+                if(ing.autoCategory === to) await setIngredientCategoryOverride(key, null);
+                else await setIngredientCategoryOverride(key, to);
+                toast(`Moved to ${to}`,'ok');
+            } catch(err){ toast('Save failed','fail'); console.error(err); }
         });
     });
 }
@@ -2602,9 +2697,11 @@ function renderHome(){
     const ingEl = document.getElementById('home-count-ingredients');
     if(ingEl){
         const ings = collectMenuIngredients();
+        // Only count cooked components — toppings & garnishes don't need a log
+        const cooked = ings.filter(i => i.category === 'cooked');
         const logs = state.ingredientLogs || {};
-        const done = ings.filter(i => { const l = logs[i.key]; return l && (l.image || l.temp != null); }).length;
-        ingEl.textContent = ings.length === 0 ? '—' : `${done} / ${ings.length}`;
+        const done = cooked.filter(i => { const l = logs[i.key]; return l && (l.image || l.temp != null); }).length;
+        ingEl.textContent = cooked.length === 0 ? '—' : `${done} / ${cooked.length}`;
     }
     const wkEl = document.getElementById('home-week');
     const dEl = document.getElementById('home-date');
@@ -5730,6 +5827,7 @@ wire();
 selectDate(state.selectedDate);
 state._unsubStorage = listenStorage();
 state._unsubIntegrations = listenIntegrations();
+state._unsubIngCats = listenIngredientCategories();
 routeFromHash(); // honour deep-links (#/assembly, #/qc, #/dispatch, #/placement) — else show home
 </script>
 

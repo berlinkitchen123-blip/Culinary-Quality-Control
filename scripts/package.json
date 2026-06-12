@@ -1,10 +1,14 @@
 {
-  "name": "bb-qc-daily-report",
+  "name": "bb-qc-email",
   "version": "1.0.0",
   "private": true,
   "type": "module",
   "engines": { "node": ">=20" },
+  "scripts": {
+    "send": "node send-snapshot.js"
+  },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.30.1"
+    "puppeteer": "^22.15.0",
+    "resend": "^3.5.0"
   }
 }

@@ -1,0 +1,36 @@
+name: QC daily email
+# Sends yesterday's Berlin + Munich QC snapshot every weekday morning.
+# 08:00 UTC ≈ 10:00 Berlin in summer (CEST), 09:00 Berlin in winter (CET).
+# Use workflow_dispatch from the Actions tab to test a manual send.
+
+on:
+  schedule:
+    - cron: '0 8 * * 1-5'   # Mon–Fri 08:00 UTC
+  workflow_dispatch:
+
+jobs:
+  send:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Puppeteer + Resend
+        working-directory: scripts
+        run: npm install --no-audit --no-fund
+
+      - name: Generate PDF and email
+        working-directory: scripts
+        env:
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          SENDER: 'Harsh@bellabona.com'
+          RECIPIENT: 'Marcus@bellabona.com'
+          CC: 'Matteo.cricco@bellabona.com,niccolo.lapini@bellabona.com,Abbas@bellabona.com,Roberto@bellabona.com,Dhiraj@bellabona.com'
+          PRESET: 'yesterday'
+          SUBJECT_PREFIX: 'Quality check report'
+        run: node send-snapshot.js

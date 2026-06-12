@@ -980,6 +980,10 @@ html[data-theme="dark"] #report-view-host{background:#f9fafb}
             <span class="glyph">🌍</span>
             <span class="name">Daily snapshot · Berlin + Munich</span>
         </a>
+        <button class="drawer-item" data-go="email-snapshot" type="button">
+            <span class="glyph">📧</span>
+            <span class="name">Email today's snapshot to team</span>
+        </button>
         <button class="drawer-item" data-go="settings" type="button">
             <span class="glyph">⚙</span>
             <span class="name">Settings · paste menu, warmers, integrations</span>
@@ -1639,11 +1643,19 @@ async function clearAllPlacements(letter){
     await saveCheckField(letter, { placements: null, placement: null });
 }
 
-/* === Integrations (AI proxy + Teams webhook) === */
+/* === Integrations (AI proxy + Teams webhook + Resend email) === */
 function listenIntegrations(){
     return onValue(ref(db, 'integrations'), snap => {
         const v = snap.val() || {};
-        state.integrations = { aiProxyUrl: v.aiProxyUrl || '', teamsWebhookUrl: v.teamsWebhookUrl || '' };
+        state.integrations = {
+            aiProxyUrl: v.aiProxyUrl || '',
+            teamsWebhookUrl: v.teamsWebhookUrl || '',
+            // Email recipients + sender are shared across all devices (Firebase),
+            // but the Resend API key stays per-device in localStorage.
+            resendSender: v.resendSender || '',
+            resendTo: v.resendTo || '',
+            resendCc: v.resendCc || ''
+        };
     });
 }
 async function saveIntegrations(partial){
@@ -3670,6 +3682,93 @@ function bumpStamp(){
    We also keep the legacy aiProxyUrl path as a fallback for users who'd
    rather run a Cloud Function.
 */
+/* Resend email — bring-your-own-key like the AI providers. Key stays in
+   localStorage per device; sender / to / cc live in Firebase integrations
+   so every device sends to the same recipient list. */
+const RESEND_KEY_STORAGE = 'bb.resend.key.v1';
+function getResendKey(){ try { return localStorage.getItem(RESEND_KEY_STORAGE) || ''; } catch { return ''; } }
+function setResendKey(k){ try { localStorage.setItem(RESEND_KEY_STORAGE, k || ''); return true; } catch { return false; } }
+
+async function callResend({ apiKey, from, to, cc, subject, html, text }){
+    const body = { from, to: Array.isArray(to) ? to : [to], subject, html, text };
+    if(cc && cc.length) body.cc = Array.isArray(cc) ? cc : [cc];
+    const res = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + apiKey },
+        body: JSON.stringify(body)
+    });
+    const txt = await res.text();
+    let parsed = null; try { parsed = JSON.parse(txt); } catch {}
+    if(!res.ok){
+        const msg = (parsed && (parsed.message || parsed.error || parsed.name)) || txt.slice(0, 240);
+        throw new Error('Resend ' + res.status + ': ' + msg);
+    }
+    return parsed;
+}
+
+/* Builds today's QC HTML summary from state.menu + state.checks for the
+   currently-active city, then emails it via Resend using stored config. */
+async function sendSnapshotEmail(){
+    const apiKey = getResendKey();
+    const sender = (state.integrations?.resendSender || '').trim();
+    const to = (state.integrations?.resendTo || '').trim();
+    const cc = (state.integrations?.resendCc || '').split(',').map(s => s.trim()).filter(Boolean);
+    if(!apiKey) throw new Error('No Resend key — paste one in Settings → Email reports');
+    if(!sender) throw new Error('No sender email set in Settings');
+    if(!to) throw new Error('No recipient set in Settings');
+
+    const cityName = (window.__qc_city && window.__qc_city.name) || 'Berlin';
+    const dishes = state.menu?.dishes || [];
+    const checks = state.checks || {};
+    const hot = dishes.filter(d => !isCold(d));
+    const cold = dishes.filter(d => isCold(d));
+    const countPass = (group, classify) => {
+        let total = 0, pass = 0;
+        for(const d of group){
+            const v = avg((checks[d.dishLetter] || {}).temperatures);
+            if(v == null) continue;
+            total++;
+            const st = classify(v, d);
+            if(st === 'pass' || st === 'watch') pass++;
+        }
+        return { total, pass };
+    };
+    const hotR = countPass(hot, (v, d) => tempStatus(v, d));
+    const coldR = countPass(cold, (v, d) => tempStatus(v, d));
+    let wtTot = 0, wtOk = 0;
+    for(const d of dishes){
+        const w = avg((checks[d.dishLetter]||{}).weights);
+        if(w != null && d.theoreticalWeight){
+            wtTot++;
+            if(Math.abs((w - d.theoreticalWeight) / d.theoreticalWeight) <= 0.05) wtOk++;
+        }
+    }
+    const pct = (n, t) => t === 0 ? '—' : Math.round(n/t*100) + '%';
+    const subject = `Quality check report · ${cityName} · ${humanDate(state.selectedDate)}`;
+    const liveUrl = `${window.location.origin}${window.location.pathname.replace(/[^/]+$/, '')}daily.html`;
+    const html = `
+        <div style="font-family:Inter,Arial,sans-serif;color:#1f2937;line-height:1.55;font-size:14px;max-width:580px">
+            <h2 style="margin:0 0 4px 0;font-size:18px;color:#0f172a">Bella &amp; Bona · ${cityName} QC snapshot</h2>
+            <div style="color:#64748b;font-size:13px;margin-bottom:14px">${humanDate(state.selectedDate)}</div>
+            <table style="width:100%;border-collapse:collapse;font-size:13px;border:1px solid #e5e7eb;border-radius:8px;overflow:hidden">
+                <tr style="background:#f8fafc"><td style="padding:8px 10px;font-weight:700;color:#334155">Hot dishes pass</td><td style="padding:8px 10px;text-align:right;font-weight:700">${pct(hotR.pass, hotR.total)} <span style="color:#64748b;font-weight:500">(${hotR.pass}/${hotR.total})</span></td></tr>
+                <tr><td style="padding:8px 10px;font-weight:700;color:#334155;border-top:1px solid #e5e7eb">Cold dishes pass</td><td style="padding:8px 10px;text-align:right;font-weight:700;border-top:1px solid #e5e7eb">${pct(coldR.pass, coldR.total)} <span style="color:#64748b;font-weight:500">(${coldR.pass}/${coldR.total})</span></td></tr>
+                <tr style="background:#f8fafc"><td style="padding:8px 10px;font-weight:700;color:#334155;border-top:1px solid #e5e7eb">Weight within 5%</td><td style="padding:8px 10px;text-align:right;font-weight:700;border-top:1px solid #e5e7eb">${pct(wtOk, wtTot)} <span style="color:#64748b;font-weight:500">(${wtOk}/${wtTot})</span></td></tr>
+            </table>
+            <p style="margin:14px 0 0 0">Live combined Berlin + Munich dashboard:<br/>
+                <a href="${liveUrl}" style="color:#2563eb">${liveUrl}</a>
+            </p>
+            <p style="margin:16px 0 0 0;color:#64748b;font-size:12px">— Bella &amp; Bona Culinary Operations · auto-generated from the QC app</p>
+        </div>
+    `;
+    const text = `Bella & Bona · ${cityName} QC snapshot · ${humanDate(state.selectedDate)}\n\n`
+        + `Hot dishes pass:  ${pct(hotR.pass, hotR.total)}  (${hotR.pass}/${hotR.total})\n`
+        + `Cold dishes pass: ${pct(coldR.pass, coldR.total)}  (${coldR.pass}/${coldR.total})\n`
+        + `Weight within 5%: ${pct(wtOk, wtTot)}  (${wtOk}/${wtTot})\n\n`
+        + `Live dashboard: ${liveUrl}\n— Bella & Bona`;
+    return await callResend({ apiKey, from: sender, to, cc, subject, html, text });
+}
+
 const AI_KEY_STORAGE = 'bb.ai.config.v1';
 function getAiConfig(){
     try {
@@ -5585,6 +5684,31 @@ function openSettings(){
                 </div>
 
                 <div class="storage-block">
+                    <h4>Email reports (Resend)</h4>
+                    <div style="font-size:12px;color:var(--mute);margin-bottom:8px">
+                        Sends the daily / weekly QC snapshot to your team automatically. Sign up at
+                        <a href="https://resend.com/api-keys" target="_blank" rel="noopener" style="color:var(--brand);text-decoration:underline">resend.com/api-keys</a>,
+                        verify <code>bellabona.com</code> in their Domains tab so emails can come from
+                        <code>@bellabona.com</code>, then paste the API key below.
+                        <strong>The key is stored only on this device</strong> — never in Firebase.
+                    </div>
+                    <div class="storage-row" style="flex-wrap:wrap;gap:8px">
+                        <input type="password" id="resend-api-key" placeholder="Resend API key (re_...)" autocomplete="off" style="flex:1;min-width:240px" />
+                        <button class="btn" type="button" id="resend-test-btn">Test send</button>
+                    </div>
+                    <div class="storage-row" style="flex-wrap:wrap;margin-top:6px;gap:8px">
+                        <input type="text" id="resend-sender" value="${escapeAttr(state.integrations?.resendSender || 'Harsh@bellabona.com')}" placeholder="Sender · e.g. Harsh@bellabona.com" style="flex:1;min-width:240px" />
+                    </div>
+                    <div class="storage-row" style="flex-wrap:wrap;margin-top:6px;gap:8px">
+                        <input type="text" id="resend-to" value="${escapeAttr(state.integrations?.resendTo || '')}" placeholder='To · primary recipient (e.g. Marcus@bellabona.com)' style="flex:1;min-width:240px" />
+                    </div>
+                    <div class="storage-row" style="flex-wrap:wrap;margin-top:6px;gap:8px">
+                        <input type="text" id="resend-cc" value="${escapeAttr(state.integrations?.resendCc || '')}" placeholder='CC · comma-separated' style="flex:1;min-width:240px" />
+                    </div>
+                    <div id="resend-test-result" style="font-size:12px;color:var(--mute);margin-top:6px"></div>
+                </div>
+
+                <div class="storage-block">
                     <h4>Other integrations</h4>
                     <div style="font-size:12px;color:var(--mute);margin-bottom:8px">
                         Optional: a Cloud-Function AI proxy (for users who'd rather not put a key in the browser)
@@ -5700,6 +5824,54 @@ function openSettings(){
                 }
             });
         }
+    }
+
+    // === Resend email config (API key local; sender/to/cc in Firebase) ===
+    const resendKeyInp = overlay.querySelector('#resend-api-key');
+    const resendSender = overlay.querySelector('#resend-sender');
+    const resendTo = overlay.querySelector('#resend-to');
+    const resendCc = overlay.querySelector('#resend-cc');
+    const resendTestBtn = overlay.querySelector('#resend-test-btn');
+    const resendTestResult = overlay.querySelector('#resend-test-result');
+    if(resendKeyInp){
+        resendKeyInp.value = getResendKey();
+        resendKeyInp.addEventListener('blur', () => setResendKey(resendKeyInp.value.trim()));
+    }
+    if(resendSender) resendSender.addEventListener('blur', () => saveIntegrations({ resendSender: resendSender.value.trim() }));
+    if(resendTo) resendTo.addEventListener('blur', () => saveIntegrations({ resendTo: resendTo.value.trim() }));
+    if(resendCc) resendCc.addEventListener('blur', () => saveIntegrations({ resendCc: resendCc.value.trim() }));
+    if(resendTestBtn){
+        resendTestBtn.addEventListener('click', async () => {
+            const key = (resendKeyInp?.value || '').trim();
+            const from = (resendSender?.value || '').trim();
+            const to = (resendTo?.value || '').trim();
+            if(!key){ resendTestResult.textContent = 'Paste your Resend API key first.'; resendTestResult.style.color = 'var(--hold)'; return; }
+            if(!from){ resendTestResult.textContent = 'Set a sender address.'; resendTestResult.style.color = 'var(--hold)'; return; }
+            if(!to){ resendTestResult.textContent = 'Set a recipient address.'; resendTestResult.style.color = 'var(--hold)'; return; }
+            // Persist current values before sending
+            setResendKey(key);
+            await saveIntegrations({ resendSender: from, resendTo: to, resendCc: (resendCc?.value || '').trim() });
+            resendTestBtn.disabled = true; resendTestBtn.textContent = 'Sending…';
+            resendTestResult.textContent = ''; resendTestResult.style.color = 'var(--mute)';
+            try {
+                const resp = await callResend({
+                    apiKey: key,
+                    from,
+                    to,
+                    cc: (resendCc?.value || '').split(',').map(s => s.trim()).filter(Boolean),
+                    subject: 'Resend test — Bella & Bona QC',
+                    text: 'This is a test from the Culinary QC app to confirm the Resend integration works. You can delete this email.',
+                    html: '<p style="font-family:Inter,Arial,sans-serif;color:#1f2937">This is a test from the <strong>Culinary QC app</strong> to confirm the Resend integration works.<br/>You can delete this email.</p>'
+                });
+                resendTestResult.textContent = '✓ Sent — message id ' + (resp.id || '(no id returned)');
+                resendTestResult.style.color = 'var(--pass)';
+            } catch(err){
+                resendTestResult.textContent = '✗ ' + (err.message || 'unknown error').slice(0, 200);
+                resendTestResult.style.color = 'var(--hold)';
+            } finally {
+                resendTestBtn.disabled = false; resendTestBtn.textContent = 'Test send';
+            }
+        });
     }
 
     overlay.querySelector('#settings-save').onclick=async()=>{
@@ -5923,12 +6095,18 @@ function wire(){
     document.getElementById('drawer-scrim').addEventListener('click', closeDrawer);
     window.addEventListener('keydown', e => { if(e.key === 'Escape') closeDrawer(); });
     document.querySelectorAll('.drawer-item').forEach(btn => {
-        btn.addEventListener('click', () => {
+        btn.addEventListener('click', async () => {
             const action = btn.getAttribute('data-go');
             if(action === 'home'){ setView('home'); closeDrawer(); }
             else if(action === 'stage'){ setStage(btn.getAttribute('data-stage')); closeDrawer(); }
             else if(action === 'settings'){ closeDrawer(); openSettings(); }
             else if(action === 'report'){ closeDrawer(); openReportDialog(); }
+            else if(action === 'email-snapshot'){
+                closeDrawer();
+                toast('Sending email…');
+                try { const r = await sendSnapshotEmail(); toast('✓ Snapshot emailed','ok'); }
+                catch(err){ console.error('Email failed', err); toast(err.message || 'Email failed','fail'); }
+            }
             else if(action === 'theme'){ document.getElementById('btn-theme').click(); refreshDrawer(); }
             else if(action === 'copy'){ document.getElementById('btn-export-summary').click(); closeDrawer(); }
             else if(action === 'print'){ closeDrawer(); window.print(); }

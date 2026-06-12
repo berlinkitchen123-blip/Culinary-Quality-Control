@@ -1,31 +1,46 @@
 name: QC weekly email
-# Sends the Mon–Fri summary every Friday morning.
-# 08:00 UTC ≈ 10:00 Berlin in summer (CEST), 09:00 Berlin in winter (CET).
-# Gmail SMTP credentials are read from Firebase (Berlin project) at
-# integrations/gmail/{user,appPassword,fromName,fromAddress}.
+# Always sends at 10:00 Europe/Berlin every Friday — DST-proof.
+# See qc-daily-email.yml for the cron-vs-DST explanation.
 
 on:
   schedule:
-    - cron: '0 8 * * 5'   # Friday 08:00 UTC
+    - cron: '0 8 * * 5'   # 08:00 UTC Friday = 10:00 Berlin summer
+    - cron: '0 9 * * 5'   # 09:00 UTC Friday = 10:00 Berlin winter
   workflow_dispatch:
 
 jobs:
   send:
     runs-on: ubuntu-latest
     steps:
+      - name: Check that it's 10:00 Berlin now
+        id: check
+        run: |
+          HOUR=$(TZ=Europe/Berlin date +%H)
+          echo "Berlin time right now: ${HOUR}h"
+          if [ "$HOUR" = "10" ] || [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "proceed=true" >> $GITHUB_OUTPUT
+          else
+            echo "proceed=false" >> $GITHUB_OUTPUT
+            echo "⏭  Skipping — DST partner will fire at 10:00 Berlin."
+          fi
+
       - name: Checkout
+        if: steps.check.outputs.proceed == 'true'
         uses: actions/checkout@v4
 
       - name: Set up Node
+        if: steps.check.outputs.proceed == 'true'
         uses: actions/setup-node@v4
         with:
           node-version: '20'
 
       - name: Install dependencies
+        if: steps.check.outputs.proceed == 'true'
         working-directory: scripts
         run: npm install --no-audit --no-fund
 
       - name: Fetch Gmail credentials from Firebase
+        if: steps.check.outputs.proceed == 'true'
         id: gmail
         run: |
           set -euo pipefail
@@ -48,6 +63,7 @@ jobs:
           echo "$OUT" >> "$GITHUB_OUTPUT"
 
       - name: Generate PDF and email via Gmail SMTP
+        if: steps.check.outputs.proceed == 'true'
         working-directory: scripts
         env:
           GMAIL_USER: ${{ steps.gmail.outputs.user }}

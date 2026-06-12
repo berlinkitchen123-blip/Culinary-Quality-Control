@@ -1,35 +1,55 @@
 name: QC daily email
-# Sends yesterday's Berlin + Munich QC snapshot every weekday morning.
-# 08:00 UTC ≈ 10:00 Berlin in summer (CEST), 09:00 Berlin in winter (CET).
+# Always sends at 10:00 Europe/Berlin — DST-proof.
+# GitHub Actions cron is UTC-only, so we schedule TWICE (08:00 UTC and 09:00 UTC)
+# and let the workflow's first step decide which run is the real 10:00 Berlin
+# one and short-circuit the other. Summer (CEST) = 08:00 UTC = 10:00 Berlin.
+# Winter (CET)  = 09:00 UTC = 10:00 Berlin.
 #
 # Gmail SMTP credentials are read from Firebase (Berlin project) at
-# integrations/gmail/{user,appPassword,fromName,fromAddress}, written by the
+# integrations/gmail/{user,appPassword,fromName,fromAddress} — set via the
 # in-app Settings → Email reports (Gmail SMTP) panel.
-#
-# Use workflow_dispatch (Actions tab → Run workflow) to test a manual send.
 
 on:
   schedule:
-    - cron: '0 8 * * 1-5'   # Mon–Fri 08:00 UTC
+    - cron: '0 8 * * 1-5'   # 08:00 UTC = 10:00 Berlin in summer (CEST)
+    - cron: '0 9 * * 1-5'   # 09:00 UTC = 10:00 Berlin in winter (CET)
   workflow_dispatch:
 
 jobs:
   send:
     runs-on: ubuntu-latest
     steps:
+      - name: Check that it's 10:00 Berlin now
+        id: check
+        run: |
+          HOUR=$(TZ=Europe/Berlin date +%H)
+          MIN=$(TZ=Europe/Berlin date +%M)
+          echo "Berlin time right now: ${HOUR}:${MIN}"
+          if [ "$HOUR" = "10" ] || [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "proceed=true" >> $GITHUB_OUTPUT
+            echo "✓ Proceeding (manual trigger or matches 10:00 Berlin)."
+          else
+            echo "proceed=false" >> $GITHUB_OUTPUT
+            echo "⏭  Skipping — the OTHER scheduled run today (DST partner) will fire at 10:00 Berlin."
+          fi
+
       - name: Checkout
+        if: steps.check.outputs.proceed == 'true'
         uses: actions/checkout@v4
 
       - name: Set up Node
+        if: steps.check.outputs.proceed == 'true'
         uses: actions/setup-node@v4
         with:
           node-version: '20'
 
       - name: Install dependencies
+        if: steps.check.outputs.proceed == 'true'
         working-directory: scripts
         run: npm install --no-audit --no-fund
 
       - name: Fetch Gmail credentials from Firebase
+        if: steps.check.outputs.proceed == 'true'
         id: gmail
         run: |
           set -euo pipefail
@@ -38,7 +58,6 @@ jobs:
             echo "::error::No Gmail config found in Firebase. Open the app → Settings → Email reports (Gmail SMTP) and fill it in."
             exit 1
           fi
-          # Tiny jq-less parser using Node since Node is already on the runner
           OUT=$(node -e "
             const c = $RAW;
             const fromName = (c.fromName || 'Bellabona Kitchen').trim();
@@ -51,12 +70,9 @@ jobs:
             ].join('\n'));
           ")
           echo "$OUT" >> "$GITHUB_OUTPUT"
-          # Sanity check
-          if [ -z "${OUT##*user=}" ] || [ "${OUT##*user=*pass=}" = "$OUT" ]; then
-            echo "Gmail user or password missing."
-          fi
 
       - name: Generate PDF and email via Gmail SMTP
+        if: steps.check.outputs.proceed == 'true'
         working-directory: scripts
         env:
           GMAIL_USER: ${{ steps.gmail.outputs.user }}

@@ -10,9 +10,12 @@ name: QC daily email
 # in-app Settings → Email reports (Gmail SMTP) panel.
 
 on:
+  # NOTE on the minute mark: GitHub Actions cron is best-effort and the busiest
+  # time is the top of the hour (X:00). Scheduling at X:07 reduces the chance
+  # of being delayed/skipped. Still "10 AM Berlin" for human purposes.
   schedule:
-    - cron: '0 8 * * 1-5'   # 08:00 UTC = 10:00 Berlin in summer (CEST)
-    - cron: '0 9 * * 1-5'   # 09:00 UTC = 10:00 Berlin in winter (CET)
+    - cron: '7 8 * * 1-5'   # 08:07 UTC = 10:07 Berlin in summer (CEST)
+    - cron: '7 9 * * 1-5'   # 09:07 UTC = 10:07 Berlin in winter (CET)
   workflow_dispatch:
 
 jobs:

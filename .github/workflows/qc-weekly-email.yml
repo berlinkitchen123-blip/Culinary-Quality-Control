@@ -4,8 +4,8 @@ name: QC weekly email
 
 on:
   schedule:
-    - cron: '0 8 * * 5'   # 08:00 UTC Friday = 10:00 Berlin summer
-    - cron: '0 9 * * 5'   # 09:00 UTC Friday = 10:00 Berlin winter
+    - cron: '7 8 * * 5'   # 08:07 UTC Friday = 10:07 Berlin summer
+    - cron: '7 9 * * 5'   # 09:07 UTC Friday = 10:07 Berlin winter
   workflow_dispatch:
 
 jobs:

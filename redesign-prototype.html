@@ -5827,6 +5827,12 @@ async function openSettings(){
                     <div class="storage-row" style="flex-wrap:wrap;gap:8px;margin-top:6px">
                         <input type="text" id="gmail-from-address" value="${escapeAttr(state.integrations?.gmail?.fromAddress || '')}" placeholder="From address (optional — defaults to auth email; only use a verified alias)" style="flex:1;min-width:240px" />
                     </div>
+                    <div class="storage-row" style="flex-wrap:wrap;gap:8px;margin-top:6px">
+                        <input type="text" id="gmail-to" value="${escapeAttr(state.integrations?.gmail?.to || '')}" placeholder="To (primary recipient — e.g. Marcus@bellabona.com)" style="flex:1;min-width:240px" />
+                    </div>
+                    <div class="storage-row" style="flex-wrap:wrap;gap:8px;margin-top:6px">
+                        <input type="text" id="gmail-cc" value="${escapeAttr(state.integrations?.gmail?.cc || '')}" placeholder="CC (comma-separated)" style="flex:1;min-width:240px" />
+                    </div>
                     <div style="font-size:11px;color:var(--mute);margin-top:6px">
                         After saving here, open <a href="https://github.com/berlinkitchen123-blip/Culinary-Quality-Control/actions/workflows/qc-daily-email.yml" target="_blank" rel="noopener" style="color:var(--brand);text-decoration:underline">Actions → QC daily email → Run workflow</a> to fire a test send.
                     </div>
@@ -6021,10 +6027,14 @@ async function openSettings(){
     const gmailPw = overlay.querySelector('#gmail-app-password');
     const gmailName = overlay.querySelector('#gmail-from-name');
     const gmailFrom = overlay.querySelector('#gmail-from-address');
+    const gmailTo = overlay.querySelector('#gmail-to');
+    const gmailCc = overlay.querySelector('#gmail-cc');
     if(gmailUser) gmailUser.addEventListener('blur', () => saveGmailConfig({ user: gmailUser.value.trim() }));
     if(gmailPw) gmailPw.addEventListener('blur', () => saveGmailConfig({ appPassword: gmailPw.value.trim() }));
     if(gmailName) gmailName.addEventListener('blur', () => saveGmailConfig({ fromName: gmailName.value.trim() }));
     if(gmailFrom) gmailFrom.addEventListener('blur', () => saveGmailConfig({ fromAddress: gmailFrom.value.trim() }));
+    if(gmailTo) gmailTo.addEventListener('blur', () => saveGmailConfig({ to: gmailTo.value.trim() }));
+    if(gmailCc) gmailCc.addEventListener('blur', () => saveGmailConfig({ cc: gmailCc.value.trim() }));
 
     // === Resend email config (API key local; sender/to/cc in Firebase) ===
     const resendKeyInp = overlay.querySelector('#resend-api-key');

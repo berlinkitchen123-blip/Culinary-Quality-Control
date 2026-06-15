@@ -54,10 +54,14 @@ jobs:
             const fromName = (c.fromName || 'Bellabona Kitchen').trim();
             const fromAddr = (c.fromAddress || c.user || '').trim();
             const sender = fromName ? fromName + ' <' + fromAddr + '>' : fromAddr;
+            const to = (c.to || 'Marcus@bellabona.com').trim();
+            const cc = (c.cc || '').trim();
             process.stdout.write([
               'user='   + (c.user || ''),
               'pass='   + (c.appPassword || ''),
-              'sender=' + sender
+              'sender=' + sender,
+              'to='     + to,
+              'cc='     + cc
             ].join('\n'));
           ")
           echo "$OUT" >> "$GITHUB_OUTPUT"
@@ -69,8 +73,8 @@ jobs:
           GMAIL_USER: ${{ steps.gmail.outputs.user }}
           GMAIL_APP_PASSWORD: ${{ steps.gmail.outputs.pass }}
           SENDER: ${{ steps.gmail.outputs.sender }}
-          RECIPIENT: 'Marcus@bellabona.com'
-          CC: 'Matteo.cricco@bellabona.com,niccolo.lapini@bellabona.com,Abbas@bellabona.com,Roberto@bellabona.com,Dhiraj@bellabona.com'
+          RECIPIENT: ${{ steps.gmail.outputs.to }}
+          CC: ${{ steps.gmail.outputs.cc }}
           PRESET: 'this-week'
           SUBJECT_PREFIX: 'Quality check report — weekly'
         run: node send-snapshot.js

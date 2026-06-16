@@ -1,0 +1,44 @@
+name: QC PDF preview
+# Renders the same PDF the daily email workflow produces, but uploads it
+# as a workflow artifact instead of sending. Useful for verifying the
+# layout / contents before tomorrow's automated send.
+#
+# Trigger manually: Actions → QC PDF preview → Run workflow
+
+on:
+  workflow_dispatch:
+    inputs:
+      preset:
+        description: 'Range preset (today / yesterday / this-week / etc.)'
+        required: true
+        default: 'today'
+
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        working-directory: scripts
+        run: npm install --no-audit --no-fund
+
+      - name: Render PDF
+        working-directory: scripts
+        env:
+          PRESET: ${{ github.event.inputs.preset || 'today' }}
+          OUT_FILE: 'preview.pdf'
+        run: node render-only.js
+
+      - name: Upload PDF as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: qc-preview-pdf
+          path: scripts/preview.pdf
+          retention-days: 7

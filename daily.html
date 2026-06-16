@@ -78,8 +78,13 @@ body{padding:18px 22px 40px 22px;max-width:1320px;margin:0 auto}
 .overall .status-tag.na{background:#475569}
 
 .dish-list{margin-top:14px}
-.dish-list-head{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:#64748b;padding:6px 0;border-bottom:1px solid #e5e7eb;display:grid;grid-template-columns:24px 1fr 60px 60px 60px;gap:6px;align-items:center}
-.dish-row{display:grid;grid-template-columns:24px 1fr 60px 60px 60px;gap:6px;padding:5px 0;border-bottom:1px solid #f3f4f6;font-size:12px;align-items:center}
+.dish-list-head{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:#64748b;padding:6px 0;border-bottom:1px solid #e5e7eb;display:grid;grid-template-columns:24px 1fr 60px 60px 60px 60px 60px;gap:6px;align-items:center}
+.dish-row{display:grid;grid-template-columns:24px 1fr 60px 60px 60px 60px 60px;gap:6px;padding:5px 0;border-bottom:1px solid #f3f4f6;font-size:12px;align-items:center}
+.dish-row .wt-theo,.dish-row .wt-actual{text-align:center;font-variant-numeric:tabular-nums;font-weight:600}
+.dish-row .wt-actual.dev-warn{color:#92400e}
+.dish-row .wt-actual.dev-crit{color:#7f1d1d}
+.dish-row .wt-actual.dev-ok{color:#166534}
+.dish-row .wt-actual.dev-na{color:#9ca3af}
 .dish-row:last-child{border-bottom:0}
 .dish-row .letter{font-weight:800;color:#0f172a;text-align:center;font-size:11px}
 .dish-row .name{font-weight:600;color:#1f2937;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -114,43 +119,61 @@ body{padding:18px 22px 40px 22px;max-width:1320px;margin:0 auto}
     .cities{grid-template-columns:1fr 1fr}
 }
 
-/* === Compact one-page layout (activated by ?compact=1 — used by the
-       scheduled email cron so the PDF attachment is exactly one A4 page) === */
-body.compact{padding:14px 16px;max-width:1000px}
-body.compact .toolbar{margin-bottom:8px}
+/* === Compact 2-page LANDSCAPE layout (activated by ?compact=1) — used by
+       the scheduled email cron. Berlin on page 1, Munich on page 2. Shows
+       ALL dishes (no row hiding) with theoretical + actual weight columns. */
+body.compact{padding:10px 12px;max-width:none}
+body.compact .toolbar{margin-bottom:6px}
 body.compact .toolbar .actions,
 body.compact .range-bar{display:none}
-body.compact .title-block h1{font-size:17px}
-body.compact .title-block .sub{font-size:11px}
-body.compact .legend{grid-template-columns:repeat(3,1fr);gap:5px;margin-bottom:8px}
-body.compact .legend-cell{padding:5px 8px;font-size:9.5px}
-body.compact .legend-cell .lbl{font-size:10px}
-body.compact .legend-cell .spec{margin-top:1px;font-size:9px}
-body.compact .cities{gap:10px}
-body.compact .city{padding:9px 11px;border-radius:10px}
+body.compact .title-block h1{font-size:15px}
+body.compact .title-block .sub{font-size:10px}
+body.compact .legend{grid-template-columns:repeat(3,1fr);gap:4px;margin-bottom:6px}
+body.compact .legend-cell{padding:4px 8px;font-size:9px}
+body.compact .legend-cell .lbl{font-size:9.5px}
+body.compact .legend-cell .spec{margin-top:1px;font-size:8.5px}
+/* Cities stacked, one per page */
+body.compact .cities{grid-template-columns:1fr;gap:0}
+body.compact .city{padding:10px 12px;border-radius:8px;page-break-after:always;break-after:page}
+body.compact .city:last-child{page-break-after:auto;break-after:auto}
 body.compact .city-head{padding-bottom:6px;margin-bottom:7px;gap:8px}
-body.compact .city-head .mark{width:30px;height:30px;font-size:13px;border-radius:7px}
-body.compact .city-head .name{font-size:15px}
+body.compact .city-head .mark{width:32px;height:32px;font-size:14px;border-radius:7px}
+body.compact .city-head .name{font-size:17px}
 body.compact .city-head .meta{font-size:10px}
 body.compact .city-head .url{display:none}
-body.compact .scorecard{gap:5px;margin-bottom:7px}
-body.compact .score{padding:7px 5px}
-body.compact .score .pct{font-size:20px}
+body.compact .scorecard{grid-template-columns:repeat(4, 1fr);gap:6px;margin-bottom:6px}
+body.compact .score{padding:8px 6px}
+body.compact .score .pct{font-size:22px}
 body.compact .score .lbl{font-size:10px;margin-top:2px}
 body.compact .score .frac{font-size:9px;margin-top:1px}
 body.compact .score .pill{font-size:8px;padding:1px 6px;margin-top:3px}
-body.compact .overall{padding:7px 10px}
+body.compact .overall{padding:6px 10px;margin-bottom:6px}
 body.compact .overall .label{font-size:9px}
-body.compact .overall .pct-big{font-size:22px}
-body.compact .overall .status-tag{font-size:9px;padding:2px 6px}
-body.compact .dish-list-section{font-size:9px;padding:5px 0 2px 0;margin-top:4px}
-body.compact .dish-list-head{display:none}
-body.compact .dish-row{grid-template-columns:18px 1fr 44px 44px 44px;padding:2px 0;font-size:10.5px;gap:4px}
-body.compact .dish-row .letter{font-size:9.5px}
-body.compact .dish-row .temp{font-size:9.5px;padding:1px 3px;min-width:38px}
-body.compact .dish-row.is-ok{display:none}  /* compact mode hides OK rows */
-body.compact .footer-note{margin-top:8px;font-size:10px;color:#475569;text-align:center}
-@page{ size:A4; margin:8mm }
+body.compact .overall .pct-big{font-size:18px}
+body.compact .overall .status-tag{font-size:8.5px;padding:2px 6px}
+body.compact .dish-list-section{font-size:9px;padding:4px 0 2px 0;margin-top:3px}
+/* Show header in compact mode now */
+body.compact .dish-list-head,
+body.compact .dish-row{
+    display:grid;
+    grid-template-columns:22px minmax(180px, 1fr) 60px 60px 60px 60px 60px;
+    gap:5px;
+    align-items:center;
+}
+body.compact .dish-list-head{font-size:9px;padding:4px 0;color:#64748b}
+body.compact .dish-row{padding:2px 0;font-size:10.5px}
+body.compact .dish-row .letter{font-size:10px}
+body.compact .dish-row .temp{font-size:10px;padding:1px 4px;min-width:0}
+body.compact .dish-row .wt-theo,
+body.compact .dish-row .wt-actual{font-variant-numeric:tabular-nums;text-align:center;font-size:10px;font-weight:600}
+body.compact .dish-row .wt-actual.dev-warn{color:#92400e}
+body.compact .dish-row .wt-actual.dev-crit{color:#7f1d1d}
+body.compact .dish-row .wt-actual.dev-ok{color:#166534}
+body.compact .dish-row .wt-actual.dev-na{color:#9ca3af}
+/* Show ALL dishes, not just issues — every row visible in landscape */
+body.compact .dish-row.is-ok{display:grid}
+body.compact .footer-note{margin-top:6px;font-size:9.5px;color:#475569;text-align:center}
+@page{ size:A4 landscape; margin:6mm }
 </style>
 </head>
 <body>
@@ -405,21 +428,30 @@ function renderCity(data, isSingleDay){
             const a = c.assembly && (c.assembly.temps ? avg(c.assembly.temps) : c.assembly.temp);
             const q = avg(c.temperatures);
             const dp = c.dispatch && (c.dispatch.temps ? avg(c.dispatch.temps) : c.dispatch.temp);
-            // Worst status across the three checkpoints — used to hide OK
-            // rows in compact (one-page PDF) mode, where we only want to
-            // surface dishes that need attention.
+            const wActual = avg(c.weights);
+            const wTheo = d.theoreticalWeight;
             const stOf = (v) => v == null ? 'na' : (isHot ? hotStatus(v) : coldStatus(v));
             const worst = ['crit','warn','ok','na'].find(s => [a,q,dp].some(v => stOf(v) === s)) || 'na';
             const tCell = (v) => {
                 if(v == null) return `<span class="temp na">—</span>`;
                 return `<span class="temp ${stOf(v)}">${v.toFixed(1)}°</span>`;
             };
+            // Weight deviation status — Munich-style thresholds (≤5% OK, 5–10% WARN, >10% CRIT)
+            let wtSt = 'na';
+            if(wTheo && wActual != null){
+                const pct = Math.abs((wActual - wTheo) / wTheo);
+                wtSt = pct <= 0.05 ? 'ok' : pct <= 0.10 ? 'warn' : 'crit';
+            }
+            const wtTheoTxt = wTheo ? Math.round(wTheo)+'g' : '—';
+            const wtActualTxt = wActual != null ? Math.round(wActual)+'g' : '—';
             return `<div class="dish-row is-${worst}">
                 <span class="letter">${escapeHtml(d.dishLetter)}</span>
                 <span class="name">${escapeHtml(d.dishName)}</span>
                 ${tCell(a)}
                 ${tCell(q)}
                 ${tCell(dp)}
+                <span class="wt-theo">${wtTheoTxt}</span>
+                <span class="wt-actual dev-${wtSt}">${wtActualTxt}</span>
             </div>`;
         };
         bodyHtml = `
@@ -429,6 +461,8 @@ function renderCity(data, isSingleDay){
                     <span style="text-align:center">CP1</span>
                     <span style="text-align:center">CP2</span>
                     <span style="text-align:center">CP3</span>
+                    <span style="text-align:center">Theo</span>
+                    <span style="text-align:center">Actual</span>
                 </div>
                 ${hotDishes.length ? `<div class="dish-list-section hot">Hot dishes (${hotDishes.length})</div>` : ''}
                 ${hotDishes.map(d => dishRow(d, true)).join('')}

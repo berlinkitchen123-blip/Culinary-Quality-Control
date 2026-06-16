@@ -125,19 +125,17 @@ body{padding:18px 22px 40px 22px;max-width:1320px;margin:0 auto}
        chat apps. Generous typography, proper hierarchy, modern cards.
        Multi-page is fine; what matters is each page looking polished. */
 body.compact{padding:0;max-width:none;background:#f8fafc;font-family:Inter,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif}
-/* Hide the range picker (not part of the report). The toolbar stays — we
-   restyle it as a clean cover banner with date + brand. */
-body.compact .range-bar{display:none}
-body.compact .toolbar{margin:0;padding:24px 24px 0 24px;max-width:1400px;margin-inline:auto;justify-content:flex-start}
-body.compact .toolbar .actions{display:none}
-body.compact .toolbar .title-block h1{font-size:24px;font-weight:800;letter-spacing:-0.02em}
-body.compact .toolbar .title-block .sub{font-size:13px;color:#64748b;margin-top:3px}
-body.compact .legend{padding:18px 24px 0 24px;max-width:1400px;margin:0 auto;grid-template-columns:repeat(3,1fr);gap:10px}
-body.compact .legend-cell{padding:10px 14px;font-size:12px;border-radius:10px}
-body.compact .legend-cell .lbl{font-size:13px;letter-spacing:0.07em}
-body.compact .legend-cell .spec{margin-top:3px;font-size:11px}
-body.compact .cities{grid-template-columns:1fr;gap:18px;max-width:1400px;margin:0 auto;padding:18px 24px 28px 24px}
-body.compact .city{padding:22px 26px;border-radius:14px;box-shadow:0 1px 3px rgba(15,23,42,0.06),0 1px 2px rgba(15,23,42,0.04);border:1px solid #e2e8f0;page-break-inside:avoid;break-inside:avoid}
+/* Hide everything that isn't the city blocks — no cover page, no wasted
+   space. Date + brand live INSIDE each city header so each page is fully
+   self-contained. */
+body.compact .toolbar,
+body.compact .range-bar,
+body.compact .legend{display:none}
+body.compact .cities{grid-template-columns:1fr;gap:0;max-width:1400px;margin:0 auto;padding:0}
+body.compact .city{padding:22px 26px;border-radius:0;box-shadow:none;border:0;background:white}
+/* Force Munich (and any city beyond the first) onto a fresh page; Berlin
+   starts at the very top of page 1 with no cover banner above it. */
+body.compact .city + .city{page-break-before:always;break-before:page}
 body.compact .city-head{padding-bottom:14px;margin-bottom:16px;gap:14px;border-bottom:1px solid #e2e8f0}
 body.compact .city-head .mark{width:48px;height:48px;font-size:20px;border-radius:11px}
 body.compact .city-head .name{font-size:24px;font-weight:800;letter-spacing:-0.015em}

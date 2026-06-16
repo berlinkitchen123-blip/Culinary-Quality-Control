@@ -120,58 +120,68 @@ body{padding:18px 22px 40px 22px;max-width:1320px;margin:0 auto}
     .cities{grid-template-columns:1fr 1fr}
 }
 
-/* === Compact 2-page LANDSCAPE layout (activated by ?compact=1) — used by
-       the scheduled email cron. Berlin on page 1, Munich on page 2. Each
-       city fits exactly one A4 landscape page with all dishes visible. */
-body.compact{padding:0;max-width:none;background:white}
-/* Hide every non-city element so the header doesn't burn page 1 */
-body.compact .toolbar,
-body.compact .range-bar,
-body.compact .legend{display:none}
-/* Cities stacked, one per page */
-body.compact .cities{grid-template-columns:1fr;gap:0}
-body.compact .city{padding:6mm 7mm;border-radius:0;border:0;box-shadow:none;page-break-after:always;break-after:page;height:auto}
-body.compact .city:last-child{page-break-after:auto;break-after:auto}
-body.compact .city-head{padding-bottom:4px;margin-bottom:5px;gap:7px;border-bottom:1px solid #cbd5e1}
-body.compact .city-head .mark{width:26px;height:26px;font-size:12px;border-radius:6px}
-body.compact .city-head .name{font-size:15px}
-body.compact .city-head .meta{font-size:9px}
+/* === Digital-share layout (activated by ?compact=1) — designed for the
+       PDF the cron attaches and that humans open on phones / laptops / in
+       chat apps. Generous typography, proper hierarchy, modern cards.
+       Multi-page is fine; what matters is each page looking polished. */
+body.compact{padding:0;max-width:none;background:#f8fafc;font-family:Inter,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif}
+/* Hide the range picker (not part of the report). The toolbar stays — we
+   restyle it as a clean cover banner with date + brand. */
+body.compact .range-bar{display:none}
+body.compact .toolbar{margin:0;padding:24px 24px 0 24px;max-width:1100px;margin-inline:auto;justify-content:flex-start}
+body.compact .toolbar .actions{display:none}
+body.compact .toolbar .title-block h1{font-size:24px;font-weight:800;letter-spacing:-0.02em}
+body.compact .toolbar .title-block .sub{font-size:13px;color:#64748b;margin-top:3px}
+body.compact .legend{padding:18px 24px 0 24px;max-width:1100px;margin:0 auto;grid-template-columns:repeat(3,1fr);gap:10px}
+body.compact .legend-cell{padding:10px 14px;font-size:12px;border-radius:10px}
+body.compact .legend-cell .lbl{font-size:13px;letter-spacing:0.07em}
+body.compact .legend-cell .spec{margin-top:3px;font-size:11px}
+body.compact .cities{grid-template-columns:1fr;gap:18px;max-width:1100px;margin:0 auto;padding:18px 24px 28px 24px}
+body.compact .city{padding:22px 26px;border-radius:14px;box-shadow:0 1px 3px rgba(15,23,42,0.06),0 1px 2px rgba(15,23,42,0.04);border:1px solid #e2e8f0;page-break-inside:avoid;break-inside:avoid}
+body.compact .city-head{padding-bottom:14px;margin-bottom:16px;gap:14px;border-bottom:1px solid #e2e8f0}
+body.compact .city-head .mark{width:48px;height:48px;font-size:20px;border-radius:11px}
+body.compact .city-head .name{font-size:24px;font-weight:800;letter-spacing:-0.015em}
+body.compact .city-head .meta{font-size:13px;margin-top:3px}
 body.compact .city-head .url{display:none}
-body.compact .scorecard{grid-template-columns:repeat(3, 1fr);gap:4px;margin-bottom:4px}
-body.compact .score{padding:5px 5px;border-width:1px}
-body.compact .score .pct{font-size:16px;line-height:1}
-body.compact .score .lbl{font-size:9px;margin-top:1px}
-body.compact .score .frac{font-size:8px;margin-top:0}
-body.compact .score .pill{font-size:7.5px;padding:1px 5px;margin-top:2px}
-body.compact .overall{padding:3px 8px;margin-bottom:4px;border-radius:5px}
-body.compact .overall .label{font-size:8px;letter-spacing:0.04em}
-body.compact .overall .pct-big{font-size:13px}
-body.compact .overall .status-tag{font-size:8px;padding:1px 5px}
-body.compact .dish-list{margin-top:2px}
-body.compact .dish-list-section{font-size:8px;padding:2px 0 1px 0;margin-top:2px;letter-spacing:0.05em;border-bottom-width:0.5px}
-/* All-dish list grid */
+body.compact .scorecard{grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:14px}
+body.compact .score{padding:18px 14px;border-radius:12px;border-width:1.5px}
+body.compact .score .pct{font-size:38px;line-height:1;letter-spacing:-0.02em}
+body.compact .score .lbl{font-size:13px;font-weight:700;margin-top:6px}
+body.compact .score .frac{font-size:11px;margin-top:3px}
+body.compact .score .pill{font-size:10px;padding:3px 10px;margin-top:8px;letter-spacing:0.06em}
+body.compact .overall{padding:14px 18px;margin-bottom:16px;border-radius:11px;background:linear-gradient(135deg,#0f172a 0%,#1e293b 100%)}
+body.compact .overall .label{font-size:11px;letter-spacing:0.08em;font-weight:700}
+body.compact .overall .pct-big{font-size:34px;letter-spacing:-0.02em;font-weight:800}
+body.compact .overall .status-tag{font-size:11px;padding:5px 14px;font-weight:800;letter-spacing:0.06em}
+body.compact .dish-list{margin-top:6px}
+body.compact .dish-list-section{font-size:11px;font-weight:800;letter-spacing:0.08em;padding:10px 0 6px 0;margin-top:6px;border-bottom:1px solid #e2e8f0}
+/* Grid: ID · Dish · CP1 · CP2 · CP3 · Theo · Actual */
 body.compact .dish-list-head,
 body.compact .dish-row{
     display:grid;
-    grid-template-columns:18px minmax(160px, 1fr) 48px 48px 48px 48px 48px;
-    gap:4px;
+    grid-template-columns:30px minmax(220px,1fr) 70px 70px 70px 70px 70px;
+    gap:10px;
     align-items:center;
 }
-body.compact .dish-list-head{font-size:7.5px;padding:2px 0;color:#64748b;border-bottom-width:0.5px}
-body.compact .dish-row{padding:1px 0;font-size:9px;border-bottom-width:0.5px;line-height:1.15}
-body.compact .dish-row .letter{font-size:9px}
-body.compact .dish-row .name{font-size:9px}
-body.compact .dish-row .temp{font-size:8.5px;padding:0px 3px;min-width:0;border-radius:3px}
-body.compact .dish-row .wt-theo{font-variant-numeric:tabular-nums;text-align:center;font-size:8.5px;font-weight:600;color:#475569}
-body.compact .dish-row .wt-actual{font-variant-numeric:tabular-nums;text-align:center;font-size:8.5px;font-weight:700;border-radius:3px;padding:0px 3px}
+body.compact .dish-list-head{font-size:10px;padding:8px 0;color:#64748b;font-weight:700;letter-spacing:0.06em;text-transform:uppercase}
+body.compact .dish-row{padding:9px 0;font-size:13px;border-bottom:1px solid #f1f5f9;line-height:1.3}
+body.compact .dish-row:last-child{border-bottom:0}
+body.compact .dish-row .letter{font-size:12px;font-weight:800}
+body.compact .dish-row .name{font-size:13px;font-weight:600}
+body.compact .dish-row .temp{font-size:12px;padding:3px 8px;min-width:0;border-radius:5px;font-weight:700}
+body.compact .dish-row .wt-theo{font-variant-numeric:tabular-nums;text-align:center;font-size:12px;font-weight:600;color:#475569}
+body.compact .dish-row .wt-actual{font-variant-numeric:tabular-nums;text-align:center;font-size:12px;font-weight:700;border-radius:5px;padding:3px 8px}
 body.compact .dish-row .wt-actual.dev-ok  {background:#dcfce7;color:#166534}
 body.compact .dish-row .wt-actual.dev-warn{background:#fef3c7;color:#92400e}
 body.compact .dish-row .wt-actual.dev-crit{background:#fee2e2;color:#7f1d1d}
 body.compact .dish-row .wt-actual.dev-na  {color:#9ca3af}
-/* Show ALL dishes, not just issues — every row visible in landscape */
+/* Show ALL dishes */
 body.compact .dish-row.is-ok{display:grid}
-body.compact .footer-note{margin-top:6px;font-size:9.5px;color:#475569;text-align:center}
-@page{ size:A4 landscape; margin:6mm }
+@page{ size:A4 portrait; margin:0 }
+@media print{
+    body.compact{background:white}
+    body.compact .city{page-break-inside:avoid;break-inside:avoid}
+}
 </style>
 </head>
 <body>

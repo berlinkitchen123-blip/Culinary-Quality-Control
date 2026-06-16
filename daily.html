@@ -80,11 +80,12 @@ body{padding:18px 22px 40px 22px;max-width:1320px;margin:0 auto}
 .dish-list{margin-top:14px}
 .dish-list-head{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:#64748b;padding:6px 0;border-bottom:1px solid #e5e7eb;display:grid;grid-template-columns:24px 1fr 60px 60px 60px 60px 60px;gap:6px;align-items:center}
 .dish-row{display:grid;grid-template-columns:24px 1fr 60px 60px 60px 60px 60px;gap:6px;padding:5px 0;border-bottom:1px solid #f3f4f6;font-size:12px;align-items:center}
-.dish-row .wt-theo,.dish-row .wt-actual{text-align:center;font-variant-numeric:tabular-nums;font-weight:600}
-.dish-row .wt-actual.dev-warn{color:#92400e}
-.dish-row .wt-actual.dev-crit{color:#7f1d1d}
-.dish-row .wt-actual.dev-ok{color:#166534}
-.dish-row .wt-actual.dev-na{color:#9ca3af}
+.dish-row .wt-theo{text-align:center;font-variant-numeric:tabular-nums;font-weight:600;color:#475569}
+.dish-row .wt-actual{text-align:center;font-variant-numeric:tabular-nums;font-weight:700;border-radius:4px;padding:2px 4px}
+.dish-row .wt-actual.dev-ok  {background:#dcfce7;color:#166534}
+.dish-row .wt-actual.dev-warn{background:#fef3c7;color:#92400e}
+.dish-row .wt-actual.dev-crit{background:#fee2e2;color:#7f1d1d}
+.dish-row .wt-actual.dev-na  {color:#9ca3af}
 .dish-row:last-child{border-bottom:0}
 .dish-row .letter{font-weight:800;color:#0f172a;text-align:center;font-size:11px}
 .dish-row .name{font-weight:600;color:#1f2937;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -164,12 +165,12 @@ body.compact .dish-list-head{font-size:9px;padding:4px 0;color:#64748b}
 body.compact .dish-row{padding:2px 0;font-size:10.5px}
 body.compact .dish-row .letter{font-size:10px}
 body.compact .dish-row .temp{font-size:10px;padding:1px 4px;min-width:0}
-body.compact .dish-row .wt-theo,
-body.compact .dish-row .wt-actual{font-variant-numeric:tabular-nums;text-align:center;font-size:10px;font-weight:600}
-body.compact .dish-row .wt-actual.dev-warn{color:#92400e}
-body.compact .dish-row .wt-actual.dev-crit{color:#7f1d1d}
-body.compact .dish-row .wt-actual.dev-ok{color:#166534}
-body.compact .dish-row .wt-actual.dev-na{color:#9ca3af}
+body.compact .dish-row .wt-theo{font-variant-numeric:tabular-nums;text-align:center;font-size:10px;font-weight:600;color:#475569}
+body.compact .dish-row .wt-actual{font-variant-numeric:tabular-nums;text-align:center;font-size:10px;font-weight:700;border-radius:4px;padding:2px 4px}
+body.compact .dish-row .wt-actual.dev-ok  {background:#dcfce7;color:#166534}
+body.compact .dish-row .wt-actual.dev-warn{background:#fef3c7;color:#92400e}
+body.compact .dish-row .wt-actual.dev-crit{background:#fee2e2;color:#7f1d1d}
+body.compact .dish-row .wt-actual.dev-na  {color:#9ca3af}
 /* Show ALL dishes, not just issues — every row visible in landscape */
 body.compact .dish-row.is-ok{display:grid}
 body.compact .footer-note{margin-top:6px;font-size:9.5px;color:#475569;text-align:center}
@@ -436,11 +437,14 @@ function renderCity(data, isSingleDay){
                 if(v == null) return `<span class="temp na">—</span>`;
                 return `<span class="temp ${stOf(v)}">${v.toFixed(1)}°</span>`;
             };
-            // Weight deviation status — Munich-style thresholds (≤5% OK, 5–10% WARN, >10% CRIT)
+            // Weight deviation — gram-based thresholds (head-chef rule):
+            //   diff ≤ 30 g → OK   (green)
+            //   diff ≤ 50 g → WARN (light orange)
+            //   diff > 50 g → CRIT (light red)
             let wtSt = 'na';
             if(wTheo && wActual != null){
-                const pct = Math.abs((wActual - wTheo) / wTheo);
-                wtSt = pct <= 0.05 ? 'ok' : pct <= 0.10 ? 'warn' : 'crit';
+                const diff = Math.abs(wActual - wTheo);
+                wtSt = diff <= 30 ? 'ok' : diff <= 50 ? 'warn' : 'crit';
             }
             const wtTheoTxt = wTheo ? Math.round(wTheo)+'g' : '—';
             const wtActualTxt = wActual != null ? Math.round(wActual)+'g' : '—';

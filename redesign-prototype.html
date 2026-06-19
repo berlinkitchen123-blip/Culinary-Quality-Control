@@ -1227,6 +1227,7 @@ html[data-theme="dark"] #report-view-host{background:#f9fafb}
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
 import { getDatabase, ref, get, onValue, set, update, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
+import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 
 /* === Multi-city config ===
    Each city has its own Firebase project, fully isolated data (menus,
@@ -1317,7 +1318,82 @@ const db = getDatabase(app);
 // Make city accessible to the rest of the app (header label, PDF filenames, etc.)
 window.__qc_city = activeCity;
 
-const HOT_MIN = 65;
+/* === Auth gate (Berlin only) ===========================================
+   Restricts the Berlin app to a hard-coded list of authorized Gmail
+   accounts via Google sign-in. The list lives here so it can be edited
+   in one place and committed via Git — no Firebase Console required to
+   add/remove people.
+
+   Until the user is signed in AND their email is on the allowlist, a
+   fullscreen overlay hides the app. Munich is unaffected by this gate.
+
+   IMPORTANT setup steps in the Firebase Console (one-time):
+     1. Authentication → Sign-in method → enable Google
+     2. Authentication → Settings → Authorized domains → ensure
+        berlinkitchen123-blip.github.io is listed
+   ========================================================================*/
+const ALLOWED_EMAILS = [
+    'bellabonaberlin@gmail.com',
+    'berlinkitchen123@gmail.com',
+    'patelharsh513@gmail.com',
+    'bellabonaberlin24@gmail.com'
+].map(e => e.toLowerCase());
+
+if(activeCity.slug === 'berlin'){
+    const auth = getAuth(app);
+    const provider = new GoogleAuthProvider();
+    provider.setCustomParameters({ prompt: 'select_account' });
+
+    const overlay = document.createElement('div');
+    overlay.id = 'auth-gate';
+    overlay.style.cssText = 'position:fixed;inset:0;background:#0f172a;color:#fff;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;font-family:Inter,system-ui,sans-serif';
+    overlay.innerHTML = '<div style="color:#94a3b8;font-size:13px">Checking sign-in…</div>';
+    document.body.appendChild(overlay);
+
+    function renderSignIn(errMsg){
+        overlay.innerHTML = `
+            <div style="font-size:13px;letter-spacing:0.18em;text-transform:uppercase;color:#94a3b8;margin-bottom:10px">Bella &amp; Bona · Culinary QC · Berlin</div>
+            <h1 style="font-size:26px;font-weight:800;margin:0 0 12px 0;text-align:center">Sign in to continue</h1>
+            <div style="font-size:14px;color:#94a3b8;margin:0 0 24px 0;max-width:340px;text-align:center">Only authorized Google accounts can access this app.</div>
+            <button id="auth-signin-btn" style="display:inline-flex;align-items:center;gap:10px;background:#fff;color:#1f2937;border:0;border-radius:10px;padding:12px 22px;font-size:15px;font-weight:700;cursor:pointer">
+                <svg width="18" height="18" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg"><path d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.49h4.84a4.14 4.14 0 01-1.8 2.72v2.27h2.92c1.71-1.58 2.69-3.91 2.69-6.64z" fill="#4285F4"/><path d="M9 18c2.43 0 4.47-.81 5.96-2.18l-2.92-2.27c-.81.54-1.84.86-3.04.86-2.34 0-4.32-1.58-5.03-3.71H.97v2.32A9 9 0 009 18z" fill="#34A853"/><path d="M3.97 10.7A5.41 5.41 0 013.69 9c0-.59.1-1.16.28-1.7V4.96H.97A9 9 0 000 9c0 1.45.35 2.83.97 4.04l3-2.34z" fill="#FBBC05"/><path d="M9 3.58c1.32 0 2.5.45 3.44 1.34l2.58-2.58A9 9 0 009 0 9 9 0 00.97 4.96l3 2.34C4.68 5.16 6.66 3.58 9 3.58z" fill="#EA4335"/></svg>
+                Sign in with Google
+            </button>
+            <div id="auth-err" style="margin-top:14px;color:#f87171;font-size:13px;min-height:18px;max-width:360px;text-align:center">${errMsg || ''}</div>`;
+        document.getElementById('auth-signin-btn').onclick = async () => {
+            try {
+                document.getElementById('auth-err').textContent = '';
+                await signInWithPopup(auth, provider);
+            } catch(e){
+                console.error('Sign-in failed', e);
+                document.getElementById('auth-err').textContent = (e && e.message) || 'Sign-in failed';
+            }
+        };
+    }
+
+    function renderDenied(user){
+        overlay.innerHTML = `
+            <div style="font-size:13px;letter-spacing:0.18em;text-transform:uppercase;color:#fca5a5;margin-bottom:10px">Access denied</div>
+            <h1 style="font-size:24px;font-weight:800;margin:0 0 8px 0;text-align:center">${user.email}</h1>
+            <div style="font-size:14px;color:#94a3b8;margin:0 0 24px 0;max-width:360px;text-align:center">This Google account is not on the authorized list for the Berlin app.</div>
+            <button id="auth-signout-btn" style="background:#1e293b;color:#fff;border:1px solid #334155;border-radius:10px;padding:10px 18px;font-size:14px;font-weight:600;cursor:pointer">Sign out and try another account</button>`;
+        document.getElementById('auth-signout-btn').onclick = () => signOut(auth);
+    }
+
+    onAuthStateChanged(auth, (user) => {
+        if(!user){
+            renderSignIn();
+        } else if(!ALLOWED_EMAILS.includes((user.email || '').toLowerCase())){
+            renderDenied(user);
+        } else {
+            overlay.remove();
+            window.__qc_user = user;
+            window.__qc_signOut = () => signOut(auth);
+        }
+    });
+}
+
+const HOT_MIN = 60;
 const COLD_MAX = 8;
 const HOT_WARN = 3;
 const COLD_WARN = 2;
@@ -3369,9 +3445,14 @@ function renderQcTab(dish, c){
         </div>
 
         <!-- Notes -->
-        <div class="section-mini">Chef's note</div>
-        <textarea id="modal-comment" class="comment-area" placeholder="What should the next shift know?">${escapeHtml(c.comment||'')}</textarea>
-        <div style="font-size:12px;color:var(--mute);margin-top:6px">Photo is resized to ~1024px and stored as JPEG. Everything auto-saves on blur.</div>
+        <div class="section-mini">Comment</div>
+        <textarea id="modal-comment" class="comment-area" placeholder="Anything worth noting about this dish (taste, look, anomaly, etc.)">${escapeHtml(c.comment||'')}</textarea>
+
+        <!-- Corrective action (e.g. for failed temp/weight checks: reheated, re-portioned, re-plated…) -->
+        <div class="section-mini" style="margin-top:14px">Corrective action</div>
+        <textarea id="modal-corrective" class="comment-area" placeholder="If something was off, what did you do to fix it? (reheated, re-portioned, discarded, …)">${escapeHtml(c.correctiveAction||'')}</textarea>
+
+        <div style="font-size:12px;color:var(--mute);margin-top:6px">Both fields are optional. Photo is resized to ~1024px and stored as JPEG. Everything auto-saves on blur.</div>
     `;
 }
 
@@ -3534,8 +3615,9 @@ function bindTabHandlers(tab, dish){
             inp.addEventListener('keydown', e=>{ if(e.key==='Enter'){ e.preventDefault(); inp.blur(); } });
             inp.addEventListener('blur', saveModalSamples);
         });
-        // Chef note
+        // Comment + Corrective action (both optional)
         overlay.querySelector('#modal-comment')?.addEventListener('blur', saveModalComment);
+        overlay.querySelector('#modal-corrective')?.addEventListener('blur', saveModalCorrective);
         // Ingredients checklist (now lives inside the QC tab)
         overlay.querySelectorAll('.ing').forEach(el=>{
             el.addEventListener('click', async ()=>{
@@ -3741,6 +3823,12 @@ async function saveModalComment(){
     const letter=modalState.letter;
     const val=document.getElementById('modal-comment').value;
     try{ await saveCheckField(letter, { comment: val, qcTime: (val && val.trim()) ? nowHHMM() : (state.checks[letter]?.qcTime||null) }); flashSaved(); bumpStamp(); }
+    catch(e){ toast('Save failed','fail'); console.error(e); }
+}
+async function saveModalCorrective(){
+    const letter=modalState.letter;
+    const val=document.getElementById('modal-corrective').value;
+    try{ await saveCheckField(letter, { correctiveAction: val, qcTime: (val && val.trim()) ? nowHHMM() : (state.checks[letter]?.qcTime||null) }); flashSaved(); bumpStamp(); }
     catch(e){ toast('Save failed','fail'); console.error(e); }
 }
 
@@ -4536,7 +4624,7 @@ async function generatePdfReport(range){
 
     // Munich-style thresholds (slightly stricter than the app defaults).
     // OK = green, WARN = orange, CRITICAL = red.
-    const HOT_PASS = 65, HOT_WARN_MIN = 60;
+    const HOT_PASS = 60, HOT_WARN_MIN = 55;
     const COLD_PASS = 6, COLD_WARN_MAX = 8;
     const WT_OK = 0.05, WT_WARN = 0.10;
 

@@ -89,6 +89,15 @@ body{padding:18px 22px 40px 22px;max-width:1320px;margin:0 auto}
 .dish-row:last-child{border-bottom:0}
 .dish-row .letter{font-weight:800;color:#0f172a;text-align:center;font-size:11px}
 .dish-row .name{font-weight:600;color:#1f2937;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dish-row .stamp{margin-left:6px;font-size:10px;font-weight:500;color:#94a3b8;font-variant-numeric:tabular-nums}
+.dish-note{grid-column:1/-1;padding:3px 0 7px 30px;font-size:11px;color:#475569;line-height:1.45;border-bottom:1px solid #f3f4f6}
+.dish-note .note-tag{display:inline-block;background:#e0f2fe;color:#0369a1;font-weight:700;font-size:9.5px;letter-spacing:0.04em;text-transform:uppercase;padding:1.5px 6px;border-radius:4px;vertical-align:middle;margin-right:4px}
+.dish-note .note-tag.corrective{background:#fef3c7;color:#92400e}
+.dish-note .note-txt{color:#1f2937}
+.dish-note .note-sep{color:#cbd5e1;margin:0 4px}
+body.compact .dish-row .stamp{font-size:11px}
+body.compact .dish-note{font-size:12px;padding:4px 0 8px 32px;border-bottom:1px solid #f1f5f9}
+body.compact .dish-note .note-tag{font-size:10px;padding:2px 7px}
 .dish-row .temp{font-weight:700;text-align:center;border-radius:4px;padding:2px 4px;font-variant-numeric:tabular-nums;font-size:11px}
 .temp.ok{background:#dcfce7;color:#166534}
 .temp.warn{background:#fef3c7;color:#92400e}
@@ -199,9 +208,9 @@ body.compact .dish-row.is-ok{display:grid}
 <div class="range-bar" id="range-bar"></div>
 
 <div class="legend">
-    <div class="legend-cell ok"><div class="lbl">✓ OK</div><div class="spec">Hot ≥65°C · Cold ≤6°C · Wt ≤5%</div></div>
-    <div class="legend-cell warn"><div class="lbl">⚠ WARN</div><div class="spec">Hot 60–64°C · Cold 6–8°C · Wt 5–10%</div></div>
-    <div class="legend-cell crit"><div class="lbl">✗ CRITICAL</div><div class="spec">Hot &lt;60°C · Cold &gt;8°C · Wt &gt;10%</div></div>
+    <div class="legend-cell ok"><div class="lbl">✓ OK</div><div class="spec">Hot ≥60°C · Cold ≤6°C · Wt ≤5%</div></div>
+    <div class="legend-cell warn"><div class="lbl">⚠ WARN</div><div class="spec">Hot 55–59°C · Cold 6–8°C · Wt 5–10%</div></div>
+    <div class="legend-cell crit"><div class="lbl">✗ CRITICAL</div><div class="spec">Hot &lt;55°C · Cold &gt;8°C · Wt &gt;10%</div></div>
 </div>
 
 <div class="cities" id="cities">
@@ -247,7 +256,7 @@ function getDb(city){
 }
 
 // ---- Helpers ----------------------------------------------------------------
-const HOT_PASS = 65, HOT_WARN_MIN = 60;
+const HOT_PASS = 60, HOT_WARN_MIN = 55;
 const COLD_PASS = 6, COLD_WARN_MAX = 8;
 const WT_OK = 0.05, WT_WARN = 0.10;
 
@@ -453,15 +462,26 @@ function renderCity(data, isSingleDay){
             }
             const wtTheoTxt = wTheo ? Math.round(wTheo)+'g' : '—';
             const wtActualTxt = wActual != null ? Math.round(wActual)+'g' : '—';
+            // Most recent HH:MM stamp across the three checkpoints (CP3 wins if present)
+            const stamp = (c.dispatch && c.dispatch.time) || c.qcTime || (c.assembly && c.assembly.time) || null;
+            const stampHtml = stamp ? `<span class="stamp">@ ${escapeHtml(stamp)}</span>` : '';
+            const comment = (c.comment || '').trim();
+            const corrective = (c.correctiveAction || '').trim();
+            const noteHtml = (comment || corrective) ? `
+                <div class="dish-note">
+                    ${comment ? `<span class="note-tag">Note</span> <span class="note-txt">${escapeHtml(comment)}</span>` : ''}
+                    ${(comment && corrective) ? '<span class="note-sep"> · </span>' : ''}
+                    ${corrective ? `<span class="note-tag corrective">Action</span> <span class="note-txt">${escapeHtml(corrective)}</span>` : ''}
+                </div>` : '';
             return `<div class="dish-row is-${worst}">
                 <span class="letter">${escapeHtml(d.dishLetter)}</span>
-                <span class="name">${escapeHtml(d.dishName)}</span>
+                <span class="name">${escapeHtml(d.dishName)} ${stampHtml}</span>
                 ${tCell(a)}
                 ${tCell(q)}
                 ${tCell(dp)}
                 <span class="wt-theo">${wtTheoTxt}</span>
                 <span class="wt-actual dev-${wtSt}">${wtActualTxt}</span>
-            </div>`;
+            </div>${noteHtml}`;
         };
         bodyHtml = `
             <div class="dish-list">

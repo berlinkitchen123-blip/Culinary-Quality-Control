@@ -89,7 +89,7 @@ body{padding:18px 22px 40px 22px;max-width:1320px;margin:0 auto}
 .dish-row:last-child{border-bottom:0}
 .dish-row .letter{font-weight:800;color:#0f172a;text-align:center;font-size:11px}
 .dish-row .name{font-weight:600;color:#1f2937;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.dish-row .stamp{margin-left:6px;font-size:10px;font-weight:500;color:#94a3b8;font-variant-numeric:tabular-nums}
+.dish-row .stamp{margin-left:6px;font-size:10px;font-weight:500;color:#94a3b8;font-variant-numeric:tabular-nums} .dish-row .temp{display:inline-flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.15} .dish-row .temp .cp-time{display:block;font-size:9px;font-weight:500;opacity:0.75;font-variant-numeric:tabular-nums;margin-top:1px} body.compact .dish-row .temp .cp-time{font-size:10px}
 .dish-note{grid-column:1/-1;padding:3px 0 7px 30px;font-size:11px;color:#475569;line-height:1.45;border-bottom:1px solid #f3f4f6}
 .dish-note .note-tag{display:inline-block;background:#e0f2fe;color:#0369a1;font-weight:700;font-size:9.5px;letter-spacing:0.04em;text-transform:uppercase;padding:1.5px 6px;border-radius:4px;vertical-align:middle;margin-right:4px}
 .dish-note .note-tag.corrective{background:#fef3c7;color:#92400e}
@@ -447,9 +447,9 @@ function renderCity(data, isSingleDay){
             const wTheo = d.theoreticalWeight;
             const stOf = (v) => v == null ? 'na' : (isHot ? hotStatus(v) : coldStatus(v));
             const worst = ['crit','warn','ok','na'].find(s => [a,q,dp].some(v => stOf(v) === s)) || 'na';
-            const tCell = (v) => {
-                if(v == null) return `<span class="temp na">—</span>`;
-                return `<span class="temp ${stOf(v)}">${v.toFixed(1)}°</span>`;
+            const tCell = (v, time) => { const timeHtml = time ? `<span class="cp-time">${escapeHtml(time)}</span>` : '';
+                if(v == null) return `<span class="temp na">—${timeHtml}</span>`;
+                return `<span class="temp ${stOf(v)}">${v.toFixed(1)}°${timeHtml}</span>`;
             };
             // Weight deviation — gram-based thresholds (head-chef rule):
             //   diff ≤ 30 g → OK   (green)
@@ -475,10 +475,10 @@ function renderCity(data, isSingleDay){
                 </div>` : '';
             return `<div class="dish-row is-${worst}">
                 <span class="letter">${escapeHtml(d.dishLetter)}</span>
-                <span class="name">${escapeHtml(d.dishName)} ${stampHtml}</span>
-                ${tCell(a)}
-                ${tCell(q)}
-                ${tCell(dp)}
+                <span class="name">${escapeHtml(d.dishName)}</span>
+                ${tCell(a, (c.assembly && c.assembly.time) || null)}
+                ${tCell(q, c.qcTime || null)}
+                ${tCell(dp, (c.dispatch && c.dispatch.time) || null)}
                 <span class="wt-theo">${wtTheoTxt}</span>
                 <span class="wt-actual dev-${wtSt}">${wtActualTxt}</span>
             </div>${noteHtml}`;

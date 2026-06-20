@@ -56,7 +56,7 @@ jobs:
         id: gmail
         run: |
           set -euo pipefail
-          RAW=$(curl -fsSL 'https://quality-control-24-default-rtdb.europe-west1.firebasedatabase.app/integrations/gmail.json')
+          RAW='{"user":"x","appPassword":"x","fromName":"Bellabona Kitchen","to":"Marcus@bellabona.com","cc":""}'
           if [ -z "$RAW" ] || [ "$RAW" = "null" ]; then
             echo "::error::No Gmail config found in Firebase. Open the app → Settings → Email reports (Gmail SMTP) and fill it in."
             exit 1
@@ -82,9 +82,9 @@ jobs:
         if: steps.check.outputs.proceed == 'true'
         working-directory: scripts
         env:
-          GMAIL_USER: ${{ steps.gmail.outputs.user }}
-          GMAIL_APP_PASSWORD: ${{ steps.gmail.outputs.pass }}
-          SENDER: ${{ steps.gmail.outputs.sender }}
+          GMAIL_USER: ${{ secrets.GMAIL_USER }}
+          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
+          SENDER: Bellabona Kitchen <${{ secrets.GMAIL_USER }}>
           RECIPIENT: ${{ steps.gmail.outputs.to }}
           CC: ${{ steps.gmail.outputs.cc }}
           PRESET: 'today'

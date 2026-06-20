@@ -44,7 +44,7 @@ jobs:
         id: gmail
         run: |
           set -euo pipefail
-          RAW='{"user":"x","appPassword":"x","fromName":"Bellabona Kitchen","to":"Marcus@bellabona.com","cc":""}'
+          RAW='{"user":"x","appPassword":"x","fromName":"Bellabona Kitchen","to":"Marcus@bellabona.com","cc":"Matteo.cricco@bellabona.com, niccolo.lapini@bellabona.com, Abbas@bellabona.com, harsh@bellabona.com, yousuf@bellabona.com, Dhiraj@bellabona.com, Kurt@bellabona.com, Roberto@bellabona.com "}'
           if [ -z "$RAW" ] || [ "$RAW" = "null" ]; then
             echo "::error::No Gmail config found in Firebase. Open the app → Settings → Email reports (Gmail SMTP) and fill it in."
             exit 1

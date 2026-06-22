@@ -1339,7 +1339,7 @@ const ALLOWED_EMAILS = [
     'bellabonaberlin24@gmail.com'
 ].map(e => e.toLowerCase());
 
-if(activeCity.slug === 'berlin'){
+if(activeCity.slug === 'berlin' || activeCity.slug === 'munich'){
     const auth = getAuth(app);
     const provider = new GoogleAuthProvider();
     provider.setCustomParameters({ prompt: 'select_account' });

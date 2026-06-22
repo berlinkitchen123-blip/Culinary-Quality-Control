@@ -1332,12 +1332,12 @@ window.__qc_city = activeCity;
      2. Authentication → Settings → Authorized domains → ensure
         berlinkitchen123-blip.github.io is listed
    ========================================================================*/
-const ALLOWED_EMAILS = [
+const _ALL_EMAILS = {berlin:[
     'bellabonaberlin@gmail.com',
     'berlinkitchen123@gmail.com',
     'patelharsh513@gmail.com',
     'bellabonaberlin24@gmail.com'
-].map(e => e.toLowerCase());
+],munich:['munichbellabona@gmail.com','patelharsh513@gmail.com','berlinkitchen123@gmail.com','ivanbellabona@gmail.com','dhirajrathod193@gmail.com']}; const ALLOWED_EMAILS = (_ALL_EMAILS[activeCity.slug]||[]).map(e => e.toLowerCase());
 
 if(activeCity.slug === 'berlin' || activeCity.slug === 'munich'){
     const auth = getAuth(app);

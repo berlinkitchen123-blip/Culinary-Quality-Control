@@ -89,7 +89,10 @@ body{padding:18px 22px 40px 22px;max-width:1320px;margin:0 auto}
 .dish-row:last-child{border-bottom:0}
 .dish-row .letter{font-weight:800;color:#0f172a;text-align:center;font-size:11px}
 .dish-row .name{font-weight:600;color:#1f2937;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.dish-row .stamp{margin-left:6px;font-size:10px;font-weight:500;color:#94a3b8;font-variant-numeric:tabular-nums} .dish-row .temp{display:inline-flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.15} .dish-row .temp .cp-time{display:block;font-size:9px;font-weight:500;opacity:0.75;font-variant-numeric:tabular-nums;margin-top:1px} body.compact .dish-row .temp .cp-time{font-size:10px}
+.dish-row .stamp{margin-left:6px;font-size:10px;font-weight:500;color:#94a3b8;font-variant-numeric:tabular-nums}
+.dish-row .temp{display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.15}
+.dish-row .temp .cp-time{display:block;font-size:9px;font-weight:500;opacity:0.75;font-variant-numeric:tabular-nums;margin-top:1px}
+body.compact .dish-row .temp .cp-time{font-size:10px}
 .dish-note{grid-column:1/-1;padding:3px 0 7px 30px;font-size:11px;color:#475569;line-height:1.45;border-bottom:1px solid #f3f4f6}
 .dish-note .note-tag{display:inline-block;background:#e0f2fe;color:#0369a1;font-weight:700;font-size:9.5px;letter-spacing:0.04em;text-transform:uppercase;padding:1.5px 6px;border-radius:4px;vertical-align:middle;margin-right:4px}
 .dish-note .note-tag.corrective{background:#fef3c7;color:#92400e}
@@ -118,6 +121,37 @@ body.compact .dish-note .note-tag{font-size:10px;padding:2px 7px}
 .day-row .d-pct.warn{background:#fef3c7;color:#92400e}
 .day-row .d-pct.crit{background:#fee2e2;color:#7f1d1d}
 .day-row .d-pct.na{color:#9ca3af}
+.weekly-detail{width:100%;border-collapse:collapse;margin-top:14px;font-size:11px;table-layout:fixed}
+.weekly-detail thead th{background:#0f172a;color:#fff;padding:8px 10px;text-align:left;font-size:10.5px;font-weight:600;letter-spacing:0.04em;text-transform:uppercase;border-bottom:0}
+.weekly-detail thead th.dish-col{width:22%}
+.weekly-detail thead th.day-col{width:9%}
+.weekly-detail thead th:not(.dish-col):not(.day-col){text-align:center;width:23%}
+.weekly-detail tbody td{padding:6px 8px;border-bottom:1px solid #f1f5f9;vertical-align:middle;color:#1f2937}
+.weekly-detail tbody tr.dish-last td{border-bottom:2px solid #cbd5e1}
+.weekly-detail tbody tr.dish-last:last-child td{border-bottom:0}
+.weekly-detail .dish-name{background:#f8fafc;border-right:2px solid #cbd5e1;vertical-align:middle;padding:8px 10px}
+.weekly-detail .dish-name .d-letter{font-size:22px;font-weight:800;color:#0f172a;line-height:1}
+.weekly-detail .dish-name .d-text{margin-top:4px}
+.weekly-detail .dish-name .d-name{font-weight:600;font-size:12px;line-height:1.25;color:#1f2937}
+.weekly-detail .dish-name .d-spec{font-size:9.5px;font-weight:600;text-transform:uppercase;letter-spacing:0.04em;margin-top:2px}
+.weekly-detail .dish-name .d-spec.hot{color:#b91c1c}
+.weekly-detail .dish-name .d-spec.cold{color:#1d4ed8}
+.weekly-detail .day{font-weight:600;color:#475569;text-align:center;font-size:11px;background:#fcfdfe}
+.weekly-detail .day small{display:block;color:#94a3b8;font-weight:500;font-size:10px;margin-top:1px}
+.weekly-detail td.cp{text-align:center;font-variant-numeric:tabular-nums}
+.weekly-detail .cp-time{font-size:10px;color:#64748b;font-weight:500;line-height:1.2}
+.weekly-detail .cp-temp{display:inline-block;padding:2px 8px;border-radius:5px;font-weight:700;font-size:12px;margin-top:2px;min-width:48px}
+.weekly-detail .cp-temp.ok{background:#dcfce7;color:#166534}
+.weekly-detail .cp-temp.warn{background:#fef3c7;color:#92400e}
+.weekly-detail .cp-temp.crit{background:#fee2e2;color:#7f1d1d}
+.weekly-detail .cp-temp.na{color:#cbd5e1;background:transparent;font-weight:500}
+body.compact .weekly-detail{font-size:12px}
+body.compact .weekly-detail thead th{font-size:11px;padding:9px 10px}
+body.compact .weekly-detail tbody td{padding:7px 10px}
+body.compact .weekly-detail .cp-time{font-size:11px}
+body.compact .weekly-detail .cp-temp{font-size:13px;padding:3px 10px}
+body.compact .weekly-detail .dish-name .d-letter{font-size:24px}
+body.compact .weekly-detail .dish-name .d-name{font-size:13px}
 
 .loading{padding:40px;text-align:center;color:#64748b;font-size:13px}
 .err{padding:20px;background:#fef2f2;color:#7f1d1d;border-radius:8px;font-size:13px;border:1px solid #fecaca}
@@ -447,10 +481,16 @@ function renderCity(data, isSingleDay){
             const wTheo = d.theoreticalWeight;
             const stOf = (v) => v == null ? 'na' : (isHot ? hotStatus(v) : coldStatus(v));
             const worst = ['crit','warn','ok','na'].find(s => [a,q,dp].some(v => stOf(v) === s)) || 'na';
-            const tCell = (v, time) => { const timeHtml = time ? `<span class="cp-time">${escapeHtml(time)}</span>` : '';
+            // Each temp cell renders temperature on top and the checkpoint's HH:MM
+            // timestamp underneath, so the report doubles as an audit log.
+            const tCell = (v, time) => {
+                const timeHtml = time ? `<span class="cp-time">${escapeHtml(time)}</span>` : '';
                 if(v == null) return `<span class="temp na">—${timeHtml}</span>`;
                 return `<span class="temp ${stOf(v)}">${v.toFixed(1)}°${timeHtml}</span>`;
             };
+            const tCP1 = (c.assembly && c.assembly.time) || null;
+            const tCP2 = c.qcTime || null;
+            const tCP3 = (c.dispatch && c.dispatch.time) || null;
             // Weight deviation — gram-based thresholds (head-chef rule):
             //   diff ≤ 30 g → OK   (green)
             //   diff ≤ 50 g → WARN (light orange)
@@ -462,9 +502,6 @@ function renderCity(data, isSingleDay){
             }
             const wtTheoTxt = wTheo ? Math.round(wTheo)+'g' : '—';
             const wtActualTxt = wActual != null ? Math.round(wActual)+'g' : '—';
-            // Most recent HH:MM stamp across the three checkpoints (CP3 wins if present)
-            const stamp = (c.dispatch && c.dispatch.time) || c.qcTime || (c.assembly && c.assembly.time) || null;
-            const stampHtml = stamp ? `<span class="stamp">@ ${escapeHtml(stamp)}</span>` : '';
             const comment = (c.comment || '').trim();
             const corrective = (c.correctiveAction || '').trim();
             const noteHtml = (comment || corrective) ? `
@@ -476,9 +513,9 @@ function renderCity(data, isSingleDay){
             return `<div class="dish-row is-${worst}">
                 <span class="letter">${escapeHtml(d.dishLetter)}</span>
                 <span class="name">${escapeHtml(d.dishName)}</span>
-                ${tCell(a, (c.assembly && c.assembly.time) || null)}
-                ${tCell(q, c.qcTime || null)}
-                ${tCell(dp, (c.dispatch && c.dispatch.time) || null)}
+                ${tCell(a, tCP1)}
+                ${tCell(q, tCP2)}
+                ${tCell(dp, tCP3)}
                 <span class="wt-theo">${wtTheoTxt}</span>
                 <span class="wt-actual dev-${wtSt}">${wtActualTxt}</span>
             </div>${noteHtml}`;
@@ -500,36 +537,80 @@ function renderCity(data, isSingleDay){
             </div>
         `;
     } else {
-        const cellPct = (rate, total) => {
-            if(total === 0) return `<span class="d-pct na">—</span>`;
-            const st = cardStatus(rate, total);
-            return `<span class="d-pct ${st}">${rate}%</span>`;
+        // Multi-day view (weekly / monthly): render a per-dish detail table
+        // showing each weekday's Assembly / QC / Dispatch time + temp for that dish.
+        // Unique union of dishes across all weeks in the range, alphabetized by letter.
+        const allDishesMap = new Map();
+        for(const wk of data.weeks){
+            const m = data.menus[wk];
+            if(m && m.dishes){
+                for(const d of m.dishes){
+                    if(!allDishesMap.has(d.dishLetter)) allDishesMap.set(d.dishLetter, d);
+                }
+            }
+        }
+        const allDishes = Array.from(allDishesMap.values()).sort((a,b) =>
+            (a.dishLetter||'').localeCompare(b.dishLetter||'', undefined, {numeric:true}));
+
+        const dayLabel = (iso) => {
+            const dt = new Date(iso + 'T00:00:00Z');
+            const wd = dt.toLocaleDateString('en-US', { weekday:'short', timeZone:'UTC' });
+            const dd = String(dt.getUTCDate()).padStart(2,'0');
+            const mm = String(dt.getUTCMonth()+1).padStart(2,'0');
+            return `${wd}<br><small>${dd}.${mm}</small>`;
         };
+        const cellFor = (dish, date) => {
+            const checks = data.checks[date] || {};
+            const c = checks[dish.dishLetter] || {};
+            const isHot = !isCold(dish);
+            const stOf = (v) => v == null ? 'na' : (isHot ? hotStatus(v) : coldStatus(v));
+            const a  = c.assembly && (c.assembly.temps ? avg(c.assembly.temps) : c.assembly.temp);
+            const q  = avg(c.temperatures);
+            const dp = c.dispatch && (c.dispatch.temps ? avg(c.dispatch.temps) : c.dispatch.temp);
+            const tA = (c.assembly && c.assembly.time) || '';
+            const tQ = c.qcTime || '';
+            const tD = (c.dispatch && c.dispatch.time) || '';
+            const cell = (val, time, st) => {
+                const timeStr = time ? `<div class="cp-time">${escapeHtml(time)}</div>` : `<div class="cp-time">&nbsp;</div>`;
+                const tempStr = val == null
+                    ? `<div class="cp-temp na">—</div>`
+                    : `<div class="cp-temp ${st}">${val.toFixed(1)}°</div>`;
+                return `<td class="cp">${timeStr}${tempStr}</td>`;
+            };
+            return cell(a, tA, stOf(a)) + cell(q, tQ, stOf(q)) + cell(dp, tD, stOf(dp));
+        };
+
         bodyHtml = `
-            <div class="day-breakdown">
-                <div class="day-breakdown-head">
-                    <span>Date</span>
-                    <span style="text-align:center">Hot</span>
-                    <span style="text-align:center">Cold</span>
-                    <span style="text-align:center">Wt</span>
-                    <span style="text-align:center">Overall</span>
-                </div>
-                ${sc.perDay.map(p => {
-                    const s = p.scorecard;
-                    const hr = s.hot.total === 0 ? 0 : Math.round(s.hot.pass/s.hot.total*100);
-                    const cr = s.cold.total === 0 ? 0 : Math.round(s.cold.pass/s.cold.total*100);
-                    const wr = s.wt.total === 0 ? 0 : Math.round(s.wt.pass/s.wt.total*100);
-                    const ovPct = s.overall.pct;
-                    const ovSt = overallStatus(ovPct);
-                    return `<div class="day-row">
-                        <span class="d-date">${humanDate(p.date)}</span>
-                        ${cellPct(hr, s.hot.total)}
-                        ${cellPct(cr, s.cold.total)}
-                        ${cellPct(wr, s.wt.total)}
-                        <span class="d-pct ${ovSt}">${ovPct == null ? '—' : ovPct + '%'}</span>
-                    </div>`;
-                }).join('')}
-            </div>
+            <table class="weekly-detail">
+                <thead>
+                    <tr>
+                        <th class="dish-col">Dish</th>
+                        <th class="day-col">Day</th>
+                        <th>Assembly (CP1)</th>
+                        <th>QC (CP2)</th>
+                        <th>Dispatch (CP3)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${allDishes.map(d => {
+                        const isHot = !isCold(d);
+                        const spec = isHot ? '≥60°C hot' : '≤8°C cold';
+                        return data.dates.map((date, i) => `
+                            <tr class="${i===0?'dish-first':''} ${i===data.dates.length-1?'dish-last':''}">
+                                ${i===0 ? `<td class="dish-name" rowspan="${data.dates.length}">
+                                    <div class="d-letter">${escapeHtml(d.dishLetter)}</div>
+                                    <div class="d-text">
+                                        <div class="d-name">${escapeHtml(d.dishName)}</div>
+                                        <div class="d-spec ${isHot?'hot':'cold'}">${spec}</div>
+                                    </div>
+                                </td>` : ''}
+                                <td class="day">${dayLabel(date)}</td>
+                                ${cellFor(d, date)}
+                            </tr>
+                        `).join('');
+                    }).join('')}
+                </tbody>
+            </table>
         `;
     }
 

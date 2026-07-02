@@ -242,9 +242,9 @@ body.compact .dish-row.is-ok{display:grid}
 <div class="range-bar" id="range-bar"></div>
 
 <div class="legend">
-    <div class="legend-cell ok"><div class="lbl">✓ OK</div><div class="spec">Hot ≥60°C · Cold ≤6°C · Wt ≤5%</div></div>
-    <div class="legend-cell warn"><div class="lbl">⚠ WARN</div><div class="spec">Hot 55–59°C · Cold 6–8°C · Wt 5–10%</div></div>
-    <div class="legend-cell crit"><div class="lbl">✗ CRITICAL</div><div class="spec">Hot &lt;55°C · Cold &gt;8°C · Wt &gt;10%</div></div>
+    <div class="legend-cell ok"><div class="lbl">✓ OK</div><div class="spec">Hot ≥60°C · Cold ≤8°C</div></div>
+    <div class="legend-cell warn"><div class="lbl">⚠ WARN</div><div class="spec">Hot 55–59°C · Cold 6–8°C</div></div>
+    <div class="legend-cell crit"><div class="lbl">✗ CRITICAL</div><div class="spec">Hot &lt;55°C · Cold &gt;8°C</div></div>
 </div>
 
 <div class="cities" id="cities">
@@ -401,7 +401,7 @@ function computeDayScorecard(dishes, checks){
             } else {
                 c.hot.total++;
                 const st = hotStatus(v);
-                if(st === 'ok' || st === 'warn') c.hot.pass++;
+                if(st === 'ok') c.hot.pass++;
             }
         }
         const w = avg(ck.weights);
@@ -411,8 +411,8 @@ function computeDayScorecard(dishes, checks){
             if(st === 'ok') c.wt.pass++;
         }
     }
-    const totalAll = c.hot.total + c.cold.total + c.wt.total;
-    const passAll = c.hot.pass + c.cold.pass + c.wt.pass;
+    const totalAll = c.hot.total + c.cold.total;
+    const passAll = c.hot.pass + c.cold.pass;
     const overallPct = totalAll === 0 ? null : Math.round(passAll / totalAll * 100);
     return { ...c, overall: { total: totalAll, pass: passAll, pct: overallPct } };
 }
@@ -432,8 +432,8 @@ function computeRangeScorecard(data){
         sum.wt.total += sc.wt.total;   sum.wt.pass += sc.wt.pass;
         perDay.push({ date, scorecard: sc, dishCount: dishes.length });
     }
-    const totalAll = sum.hot.total + sum.cold.total + sum.wt.total;
-    const passAll = sum.hot.pass + sum.cold.pass + sum.wt.pass;
+    const totalAll = sum.hot.total + sum.cold.total;
+    const passAll = sum.hot.pass + sum.cold.pass;
     const overallPct = totalAll === 0 ? null : Math.round(passAll / totalAll * 100);
     return { ...sum, overall: { total: totalAll, pass: passAll, pct: overallPct }, perDay };
 }

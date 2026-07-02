@@ -153,6 +153,8 @@ body.compact .weekly-detail .cp-temp{font-size:13px;padding:3px 10px}
 body.compact .weekly-detail .dish-name .d-letter{font-size:24px}
 body.compact .weekly-detail .dish-name .d-name{font-size:13px}
 
+.cp-label{display:block;font-size:9px;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;margin-top:1px;line-height:1}
+body.compact .cp-label{font-size:10px;margin-top:2px}
 .loading{padding:40px;text-align:center;color:#64748b;font-size:13px}
 .err{padding:20px;background:#fef2f2;color:#7f1d1d;border-radius:8px;font-size:13px;border:1px solid #fecaca}
 
@@ -486,7 +488,7 @@ function renderCity(data, isSingleDay){
             const tCell = (v, time) => {
                 const timeHtml = time ? `<span class="cp-time">${escapeHtml(time)}</span>` : '';
                 if(v == null) return `<span class="temp na">—${timeHtml}</span>`;
-                return `<span class="temp ${stOf(v)}">${v.toFixed(1)}°${timeHtml}</span>`;
+                const st2 = stOf(v); const lbl2 = {ok:'Pass',warn:'Hold',crit:'Fail'}[st2]||''; return `<span class="temp ${st2}">${v.toFixed(1)}°<span class="cp-label">${lbl2}</span>${timeHtml}</span>`;
             };
             const tCP1 = (c.assembly && c.assembly.time) || null;
             const tCP2 = c.qcTime || null;
@@ -574,7 +576,7 @@ function renderCity(data, isSingleDay){
                 const timeStr = time ? `<div class="cp-time">${escapeHtml(time)}</div>` : `<div class="cp-time">&nbsp;</div>`;
                 const tempStr = val == null
                     ? `<div class="cp-temp na">—</div>`
-                    : `<div class="cp-temp ${st}">${val.toFixed(1)}°</div>`;
+                    : `<div class="cp-temp ${st}">${val.toFixed(1)}°<span class="cp-label">${{ok:'Pass',warn:'Hold',crit:'Fail'}[st]||''}</span></div>`;
                 return `<td class="cp">${timeStr}${tempStr}</td>`;
             };
             return cell(a, tA, stOf(a)) + cell(q, tQ, stOf(q)) + cell(dp, tD, stOf(dp));

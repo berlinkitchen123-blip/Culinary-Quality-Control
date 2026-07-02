@@ -306,7 +306,7 @@ html[data-theme="dark"] .lt-tile.hot{background:rgba(248,113,113,0.10)}
 .lt-tile .lt-pip.is-watch::after{content:'Watch'}
 .lt-tile .lt-pip.is-hold{background:var(--hold);color:#fff}
 .lt-tile .lt-pip.is-hold::after{content:'Hold'}
-.lt-tile .lt-pip.is-empty{background:var(--mute-low);width:10px;height:10px;border-radius:50%;padding:0}
+.lt-tile .lt-pip.is-empty{background:var(--mute-low);width:10px;height:10px;border-radius:50%;padding:0;font-size:0}
 .lt-tile .lt-stages{display:flex;gap:3px;margin-top:6px}
 .lt-tile .lt-stages span{width:6px;height:6px;border-radius:50%;background:var(--mute-low);opacity:0.4}
 .lt-tile .lt-stages span.is-set{opacity:1}
@@ -2115,7 +2115,7 @@ function renderLetterTile(dish){
         : '';
     return `
         <article class="lt-tile ${cls}" data-letter="${escapeHtml(dish.dishLetter)}" role="button" tabindex="0" aria-label="${escapeHtml(dish.dishName)}">
-            <span class="lt-pip is-${s}" aria-hidden="true"></span>
+            <span class="lt-pip is-${s}" aria-hidden="true">${{pass:'Pass',hold:'Hold',watch:'Watch',empty:''}[s]||''}</span>
             <span class="lt-letter">${escapeHtml(dish.dishLetter)}</span>
             <span class="lt-name">${escapeHtml(dish.dishName)}</span>
             <span class="lt-stages" aria-hidden="true">

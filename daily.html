@@ -394,7 +394,11 @@ function computeDayScorecard(dishes, checks){
     const c = { hot:{total:0,pass:0}, cold:{total:0,pass:0}, wt:{total:0,pass:0} };
     for(const d of dishes){
         const ck = checks[d.dishLetter] || {};
-        const v = avg(ck.temperatures);
+        const _dp = ck.dispatch && (ck.dispatch.temps ? avg(ck.dispatch.temps) : ck.dispatch.temp != null ? ck.dispatch.temp : null);
+        const _a = ck.assembly && (ck.assembly.temps ? avg(ck.assembly.temps) : ck.assembly.temp != null ? ck.assembly.temp : null);
+        const _q = avg(ck.temperatures);
+        const _fb = [_a, _q].filter(x => x != null);
+        const v = _dp != null ? _dp : (_fb.length ? _fb.reduce((s,x)=>s+x,0)/_fb.length : null);
         if(v != null){
             if(isCold(d)){
                 c.cold.total++;

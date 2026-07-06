@@ -97,6 +97,8 @@ body.compact .dish-row .temp .cp-time{font-size:10px}
 .dish-note .note-tag{display:inline-block;background:#e0f2fe;color:#0369a1;font-weight:700;font-size:9.5px;letter-spacing:0.04em;text-transform:uppercase;padding:1.5px 6px;border-radius:4px;vertical-align:middle;margin-right:4px}
 .dish-note .note-tag.corrective{background:#fef3c7;color:#92400e}
 .dish-note .note-txt{color:#1f2937}
+.dish-note .note-lbl{font-size:9.5px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:0.04em;margin-right:3px}
+.dish-note .note-empty{color:#cbd5e1}
 .dish-note .note-sep{color:#cbd5e1;margin:0 4px}
 body.compact .dish-row .stamp{font-size:11px}
 body.compact .dish-note{font-size:12px;padding:4px 0 8px 32px;border-bottom:1px solid #f1f5f9}
@@ -510,12 +512,7 @@ function renderCity(data, isSingleDay){
             const wtActualTxt = wActual != null ? Math.round(wActual)+'g' : '—';
             const comment = (c.comment || '').trim();
             const corrective = (c.correctiveAction || '').trim();
-            const noteHtml = (comment || corrective) ? `
-                <div class="dish-note">
-                    ${comment ? `<span class="note-tag">Note</span> <span class="note-txt">${escapeHtml(comment)}</span>` : ''}
-                    ${(comment && corrective) ? '<span class="note-sep"> · </span>' : ''}
-                    ${corrective ? `<span class="note-tag corrective">Action</span> <span class="note-txt">${escapeHtml(corrective)}</span>` : ''}
-                </div>` : '';
+            const noteHtml = `<div class="dish-note">${comment ? `<span class="note-tag">Note</span> <span class="note-txt">${escapeHtml(comment)}</span>` : '<span class="note-lbl">Note:</span> <span class="note-empty">—</span>'}${(comment && corrective) ? '<span class="note-sep"> · </span>' : ' '}${corrective ? `<span class="note-tag corrective">Action</span> <span class="note-txt">${escapeHtml(corrective)}</span>` : '<span class="note-lbl">Action:</span> <span class="note-empty">—</span>'}</div>`;
             return `<div class="dish-row is-${worst}">
                 <span class="letter">${escapeHtml(d.dishLetter)}</span>
                 <span class="name">${escapeHtml(d.dishName)}</span>

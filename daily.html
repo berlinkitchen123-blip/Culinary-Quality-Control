@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Bella & Bona — Daily QC Snapshot (Berlin + Munich)</title>
+<title>Bella & Bona â Daily QC Snapshot (Berlin + Munich)</title>
 <style>
 *{box-sizing:border-box}
 html,body{margin:0;padding:0;font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f1f5f9;color:#1f2937;line-height:1.4}
@@ -78,8 +78,8 @@ body{padding:18px 22px 40px 22px;max-width:1320px;margin:0 auto}
 .overall .status-tag.na{background:#475569}
 
 .dish-list{margin-top:14px}
-.dish-list-head{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:#64748b;padding:6px 0;border-bottom:1px solid #e5e7eb;display:grid;grid-template-columns:24px 1fr 60px 60px 60px 60px 60px;gap:6px;align-items:center}
-.dish-row{display:grid;grid-template-columns:24px 1fr 60px 60px 60px 60px 60px;gap:6px;padding:5px 0;border-bottom:1px solid #f3f4f6;font-size:12px;align-items:center}
+.dish-list-head{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:#64748b;padding:6px 0;border-bottom:1px solid #e5e7eb;display:grid;grid-template-columns:24px minmax(0,0.7fr) 60px 60px 60px 60px 60px minmax(80px,1fr);gap:6px;align-items:center}
+.dish-row{display:grid;grid-template-columns:24px minmax(0,0.7fr) 60px 60px 60px 60px 60px minmax(80px,1fr);gap:6px;padding:5px 0;border-bottom:1px solid #f3f4f6;font-size:12px;align-items:center}
 .dish-row .wt-theo{text-align:center;font-variant-numeric:tabular-nums;font-weight:600;color:#475569}
 .dish-row .wt-actual{text-align:center;font-variant-numeric:tabular-nums;font-weight:700;border-radius:4px;padding:2px 4px}
 .dish-row .wt-actual.dev-ok  {background:#dcfce7;color:#166534}
@@ -93,7 +93,8 @@ body{padding:18px 22px 40px 22px;max-width:1320px;margin:0 auto}
 .dish-row .temp{display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.15}
 .dish-row .temp .cp-time{display:block;font-size:9px;font-weight:500;opacity:0.75;font-variant-numeric:tabular-nums;margin-top:1px}
 body.compact .dish-row .temp .cp-time{font-size:10px}
-.dish-note{grid-column:1/-1;padding:3px 0 7px 30px;font-size:11px;color:#475569;line-height:1.45;border-bottom:1px solid #f3f4f6}
+.dish-note-cell{font-size:10px;line-height:1.4;color:#374151;padding:2px 4px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical}
+.dish-note{padding:3px 0 7px 30px;font-size:11px;color:#475569;line-height:1.45;border-bottom:1px solid #f3f4f6}
 .dish-note .note-tag{display:inline-block;background:#e0f2fe;color:#0369a1;font-weight:700;font-size:9.5px;letter-spacing:0.04em;text-transform:uppercase;padding:1.5px 6px;border-radius:4px;vertical-align:middle;margin-right:4px}
 .dish-note .note-tag.corrective{background:#fef3c7;color:#92400e}
 .dish-note .note-txt{color:#1f2937}
@@ -167,12 +168,12 @@ body.compact .cp-label{font-size:10px;margin-top:2px}
     .cities{grid-template-columns:1fr 1fr}
 }
 
-/* === Digital-share layout (activated by ?compact=1) — designed for the
+/* === Digital-share layout (activated by ?compact=1) â designed for the
        PDF the cron attaches and that humans open on phones / laptops / in
        chat apps. Generous typography, proper hierarchy, modern cards.
        Multi-page is fine; what matters is each page looking polished. */
 body.compact{padding:0;max-width:none;background:#f8fafc;font-family:Inter,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif}
-/* Hide everything that isn't the city blocks — no cover page, no wasted
+/* Hide everything that isn't the city blocks â no cover page, no wasted
    space. Date + brand live INSIDE each city header so each page is fully
    self-contained. */
 body.compact .toolbar,
@@ -200,11 +201,11 @@ body.compact .overall .pct-big{font-size:34px;letter-spacing:-0.02em;font-weight
 body.compact .overall .status-tag{font-size:11px;padding:5px 14px;font-weight:800;letter-spacing:0.06em}
 body.compact .dish-list{margin-top:6px}
 body.compact .dish-list-section{font-size:11px;font-weight:800;letter-spacing:0.08em;padding:10px 0 6px 0;margin-top:6px;border-bottom:1px solid #e2e8f0}
-/* Grid: ID · Dish · CP1 · CP2 · CP3 · Theo · Actual */
+/* Grid: ID Â· Dish Â· CP1 Â· CP2 Â· CP3 Â· Theo Â· Actual */
 body.compact .dish-list-head,
 body.compact .dish-row{
     display:grid;
-    grid-template-columns:30px minmax(220px,1fr) 70px 70px 70px 70px 70px;
+    grid-template-columns:30px minmax(120px,0.7fr) 70px 70px 70px 70px 70px minmax(90px,1fr);
     gap:10px;
     align-items:center;
 }
@@ -233,27 +234,27 @@ body.compact .dish-row.is-ok{display:grid}
 
 <div class="toolbar">
     <div class="title-block">
-        <h1>Bella & Bona · QC Snapshot</h1>
-        <div class="sub" id="sub-line">Loading…</div>
+        <h1>Bella & Bona Â· QC Snapshot</h1>
+        <div class="sub" id="sub-line">Loadingâ¦</div>
     </div>
     <div class="actions">
-        <button class="btn" type="button" onclick="window.location.reload()">↻ Refresh</button>
-        <button class="btn" type="button" onclick="copySummary()">📋 Copy email summary</button>
-        <button class="btn primary" type="button" onclick="window.print()">🖨️ Print / Save as PDF</button>
+        <button class="btn" type="button" onclick="window.location.reload()">â» Refresh</button>
+        <button class="btn" type="button" onclick="copySummary()">ð Copy email summary</button>
+        <button class="btn primary" type="button" onclick="window.print()">ð¨ï¸ Print / Save as PDF</button>
     </div>
 </div>
 
 <div class="range-bar" id="range-bar"></div>
 
 <div class="legend">
-    <div class="legend-cell ok"><div class="lbl">✓ OK</div><div class="spec">Hot ≥60°C · Cold ≤8°C</div></div>
-    <div class="legend-cell warn"><div class="lbl">⚠ WARN</div><div class="spec">Hot 55–59°C · Cold 6–8°C</div></div>
-    <div class="legend-cell crit"><div class="lbl">✗ CRITICAL</div><div class="spec">Hot &lt;55°C · Cold &gt;8°C</div></div>
+    <div class="legend-cell ok"><div class="lbl">â OK</div><div class="spec">Hot â¥60Â°C Â· Cold â¤8Â°C</div></div>
+    <div class="legend-cell warn"><div class="lbl">â  WARN</div><div class="spec">Hot 55â59Â°C Â· Cold 6â8Â°C</div></div>
+    <div class="legend-cell crit"><div class="lbl">â CRITICAL</div><div class="spec">Hot &lt;55Â°C Â· Cold &gt;8Â°C</div></div>
 </div>
 
 <div class="cities" id="cities">
-    <div class="city"><div class="loading">Loading…</div></div>
-    <div class="city"><div class="loading">Loading…</div></div>
+    <div class="city"><div class="loading">Loadingâ¦</div></div>
+    <div class="city"><div class="loading">Loadingâ¦</div></div>
 </div>
 
 <script type="module">
@@ -301,7 +302,7 @@ const WT_OK = 0.05, WT_WARN = 0.10;
 const pad2 = (n) => String(n).padStart(2, '0');
 const todayIso = () => { const d = new Date(); return d.getFullYear() + '-' + pad2(d.getMonth()+1) + '-' + pad2(d.getDate()); };
 const shiftIso = (iso, days) => { const d = new Date(iso + 'T12:00:00'); d.setDate(d.getDate() + days); return d.getFullYear() + '-' + pad2(d.getMonth()+1) + '-' + pad2(d.getDate()); };
-// Mon–Fri only: if today is Sat/Sun, roll back to Friday.
+// MonâFri only: if today is Sat/Sun, roll back to Friday.
 const todayOrLastFriday = () => {
     const d = new Date();
     const dow = d.getDay(); // 0 Sun, 6 Sat
@@ -320,7 +321,7 @@ const isoYearWeek = (iso) => {
     const wk = Math.ceil(((d - y0) / 86400000 + 1) / 7);
     return d.getUTCFullYear() + '-' + pad2(wk);
 };
-// Mon–Fri only: every report skips Sat/Sun (no kitchen ops on weekends)
+// MonâFri only: every report skips Sat/Sun (no kitchen ops on weekends)
 const datesInRange = (start, end) => {
     const out = [];
     let cur = start, guard = 0;
@@ -346,8 +347,8 @@ function rangeForPreset(preset){
     const d = new Date(today + 'T12:00:00');
     const dow = (d.getDay() + 6) % 7; // 0 = Mon
     const monIso = shiftIso(today, -dow);
-    if(preset === 'this-week') return { start: monIso, end: shiftIso(monIso, 4) };  // Mon–Fri
-    if(preset === 'last-week') return { start: shiftIso(monIso, -7), end: shiftIso(monIso, -3) };  // prev Mon–Fri
+    if(preset === 'this-week') return { start: monIso, end: shiftIso(monIso, 4) };  // MonâFri
+    if(preset === 'last-week') return { start: shiftIso(monIso, -7), end: shiftIso(monIso, -3) };  // prev MonâFri
     const m1 = today.slice(0,8) + '01';
     const lastDay = new Date(d.getFullYear(), d.getMonth()+1, 0).getDate();
     const mEnd = today.slice(0,8) + pad2(lastDay);
@@ -470,7 +471,7 @@ function renderCity(data, isSingleDay){
     const cityAppUrl = `${baseUrl}redesign-prototype.html?city=${data.city.slug}`;
 
     // For single-day views: keep the live dish list. For multi-day: switch
-    // to a per-day breakdown table (date · hot% · cold% · wt% · overall%).
+    // to a per-day breakdown table (date Â· hot% Â· cold% Â· wt% Â· overall%).
     let bodyHtml;
     if(isSingleDay){
         const date = data.dates[0];
@@ -493,26 +494,28 @@ function renderCity(data, isSingleDay){
             // timestamp underneath, so the report doubles as an audit log.
             const tCell = (v, time) => {
                 const timeHtml = time ? `<span class="cp-time">${escapeHtml(time)}</span>` : '';
-                if(v == null) return `<span class="temp na">—${timeHtml}</span>`;
-                const st2 = stOf(v); const lbl2 = {ok:'Pass',warn:'Hold',crit:'Fail'}[st2]||''; return `<span class="temp ${st2}">${v.toFixed(1)}°<span class="cp-label">${lbl2}</span>${timeHtml}</span>`;
+                if(v == null) return `<span class="temp na">â${timeHtml}</span>`;
+                const st2 = stOf(v); const lbl2 = {ok:'Pass',warn:'Hold',crit:'Fail'}[st2]||''; return `<span class="temp ${st2}">${v.toFixed(1)}Â°<span class="cp-label">${lbl2}</span>${timeHtml}</span>`;
             };
             const tCP1 = (c.assembly && c.assembly.time) || null;
             const tCP2 = c.qcTime || null;
             const tCP3 = (c.dispatch && c.dispatch.time) || null;
-            // Weight deviation — gram-based thresholds (head-chef rule):
-            //   diff ≤ 30 g → OK   (green)
-            //   diff ≤ 50 g → WARN (light orange)
-            //   diff > 50 g → CRIT (light red)
+            // Weight deviation â gram-based thresholds (head-chef rule):
+            //   diff â¤ 30 g â OK   (green)
+            //   diff â¤ 50 g â WARN (light orange)
+            //   diff > 50 g â CRIT (light red)
             let wtSt = 'na';
             if(wTheo && wActual != null){
                 const diff = Math.abs(wActual - wTheo);
                 wtSt = diff <= 30 ? 'ok' : diff <= 50 ? 'warn' : 'crit';
             }
-            const wtTheoTxt = wTheo ? Math.round(wTheo)+'g' : '—';
-            const wtActualTxt = wActual != null ? Math.round(wActual)+'g' : '—';
+            const wtTheoTxt = wTheo ? Math.round(wTheo)+'g' : 'â';
+            const wtActualTxt = wActual != null ? Math.round(wActual)+'g' : 'â';
             const comment = (c.comment || '').trim();
             const corrective = (c.correctiveAction || '').trim();
-            const noteHtml = `<div class="dish-note">${comment ? `<span class="note-tag">Note</span> <span class="note-txt">${escapeHtml(comment)}</span>` : '<span class="note-lbl">Note:</span> <span class="note-empty">—</span>'}${(comment && corrective) ? '<span class="note-sep"> · </span>' : ' '}${corrective ? `<span class="note-tag corrective">Action</span> <span class="note-txt">${escapeHtml(corrective)}</span>` : '<span class="note-lbl">Action:</span> <span class="note-empty">—</span>'}</div>`;
+            const comment = (c.comment || '').trim();
+      const corrective = (c.correctiveAction || '').trim();
+      const noteCell = `<span class="dish-note-cell">${comment ? `<span class="note-tag">N</span> ${escapeHtml(comment)}` : ''}${comment && corrective ? ' · ' : ''}${corrective ? `<span class="note-tag corrective">A</span> ${escapeHtml(corrective)}` : ''}${!comment && !corrective ? '<span style="color:#cbd5e1">—</span>' : ''}</span>`;
             return `<div class="dish-row is-${worst}">
                 <span class="letter">${escapeHtml(d.dishLetter)}</span>
                 <span class="name">${escapeHtml(d.dishName)}</span>
@@ -521,7 +524,7 @@ function renderCity(data, isSingleDay){
                 ${tCell(dp, tCP3)}
                 <span class="wt-theo">${wtTheoTxt}</span>
                 <span class="wt-actual dev-${wtSt}">${wtActualTxt}</span>
-            </div>${noteHtml}`;
+            </div>`;
         };
         bodyHtml = `
             <div class="dish-list">
@@ -576,8 +579,8 @@ function renderCity(data, isSingleDay){
             const cell = (val, time, st) => {
                 const timeStr = time ? `<div class="cp-time">${escapeHtml(time)}</div>` : `<div class="cp-time">&nbsp;</div>`;
                 const tempStr = val == null
-                    ? `<div class="cp-temp na">—</div>`
-                    : `<div class="cp-temp ${st}">${val.toFixed(1)}°<span class="cp-label">${{ok:'Pass',warn:'Hold',crit:'Fail'}[st]||''}</span></div>`;
+                    ? `<div class="cp-temp na">â</div>`
+                    : `<div class="cp-temp ${st}">${val.toFixed(1)}Â°<span class="cp-label">${{ok:'Pass',warn:'Hold',crit:'Fail'}[st]||''}</span></div>`;
                 return `<td class="cp">${timeStr}${tempStr}</td>`;
             };
             return cell(a, tA, stOf(a)) + cell(q, tQ, stOf(q)) + cell(dp, tD, stOf(dp));
@@ -597,7 +600,7 @@ function renderCity(data, isSingleDay){
                 <tbody>
                     ${allDishes.map(d => {
                         const isHot = !isCold(d);
-                        const spec = isHot ? '≥60°C hot' : '≤8°C cold';
+                        const spec = isHot ? 'â¥60Â°C hot' : 'â¤8Â°C cold';
                         return data.dates.map((date, i) => `
                             <tr class="${i===0?'dish-first':''} ${i===data.dates.length-1?'dish-last':''}">
                                 ${i===0 ? `<td class="dish-name" rowspan="${data.dates.length}">
@@ -617,7 +620,7 @@ function renderCity(data, isSingleDay){
         `;
     }
 
-    // City meta (count of dishes — for single day take that day, for range
+    // City meta (count of dishes â for single day take that day, for range
     // count distinct dishLetters across all weeks)
     let dishCount = 0;
     if(isSingleDay){
@@ -637,27 +640,27 @@ function renderCity(data, isSingleDay){
             <div class="city-head ${data.city.class}">
                 <div class="mark">${data.city.name.charAt(0)}</div>
                 <div class="info">
-                    <div class="name">${data.city.name} · Bella &amp; Bona QC</div>
-                    <div class="meta">${humanDate(data.dates[0])}${data.dates.length>1?' → '+humanDate(data.dates[data.dates.length-1]):''} · ${dishCount} dish${dishCount===1?'':'es'}${data.dates.length>1?' · '+data.dates.length+' days':''}</div>
+                    <div class="name">${data.city.name} Â· Bella &amp; Bona QC</div>
+                    <div class="meta">${humanDate(data.dates[0])}${data.dates.length>1?' â '+humanDate(data.dates[data.dates.length-1]):''} Â· ${dishCount} dish${dishCount===1?'':'es'}${data.dates.length>1?' Â· '+data.dates.length+' days':''}</div>
                 </div>
-                <div class="url"><a href="${cityAppUrl}" target="_blank">Open app →</a></div>
+                <div class="url"><a href="${cityAppUrl}" target="_blank">Open app â</a></div>
             </div>
 
             <div class="scorecard">
                 <div class="score ${cardStatus(hotRate, sc.hot.total)}">
-                    <div class="pct">${sc.hot.total === 0 ? '—' : hotRate + '%'}</div>
+                    <div class="pct">${sc.hot.total === 0 ? 'â' : hotRate + '%'}</div>
                     <div class="lbl">Hot dishes</div>
                     <div class="frac">${sc.hot.pass}/${sc.hot.total} pass</div>
                     <div class="pill">${cardStatus(hotRate, sc.hot.total).toUpperCase()}</div>
                 </div>
                 <div class="score ${cardStatus(coldRate, sc.cold.total)}">
-                    <div class="pct">${sc.cold.total === 0 ? '—' : coldRate + '%'}</div>
+                    <div class="pct">${sc.cold.total === 0 ? 'â' : coldRate + '%'}</div>
                     <div class="lbl">Cold dishes</div>
                     <div class="frac">${sc.cold.pass}/${sc.cold.total} pass</div>
                     <div class="pill">${cardStatus(coldRate, sc.cold.total).toUpperCase()}</div>
                 </div>
                 <div class="score ${cardStatus(wtRate, sc.wt.total)}">
-                    <div class="pct">${sc.wt.total === 0 ? '—' : wtRate + '%'}</div>
+                    <div class="pct">${sc.wt.total === 0 ? 'â' : wtRate + '%'}</div>
                     <div class="lbl">Weight</div>
                     <div class="frac">${sc.wt.pass}/${sc.wt.total} within 5%</div>
                     <div class="pill">${cardStatus(wtRate, sc.wt.total).toUpperCase()}</div>
@@ -667,7 +670,7 @@ function renderCity(data, isSingleDay){
             <div class="overall">
                 <div>
                     <div class="label">Overall compliance${isSingleDay ? '' : ' (range)'}</div>
-                    <div class="pct-big">${sc.overall.pct == null ? '—' : sc.overall.pct + '%'}</div>
+                    <div class="pct-big">${sc.overall.pct == null ? 'â' : sc.overall.pct + '%'}</div>
                 </div>
                 <span class="status-tag ${ovStatus}">${ovStatus === 'na' ? 'No data' : ovStatus.toUpperCase()}</span>
             </div>
@@ -694,9 +697,9 @@ function renderRangeBar(){
     const presets = [
         { id:'today', label:'Today', sub: humanDate(todayIso()) },
         { id:'yesterday', label:'Yesterday', sub: humanDate(shiftIso(todayIso(), -1)) },
-        { id:'this-week', label:'This week', sub:'Mon–Fri' },
-        { id:'last-week', label:'Last week', sub:'previous Mon–Fri' },
-        { id:'this-month', label:'This month', sub:'1st–end' },
+        { id:'this-week', label:'This week', sub:'MonâFri' },
+        { id:'last-week', label:'Last week', sub:'previous MonâFri' },
+        { id:'this-month', label:'This month', sub:'1stâend' },
         { id:'last-month', label:'Last month', sub:'previous month' },
         { id:'custom', label:'Custom', sub:'pick from / to' }
     ];
@@ -729,16 +732,16 @@ function renderRangeBar(){
 async function loadAndRender(){
     const r = rangeState.preset === 'custom' ? { start: rangeState.start, end: rangeState.end } : rangeForPreset(rangeState.preset);
     if(!r.start || !r.end || r.start > r.end){
-        document.getElementById('cities').innerHTML = `<div class="err">Bad date range — adjust the dates above.</div>`;
+        document.getElementById('cities').innerHTML = `<div class="err">Bad date range â adjust the dates above.</div>`;
         return;
     }
     const dates = datesInRange(r.start, r.end);
     const isSingleDay = dates.length === 1;
-    const rangeTxt = isSingleDay ? humanDate(r.start) : `${humanDate(r.start)} → ${humanDate(r.end)}  ·  ${dates.length} days`;
-    document.getElementById('sub-line').textContent = `${rangeTxt}  ·  Berlin + Munich  ·  Refreshed ${new Date().toLocaleTimeString('en-GB')}`;
+    const rangeTxt = isSingleDay ? humanDate(r.start) : `${humanDate(r.start)} â ${humanDate(r.end)}  Â·  ${dates.length} days`;
+    document.getElementById('sub-line').textContent = `${rangeTxt}  Â·  Berlin + Munich  Â·  Refreshed ${new Date().toLocaleTimeString('en-GB')}`;
 
     const host = document.getElementById('cities');
-    host.innerHTML = `<div class="city"><div class="loading">Loading Berlin…</div></div><div class="city"><div class="loading">Loading Munich…</div></div>`;
+    host.innerHTML = `<div class="city"><div class="loading">Loading Berlinâ¦</div></div><div class="city"><div class="loading">Loading Munichâ¦</div></div>`;
     window.__cityData = {};
     try {
         const results = await Promise.all(CITIES.map(c => loadCityRange(c, dates)
@@ -762,28 +765,28 @@ window.copySummary = function(){
     const dates = datesInRange(r.start, r.end);
     const isSingleDay = dates.length === 1;
     const out = [];
-    out.push(`Bella & Bona — QC Snapshot`);
-    out.push(isSingleDay ? humanDate(r.start) : `${humanDate(r.start)} → ${humanDate(r.end)} (${dates.length} days)`);
+    out.push(`Bella & Bona â QC Snapshot`);
+    out.push(isSingleDay ? humanDate(r.start) : `${humanDate(r.start)} â ${humanDate(r.end)} (${dates.length} days)`);
     out.push(``);
     for(const slug of ['berlin', 'munich']){
         const d = data[slug];
         if(!d){ out.push(`${slug.toUpperCase()}: failed to load`); continue; }
         const sc = computeRangeScorecard(d);
-        const hotRate = sc.hot.total === 0 ? '—' : Math.round(sc.hot.pass/sc.hot.total*100) + '%';
-        const coldRate = sc.cold.total === 0 ? '—' : Math.round(sc.cold.pass/sc.cold.total*100) + '%';
-        const wtRate = sc.wt.total === 0 ? '—' : Math.round(sc.wt.pass/sc.wt.total*100) + '%';
-        const ov = sc.overall.pct == null ? '—' : sc.overall.pct + '%';
+        const hotRate = sc.hot.total === 0 ? 'â' : Math.round(sc.hot.pass/sc.hot.total*100) + '%';
+        const coldRate = sc.cold.total === 0 ? 'â' : Math.round(sc.cold.pass/sc.cold.total*100) + '%';
+        const wtRate = sc.wt.total === 0 ? 'â' : Math.round(sc.wt.pass/sc.wt.total*100) + '%';
+        const ov = sc.overall.pct == null ? 'â' : sc.overall.pct + '%';
         const status = overallStatus(sc.overall.pct).toUpperCase();
-        out.push(`*${d.city.name.toUpperCase()}* — overall ${ov} (${status})`);
+        out.push(`*${d.city.name.toUpperCase()}* â overall ${ov} (${status})`);
         out.push(`  Hot:    ${hotRate}  (${sc.hot.pass}/${sc.hot.total} pass)`);
         out.push(`  Cold:   ${coldRate}  (${sc.cold.pass}/${sc.cold.total} pass)`);
         out.push(`  Weight: ${wtRate}  (${sc.wt.pass}/${sc.wt.total} within 5%)`);
         out.push(``);
     }
-    out.push(`— Sent from Bella & Bona QC Snapshot`);
+    out.push(`â Sent from Bella & Bona QC Snapshot`);
     const text = out.join('\n');
     navigator.clipboard.writeText(text).then(() => {
-        alert('Summary copied — paste it into your email.');
+        alert('Summary copied â paste it into your email.');
     }).catch(() => {
         prompt('Copy this:', text);
     });

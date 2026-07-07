@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-    <title>Culinary QC · Bella &amp; Bona</title>
+    <title>Culinary QC Â· Bella &amp; Bona</title>
     <meta name="description" content="Daily QC instrument: separate Assembly, QC, Dispatch tabs. Cold dishes in blue, hot in red.">
     <meta name="theme-color" content="#2563eb">
 
@@ -13,11 +13,11 @@
 
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%232563eb'/%3E%3Ctext x='16' y='22' text-anchor='middle' font-family='Inter,sans-serif' font-weight='800' font-size='14' fill='white'%3EBB%3C/text%3E%3C/svg%3E">
 
-    <!-- PDF generation libraries (loaded lazily — only needed for Reports) -->
+    <!-- PDF generation libraries (loaded lazily â only needed for Reports) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js" defer></script>
 
-    <!-- Theme bootstrap — applied BEFORE first paint to avoid a flash -->
+    <!-- Theme bootstrap â applied BEFORE first paint to avoid a flash -->
     <script>
     (function(){
         try {
@@ -58,7 +58,7 @@
   --shadow-lg:0 20px 40px rgba(0,0,0,0.08),0 6px 12px rgba(0,0,0,0.05);
 }
 
-/* === DARK MODE — applied via [data-theme="dark"] on <html> === */
+/* === DARK MODE â applied via [data-theme="dark"] on <html> === */
 html[data-theme="dark"]{
   --bg:#0f1115; --bg-2:#171a21; --bg-3:#212530;
   --line:#2a2f3a; --line-2:#262a34;
@@ -280,7 +280,7 @@ body[data-city] .drawer-brand .mark{background:var(--city-accent, var(--brand))}
 .score.dispatch .rate{color:var(--dispatch)}
 
 /* Compact letter-grid (replaces the verbose tile layout). All inputs
-   moved to the modal — tile is just a tap-target with letter + status.
+   moved to the modal â tile is just a tap-target with letter + status.
    Mobile: 4 cols on phones, 6 on small tablets, 8+ on desktop. */
 .dish-grid{display:grid;grid-template-columns:repeat(auto-fill, minmax(120px, 1fr));gap:10px}
 .dish-grid.stage{grid-template-columns:repeat(auto-fill, minmax(120px, 1fr))}
@@ -371,7 +371,7 @@ html[data-theme="dark"] .lt-tile.hot{background:rgba(248,113,113,0.10)}
 .stage-badge.is-set[data-stage=assembly]{background:var(--assembly-soft);color:var(--assembly);border-color:var(--assembly-line)}
 .stage-badge.is-set[data-stage=qc]{background:var(--qc-soft);color:var(--qc);border-color:var(--qc-line)}
 .stage-badge.is-set[data-stage=dispatch]{background:var(--dispatch-soft);color:var(--dispatch);border-color:var(--dispatch-line)}
-.stage-badge.is-set::before{content:'✓';font-weight:800}
+.stage-badge.is-set::before{content:'â';font-weight:800}
 
 /* Time input field */
 .time-cell{flex:0 0 110px;background:var(--bg-3);border:1px solid var(--line);border-radius:8px;padding:10px;display:flex;flex-direction:column;gap:2px;position:relative;transition:background 160ms ease,border-color 160ms ease}
@@ -458,7 +458,7 @@ body[data-view="home"] .menu-back{display:none}
     .modal-overlay{padding:0;align-items:stretch;background:var(--bg);backdrop-filter:none}
     .modal-panel{max-height:none;height:calc(100vh - var(--kb-offset, 0px));height:calc(100dvh - var(--kb-offset, 0px));border-radius:0;border:0;box-shadow:none;max-width:100%}
 }
-/* Body scroll lock — applied while a modal is open so background never scrolls */
+/* Body scroll lock â applied while a modal is open so background never scrolls */
 body.modal-open{overflow:hidden;position:fixed;width:100%;left:0;right:0}
 .modal-body{overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
 .modal-head{position:relative;padding:20px 22px 14px 22px;border-bottom:1px solid var(--line)}
@@ -497,9 +497,9 @@ body.modal-open{overflow:hidden;position:fixed;width:100%;left:0;right:0}
 .photo-empty .camera-btn input{display:none}
 .photo-empty .icon-svg{width:18px;height:18px;display:inline-flex}
 
-/* Compact photo block for the Assembly tab — a small thumbnail-sized panel
+/* Compact photo block for the Assembly tab â a small thumbnail-sized panel
    instead of the big square the QC reference/capture row uses. */
-/* === Ingredient tab cards — kitchen-tablet optimised (big name, big tap target) === */
+/* === Ingredient tab cards â kitchen-tablet optimised (big name, big tap target) === */
 .ing-grid{display:grid;grid-template-columns:repeat(auto-fill, minmax(180px, 1fr));gap:12px;margin-top:6px}
 .ing-card{display:flex;flex-direction:column;align-items:stretch;justify-content:center;gap:6px;padding:18px 14px;min-height:88px;border-radius:12px;border:1.5px solid var(--line);background:var(--bg-2);text-align:center;cursor:pointer;overflow:hidden;transition:transform 120ms ease, box-shadow 120ms ease, border-color 120ms ease;position:relative}
 .ing-card:hover{border-color:var(--brand);box-shadow:var(--shadow-sm)}
@@ -511,7 +511,7 @@ html[data-theme="dark"] .ing-card.has-data{background:rgba(34,197,94,0.10)}
 .ing-card-temp.is-set{color:var(--pass);background:rgba(34,197,94,0.14)}
 .ing-card.is-topping .ing-card-temp{color:#0891b2;background:rgba(8,145,178,0.10)}
 .ing-card .ing-card-thumb-img{position:absolute;top:6px;right:6px;width:28px;height:28px;border-radius:6px;object-fit:cover;border:2px solid white;box-shadow:var(--shadow-sm)}
-/* Compact in-dish ingredient card — about half the height of the global
+/* Compact in-dish ingredient card â about half the height of the global
    stage version (which is intentionally bigger for kitchen tablet use). */
 .ing-card-mini{min-height:52px;padding:9px 12px;gap:3px}
 .ing-card-mini .ing-card-name{font-size:14px}
@@ -702,7 +702,7 @@ html[data-theme="dark"] .warmer-slot.filled.hot{background:rgba(248,113,113,0.10
 .report-go:disabled{opacity:0.5;cursor:not-allowed;background:var(--mute-low)}
 .report-go .spinner{width:16px;height:16px;border:2px solid rgba(255,255,255,0.4);border-top-color:#fff;border-radius:50%;animation:rep-spin 700ms linear infinite;display:none}
 .report-go.is-loading .spinner{display:inline-block}
-.report-go.is-loading .label::after{content:' · generating…'}
+.report-go.is-loading .label::after{content:' Â· generatingâ¦'}
 @keyframes rep-spin{to{transform:rotate(360deg)}}
 .report-actions{display:flex;gap:10px;flex-wrap:wrap}
 .report-actions > button{flex:1 1 200px}
@@ -791,7 +791,7 @@ html[data-theme="dark"] #report-view-host{background:#f9fafb}
 .fridge-list{display:grid;grid-template-columns:repeat(auto-fill, minmax(280px, 1fr));gap:14px;margin-top:8px}
 .fridge-card{background:var(--bg-2);border:1px solid var(--line);border-radius:14px;padding:16px;box-shadow:var(--shadow-sm);min-height:140px;display:flex;flex-direction:column;gap:10px}
 .fridge-card .fridge-name{font-weight:700;font-size:15px;color:var(--ink);display:flex;align-items:center;gap:8px}
-.fridge-card .fridge-name::before{content:'❄';color:var(--cold);font-size:16px}
+.fridge-card .fridge-name::before{content:'â';color:var(--cold);font-size:16px}
 .fridge-card .fridge-bin{flex:1;border:1px dashed var(--line);border-radius:10px;padding:10px;background:var(--bg-3);min-height:70px;display:flex;flex-wrap:wrap;gap:6px;align-content:flex-start}
 .fridge-card.empty .fridge-bin::before{content:'Drop dishes here';color:var(--mute-low);font-size:12px;font-weight:600}
 .fridge-pill{background:var(--bg-2);border:1px solid var(--line);border-radius:99px;padding:4px 10px 4px 4px;font-size:12px;font-weight:600;display:inline-flex;align-items:center;gap:6px;color:var(--ink)}
@@ -918,7 +918,7 @@ html[data-theme="dark"] #report-view-host{background:#f9fafb}
 .settings-help code{font-family:ui-monospace,monospace;background:white;padding:1px 6px;border-radius:4px;border:1px solid var(--line);font-size:12px}
 .settings-help summary{cursor:pointer;font-weight:600;color:var(--ink);outline:none;list-style:none}
 .settings-help summary::-webkit-details-marker{display:none}
-.settings-help summary::before{content:'▸ ';color:var(--mute);transition:transform 160ms ease;display:inline-block}
+.settings-help summary::before{content:'â¸ ';color:var(--mute);transition:transform 160ms ease;display:inline-block}
 .settings-help[open] summary::before{transform:rotate(90deg)}
 .settings-help pre{background:white;border:1px solid var(--line);border-radius:6px;padding:10px;font-size:11px;overflow:auto;margin-top:8px;max-height:240px;font-family:ui-monospace,monospace}
 </style>
@@ -931,7 +931,7 @@ html[data-theme="dark"] #report-view-host{background:#f9fafb}
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
     </button>
     <button class="menu-back" id="menu-home" type="button" aria-label="Back to home">
-        ← Home
+        â Home
     </button>
 </div>
 
@@ -940,69 +940,69 @@ html[data-theme="dark"] #report-view-host{background:#f9fafb}
 <aside class="drawer" id="drawer" aria-hidden="true" aria-label="Navigation">
     <div class="drawer-head">
         <div class="drawer-brand"><span class="mark" id="drawer-mark">BB</span><span>Bella &amp; Bona <span class="city-tag" id="drawer-city-tag"></span></span></div>
-        <button class="drawer-x" id="drawer-close" aria-label="Close menu">✕</button>
+        <button class="drawer-x" id="drawer-close" aria-label="Close menu">â</button>
     </div>
     <div class="drawer-section">
         <div class="label">Navigate</div>
         <button class="drawer-item" data-go="home" type="button">
-            <span class="glyph">⌂</span>
+            <span class="glyph">â</span>
             <span class="name">Home</span>
         </button>
         <button class="drawer-item" data-go="stage" data-stage="assembly" type="button">
-            <span class="glyph">①</span>
+            <span class="glyph">â </span>
             <span class="name">Assembly</span>
-            <span class="badge" id="drawer-count-assembly">—</span>
+            <span class="badge" id="drawer-count-assembly">â</span>
         </button>
         <button class="drawer-item" data-go="stage" data-stage="qc" type="button">
-            <span class="glyph">②</span>
+            <span class="glyph">â¡</span>
             <span class="name">QC Check</span>
-            <span class="badge" id="drawer-count-qc">—</span>
+            <span class="badge" id="drawer-count-qc">â</span>
         </button>
         <button class="drawer-item" data-go="stage" data-stage="dispatch" type="button">
-            <span class="glyph">③</span>
+            <span class="glyph">â¢</span>
             <span class="name">Dispatch</span>
-            <span class="badge" id="drawer-count-dispatch">—</span>
+            <span class="badge" id="drawer-count-dispatch">â</span>
         </button>
         <button class="drawer-item" data-go="stage" data-stage="placement" type="button">
-            <span class="glyph">④</span>
+            <span class="glyph">â£</span>
             <span class="name">Placement</span>
-            <span class="badge" id="drawer-count-placement">—</span>
+            <span class="badge" id="drawer-count-placement">â</span>
         </button>
     </div>
     <div class="drawer-divider"></div>
     <div class="drawer-section">
         <div class="label">Tools</div>
         <button class="drawer-item" data-go="report" type="button">
-            <span class="glyph">⎙</span>
+            <span class="glyph">â</span>
             <span class="name">Download PDF report</span>
         </button>
         <a class="drawer-item" href="daily.html" style="text-decoration:none">
-            <span class="glyph">🌍</span>
-            <span class="name">Daily snapshot · Berlin + Munich</span>
+            <span class="glyph">ð</span>
+            <span class="name">Daily snapshot Â· Berlin + Munich</span>
         </a>
         <button class="drawer-item" data-go="email-snapshot" type="button">
-            <span class="glyph">📧</span>
+            <span class="glyph">ð§</span>
             <span class="name">Email today's snapshot to team</span>
         </button>
         <button class="drawer-item" data-go="settings" type="button">
-            <span class="glyph">⚙</span>
-            <span class="name">Settings · paste menu, warmers, integrations</span>
+            <span class="glyph">â</span>
+            <span class="name">Settings Â· paste menu, warmers, integrations</span>
         </button>
         <button class="drawer-item" data-go="theme" type="button">
-            <span class="glyph">◐</span>
+            <span class="glyph">â</span>
             <span class="name" id="drawer-theme-label">Toggle dark / light</span>
         </button>
         <button class="drawer-item" data-go="copy" type="button">
-            <span class="glyph">⧉</span>
+            <span class="glyph">â§</span>
             <span class="name">Copy today's summary</span>
         </button>
         <button class="drawer-item" data-go="print" type="button">
-            <span class="glyph">⎙</span>
+            <span class="glyph">â</span>
             <span class="name">Print</span>
         </button>
     </div>
     <div class="drawer-footer">
-        Bella &amp; Bona Culinary Ops · Firebase project <code id="drawer-fb-project" style="font-family:ui-monospace,monospace;font-size:11px;background:var(--bg-3);padding:1px 6px;border-radius:4px">—</code>
+        Bella &amp; Bona Culinary Ops Â· Firebase project <code id="drawer-fb-project" style="font-family:ui-monospace,monospace;font-size:11px;background:var(--bg-3);padding:1px 6px;border-radius:4px">â</code>
         <button type="button" class="city-switch-btn" id="switch-city-link">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
             Switch city
@@ -1021,8 +1021,8 @@ html[data-theme="dark"] #report-view-host{background:#f9fafb}
         </div>
 
         <div class="week-strip" id="week-strip" role="group" aria-label="Date selection">
-            <button class="nav" id="week-prev" aria-label="Previous week">‹</button>
-            <button class="nav" id="week-next" aria-label="Next week" style="order:99">›</button>
+            <button class="nav" id="week-prev" aria-label="Previous week">â¹</button>
+            <button class="nav" id="week-next" aria-label="Next week" style="order:99">âº</button>
         </div>
 
         <div class="actions">
@@ -1030,7 +1030,7 @@ html[data-theme="dark"] #report-view-host{background:#f9fafb}
                 <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
                 <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="M4.93 4.93l1.41 1.41"/><path d="M17.66 17.66l1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="M6.34 17.66l-1.41 1.41"/><path d="M19.07 4.93l-1.41 1.41"/></svg>
             </button>
-            <button class="btn btn-icon" id="btn-settings" title="Settings · paste menu JSON" aria-label="Settings">⚙</button>
+            <button class="btn btn-icon" id="btn-settings" title="Settings Â· paste menu JSON" aria-label="Settings">â</button>
             <button class="btn" id="btn-export-summary">Copy</button>
             <button class="btn" id="btn-print">Print</button>
         </div>
@@ -1045,77 +1045,77 @@ html[data-theme="dark"] #report-view-host{background:#f9fafb}
     <div class="stage-card-grid" id="home-stage-grid">
         <button class="stage-card" data-stage="ingredients" type="button">
             <div>
-                <div class="step">✦ Ingredients</div>
+                <div class="step">â¦ Ingredients</div>
                 <div class="stage-name">Ingredients</div>
                 <div class="stage-desc">Raw materials after cooking: pick each ingredient, snap a photo, stamp its temperature before it goes into a dish.</div>
             </div>
             <div class="stage-progress">
-                <span class="progress-pill" id="home-count-ingredients">—</span>
+                <span class="progress-pill" id="home-count-ingredients">â</span>
                 <span>logged today</span>
             </div>
-            <div class="stage-arrow">→</div>
+            <div class="stage-arrow">â</div>
         </button>
         <button class="stage-card" data-stage="assembly" type="button">
             <div>
-                <div class="step">① Assembly</div>
+                <div class="step">â  Assembly</div>
                 <div class="stage-name">Assembly</div>
                 <div class="stage-desc">Plate the dish: confirm ingredients are present and stamp the temperature when it leaves the line.</div>
             </div>
             <div class="stage-progress">
-                <span class="progress-pill" id="home-count-assembly">—</span>
+                <span class="progress-pill" id="home-count-assembly">â</span>
                 <span>logged today</span>
             </div>
-            <div class="stage-arrow">→</div>
+            <div class="stage-arrow">â</div>
         </button>
         <button class="stage-card" data-stage="qc" type="button">
             <div>
-                <div class="step">② QC Check</div>
+                <div class="step">â¡ QC Check</div>
                 <div class="stage-name">QC Check</div>
                 <div class="stage-desc">Full quality control: photo, ingredients tick-list, three temperature + weight samples, chef's note.</div>
             </div>
             <div class="stage-progress">
-                <span class="progress-pill" id="home-count-qc">—</span>
+                <span class="progress-pill" id="home-count-qc">â</span>
                 <span>logged today</span>
             </div>
-            <div class="stage-arrow">→</div>
+            <div class="stage-arrow">â</div>
         </button>
         <button class="stage-card" data-stage="dispatch" type="button">
             <div>
-                <div class="step">③ Dispatch</div>
+                <div class="step">â¢ Dispatch</div>
                 <div class="stage-name">Dispatch</div>
                 <div class="stage-desc">Last reading before the van: confirm the dish is still in spec and stamp the dispatch time.</div>
             </div>
             <div class="stage-progress">
-                <span class="progress-pill" id="home-count-dispatch">—</span>
+                <span class="progress-pill" id="home-count-dispatch">â</span>
                 <span>logged today</span>
             </div>
-            <div class="stage-arrow">→</div>
+            <div class="stage-arrow">â</div>
         </button>
         <button class="stage-card" data-stage="placement" type="button">
             <div>
-                <div class="step">④ Placement</div>
+                <div class="step">â£ Placement</div>
                 <div class="stage-name">Placement</div>
                 <div class="stage-desc">Where each dish lives: warmer compartment or fridge. Tap a slot to assign a dish.</div>
             </div>
             <div class="stage-progress">
-                <span class="progress-pill" id="home-count-placement">—</span>
+                <span class="progress-pill" id="home-count-placement">â</span>
                 <span>placed today</span>
             </div>
-            <div class="stage-arrow">→</div>
+            <div class="stage-arrow">â</div>
         </button>
     </div>
     <div class="home-meta">
-        <span class="home-meta-pill" id="home-week">—</span>
-        <span class="home-meta-pill" id="home-date">—</span>
-        <span class="home-meta-pill" id="home-menu-count">—</span>
+        <span class="home-meta-pill" id="home-week">â</span>
+        <span class="home-meta-pill" id="home-date">â</span>
+        <span class="home-meta-pill" id="home-menu-count">â</span>
     </div>
 
-    <!-- Daily summary table — lives only on the home page so it doesn't
+    <!-- Daily summary table â lives only on the home page so it doesn't
          duplicate on every stage view. Auto-updates as checks save. -->
     <section class="section" style="margin-top:24px">
         <div class="section-head">
             <div class="title">Daily summary</div>
-            <div style="font-size:13px;color:var(--mute);font-weight:500" id="summary-date">—</div>
+            <div style="font-size:13px;color:var(--mute);font-weight:500" id="summary-date">â</div>
         </div>
         <div class="table-card">
             <div class="table-scroll">
@@ -1141,37 +1141,37 @@ html[data-theme="dark"] #report-view-host{background:#f9fafb}
 <!-- TOP-LEVEL STAGE TABS (visible inside a stage view) -->
 <nav class="stage-bar" aria-label="Stage">
     <div class="stage-bar-inner">
-        <button class="home-link" id="go-home" type="button" aria-label="Back to stage chooser">← Home</button>
+        <button class="home-link" id="go-home" type="button" aria-label="Back to stage chooser">â Home</button>
         <div class="stage-tabs" role="tablist">
             <button class="stage-tab" data-stage="ingredients" role="tab" aria-selected="false">
-                <span class="stage-emoji">✦</span>
+                <span class="stage-emoji">â¦</span>
                 <span class="tab-label-full">Ingredients</span>
                 <span class="tab-label-short">Ing</span>
-                <span class="stage-count" id="count-ingredients">—</span>
+                <span class="stage-count" id="count-ingredients">â</span>
             </button>
             <button class="stage-tab" data-stage="assembly" role="tab" aria-selected="false">
-                <span class="stage-emoji">①</span>
+                <span class="stage-emoji">â </span>
                 <span class="tab-label-full">Assembly</span>
                 <span class="tab-label-short">Asm</span>
-                <span class="stage-count" id="count-assembly">—</span>
+                <span class="stage-count" id="count-assembly">â</span>
             </button>
             <button class="stage-tab is-active" data-stage="qc" role="tab" aria-selected="true">
-                <span class="stage-emoji">②</span>
+                <span class="stage-emoji">â¡</span>
                 <span class="tab-label-full">QC Check</span>
                 <span class="tab-label-short">QC</span>
-                <span class="stage-count" id="count-qc">—</span>
+                <span class="stage-count" id="count-qc">â</span>
             </button>
             <button class="stage-tab" data-stage="dispatch" role="tab" aria-selected="false">
-                <span class="stage-emoji">③</span>
+                <span class="stage-emoji">â¢</span>
                 <span class="tab-label-full">Dispatch</span>
                 <span class="tab-label-short">Dsp</span>
-                <span class="stage-count" id="count-dispatch">—</span>
+                <span class="stage-count" id="count-dispatch">â</span>
             </button>
             <button class="stage-tab" data-stage="placement" role="tab" aria-selected="false">
-                <span class="stage-emoji">④</span>
+                <span class="stage-emoji">â£</span>
                 <span class="tab-label-full">Placement</span>
                 <span class="tab-label-short">Pls</span>
-                <span class="stage-count" id="count-placement">—</span>
+                <span class="stage-count" id="count-placement">â</span>
             </button>
         </div>
     </div>
@@ -1186,10 +1186,10 @@ html[data-theme="dark"] #report-view-host{background:#f9fafb}
 
 <main class="container">
 
-    <!-- 1) Dish letters first — cold then hot, full grid on top of the page -->
+    <!-- 1) Dish letters first â cold then hot, full grid on top of the page -->
     <section class="section">
         <div class="section-head">
-            <div class="title" id="dish-section-title">Dishes <span class="count" id="pass-count">—</span></div>
+            <div class="title" id="dish-section-title">Dishes <span class="count" id="pass-count">â</span></div>
             <div class="filter" role="group" aria-label="Filter">
                 <button class="is-active" data-filter="all">All</button>
                 <button data-filter="cold">Cold</button>
@@ -1198,24 +1198,24 @@ html[data-theme="dark"] #report-view-host{background:#f9fafb}
             </div>
         </div>
         <div id="dish-area">
-            <div class="loading"><span class="spinner"></span>Loading menu &amp; readings…</div>
+            <div class="loading"><span class="spinner"></span>Loading menu &amp; readingsâ¦</div>
         </div>
     </section>
 
-    <!-- 2) Alert banner — only renders when there's something to flag -->
+    <!-- 2) Alert banner â only renders when there's something to flag -->
     <div id="alert-host"></div>
 
     <!-- 3) Compliance scorecard -->
     <section class="section">
         <div class="section-head">
-            <div class="title" id="scorecard-title">—</div>
-            <div style="font-size:13px;color:var(--mute);font-weight:500" id="scorecard-date">—</div>
+            <div class="title" id="scorecard-title">â</div>
+            <div style="font-size:13px;color:var(--mute);font-weight:500" id="scorecard-date">â</div>
         </div>
         <div class="scorecard" id="scorecard"></div>
     </section>
 
     <footer class="footer">
-        Bella &amp; Bona Culinary Ops · synced with Firebase project <code id="footer-fb-project">—</code>
+        Bella &amp; Bona Culinary Ops Â· synced with Firebase project <code id="footer-fb-project">â</code>
     </footer>
 </main>
 
@@ -1233,8 +1233,8 @@ import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChang
    Each city has its own Firebase project, fully isolated data (menus,
    checks, storage config, team roster, integrations). Pick a city by
    visiting either:
-     ?city=berlin    → Berlin (Firebase project quality-control-24)
-     ?city=munich    → Munich (Firebase project quality-control-86)
+     ?city=berlin    â Berlin (Firebase project quality-control-24)
+     ?city=munich    â Munich (Firebase project quality-control-86)
    Or via the in-app city picker. The chosen city is also remembered in
    localStorage so reload + bookmarks Just Work. */
 const CITIES = {
@@ -1269,9 +1269,9 @@ const CITIES = {
 };
 
 /* Determine the active city. Priority:
-   1. ?city= URL param (highest — explicit / bookmark)
+   1. ?city= URL param (highest â explicit / bookmark)
    2. localStorage (returning visit on a tablet that's been set once)
-   3. Show city picker (no auto-pick — we never guess) */
+   3. Show city picker (no auto-pick â we never guess) */
 function detectCity(){
     try {
         const params = new URLSearchParams(window.location.search);
@@ -1289,9 +1289,9 @@ function detectCity(){
 function showCityPicker(){
     const html = `
         <div style="position:fixed;inset:0;background:#0f172a;color:#fff;z-index:2000;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;font-family:'Inter',system-ui,sans-serif">
-            <div style="font-size:13px;letter-spacing:0.18em;text-transform:uppercase;color:#94a3b8;margin-bottom:10px">Bella &amp; Bona · Culinary QC</div>
+            <div style="font-size:13px;letter-spacing:0.18em;text-transform:uppercase;color:#94a3b8;margin-bottom:10px">Bella &amp; Bona Â· Culinary QC</div>
             <h1 style="font-size:28px;font-weight:800;letter-spacing:-0.02em;margin:0 0 8px 0;text-align:center">Pick your city</h1>
-            <div style="font-size:14px;color:#94a3b8;margin-bottom:28px;text-align:center;max-width:360px">Each city has its own dishes, logs, and reports. Bookmark the URL after picking — you'll never see this screen again on this device.</div>
+            <div style="font-size:14px;color:#94a3b8;margin-bottom:28px;text-align:center;max-width:360px">Each city has its own dishes, logs, and reports. Bookmark the URL after picking â you'll never see this screen again on this device.</div>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;width:100%;max-width:520px">
                 ${Object.values(CITIES).map(city => `
                     <a href="?city=${encodeURIComponent(city.slug)}" style="display:flex;flex-direction:column;align-items:center;padding:28px 16px;border-radius:14px;background:#1e293b;border:1px solid #334155;text-decoration:none;color:#fff;transition:transform 140ms ease,background 140ms ease;font-weight:700">
@@ -1309,7 +1309,7 @@ function showCityPicker(){
 const activeCity = detectCity();
 if(!activeCity){
     showCityPicker();
-    throw new Error('No city selected — picker shown');
+    throw new Error('No city selected â picker shown');
 }
 
 const firebaseConfig = activeCity.firebase;
@@ -1321,15 +1321,15 @@ window.__qc_city = activeCity;
 /* === Auth gate (Berlin only) ===========================================
    Restricts the Berlin app to a hard-coded list of authorized Gmail
    accounts via Google sign-in. The list lives here so it can be edited
-   in one place and committed via Git — no Firebase Console required to
+   in one place and committed via Git â no Firebase Console required to
    add/remove people.
 
    Until the user is signed in AND their email is on the allowlist, a
    fullscreen overlay hides the app. Munich is unaffected by this gate.
 
    IMPORTANT setup steps in the Firebase Console (one-time):
-     1. Authentication → Sign-in method → enable Google
-     2. Authentication → Settings → Authorized domains → ensure
+     1. Authentication â Sign-in method â enable Google
+     2. Authentication â Settings â Authorized domains â ensure
         berlinkitchen123-blip.github.io is listed
    ========================================================================*/
 const _ALL_EMAILS = {berlin:[
@@ -1347,12 +1347,12 @@ if(activeCity.slug === 'berlin' || activeCity.slug === 'munich'){
     const overlay = document.createElement('div');
     overlay.id = 'auth-gate';
     overlay.style.cssText = 'position:fixed;inset:0;background:#0f172a;color:#fff;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;font-family:Inter,system-ui,sans-serif';
-    overlay.innerHTML = '<div style="color:#94a3b8;font-size:13px">Checking sign-in…</div>';
+    overlay.innerHTML = '<div style="color:#94a3b8;font-size:13px">Checking sign-inâ¦</div>';
     document.body.appendChild(overlay);
 
     function renderSignIn(errMsg){
         overlay.innerHTML = `
-            <div style="font-size:13px;letter-spacing:0.18em;text-transform:uppercase;color:#94a3b8;margin-bottom:10px">Bella &amp; Bona · Culinary QC · Berlin</div>
+            <div style="font-size:13px;letter-spacing:0.18em;text-transform:uppercase;color:#94a3b8;margin-bottom:10px">Bella &amp; Bona Â· Culinary QC Â· Berlin</div>
             <h1 style="font-size:26px;font-weight:800;margin:0 0 12px 0;text-align:center">Sign in to continue</h1>
             <div style="font-size:14px;color:#94a3b8;margin:0 0 24px 0;max-width:340px;text-align:center">Only authorized Google accounts can access this app.</div>
             <button id="auth-signin-btn" style="display:inline-flex;align-items:center;gap:10px;background:#fff;color:#1f2937;border:0;border-radius:10px;padding:12px 22px;font-size:15px;font-weight:700;cursor:pointer">
@@ -1417,23 +1417,23 @@ const modalState = { letter: null, tab: 'qc', ingredient: null };
 
 /* Compartment layouts for warmers. Each entry: { id, label } */
 const WARMER_LAYOUTS = {
-    'h-2x2':  { name:'2 × 2 (4 slots)',           rows:2, cols:2, cells:['tl','tr','bl','br'],
+    'h-2x2':  { name:'2 Ã 2 (4 slots)',           rows:2, cols:2, cells:['tl','tr','bl','br'],
                 labels:{tl:'Top L', tr:'Top R', bl:'Bot L', br:'Bot R'} },
-    'h-2x3':  { name:'2 × 3 horizontal (6 slots)', rows:2, cols:3, cells:['tl','tm','tr','bl','bm','br'],
+    'h-2x3':  { name:'2 Ã 3 horizontal (6 slots)', rows:2, cols:3, cells:['tl','tm','tr','bl','bm','br'],
                 labels:{tl:'Top L', tm:'Top M', tr:'Top R', bl:'Bot L', bm:'Bot M', br:'Bot R'} },
-    'v-3x2':  { name:'3 × 2 vertical (6 slots)',   rows:3, cols:2, cells:['tl','tr','ml','mr','bl','br'],
+    'v-3x2':  { name:'3 Ã 2 vertical (6 slots)',   rows:3, cols:2, cells:['tl','tr','ml','mr','bl','br'],
                 labels:{tl:'Top L', tr:'Top R', ml:'Mid L', mr:'Mid R', bl:'Bot L', br:'Bot R'} }
 };
 
 /* === Date helpers === */
 function todayIso(){ const d=new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
-/* If today is Sat or Sun, roll back to Friday — Bella & Bona only operates
-   Mon–Fri so the default landing date should always be a working day. */
+/* If today is Sat or Sun, roll back to Friday â Bella & Bona only operates
+   MonâFri so the default landing date should always be a working day. */
 function todayOrLastFriday(){
     const d = new Date();
     const dow = d.getDay(); // 0 Sun, 6 Sat
-    if(dow === 0) d.setDate(d.getDate() - 2); // Sun → Fri
-    else if(dow === 6) d.setDate(d.getDate() - 1); // Sat → Fri
+    if(dow === 0) d.setDate(d.getDate() - 2); // Sun â Fri
+    else if(dow === 6) d.setDate(d.getDate() - 1); // Sat â Fri
     return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 }
 function parseIso(iso){ return new Date(iso+'T12:00:00'); }
@@ -1477,7 +1477,7 @@ function isCold(dish){ return (dish?.dishType||'').toLowerCase().includes('cold'
 /* Sort dishes ascending by letter (case-insensitive, numeric-aware) and
    return a NEW menu object. Cold + hot stay mixed in the result; every
    downstream filter (cold = filter isCold, hot = filter !isCold) preserves
-   this order — so cold dishes show alphabetically, hot dishes show
+   this order â so cold dishes show alphabetically, hot dishes show
    alphabetically, in every tab + every report. */
 function sortMenuByLetter(menu){
     if(!menu || !Array.isArray(menu.dishes)) return menu;
@@ -1543,7 +1543,7 @@ function weightStatus(v, dish){
     if(pct<=0.15) return 'watch';
     return 'hold';
 }
-function statusLabel(s){ return s==='pass'?'Pass':s==='watch'?'Watch':s==='hold'?'Hold':'—'; }
+function statusLabel(s){ return s==='pass'?'Pass':s==='watch'?'Watch':s==='hold'?'Hold':'â'; }
 function stageLabel(s){ return s==='assembly'?'Assembly':s==='qc'?'QC Check':s==='dispatch'?'Dispatch':s; }
 
 /* === Firebase === */
@@ -1559,7 +1559,7 @@ function listenStorage(){
         state.storage = {
             warmers: toArr(v.warmers),
             fridges: toArr(v.fridges),
-            team: toArr(v.team) // team roster — same shape: {id, name, order, initials?}
+            team: toArr(v.team) // team roster â same shape: {id, name, order, initials?}
         };
         if(state.view === 'stage' && (state.stage === 'placement' || state.stage === 'assembly')) renderAll();
     });
@@ -1579,7 +1579,7 @@ function teamInitials(name){
 /* Entry shape: { by: string | string[], count: number, ts: 'HH:MM' }
    - A plain `by` string is a single contributor.
    - `by` as an array is a shared batch: N people prepared `count` dishes
-     together. The total still counts as `count` (not count × N).
+     together. The total still counts as `count` (not count Ã N).
    Backward compat: also reads a top-level c.assembly.count scalar. */
 function assemblyEntries(c){
     if(!c?.assembly) return [];
@@ -1615,7 +1615,7 @@ async function setMemberAssemblyCount(letter, memberName, count){
     const c = state.checks[letter] || {};
     const entries = assemblyEntries(c).slice();
     // Find an existing single-person entry for this member (don't touch
-    // batch entries — those are shared).
+    // batch entries â those are shared).
     const idx = entries.findIndex(e => !Array.isArray(e.by) && e.by === memberName);
     const ts = nowHHMM();
     if(n === 0){
@@ -1661,7 +1661,7 @@ async function saveFridge(fridge){
 }
 async function deleteFridge(id){ await set(ref(db, `storage/fridges/${id}`), null); }
 
-/* Per-dish placements — now an array so the same dish can sit in many
+/* Per-dish placements â now an array so the same dish can sit in many
    warmer compartments and/or fridges at once (e.g. a 500-portion item
    spread across multiple slots). Backward compatible with the old
    single `placement` field (treated as a 1-element array on read). */
@@ -1731,7 +1731,7 @@ function listenIntegrations(){
             resendSender: v.resendSender || '',
             resendTo: v.resendTo || '',
             resendCc: v.resendCc || '',
-            // Gmail SMTP credentials — read by the scheduled GitHub Action via
+            // Gmail SMTP credentials â read by the scheduled GitHub Action via
             // the Firebase REST endpoint. Anyone who can read this database can
             // read the password too; app passwords are revocable if leaked.
             gmail: v.gmail || { user: '', appPassword: '', fromName: '', fromAddress: '' }
@@ -1749,7 +1749,7 @@ async function saveGmailConfig(partial){
 /* === Settings lock (PIN-protected) =================================
    Stops accidental changes by kitchen staff. PIN hashed with SHA-256
    before sending to Firebase. Anyone who can edit Firebase directly can
-   still bypass this — it's an "are you sure" gate, not real security. */
+   still bypass this â it's an "are you sure" gate, not real security. */
 async function hashPin(pin){
     const buf = new TextEncoder().encode(String(pin || ''));
     const hash = await crypto.subtle.digest('SHA-256', buf);
@@ -1769,7 +1769,7 @@ async function setSettingsPin(pin){
     }
     const hash = await hashPin(pin);
     await set(ref(db, 'settings-lock'), { hash, enabled: true, updatedAt: serverTimestamp() });
-    // Do NOT auto-unlock — force the admin to re-enter the PIN next time so
+    // Do NOT auto-unlock â force the admin to re-enter the PIN next time so
     // they can immediately see that the lock works.
     sessionStorage.removeItem('bb.settings.unlocked');
 }
@@ -1782,7 +1782,7 @@ function lockSettingsNow(){
 
 /* Ask for the PIN before showing the panel. Returns true if unlocked. */
 async function promptPinIfLocked(){
-    // Listener may not have fired yet on first page load — do a one-shot
+    // Listener may not have fired yet on first page load â do a one-shot
     // fetch so we never accidentally let someone in before lock state arrives.
     let lock = state.settingsLock;
     if(lock === undefined){
@@ -1802,7 +1802,7 @@ async function promptPinIfLocked(){
             <div style="background:var(--bg-2);border:1px solid var(--line);border-radius:14px;padding:22px;max-width:340px;width:100%;box-shadow:var(--shadow-lg);font-family:Inter,sans-serif">
                 <div style="font-size:13px;letter-spacing:0.06em;text-transform:uppercase;color:var(--mute);font-weight:700;margin-bottom:4px">Settings locked</div>
                 <div style="font-size:18px;font-weight:800;color:var(--ink);margin-bottom:14px;letter-spacing:-0.01em">Enter PIN to continue</div>
-                <input type="password" id="pin-input" inputmode="numeric" maxlength="12" placeholder="••••" autocomplete="off"
+                <input type="password" id="pin-input" inputmode="numeric" maxlength="12" placeholder="â¢â¢â¢â¢" autocomplete="off"
                     style="width:100%;font-size:24px;text-align:center;letter-spacing:0.4em;padding:12px;border:1px solid var(--line);border-radius:10px;background:var(--bg-3);color:var(--ink);font-family:inherit;font-weight:700"/>
                 <div id="pin-err" style="font-size:12px;color:var(--hold);margin-top:8px;min-height:14px"></div>
                 <div style="display:flex;gap:8px;margin-top:10px">
@@ -1883,7 +1883,7 @@ function updateStageTabs(){
     ['assembly','qc','dispatch'].forEach(stg=>{
         const { logged, total } = countLoggedForStage(stg);
         const cnt = document.getElementById(`count-${stg}`);
-        if(cnt) cnt.textContent = total === 0 ? '—' : `${logged}/${total}`;
+        if(cnt) cnt.textContent = total === 0 ? 'â' : `${logged}/${total}`;
     });
     document.querySelectorAll('.stage-tab').forEach(t=>{
         const s = t.getAttribute('data-stage');
@@ -1891,10 +1891,10 @@ function updateStageTabs(){
         t.setAttribute('aria-selected', s === state.stage ? 'true' : 'false');
     });
     const ttl = document.getElementById('scorecard-title');
-    if(ttl) ttl.textContent = `${stageLabel(state.stage)} · today`;
+    if(ttl) ttl.textContent = `${stageLabel(state.stage)} Â· today`;
     const dst = document.getElementById('dish-section-title');
     const dishCount = state.menu ? (state.menu.dishes||[]).length : 0;
-    if(dst) dst.innerHTML = `${stageLabel(state.stage)} sheet <span class="count">${dishCount || '—'}</span>`;
+    if(dst) dst.innerHTML = `${stageLabel(state.stage)} sheet <span class="count">${dishCount || 'â'}</span>`;
 }
 
 /* === Week strip === */
@@ -1902,7 +1902,7 @@ function renderWeekStrip(){
     const strip=document.getElementById('week-strip');
     strip.querySelectorAll('.day').forEach(d=>d.remove());
     const monday=state.weekStartIso, today=todayIso();
-    // Mon–Fri only — Bella & Bona doesn't operate weekends
+    // MonâFri only â Bella & Bona doesn't operate weekends
     const days=[0,1,2,3,4].map(o=>shiftIso(monday,o));
     const next=document.getElementById('week-next');
     days.forEach(iso=>{
@@ -1921,7 +1921,7 @@ function renderWeekStrip(){
 function renderAlert(){
     const host=document.getElementById('alert-host');
     if(!state.menu){
-        host.innerHTML=`<div class="alert"><div class="icon">i</div><div class="body"><div class="title">No menu for this week</div><div class="detail">No <code>menus/${isoYearWeek(state.selectedDate)}</code> record yet. Click ⚙ to paste menu JSON.</div></div></div>`;
+        host.innerHTML=`<div class="alert"><div class="icon">i</div><div class="body"><div class="title">No menu for this week</div><div class="detail">No <code>menus/${isoYearWeek(state.selectedDate)}</code> record yet. Click â to paste menu JSON.</div></div></div>`;
         return;
     }
     const dishes=state.menu.dishes||[];
@@ -1931,7 +1931,7 @@ function renderAlert(){
     const empties=stats.filter(s=>s.status==='empty');
 
     if(fails.length===0 && warns.length===0 && empties.length<dishes.length){
-        host.innerHTML=`<div class="alert is-ok"><div class="icon">✓</div><div class="body"><div class="title">${stageLabel(state.stage)}: all within spec</div><div class="detail">Every logged ${stageLabel(state.stage).toLowerCase()} reading on ${humanDate(state.selectedDate)} is passing.</div></div></div>`;
+        host.innerHTML=`<div class="alert is-ok"><div class="icon">â</div><div class="body"><div class="title">${stageLabel(state.stage)}: all within spec</div><div class="detail">Every logged ${stageLabel(state.stage).toLowerCase()} reading on ${humanDate(state.selectedDate)} is passing.</div></div></div>`;
         return;
     }
     if(empties.length===dishes.length){
@@ -1952,10 +1952,10 @@ function renderAlert(){
     ].filter(Boolean);
     host.innerHTML=`
         <div class="alert is-${tone}">
-            <div class="icon">${tone==='fail'?'!':'•'}</div>
+            <div class="icon">${tone==='fail'?'!':'â¢'}</div>
             <div class="body">
-                <div class="title">${stageLabel(state.stage)}: ${parts.join(' · ')}</div>
-                <div class="detail">${escapeHtml(top.dish.dishName)} reading ${t!=null?Number(t).toFixed(1):'—'}°C · ${isCold(top.dish)?`spec ≤${COLD_MAX}°C`:`spec ≥${HOT_MIN}°C`}</div>
+                <div class="title">${stageLabel(state.stage)}: ${parts.join(' Â· ')}</div>
+                <div class="detail">${escapeHtml(top.dish.dishName)} reading ${t!=null?Number(t).toFixed(1):'â'}Â°C Â· ${isCold(top.dish)?`spec â¤${COLD_MAX}Â°C`:`spec â¥${HOT_MIN}Â°C`}</div>
             </div>
             <button class="btn btn-ghost-danger btn-sm" onclick="window.__qc.filterToIssues()">Review</button>
         </div>
@@ -1988,11 +1988,11 @@ function renderScorecard(){
                 if(Math.abs((w-d.theoreticalWeight)/d.theoreticalWeight)<=0.08) b.wOk++;
             }
         }
-        const pct=(n,d)=>d===0?'—':`${Math.round(n/d*100)}%`;
+        const pct=(n,d)=>d===0?'â':`${Math.round(n/d*100)}%`;
         host.innerHTML=[
-            {cls:'cold',    label:'Cold · temperature', rate:pct(b.coldPass,b.coldTot), meta:b.coldTot?`${b.coldPass} of ${b.coldTot} pass`:'no readings'},
-            {cls:'hot',     label:'Hot · temperature',  rate:pct(b.hotPass,b.hotTot),   meta:b.hotTot?`${b.hotPass} of ${b.hotTot} pass`:'no readings'},
-            {cls:'weight',  label:'Weight band',        rate:pct(b.wOk,b.wTot),         meta:b.wTot?`${b.wOk} of ${b.wTot} within ±8%`:'no weights'},
+            {cls:'cold',    label:'Cold Â· temperature', rate:pct(b.coldPass,b.coldTot), meta:b.coldTot?`${b.coldPass} of ${b.coldTot} pass`:'no readings'},
+            {cls:'hot',     label:'Hot Â· temperature',  rate:pct(b.hotPass,b.hotTot),   meta:b.hotTot?`${b.hotPass} of ${b.hotTot} pass`:'no readings'},
+            {cls:'weight',  label:'Weight band',        rate:pct(b.wOk,b.wTot),         meta:b.wTot?`${b.wOk} of ${b.wTot} within Â±8%`:'no weights'},
             {cls:'coverage',label:'Coverage',           rate:pct(b.logged,dishes.length), meta:`${b.logged} of ${dishes.length} logged`}
         ].map(s=>`<div class="score ${s.cls}"><div class="rate">${s.rate}</div><div class="label">${s.label}</div><div class="meta">${s.meta}</div></div>`).join('');
         return;
@@ -2010,12 +2010,12 @@ function renderScorecard(){
         if(isCold(d)){ b.coldTot++; if(s!=='hold') b.coldPass++; coldSum+=Number(v); coldCnt++; }
         else         { b.hotTot++;  if(s!=='hold') b.hotPass++;  hotSum+=Number(v);  hotCnt++; }
     }
-    const pct=(n,d)=>d===0?'—':`${Math.round(n/d*100)}%`;
+    const pct=(n,d)=>d===0?'â':`${Math.round(n/d*100)}%`;
     const cls = state.stage; // 'assembly' or 'dispatch'
     host.innerHTML=[
-        {cls:'cold',  label:'Cold · '+state.stage, rate:pct(b.coldPass,b.coldTot), meta:b.coldTot?`${b.coldPass} of ${b.coldTot} pass`:'no readings'},
-        {cls:'hot',   label:'Hot · '+state.stage,  rate:pct(b.hotPass,b.hotTot),   meta:b.hotTot?`${b.hotPass} of ${b.hotTot} pass`:'no readings'},
-        {cls:cls,     label:'Avg hot temp',         rate:hotCnt?`${(hotSum/hotCnt).toFixed(1)}°C`:'—', meta:hotCnt?`across ${hotCnt} hot dishes`:'no hot readings'},
+        {cls:'cold',  label:'Cold Â· '+state.stage, rate:pct(b.coldPass,b.coldTot), meta:b.coldTot?`${b.coldPass} of ${b.coldTot} pass`:'no readings'},
+        {cls:'hot',   label:'Hot Â· '+state.stage,  rate:pct(b.hotPass,b.hotTot),   meta:b.hotTot?`${b.hotPass} of ${b.hotTot} pass`:'no readings'},
+        {cls:cls,     label:'Avg hot temp',         rate:hotCnt?`${(hotSum/hotCnt).toFixed(1)}Â°C`:'â', meta:hotCnt?`across ${hotCnt} hot dishes`:'no hot readings'},
         {cls:'coverage',label:'Coverage',           rate:pct(b.logged,dishes.length), meta:`${b.logged} of ${dishes.length} logged`}
     ].map(s=>`<div class="score ${s.cls}"><div class="rate">${s.rate}</div><div class="label">${s.label}</div><div class="meta">${s.meta}</div></div>`).join('');
 }
@@ -2035,8 +2035,8 @@ function renderDishes(){
     const host=document.getElementById('dish-area');
     if(!host) return;
     const pc=document.getElementById('pass-count');
-    if(pc) pc.textContent = state.menu ? (state.menu.dishes||[]).length : '—';
-    if(!state.menu){ host.innerHTML=`<div class="loading">No menu for this week yet. Open ⚙ to paste menu JSON.</div>`; return; }
+    if(pc) pc.textContent = state.menu ? (state.menu.dishes||[]).length : 'â';
+    if(!state.menu){ host.innerHTML=`<div class="loading">No menu for this week yet. Open â to paste menu JSON.</div>`; return; }
     const all=(state.menu.dishes||[]).filter(d=>passesFilter(d, state.checks[d.dishLetter]));
     if(all.length===0){ host.innerHTML=`<div class="loading">No dishes match this filter.</div>`; return; }
     const cold=all.filter(d=>isCold(d));
@@ -2049,7 +2049,7 @@ function renderDishes(){
     bindTiles();
 }
 
-/* Compact letter-only tile — replaces the verbose tile across all stages.
+/* Compact letter-only tile â replaces the verbose tile across all stages.
    The tile shows: letter, dish name, status pip, recent timestamp, and
    3 stage-presence dots. Everything else (inputs, photos, etc.) lives
    inside the modal that opens on tap. */
@@ -2064,10 +2064,10 @@ function renderTeamBar(){
     const host = document.createElement('div');
     host.id = 'team-bar-host';
     host.innerHTML = `
-        <div class="team-bar" role="group" aria-label="Team — tap to select">
+        <div class="team-bar" role="group" aria-label="Team â tap to select">
             <span class="team-label">Prepared by</span>
             ${team.length === 0
-                ? `<span class="team-empty-hint">No team yet — open ⚙ Settings to add brigade names. The dish-count input still works without a selected member.</span>`
+                ? `<span class="team-empty-hint">No team yet â open â Settings to add brigade names. The dish-count input still works without a selected member.</span>`
                 : `<div class="team-chips">${team.map(m => {
                     const isActive = state.activeAssemblyMember === m.name;
                     return `<button class="team-chip ${isActive?'is-active':''}" data-team-name="${escapeAttr(m.name)}" type="button"><span class="chip-init">${escapeHtml(teamInitials(m.name))}</span><span class="chip-name">${escapeHtml((m.name||'').split(/\s+/)[0])}</span></button>`;
@@ -2108,7 +2108,7 @@ function renderLetterTile(dish){
     const total = isAssemblyStage ? assemblyCountTotal(c) : 0;
     const contributors = isAssemblyStage ? assemblyContributorNames(c).length : 0;
     const assemblyBadge = isAssemblyStage && total > 0
-        ? `<span class="lt-count-total">${total}${contributors > 1 ? ` · ${contributors} ppl` : ''}</span>`
+        ? `<span class="lt-count-total">${total}${contributors > 1 ? ` Â· ${contributors} ppl` : ''}</span>`
         : '';
     return `
         <article class="lt-tile ${cls}" data-letter="${escapeHtml(dish.dishLetter)}" role="button" tabindex="0" aria-label="${escapeHtml(dish.dishName)}">
@@ -2120,7 +2120,7 @@ function renderLetterTile(dish){
                 <span data-stage="qc" class="${hasQ?'is-set':''}"></span>
                 <span data-stage="dispatch" class="${hasD?'is-set':''}"></span>
             </span>
-            ${isAssemblyStage ? assemblyBadge : (lastTime ? `<span class="lt-time">⏱ ${escapeHtml(lastTime)}</span>` : '')}
+            ${isAssemblyStage ? assemblyBadge : (lastTime ? `<span class="lt-time">â± ${escapeHtml(lastTime)}</span>` : '')}
         </article>
     `;
 }
@@ -2133,14 +2133,14 @@ function bindTiles(){
     document.querySelectorAll('[data-action="open"]').forEach(btn=>{
         btn.addEventListener('click', e=>{ e.stopPropagation(); openModal(btn.getAttribute('data-letter')); });
     });
-    // (Manual "Now" stamping removed — time is auto-stamped on save.)
+    // (Manual "Now" stamping removed â time is auto-stamped on save.)
     document.querySelectorAll('.tile').forEach(tile=>{
         tile.addEventListener('click', e=>{
             if(e.target.closest('input, button, label.read-cell, label.time-cell')) return;
             openModal(tile.getAttribute('data-letter'));
         });
     });
-    // Compact letter-tile: tap anywhere opens the modal — except the count
+    // Compact letter-tile: tap anywhere opens the modal â except the count
     // input on Assembly stage which is for inline entry.
     document.querySelectorAll('.lt-tile').forEach(tile=>{
         const open = () => openModal(tile.getAttribute('data-letter'));
@@ -2155,9 +2155,9 @@ function bindTiles(){
         });
     });
     // Inline dish-count input on the Assembly stage tile. Updates only the
-    // active team member's entry — every other contributor's count is left
+    // active team member's entry â every other contributor's count is left
     // intact. If no member is active, the input is disabled (placeholder
-    // says '—'); tapping it does nothing.
+    // says 'â'); tapping it does nothing.
     document.querySelectorAll('[data-count-letter]').forEach(inp => {
         inp.addEventListener('focus', () => inp.select());
         inp.addEventListener('keydown', e => { if(e.key === 'Enter'){ e.preventDefault(); inp.blur(); } });
@@ -2223,18 +2223,18 @@ function flashSave(el){
 /* === Summary table === */
 function renderSummary(){
     const tbody=document.getElementById('summary-body');
-    document.getElementById('summary-date').textContent = `${humanDate(state.selectedDate)} · viewed ${nowHHMM()}`;
+    document.getElementById('summary-date').textContent = `${humanDate(state.selectedDate)} Â· viewed ${nowHHMM()}`;
     if(!state.menu){ tbody.innerHTML=`<tr><td colspan="7" style="text-align:center;padding:32px;color:var(--mute)">No menu for this week.</td></tr>`; return; }
     const dishes=state.menu.dishes||[];
     const cold=dishes.filter(d=>isCold(d));
     const hot=dishes.filter(d=>!isCold(d));
     const cellTemp = (v, dish) => {
-        if(v==null) return `<span style="color:var(--mute)">—</span>`;
+        if(v==null) return `<span style="color:var(--mute)">â</span>`;
         const s = tempStatus(v, dish);
         const c = s==='pass'?'var(--pass)':s==='watch'?'var(--watch)':s==='hold'?'var(--hold)':'var(--ink)';
-        return `<span class="cell-num" style="color:${c}">${Number(v).toFixed(1)}°</span>`;
+        return `<span class="cell-num" style="color:${c}">${Number(v).toFixed(1)}Â°</span>`;
     };
-    const stampUnder = (time) => time ? `<div style="font-size:10px;color:var(--mute);font-weight:500;margin-top:2px">⏱ ${escapeHtml(time)}</div>` : '';
+    const stampUnder = (time) => time ? `<div style="font-size:10px;color:var(--mute);font-weight:500;margin-top:2px">â± ${escapeHtml(time)}</div>` : '';
     const rowsFor=(list,cls)=>list.map(d=>{
         const c=state.checks[d.dishLetter]||{};
         const t=avg(c.temperatures), w=avg(c.weights);
@@ -2248,8 +2248,8 @@ function renderSummary(){
                 <td>${cellTemp(aT, d)}${stampUnder(aTime)}</td>
                 <td>${cellTemp(t, d)}${stampUnder(qTime)}</td>
                 <td>${cellTemp(dT, d)}${stampUnder(dTime)}</td>
-                <td><span class="cell-num">${w!=null?`${Math.round(w)}${d.theoreticalWeight?' / '+d.theoreticalWeight+'g':'g'}`:(d.theoreticalWeight?`— / ${d.theoreticalWeight}g`:'—')}</span></td>
-                <td class="cell-note">${escapeHtml(c.comment||'—')}</td>
+                <td><span class="cell-num">${w!=null?`${Math.round(w)}${d.theoreticalWeight?' / '+d.theoreticalWeight+'g':'g'}`:(d.theoreticalWeight?`â / ${d.theoreticalWeight}g`:'â')}</span></td>
+                <td class="cell-note">${escapeHtml(c.comment||'â')}</td>
             </tr>
         `;
     }).join('');
@@ -2274,7 +2274,7 @@ function dishByLetter(letter){
     return (state.menu.dishes || []).find(d => d.dishLetter === letter) || null;
 }
 function placementOf(letter){
-    // Back-compat shim — first placement, or legacy single field
+    // Back-compat shim â first placement, or legacy single field
     const arr = placementsOf(letter);
     return arr[0] || null;
 }
@@ -2296,7 +2296,7 @@ function isDishPlaced(letter){
 }
 /* === Global ingredient logs ===
    Stored at `ingredient-logs/{date}/{key}` = { name, temp, image, ts }.
-   Shared across all dishes that use the ingredient — log once, count
+   Shared across all dishes that use the ingredient â log once, count
    everywhere. */
 function listenIngredientLogs(date){
     return onValue(ref(db, `ingredient-logs/${date}`), snap => {
@@ -2342,7 +2342,7 @@ const TOPPING_RE = new RegExp([
     // Onions / aromatics typically used raw or finished
     '\\bfried\\s*onion\\b',
     '\\bred\\s*onion(s)?\\b',
-    '\\bjalape[nñ]o\\b',
+    '\\bjalape[nÃ±]o\\b',
     // Cheeses (typically cubed/sliced and added at the end)
     '\\bfeta\\b',
     '\\bcheddar\\b',
@@ -2402,19 +2402,19 @@ function classifyIngredient(name){
     return TOPPING_RE.test(s) ? 'topping' : 'cooked';
 }
 
-/* Canonical name — merges trivial variations of the same ingredient so the
+/* Canonical name â merges trivial variations of the same ingredient so the
    kitchen sees one card per real ingredient. "Tomato cubed" / "Tomato
    sliced" / "Tomato" all collapse to "Tomato". "Halloumi Raw" / "Halloumi
-   grilled" → "Halloumi". The basmati family normalises to one entry. */
+   grilled" â "Halloumi". The basmati family normalises to one entry. */
 function canonicalIngredientName(name){
     let n = String(name || '').toLowerCase().trim();
     if(!n) return n;
 
-    // 1) Strip qualifier suffix after " - ", " – ", " — ". Catches the very
-    //    common menu pattern "Carrots - Cubed & Steamed" → "Carrots".
-    n = n.replace(/\s+[-–—]\s+.*$/, '').trim();
+    // 1) Strip qualifier suffix after " - ", " â ", " â ". Catches the very
+    //    common menu pattern "Carrots - Cubed & Steamed" â "Carrots".
+    n = n.replace(/\s+[-ââ]\s+.*$/, '').trim();
 
-    // 2) Specific aliases — exact matches take priority (run after dash-strip)
+    // 2) Specific aliases â exact matches take priority (run after dash-strip)
     const SPECIFIC = {
         'rice-white basmati': 'basmati rice',
         'rice white basmati': 'basmati rice',
@@ -2434,22 +2434,22 @@ function canonicalIngredientName(name){
     };
     if(SPECIFIC[n]) return SPECIFIC[n];
 
-    // 3) Strip leading prep modifiers ("thin sliced cucumber" → "cucumber")
+    // 3) Strip leading prep modifiers ("thin sliced cucumber" â "cucumber")
     n = n.replace(/^(thin\s*sliced|chopped|cubed|diced|sliced|grated|shredded|minced|julienned|halved|quartered)\s+/i, '').trim();
-    // 4) Strip trailing prep modifiers ("cucumber cubed" → "cucumber")
-    n = n.replace(/\s+(raw|cooked|boiled|steamed|grilled|fried|baked|roasted|sauteed|saut[eé]ed|dry|dried|fresh|frozen|thawed|cubed|sliced|slice|slices|chopped|diced|minced|shredded|julienned|halved|quartered|grated|peeled|canned)$/i, '').trim();
+    // 4) Strip trailing prep modifiers ("cucumber cubed" â "cucumber")
+    n = n.replace(/\s+(raw|cooked|boiled|steamed|grilled|fried|baked|roasted|sauteed|saut[eÃ©]ed|dry|dried|fresh|frozen|thawed|cubed|sliced|slice|slices|chopped|diced|minced|shredded|julienned|halved|quartered|grated|peeled|canned)$/i, '').trim();
     n = n.replace(/\s+thin\s*sliced$/i, '').trim();
 
     // 5) Singularise trailing plurals so "Carrots" and "Carrot" merge.
     //    Safe rules: only for words >4 chars; avoid -ss/-us/-is/-os endings.
     if(n.length > 4){
-        if(/ies$/.test(n))                       n = n.slice(0, -3) + 'y';   // strawberries → strawberry
+        if(/ies$/.test(n))                       n = n.slice(0, -3) + 'y';   // strawberries â strawberry
         else if(/(ss|us|is|os)$/.test(n))        { /* leave: glass, hummus, basis, tacos */ }
-        else if(/(toe|hoe|oe)s$/.test(n))        n = n.slice(0, -1);          // toes → toe
-        else if(/(tomato|potato|mango|domino)es$/.test(n)) n = n.slice(0, -2); // tomatoes → tomato
+        else if(/(toe|hoe|oe)s$/.test(n))        n = n.slice(0, -1);          // toes â toe
+        else if(/(tomato|potato|mango|domino)es$/.test(n)) n = n.slice(0, -2); // tomatoes â tomato
         else if(/[aeiou]ses$/.test(n))           { /* leave: bruises, etc. */ }
-        else if(/es$/.test(n))                   n = n.slice(0, -1);          // peppers (no -es) skip, hashes → hashe (rare)
-        else if(/s$/.test(n))                    n = n.slice(0, -1);          // onions → onion, carrots → carrot
+        else if(/es$/.test(n))                   n = n.slice(0, -1);          // peppers (no -es) skip, hashes â hashe (rare)
+        else if(/s$/.test(n))                    n = n.slice(0, -1);          // onions â onion, carrots â carrot
     }
 
     // 6) Collapse multiple spaces
@@ -2458,7 +2458,7 @@ function canonicalIngredientName(name){
 }
 
 /* Per-ingredient classification override (persisted across devices). Kitchen
-   staff can flip "cooked ↔ topping" for any item and that choice stays. */
+   staff can flip "cooked â topping" for any item and that choice stays. */
 function listenIngredientCategories(){
     return onValue(ref(db, 'ingredient-categories'), snap => {
         state.ingredientCategories = snap.val() || {};
@@ -2490,7 +2490,7 @@ function collectMenuIngredients(){
             const k = ingredientKey(canonical);
             if(!map.has(canonical)){
                 const overridden = overrides[k] && overrides[k].category;
-                // Classify using BOTH the canonical and the raw name —
+                // Classify using BOTH the canonical and the raw name â
                 // catches cases like "Lemon dressing" where the raw form
                 // has a topping marker that the canonical drops.
                 const autoCanonical = classifyIngredient(canonical);
@@ -2512,7 +2512,7 @@ function collectMenuIngredients(){
             if(!entry.usedIn.includes(d.dishLetter)) entry.usedIn.push(d.dishLetter);
         }
     }
-    // Convert aliases Set → Array for serialization, then sort
+    // Convert aliases Set â Array for serialization, then sort
     const out = Array.from(map.values()).map(e => ({ ...e, aliases: Array.from(e.aliases) }));
     return out.sort((a,b) => a.name.localeCompare(b.name));
 }
@@ -2554,10 +2554,10 @@ function renderIngredientsStageView(){
         const log = logs[focus.key] || {};
         dishArea.innerHTML = `
             <div class="ing-detail-head">
-                <button class="ing-back" type="button" id="ing-back-btn">← All ingredients</button>
+                <button class="ing-back" type="button" id="ing-back-btn">â All ingredients</button>
                 <div class="ing-detail-title">${escapeHtml(focus.name)}${focus.weight?`<span class="ing-detail-weight">${escapeHtml(focus.weight)}</span>`:''}</div>
             </div>
-            <div style="font-size:12px;color:var(--mute);margin-top:6px">Used in ${focus.usedIn.length} dish${focus.usedIn.length===1?'':'es'}: ${focus.usedIn.map(l => `<strong style="color:var(--ink-2)">${escapeHtml(l)}</strong>`).join(' · ')}</div>
+            <div style="font-size:12px;color:var(--mute);margin-top:6px">Used in ${focus.usedIn.length} dish${focus.usedIn.length===1?'':'es'}: ${focus.usedIn.map(l => `<strong style="color:var(--ink-2)">${escapeHtml(l)}</strong>`).join(' Â· ')}</div>
 
             <div class="section-mini" style="margin-top:18px">Photo of the cooked ingredient</div>
             <div class="asm-photo-row">
@@ -2579,17 +2579,17 @@ function renderIngredientsStageView(){
                 </div>
             </div>
 
-            <div class="section-mini" style="margin-top:16px">Temperature after cooking (°C)</div>
+            <div class="section-mini" style="margin-top:16px">Temperature after cooking (Â°C)</div>
             <div class="samples" style="grid-template-columns:1fr;max-width:240px">
                 <div class="sample is-empty">
-                    <input id="ing-stage-temp" type="text" pattern="[0-9]*[.,]?[0-9]*" value="${log.temp != null ? log.temp : ''}" placeholder="—" inputmode="decimal" autocomplete="off"/>
-                    <div class="unit">°C</div>
+                    <input id="ing-stage-temp" type="text" pattern="[0-9]*[.,]?[0-9]*" value="${log.temp != null ? log.temp : ''}" placeholder="â" inputmode="decimal" autocomplete="off"/>
+                    <div class="unit">Â°C</div>
                 </div>
             </div>
-            ${log.ts ? `<div style="font-size:11px;color:var(--mute);margin-top:6px">⏱ Last saved at ${escapeHtml(log.ts)}</div>` : ''}
+            ${log.ts ? `<div style="font-size:11px;color:var(--mute);margin-top:6px">â± Last saved at ${escapeHtml(log.ts)}</div>` : ''}
 
             <div class="inline-done-row" style="max-width:240px">
-                <button type="button" class="inline-done" id="ing-stage-done"><span class="check">✓</span> Save &amp; back</button>
+                <button type="button" class="inline-done" id="ing-stage-done"><span class="check">â</span> Save &amp; back</button>
             </div>
         `;
 
@@ -2614,7 +2614,7 @@ function renderIngredientsStageView(){
         if(inp){
             inp.addEventListener('change', async (e) => {
                 const file = e.target.files?.[0]; if(!file) return;
-                try { toast('Processing photo…'); const dataUrl = await resizeImageToDataUrl(file, 1024, 0.85); await savePhoto(dataUrl); toast('Photo saved','ok'); renderAll(); }
+                try { toast('Processing photoâ¦'); const dataUrl = await resizeImageToDataUrl(file, 1024, 0.85); await savePhoto(dataUrl); toast('Photo saved','ok'); renderAll(); }
                 catch(err){ toast('Photo save failed','fail'); console.error(err); }
             });
         }
@@ -2622,7 +2622,7 @@ function renderIngredientsStageView(){
     }
 
     // Grid view: split into Cooked components (need a temp log) vs
-    // Toppings & garnishes (raw additions at the end — no temp required).
+    // Toppings & garnishes (raw additions at the end â no temp required).
     const cooked = ings.filter(i => i.category === 'cooked');
     const toppings = ings.filter(i => i.category === 'topping');
     const loggedCooked = cooked.filter(i => {
@@ -2634,17 +2634,17 @@ function renderIngredientsStageView(){
         const hasTemp = log.temp != null;
         const hasData = hasImg || hasTemp;
         const isTopping = ing.category === 'topping';
-        // Flip button: moves this ingredient between cooked ↔ topping
+        // Flip button: moves this ingredient between cooked â topping
         const flipTo = isTopping ? 'cooked' : 'topping';
-        const flipLabel = isTopping ? '→ cooked' : '→ topping';
+        const flipLabel = isTopping ? 'â cooked' : 'â topping';
         // Simplified card: big name + small status pill. Photo (if any)
         // appears as a tiny corner thumbnail. Weight + "used in N" dropped
-        // from grid — they're in the detail view.
+        // from grid â they're in the detail view.
         let statusPill;
         if(isTopping){
             statusPill = `<span class="ing-card-temp">Topping</span>`;
         } else if(hasTemp){
-            statusPill = `<span class="ing-card-temp is-set">${Number(log.temp).toFixed(1)}°C</span>`;
+            statusPill = `<span class="ing-card-temp is-set">${Number(log.temp).toFixed(1)}Â°C</span>`;
         } else {
             statusPill = `<span class="ing-card-temp">Tap to log</span>`;
         }
@@ -2662,7 +2662,7 @@ function renderIngredientsStageView(){
     const ingSectionHead = (title, count, color, sub) => `
         <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:18px 0 10px 0">
             <div>
-                <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:${color}">${title} · ${count}</div>
+                <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:${color}">${title} Â· ${count}</div>
                 <div style="font-size:13px;color:var(--mute);margin-top:2px">${sub}</div>
             </div>
         </div>
@@ -2670,18 +2670,18 @@ function renderIngredientsStageView(){
     dishArea.innerHTML = `
         <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:8px">
             <div>
-                <div style="font-size:22px;font-weight:800;color:var(--ink)">Ingredients · raw-material log</div>
-                <div style="font-size:13px;color:var(--mute);margin-top:2px">${loggedCooked} / ${cooked.length} cooked components logged · toppings &amp; garnishes don't need a temperature. Wrong section? Tap the small chip on a card to flip it.</div>
+                <div style="font-size:22px;font-weight:800;color:var(--ink)">Ingredients Â· raw-material log</div>
+                <div style="font-size:13px;color:var(--mute);margin-top:2px">${loggedCooked} / ${cooked.length} cooked components logged Â· toppings &amp; garnishes don't need a temperature. Wrong section? Tap the small chip on a card to flip it.</div>
             </div>
         </div>
 
         ${cooked.length ? `
-            ${ingSectionHead('Cooked components — need post-cook temp', cooked.length, '#0d9488', 'Tap a card to record temperature + photo. Logged once, shared across every dish that uses it.')}
+            ${ingSectionHead('Cooked components â need post-cook temp', cooked.length, '#0d9488', 'Tap a card to record temperature + photo. Logged once, shared across every dish that uses it.')}
             <div class="ing-grid">${cooked.map(card).join('')}</div>
         ` : `<div class="rv-empty" style="margin-top:12px">No cooked components in this menu.</div>`}
 
         ${toppings.length ? `
-            ${ingSectionHead('Toppings & garnishes — added at the end', toppings.length, '#0891b2', 'Raw additions like fresh herbs, seeds, flakes, microgreens. No cooking temperature needed — just confirm presence.')}
+            ${ingSectionHead('Toppings & garnishes â added at the end', toppings.length, '#0891b2', 'Raw additions like fresh herbs, seeds, flakes, microgreens. No cooking temperature needed â just confirm presence.')}
             <div class="ing-grid">${toppings.map(card).join('')}</div>
         ` : ''}
     `;
@@ -2731,7 +2731,7 @@ function renderPlacementStageView(){
         dishArea.innerHTML = `
             <div class="placement-empty">
                 <div class="pe-title">No warmers or fridges set up yet</div>
-                <div>Add the kitchen's warmers and fridges in Settings — give each warmer a name and pick its compartment layout (2×2, 2×3 horizontal, or 3×2 vertical).</div>
+                <div>Add the kitchen's warmers and fridges in Settings â give each warmer a name and pick its compartment layout (2Ã2, 2Ã3 horizontal, or 3Ã2 vertical).</div>
                 <button class="btn btn-primary" onclick="window.__qc.openSettings()">Open Settings</button>
             </div>
         `;
@@ -2763,7 +2763,7 @@ function renderPlacementStageView(){
                             <div class="warmer-slot ${lt?'filled '+cls:''}" data-warmer="${escapeAttr(w.id)}" data-cell="${escapeAttr(cell)}" role="button" tabindex="0" aria-label="${escapeAttr((layout.labels[cell] || cell) + (d ? ': ' + d.dishName + ', qty ' + slotQty + ', total ' + total : ': empty'))}">
                                 <span class="slot-label">${escapeHtml(layout.labels[cell] || cell.toUpperCase())}</span>
                                 ${lt ? `
-                                    <button class="slot-clear" type="button" data-clear="${escapeAttr(lt)}" data-warmer="${escapeAttr(w.id)}" data-cell="${escapeAttr(cell)}" aria-label="Remove">×</button>
+                                    <button class="slot-clear" type="button" data-clear="${escapeAttr(lt)}" data-warmer="${escapeAttr(w.id)}" data-cell="${escapeAttr(cell)}" aria-label="Remove">Ã</button>
                                     <span class="slot-letter ${cls}">${escapeHtml(lt)}</span>
                                     ${d ? `<span class="slot-name">${escapeHtml(d.dishName)}</span>` : ''}
                                     <span class="slot-qty">${slotQty}</span>
@@ -2794,7 +2794,7 @@ function renderPlacementStageView(){
                                 ${escapeHtml(d?.dishName || '')}
                                 <span class="pill-qty">${q}</span>
                                 <span class="pill-total">Total ${total}</span>
-                                <button class="pill-rm" data-clear="${escapeAttr(lt)}" data-fridge="${escapeAttr(f.id)}" type="button" aria-label="Remove">×</button>
+                                <button class="pill-rm" data-clear="${escapeAttr(lt)}" data-fridge="${escapeAttr(f.id)}" type="button" aria-label="Remove">Ã</button>
                             </span>
                         `;
                     }).join('')}
@@ -2807,8 +2807,8 @@ function renderPlacementStageView(){
     dishArea.innerHTML = `
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:10px">
             <div>
-                <div style="font-size:22px;font-weight:800;color:var(--ink)">Placement · ${humanDate(state.selectedDate)}</div>
-                <div style="font-size:13px;color:var(--mute);margin-top:2px">${placedCount} of ${totalDishes} dishes placed · ${warmers.length} warmer${warmers.length===1?'':'s'} · ${fridges.length} fridge${fridges.length===1?'':'s'}</div>
+                <div style="font-size:22px;font-weight:800;color:var(--ink)">Placement Â· ${humanDate(state.selectedDate)}</div>
+                <div style="font-size:13px;color:var(--mute);margin-top:2px">${placedCount} of ${totalDishes} dishes placed Â· ${warmers.length} warmer${warmers.length===1?'':'s'} Â· ${fridges.length} fridge${fridges.length===1?'':'s'}</div>
             </div>
             <div style="display:flex;gap:8px;flex-wrap:wrap">
                 <button class="btn" type="button" onclick="window.__qc.openSettings()">Manage warmers & fridges</button>
@@ -2844,10 +2844,10 @@ function bindPlacementHandlers(){
     if(!root) return;
     const sendBtn = document.getElementById('send-teams-now');
     if(sendBtn) sendBtn.addEventListener('click', sendReportToTeamsNow);
-    // Click a warmer slot → open dish picker for that compartment
+    // Click a warmer slot â open dish picker for that compartment
     root.querySelectorAll('.warmer-slot').forEach(slot => {
         const open = (e) => {
-            // Stop if user clicked the inline ✕
+            // Stop if user clicked the inline â
             if(e && e.target && e.target.closest('[data-clear]')) return;
             const warmer = slot.getAttribute('data-warmer');
             const cell = slot.getAttribute('data-cell');
@@ -2865,7 +2865,7 @@ function bindPlacementHandlers(){
             openPlacementPicker({ type:'fridge', containerId: btn.getAttribute('data-add-to-fridge') });
         });
     });
-    // Clear buttons — remove just this one placement, not the dish everywhere.
+    // Clear buttons â remove just this one placement, not the dish everywhere.
     root.querySelectorAll('[data-clear]').forEach(btn => {
         btn.addEventListener('click', async (e) => {
             e.stopPropagation();
@@ -2882,7 +2882,7 @@ function bindPlacementHandlers(){
     });
 }
 
-/* Simple inline picker — re-uses the settings overlay */
+/* Simple inline picker â re-uses the settings overlay */
 function openPlacementPicker(target){
     const overlay = document.getElementById('settings-overlay');
     const containerName = (target.type === 'warmer'
@@ -2903,11 +2903,11 @@ function openPlacementPicker(target){
         <div class="modal-panel" style="max-width:520px">
             <div class="modal-head">
                 <div class="eyebrow">Placement</div>
-                <h3 class="title">${escapeHtml(containerName)}${compLabel?' · '+escapeHtml(compLabel):''}</h3>
-                <button class="modal-close" aria-label="Close" onclick="window.__qc.closeSettings()">×</button>
+                <h3 class="title">${escapeHtml(containerName)}${compLabel?' Â· '+escapeHtml(compLabel):''}</h3>
+                <button class="modal-close" aria-label="Close" onclick="window.__qc.closeSettings()">Ã</button>
             </div>
             <div class="modal-body">
-                <div style="font-size:13px;color:var(--mute);margin-bottom:10px">Set the quantity for this slot, then pick a dish. A dish can sit in many slots — pick the same one again later for another slot.</div>
+                <div style="font-size:13px;color:var(--mute);margin-bottom:10px">Set the quantity for this slot, then pick a dish. A dish can sit in many slots â pick the same one again later for another slot.</div>
                 <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;background:var(--bg-3);border:1px solid var(--line);border-radius:10px;padding:10px 12px">
                     <label for="pick-qty" style="font-size:13px;font-weight:600;color:var(--ink-2)">Qty in this slot</label>
                     <input id="pick-qty" type="number" min="1" step="1" value="${presetQty}" inputmode="numeric" style="flex:1;min-width:80px;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg-2);color:var(--ink);font-size:15px;font-weight:700;text-align:center" />
@@ -2943,7 +2943,7 @@ function openPlacementPicker(target){
         const n = parseDecimal(qtyInput?.value);
         return (Number.isFinite(n) && n > 0) ? Math.round(n) : 1;
     };
-    // "Update qty only" button — keeps the same dish, just updates its qty
+    // "Update qty only" button â keeps the same dish, just updates its qty
     const updateBtn = overlay.querySelector('#pick-update-qty');
     if(updateBtn && occupantInThisSlot){
         updateBtn.addEventListener('click', async () => {
@@ -3013,7 +3013,7 @@ function renderAll(){
             const sectionHead = dishArea?.parentElement?.querySelector('.section-head');
             if(sectionHead) sectionHead.style.display = '';
         }
-        // Entry now happens in the dish modal — no team-bar above the grid
+        // Entry now happens in the dish modal â no team-bar above the grid
         document.getElementById('team-bar-host')?.remove();
         if(state.stage === 'placement'){
             renderPlacementStageView();
@@ -3038,18 +3038,18 @@ function renderHome(){
     ['assembly','qc','dispatch','placement'].forEach(stg=>{
         const { logged, total } = countLoggedForStage(stg);
         const el = document.getElementById(`home-count-${stg}`);
-        if(el) el.textContent = total === 0 ? '—' : `${logged} / ${total}`;
+        if(el) el.textContent = total === 0 ? 'â' : `${logged} / ${total}`;
     });
     // Ingredients: count unique ingredients in this week's menu that have a
     // global log (temp or photo). Shared across all dishes that use them.
     const ingEl = document.getElementById('home-count-ingredients');
     if(ingEl){
         const ings = collectMenuIngredients();
-        // Only count cooked components — toppings & garnishes don't need a log
+        // Only count cooked components â toppings & garnishes don't need a log
         const cooked = ings.filter(i => i.category === 'cooked');
         const logs = state.ingredientLogs || {};
         const done = cooked.filter(i => { const l = logs[i.key]; return l && (l.image || l.temp != null); }).length;
-        ingEl.textContent = cooked.length === 0 ? '—' : `${done} / ${cooked.length}`;
+        ingEl.textContent = cooked.length === 0 ? 'â' : `${done} / ${cooked.length}`;
     }
     const wkEl = document.getElementById('home-week');
     const dEl = document.getElementById('home-date');
@@ -3072,7 +3072,7 @@ function setView(view, opts){
         if(location.hash !== target) history.replaceState(null, '', target);
     }
     renderAll();
-    // Always start a new view at the top of the page — no auto-scroll past
+    // Always start a new view at the top of the page â no auto-scroll past
     // the header. (Previously this jumped down to alert-host which felt
     // disorienting on tablets / phones.)
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -3104,7 +3104,7 @@ function refreshDrawer(){
     ['assembly','qc','dispatch','placement'].forEach(stg=>{
         const { logged, total } = countLoggedForStage(stg);
         const el = document.getElementById(`drawer-count-${stg}`);
-        if(el) el.textContent = total === 0 ? '—' : `${logged}/${total}`;
+        if(el) el.textContent = total === 0 ? 'â' : `${logged}/${total}`;
     });
     // Mark active item
     document.querySelectorAll('.drawer-item').forEach(b => b.classList.remove('is-active'));
@@ -3138,7 +3138,7 @@ function unlockBodyScroll(){
 
 /* Keyboard-aware modal sizing.
    On phones the on-screen keyboard reduces visualViewport.height but the
-   layout viewport (and 100dvh) often doesn't shrink — so the modal's foot
+   layout viewport (and 100dvh) often doesn't shrink â so the modal's foot
    (Save / Done button) ends up behind the keyboard. We watch visualViewport,
    compute the keyboard overlap, and expose it as --kb-offset so CSS shrinks
    the modal-panel by exactly that amount. The footer naturally rises above
@@ -3203,21 +3203,21 @@ function renderModal(){
     overlay.innerHTML=`
         <div class="modal-panel">
             <div class="modal-head ${cls}">
-                <div class="eyebrow">${stageLabel(tab)} · ${humanDate(state.selectedDate)}</div>
-                <h3 class="title">${escapeHtml(dish.dishLetter)} — ${escapeHtml(dish.dishName)}</h3>
+                <div class="eyebrow">${stageLabel(tab)} Â· ${humanDate(state.selectedDate)}</div>
+                <h3 class="title">${escapeHtml(dish.dishLetter)} â ${escapeHtml(dish.dishName)}</h3>
                 <div class="chips">
                     <span class="pill is-${s}">${statusLabel(s)}</span>
                     <span class="pill" style="text-transform:none;letter-spacing:0;color:${cls==='cold'?'var(--cold)':'var(--hot)'};background:${cls==='cold'?'var(--cold-soft)':'var(--hot-soft)'};border-color:${cls==='cold'?'var(--cold-line)':'var(--hot-line)'}">${cls==='cold'?'Cold':'Hot'} dish</span>
                     <span class="pill" style="text-transform:none;letter-spacing:0">${dish.theoreticalWeight?'Theo '+dish.theoreticalWeight+'g':'No weight target'}</span>
                 </div>
-                <div class="modal-stamp" id="modal-stamp" style="position:absolute;top:14px;right:54px;font-size:12px;font-weight:700;color:var(--mute);letter-spacing:0.02em;background:var(--bg-2);border:1px solid var(--line);padding:5px 10px;border-radius:99px">${lastTime ? '⏱ Logged ' + escapeHtml(lastTime) : '⏱ Not logged yet'}</div>
-                <button class="modal-close" aria-label="Close" onclick="window.__qc.closeModal()">×</button>
+                <div class="modal-stamp" id="modal-stamp" style="position:absolute;top:14px;right:54px;font-size:12px;font-weight:700;color:var(--mute);letter-spacing:0.02em;background:var(--bg-2);border:1px solid var(--line);padding:5px 10px;border-radius:99px">${lastTime ? 'â± Logged ' + escapeHtml(lastTime) : 'â± Not logged yet'}</div>
+                <button class="modal-close" aria-label="Close" onclick="window.__qc.closeModal()">Ã</button>
             </div>
             <div class="modal-tabs">
-                <button class="modal-tab ${tab==='ingredient'?'is-active':''} ${hasIngredientLog?'has-data':''}" data-tab="ingredient"><span class="tab-dot"></span>✦ Ingredient</button>
-                <button class="modal-tab ${tab==='assembly'?'is-active':''} ${hasAssembly?'has-data':''}" data-tab="assembly"><span class="tab-dot"></span>① Assembly</button>
-                <button class="modal-tab ${tab==='qc'?'is-active':''} ${(hasQc||hasIng||hasPhoto)?'has-data':''}" data-tab="qc"><span class="tab-dot"></span>② QC check</button>
-                <button class="modal-tab ${tab==='dispatch'?'is-active':''} ${hasDispatch?'has-data':''}" data-tab="dispatch"><span class="tab-dot"></span>③ Dispatch</button>
+                <button class="modal-tab ${tab==='ingredient'?'is-active':''} ${hasIngredientLog?'has-data':''}" data-tab="ingredient"><span class="tab-dot"></span>â¦ Ingredient</button>
+                <button class="modal-tab ${tab==='assembly'?'is-active':''} ${hasAssembly?'has-data':''}" data-tab="assembly"><span class="tab-dot"></span>â  Assembly</button>
+                <button class="modal-tab ${tab==='qc'?'is-active':''} ${(hasQc||hasIng||hasPhoto)?'has-data':''}" data-tab="qc"><span class="tab-dot"></span>â¡ QC check</button>
+                <button class="modal-tab ${tab==='dispatch'?'is-active':''} ${hasDispatch?'has-data':''}" data-tab="dispatch"><span class="tab-dot"></span>â¢ Dispatch</button>
             </div>
             <div class="modal-body" id="modal-body">
                 ${renderTabContent(tab, dish, c)}
@@ -3238,22 +3238,22 @@ function renderTabContent(tab, dish, c){
     if(tab === 'assembly') return renderStageTab('assembly', 'Assembly', dish, c);
     if(tab === 'dispatch') return renderStageTab('dispatch', 'Dispatch', dish, c);
     if(tab === 'ingredient') return renderIngredientTab(dish, c);
-    // Fallback: QC (photo + ingredients + temp + weight + notes — one combined view)
+    // Fallback: QC (photo + ingredients + temp + weight + notes â one combined view)
     return renderQcTab(dish, c);
 }
 
-/* Ingredient tab — per-ingredient temp + photo capture for raw-material
+/* Ingredient tab â per-ingredient temp + photo capture for raw-material
    traceability. modalState.ingredient stores which ingredient (if any) is
    currently expanded into the detail view. Data lives at c.ingredients[<key>]. */
 function ingredientKey(name){
-    // Firebase keys can't contain . # $ / [ ] — flatten the ingredient name
+    // Firebase keys can't contain . # $ / [ ] â flatten the ingredient name
     return String(name || '').replace(/[.#$/\[\]]/g, '_').trim() || 'unnamed';
 }
 function renderIngredientTab(dish, c){
     const ingredients = (dish.dishIngredients || []).map(i => typeof i === 'string' ? { name: i, weight: '' } : i);
     const logged = c.ingredients || {};
     if(!ingredients.length){
-        return `<div style="color:var(--mute);padding:24px;text-align:center">No ingredients in the menu data for this dish.<br/>Add them via Settings → Menu JSON.</div>`;
+        return `<div style="color:var(--mute);padding:24px;text-align:center">No ingredients in the menu data for this dish.<br/>Add them via Settings â Menu JSON.</div>`;
     }
     // Are we in detail mode for one specific ingredient?
     const focusName = modalState.ingredient;
@@ -3268,12 +3268,12 @@ function renderIngredientTab(dish, c){
         const hasImg = !!log.image;
         const hasTemp = log.temp != null;
         const hasData = hasImg || hasTemp;
-        const tempTxt = hasTemp ? Number(log.temp).toFixed(1) + '°C' : '—';
+        const tempTxt = hasTemp ? Number(log.temp).toFixed(1) + 'Â°C' : 'â';
         // Minimal in-dish ingredient card: name + small status pill only,
         // no thumbnail, no weight. Photo (when captured) shown as a tiny
         // corner badge so it's spottable but not space-hogging.
         const statusPill = hasTemp
-            ? `<span class="ing-card-temp is-set">${Number(log.temp).toFixed(1)}°C</span>`
+            ? `<span class="ing-card-temp is-set">${Number(log.temp).toFixed(1)}Â°C</span>`
             : `<span class="ing-card-temp">Tap to log</span>`;
         return `
             <button class="ing-card ing-card-mini ${hasData?'has-data':''}" type="button" data-ing-open="${escapeAttr(ing.name)}">
@@ -3289,7 +3289,7 @@ function renderIngredientTab(dish, c){
         return log.image || log.temp != null;
     }).length;
     return `
-        <div class="section-mini">Ingredients · ${done}/${total} logged · tap one to record temperature + photo</div>
+        <div class="section-mini">Ingredients Â· ${done}/${total} logged Â· tap one to record temperature + photo</div>
         <div class="ing-grid">${ingredients.map(card).join('')}</div>
         <div style="font-size:12px;color:var(--mute);margin-top:12px">Raw-material traceability: capture the cooked temperature and a photo of each component before it goes into the final dish.</div>
     `;
@@ -3302,7 +3302,7 @@ function renderIngredientDetail(dish, c, ing){
                                                           : (log.temp >= HOT_MIN ? 'pass' : log.temp >= HOT_MIN-HOT_WARN ? 'watch' : 'hold');
     return `
         <div class="ing-detail-head">
-            <button class="ing-back" type="button" data-ing-back>← All ingredients</button>
+            <button class="ing-back" type="button" data-ing-back>â All ingredients</button>
             <div class="ing-detail-title">${escapeHtml(ing.name)}${ing.weight?`<span class="ing-detail-weight">${escapeHtml(ing.weight)}</span>`:''}</div>
         </div>
 
@@ -3329,15 +3329,15 @@ function renderIngredientDetail(dish, c, ing){
         <div class="section-mini" style="margin-top:16px">Temperature after cooking</div>
         <div class="samples" style="grid-template-columns:1fr">
             <div class="sample is-${status === 'pass' ? 'pass' : status === 'watch' ? 'watch' : status === 'hold' ? 'hold' : 'empty'}">
-                <input data-ing-temp type="text" pattern="[0-9]*[.,]?[0-9]*" value="${log.temp != null ? log.temp : ''}" placeholder="—" inputmode="decimal" autocomplete="off"/>
-                <div class="unit">°C</div>
+                <input data-ing-temp type="text" pattern="[0-9]*[.,]?[0-9]*" value="${log.temp != null ? log.temp : ''}" placeholder="â" inputmode="decimal" autocomplete="off"/>
+                <div class="unit">Â°C</div>
             </div>
         </div>
-        ${log.ts ? `<div style="font-size:11px;color:var(--mute);margin-top:6px">⏱ Last saved at ${escapeHtml(log.ts)}</div>` : ''}
+        ${log.ts ? `<div style="font-size:11px;color:var(--mute);margin-top:6px">â± Last saved at ${escapeHtml(log.ts)}</div>` : ''}
 
         <div class="inline-done-row">
             <button type="button" class="inline-done" data-ing-done>
-                <span class="check">✓</span> Save &amp; back
+                <span class="check">â</span> Save &amp; back
             </button>
         </div>
     `;
@@ -3352,7 +3352,7 @@ function renderQcTab(dish, c){
     const checkedCount = ingredients.filter(ing=>selected.has(ing.name)).length;
     return `
         <!-- Photo: reference + today's capture -->
-        <div class="section-mini">Photo · reference vs. today</div>
+        <div class="section-mini">Photo Â· reference vs. today</div>
         <div class="photo-row">
             <div class="photo">
                 ${dish.dishImage?`<img src="${escapeAttr(dish.dishImage)}" alt="Reference"/>`:`<div class="photo-empty"><div style="color:var(--mute);font-size:13px">No reference image</div></div>`}
@@ -3381,10 +3381,10 @@ function renderQcTab(dish, c){
                 <div style="display:flex;flex-direction:column;gap:2px">
                     <span style="font-weight:700;font-size:13px;color:var(--ink)">AI photo review</span>
                     ${c.aiReview ? `
-                        <span style="font-size:12px;color:var(--mute)">Score ${c.aiReview.score != null ? c.aiReview.score + '/100' : '—'} · ${escapeHtml((c.aiReview.summary || 'No summary').slice(0, 90))} <em>(${escapeHtml(c.aiReview.ts || '')})</em></span>
+                        <span style="font-size:12px;color:var(--mute)">Score ${c.aiReview.score != null ? c.aiReview.score + '/100' : 'â'} Â· ${escapeHtml((c.aiReview.summary || 'No summary').slice(0, 90))} <em>(${escapeHtml(c.aiReview.ts || '')})</em></span>
                     ` : `<span style="font-size:12px;color:var(--mute)">Click to compare today's photo with the reference using Claude vision.</span>`}
                 </div>
-                <button class="btn btn-primary btn-sm" type="button" data-ai-review-letter="${escapeAttr(dish.dishLetter)}">✨ ${c.aiReview ? 'Re-review' : 'Review with AI'}</button>
+                <button class="btn btn-primary btn-sm" type="button" data-ai-review-letter="${escapeAttr(dish.dishLetter)}">â¨ ${c.aiReview ? 'Re-review' : 'Review with AI'}</button>
             </div>
             ${c.aiReview && Array.isArray(c.aiReview.differences) && c.aiReview.differences.length ? `
                 <details style="margin-bottom:14px;font-size:13px"><summary style="cursor:pointer;font-weight:600;color:var(--ink)">Differences noted (${c.aiReview.differences.length})</summary>
@@ -3394,63 +3394,63 @@ function renderQcTab(dish, c){
         ` : ''}
 
         <!-- Ingredients checklist -->
-        <div class="section-mini">Ingredients check ${ingredients.length?`· ${checkedCount} / ${ingredients.length} confirmed`:''}</div>
+        <div class="section-mini">Ingredients check ${ingredients.length?`Â· ${checkedCount} / ${ingredients.length} confirmed`:''}</div>
         ${ingredients.length === 0
             ? `<div style="color:var(--mute);padding:14px;text-align:center;font-size:13px;background:var(--bg-3);border-radius:8px">No ingredients in menu data for this dish.</div>`
             : `<div class="ing-list">
                 ${ingredients.map(ing=>{
                     const present=selected.has(ing.name);
-                    return `<div class="ing ${present?'checked':'unchecked'}" data-ing="${escapeAttr(ing.name)}"><span style="display:flex;align-items:center"><span class="check">${present?'✓':''}</span><span class="ing-name">${escapeHtml(ing.name)}</span></span><span class="ing-weight">${escapeHtml(ing.weight||'')}</span></div>`;
+                    return `<div class="ing ${present?'checked':'unchecked'}" data-ing="${escapeAttr(ing.name)}"><span style="display:flex;align-items:center"><span class="check">${present?'â':''}</span><span class="ing-name">${escapeHtml(ing.name)}</span></span><span class="ing-weight">${escapeHtml(ing.weight||'')}</span></div>`;
                 }).join('')}
               </div>`
         }
 
         <!-- Temperature -->
-        <div class="section-mini">Temperature samples · spec ${isCold(dish)?`≤${COLD_MAX}`:`≥${HOT_MIN}`}°C</div>
+        <div class="section-mini">Temperature samples Â· spec ${isCold(dish)?`â¤${COLD_MAX}`:`â¥${HOT_MIN}`}Â°C</div>
         <div class="samples">
             ${[0,1,2].map(i=>{
                 const v=c.temperatures?.[i];
                 const ss=tempStatus(v, dish);
-                return `<div class="sample is-${ss}"><input data-modal="temp" data-idx="${i}" type="text" pattern="[0-9]*[.,]?[0-9]*" value="${v!=null?v:''}" placeholder="—" inputmode="decimal" autocomplete="off"/><div class="unit">°C · ${i+1}</div></div>`;
+                return `<div class="sample is-${ss}"><input data-modal="temp" data-idx="${i}" type="text" pattern="[0-9]*[.,]?[0-9]*" value="${v!=null?v:''}" placeholder="â" inputmode="decimal" autocomplete="off"/><div class="unit">Â°C Â· ${i+1}</div></div>`;
             }).join('')}
         </div>
         <div class="avg-row ${cls}">
             <span class="lbl">Avg</span>
-            <span class="val">${tAvg!=null?tAvg.toFixed(1)+'°C':'—'}</span>
-            <span class="delta">${tAvg!=null?(isCold(dish)?(tAvg<=COLD_MAX?`+${(COLD_MAX-tAvg).toFixed(1)} headroom`:`+${(tAvg-COLD_MAX).toFixed(1)} over spec`):(tAvg>=HOT_MIN?`+${(tAvg-HOT_MIN).toFixed(1)} above min`:`-${(HOT_MIN-tAvg).toFixed(1)} below min`)):'—'}</span>
+            <span class="val">${tAvg!=null?tAvg.toFixed(1)+'Â°C':'â'}</span>
+            <span class="delta">${tAvg!=null?(isCold(dish)?(tAvg<=COLD_MAX?`+${(COLD_MAX-tAvg).toFixed(1)} headroom`:`+${(tAvg-COLD_MAX).toFixed(1)} over spec`):(tAvg>=HOT_MIN?`+${(tAvg-HOT_MIN).toFixed(1)} above min`:`-${(HOT_MIN-tAvg).toFixed(1)} below min`)):'â'}</span>
         </div>
 
-        <!-- Inline Done — visible right after the 3 temp samples so it sits
+        <!-- Inline Done â visible right after the 3 temp samples so it sits
              above the on-screen keyboard. Temps auto-save on blur, so this
              just closes the modal. -->
         <div class="inline-done-row">
-            <button type="button" class="inline-done" onclick="window.__qc.closeModal()" aria-label="Done — close dish">
-                <span class="check">✓</span> Done
+            <button type="button" class="inline-done" onclick="window.__qc.closeModal()" aria-label="Done â close dish">
+                <span class="check">â</span> Done
             </button>
         </div>
 
         <!-- Weight -->
-        <div class="section-mini">Weight samples${dish.theoreticalWeight?' · theoretical '+dish.theoreticalWeight+'g':' · no target set'}</div>
+        <div class="section-mini">Weight samples${dish.theoreticalWeight?' Â· theoretical '+dish.theoreticalWeight+'g':' Â· no target set'}</div>
         <div class="samples">
             ${[0,1,2].map(i=>{
                 const v=c.weights?.[i];
                 const ss=weightStatus(v, dish);
-                return `<div class="sample is-${ss}"><input data-modal="weight" data-idx="${i}" type="number" step="1" value="${v!=null?v:''}" placeholder="—" inputmode="numeric"/><div class="unit">g · ${i+1}</div></div>`;
+                return `<div class="sample is-${ss}"><input data-modal="weight" data-idx="${i}" type="number" step="1" value="${v!=null?v:''}" placeholder="â" inputmode="numeric"/><div class="unit">g Â· ${i+1}</div></div>`;
             }).join('')}
         </div>
         <div class="avg-row">
             <span class="lbl">Avg</span>
-            <span class="val">${wAvg!=null?Math.round(wAvg)+'g':'—'}</span>
-            <span class="delta">${wDelta!=null?`${wDelta>=0?'+':''}${wDelta.toFixed(1)}% vs theoretical`:'—'}</span>
+            <span class="val">${wAvg!=null?Math.round(wAvg)+'g':'â'}</span>
+            <span class="delta">${wDelta!=null?`${wDelta>=0?'+':''}${wDelta.toFixed(1)}% vs theoretical`:'â'}</span>
         </div>
 
         <!-- Notes -->
         <div class="section-mini">Comment</div>
         <textarea id="modal-comment" class="comment-area" placeholder="Anything worth noting about this dish (taste, look, anomaly, etc.)">${escapeHtml(c.comment||'')}</textarea>
 
-        <!-- Corrective action (e.g. for failed temp/weight checks: reheated, re-portioned, re-plated…) -->
+        <!-- Corrective action (e.g. for failed temp/weight checks: reheated, re-portioned, re-platedâ¦) -->
         <div class="section-mini" style="margin-top:14px">Corrective action</div>
-        <textarea id="modal-corrective" class="comment-area" placeholder="If something was off, what did you do to fix it? (reheated, re-portioned, discarded, …)">${escapeHtml(c.correctiveAction||'')}</textarea>
+        <textarea id="modal-corrective" class="comment-area" placeholder="If something was off, what did you do to fix it? (reheated, re-portioned, discarded, â¦)">${escapeHtml(c.correctiveAction||'')}</textarea>
 
         <div style="font-size:12px;color:var(--mute);margin-top:6px">Both fields are optional. Photo is resized to ~1024px and stored as JPEG. Everything auto-saves on blur.</div>
     `;
@@ -3461,25 +3461,25 @@ function renderStageTab(stage, label, dish, c){
     const isAssembly = stage === 'assembly';
     const isDispatch = stage === 'dispatch';
     const cls = isCold(dish) ? 'cold' : 'hot';
-    const specHint = isCold(dish) ? `≤${COLD_MAX}°C` : `≥${HOT_MIN}°C`;
+    const specHint = isCold(dish) ? `â¤${COLD_MAX}Â°C` : `â¥${HOT_MIN}Â°C`;
     // Both Assembly and Dispatch take 3 temperature samples. Read from temps[]
     // preferred, fall back to scalar `temp` for legacy data.
     let temps = Array.isArray(data.temps) ? data.temps.slice(0,3) : (data.temp!=null ? [data.temp,null,null] : [null,null,null]);
     while(temps.length < 3) temps.push(null);
     const tAvg = avg(temps);
     const samplesBlock = `
-        <div class="section-mini">${label} · temperature samples · spec ${specHint}${data.time?` · last logged ${data.time}`:''}</div>
+        <div class="section-mini">${label} Â· temperature samples Â· spec ${specHint}${data.time?` Â· last logged ${data.time}`:''}</div>
         <div class="samples">
             ${[0,1,2].map(i=>{
                 const v=temps[i];
                 const ss=tempStatus(v, dish);
-                return `<div class="sample is-${ss}"><input data-stage-input="temp-${i}" type="text" pattern="[0-9]*[.,]?[0-9]*" value="${v!=null?v:''}" placeholder="—" inputmode="decimal" autocomplete="off"/><div class="unit">°C · ${i+1}</div></div>`;
+                return `<div class="sample is-${ss}"><input data-stage-input="temp-${i}" type="text" pattern="[0-9]*[.,]?[0-9]*" value="${v!=null?v:''}" placeholder="â" inputmode="decimal" autocomplete="off"/><div class="unit">Â°C Â· ${i+1}</div></div>`;
             }).join('')}
         </div>
         <div class="avg-row ${cls}">
             <span class="lbl">Avg</span>
-            <span class="val">${tAvg!=null?tAvg.toFixed(2)+'°C':'—'}</span>
-            <span class="delta">${tAvg!=null?(isCold(dish)?(tAvg<=COLD_MAX?`+${(COLD_MAX-tAvg).toFixed(2)} headroom`:`+${(tAvg-COLD_MAX).toFixed(2)} over spec`):(tAvg>=HOT_MIN?`+${(tAvg-HOT_MIN).toFixed(2)} above min`:`-${(HOT_MIN-tAvg).toFixed(2)} below min`)):'—'}</span>
+            <span class="val">${tAvg!=null?tAvg.toFixed(2)+'Â°C':'â'}</span>
+            <span class="delta">${tAvg!=null?(isCold(dish)?(tAvg<=COLD_MAX?`+${(COLD_MAX-tAvg).toFixed(2)} headroom`:`+${(tAvg-COLD_MAX).toFixed(2)} over spec`):(tAvg>=HOT_MIN?`+${(tAvg-HOT_MIN).toFixed(2)} above min`:`-${(HOT_MIN-tAvg).toFixed(2)} below min`)):'â'}</span>
         </div>
     `;
     // Assembly: contributor breakdown + weight/by/note. Dispatch is temp only.
@@ -3492,20 +3492,20 @@ function renderStageTab(stage, label, dish, c){
             const names = Array.isArray(e.by) ? e.by : (e.by ? [e.by] : []);
             const label = names.length === 0 ? 'Unattributed'
                 : names.length === 1 ? names[0]
-                : `Batch · ${names.join(', ')}`;
+                : `Batch Â· ${names.join(', ')}`;
             return `
                 <div class="contributor-row">
                     <span class="contrib-tag ${names.length>1?'batch':''}">${escapeHtml(label)}</span>
                     <span class="contrib-count">${e.count}</span>
                     <span class="contrib-time">${escapeHtml(e.ts || '')}</span>
-                    <button class="contrib-rm" type="button" data-rm-entry="${idx}" aria-label="Remove">×</button>
+                    <button class="contrib-rm" type="button" data-rm-entry="${idx}" aria-label="Remove">Ã</button>
                 </div>`;
         };
-        // Assembly photo (no reference image — single panel + camera button).
+        // Assembly photo (no reference image â single panel + camera button).
         // Stored separately from QC's photo at c.assembly.image so both can coexist.
         const asmImage = c.assembly && c.assembly.image;
         const photoBlock = `
-            <div class="section-mini" style="margin-top:14px">Assembly photo · single shot from the line</div>
+            <div class="section-mini" style="margin-top:14px">Assembly photo Â· single shot from the line</div>
             <div class="asm-photo-row">
                 <div class="photo">
                     ${asmImage
@@ -3528,7 +3528,7 @@ function renderStageTab(stage, label, dish, c){
         `;
 
         assemblyBlock = `
-            <div class="section-mini">Dish count · ${total} total${entries.length>0?` across ${entries.length} ${entries.length===1?'entry':'entries'}`:''}</div>
+            <div class="section-mini">Dish count Â· ${total} total${entries.length>0?` across ${entries.length} ${entries.length===1?'entry':'entries'}`:''}</div>
             <div class="contributors">
                 ${entries.length === 0
                     ? `<div style="color:var(--mute);padding:10px;font-size:13px;text-align:center;background:var(--bg-3);border-radius:8px">No entries yet. Use the form at the bottom to add one.</div>`
@@ -3540,7 +3540,7 @@ function renderStageTab(stage, label, dish, c){
             <div class="stage-form" style="margin-top:14px">
                 <div class="field">
                     <label class="label">Weight (optional, g)</label>
-                    <input class="num" type="number" step="1" inputmode="numeric" data-stage-input="weight" value="${data.weight!=null?data.weight:''}" placeholder="—" />
+                    <input class="num" type="number" step="1" inputmode="numeric" data-stage-input="weight" value="${data.weight!=null?data.weight:''}" placeholder="â" />
                 </div>
                 <div class="field full">
                     <label class="label">Note</label>
@@ -3550,19 +3550,24 @@ function renderStageTab(stage, label, dish, c){
 
         `;
     }
-    // Inline Done button — sits right below the AVG / sample block so the
+    // Inline Done button â sits right below the AVG / sample block so the
     // user can dismiss the keyboard + close the modal as soon as the 3 temps
     // are typed, without scrolling down to the modal footer. Data already
     // auto-saves on blur, so this button just closes the modal.
     const inlineDone = `
         <div class="inline-done-row">
-            <button type="button" class="inline-done" onclick="window.__qc.closeModal()" aria-label="Done — close dish">
-                <span class="check">✓</span> Done
+            <button type="button" class="inline-done" onclick="window.__qc.closeModal()" aria-label="Done â close dish">
+                <span class="check">â</span> Done
             </button>
         </div>
     `;
-    const timeHint = `<div style="font-size:12px;color:var(--mute);margin-top:8px">⏱ Time is recorded automatically when you save — no need to type it.</div>`;
-    return `${samplesBlock}${inlineDone}${assemblyBlock}${timeHint}`;
+    const timeHint = `<div style="font-size:12px;color:var(--mute);margin-top:8px">â± Time is recorded automatically when you save â no need to type it.</div>`;
+    const dispatchNoteBlock = label === 'Dispatch' ? `
+        <div class="section-mini" style="margin-top:14px">Note</div>
+        <textarea id="modal-comment" class="comment-area" placeholder="Anything worth noting about this dish at dispatch?">${escapeHtml(c.comment||'')}</textarea>
+        <div class="section-mini" style="margin-top:14px">Corrective action</div>
+        <textarea id="modal-corrective" class="comment-area" placeholder="Corrective action taken (reheat, re-portion, discard…)">${escapeHtml(c.correctiveAction||'')}</textarea>` : '';
+    return `${samplesBlock}${inlineDone}${assemblyBlock}${dispatchNoteBlock}${timeHint}`;
 }
 
 function renderIngredientsTab(dish, c){
@@ -3570,11 +3575,11 @@ function renderIngredientsTab(dish, c){
     const selected=new Set(c.selectedIngredients||[]);
     if(ingredients.length === 0) return `<div style="color:var(--mute);padding:24px;text-align:center">No ingredients in menu data for this dish.</div>`;
     return `
-        <div class="section-mini">Ingredients · tap to toggle present</div>
+        <div class="section-mini">Ingredients Â· tap to toggle present</div>
         <div class="ing-list">
             ${ingredients.map(ing=>{
                 const present=selected.has(ing.name);
-                return `<div class="ing ${present?'checked':'unchecked'}" data-ing="${escapeAttr(ing.name)}"><span style="display:flex;align-items:center"><span class="check">${present?'✓':''}</span><span class="ing-name">${escapeHtml(ing.name)}</span></span><span class="ing-weight">${escapeHtml(ing.weight||'')}</span></div>`;
+                return `<div class="ing ${present?'checked':'unchecked'}" data-ing="${escapeAttr(ing.name)}"><span style="display:flex;align-items:center"><span class="check">${present?'â':''}</span><span class="ing-name">${escapeHtml(ing.name)}</span></span><span class="ing-weight">${escapeHtml(ing.weight||'')}</span></div>`;
             }).join('')}
         </div>
     `;
@@ -3624,7 +3629,7 @@ function bindTabHandlers(tab, dish){
                 el.classList.toggle('checked');
                 el.classList.toggle('unchecked');
                 const tick=el.querySelector('.check');
-                if(tick) tick.textContent = el.classList.contains('checked') ? '✓' : '';
+                if(tick) tick.textContent = el.classList.contains('checked') ? 'â' : '';
                 await saveModalIngredients();
             });
         });
@@ -3643,7 +3648,7 @@ function bindTabHandlers(tab, dish){
                 const file=e.target.files?.[0];
                 if(!file) return;
                 try{
-                    toast('Processing photo…');
+                    toast('Processing photoâ¦');
                     const dataUrl=await resizeImageToDataUrl(file, 1024, 0.85);
                     await saveCheckField(letter, { capturedImage: dataUrl, qcTime: nowHHMM() });
                     toast('Photo saved','ok');
@@ -3674,13 +3679,13 @@ function bindTabHandlers(tab, dish){
                 const tAvg = avg(temps);
                 const valEl = overlay.querySelector('.avg-row .val');
                 const deltaEl = overlay.querySelector('.avg-row .delta');
-                if(valEl) valEl.textContent = tAvg!=null ? tAvg.toFixed(2)+'°C' : '—';
+                if(valEl) valEl.textContent = tAvg!=null ? tAvg.toFixed(2)+'Â°C' : 'â';
                 if(deltaEl){
                     deltaEl.textContent = tAvg!=null
                         ? (isCold(dish)
                             ? (tAvg<=COLD_MAX ? `+${(COLD_MAX-tAvg).toFixed(2)} headroom` : `+${(tAvg-COLD_MAX).toFixed(2)} over spec`)
                             : (tAvg>=HOT_MIN ? `+${(tAvg-HOT_MIN).toFixed(2)} above min` : `-${(HOT_MIN-tAvg).toFixed(2)} below min`))
-                        : '—';
+                        : 'â';
                 }
                 // Update per-sample tint as well
                 [0,1,2].forEach(i => {
@@ -3694,17 +3699,17 @@ function bindTabHandlers(tab, dish){
             tempInputs.forEach(inp => inp.addEventListener('input', updateAvg));
         }
     }
-    // Ingredient tab — list view + detail view (per-ingredient photo + temp).
+    // Ingredient tab â list view + detail view (per-ingredient photo + temp).
     if(tab === 'ingredient'){
         const lettr = modalState.letter;
-        // List → detail
+        // List â detail
         overlay.querySelectorAll('[data-ing-open]').forEach(card => {
             card.addEventListener('click', () => {
                 modalState.ingredient = card.getAttribute('data-ing-open');
                 renderModal();
             });
         });
-        // Detail → list
+        // Detail â list
         overlay.querySelectorAll('[data-ing-back], [data-ing-done]').forEach(btn => {
             btn.addEventListener('click', async () => {
                 // Persist temp before leaving if it's been edited
@@ -3749,7 +3754,7 @@ function bindTabHandlers(tab, dish){
                     const file = e.target.files?.[0];
                     if(!file) return;
                     try {
-                        toast('Processing photo…');
+                        toast('Processing photoâ¦');
                         const dataUrl = await resizeImageToDataUrl(file, 1024, 0.85);
                         await saveIngPhoto(dataUrl);
                         toast('Photo saved','ok');
@@ -3771,7 +3776,7 @@ function bindTabHandlers(tab, dish){
             });
         });
 
-        // Assembly photo — write to c.assembly.image via saveStage so it
+        // Assembly photo â write to c.assembly.image via saveStage so it
         // doesn't collide with the QC photo at c.capturedImage.
         const saveAsmPhoto = async (dataUrl) => {
             await saveStage(lettr, 'assembly', { image: dataUrl, time: nowHHMM() });
@@ -3785,7 +3790,7 @@ function bindTabHandlers(tab, dish){
                 const file = e.target.files?.[0];
                 if(!file) return;
                 try {
-                    toast('Processing photo…');
+                    toast('Processing photoâ¦');
                     const dataUrl = await resizeImageToDataUrl(file, 1024, 0.85);
                     await saveAsmPhoto(dataUrl);
                     toast('Photo saved','ok');
@@ -3853,7 +3858,7 @@ function bumpStamp(){
     const c = state.checks[letter] || {};
     const t = mostRecentTime(c);
     const el = document.getElementById('modal-stamp');
-    if(el) el.textContent = t ? '⏱ Logged ' + t : '⏱ Not logged yet';
+    if(el) el.textContent = t ? 'â± Logged ' + t : 'â± Not logged yet';
 }
 
 /* === AI photo review ===
@@ -3862,13 +3867,13 @@ function bumpStamp(){
    Firebase Cloud Function) that has the Anthropic key. The browser never
    sees the key.
 */
-/* AI dish analysis — bring-your-own-key.
-   Settings → Integrations stores provider + API key in localStorage (NEVER
+/* AI dish analysis â bring-your-own-key.
+   Settings â Integrations stores provider + API key in localStorage (NEVER
    in Firebase). The key is sent only to the chosen vision-model endpoint.
    We also keep the legacy aiProxyUrl path as a fallback for users who'd
    rather run a Cloud Function.
 */
-/* Resend email — bring-your-own-key like the AI providers. Key stays in
+/* Resend email â bring-your-own-key like the AI providers. Key stays in
    localStorage per device; sender / to / cc live in Firebase integrations
    so every device sends to the same recipient list. */
 const RESEND_KEY_STORAGE = 'bb.resend.key.v1';
@@ -3899,7 +3904,7 @@ async function sendSnapshotEmail(){
     const sender = (state.integrations?.resendSender || '').trim();
     const to = (state.integrations?.resendTo || '').trim();
     const cc = (state.integrations?.resendCc || '').split(',').map(s => s.trim()).filter(Boolean);
-    if(!apiKey) throw new Error('No Resend key — paste one in Settings → Email reports');
+    if(!apiKey) throw new Error('No Resend key â paste one in Settings â Email reports');
     if(!sender) throw new Error('No sender email set in Settings');
     if(!to) throw new Error('No recipient set in Settings');
 
@@ -3929,12 +3934,12 @@ async function sendSnapshotEmail(){
             if(Math.abs((w - d.theoreticalWeight) / d.theoreticalWeight) <= 0.05) wtOk++;
         }
     }
-    const pct = (n, t) => t === 0 ? '—' : Math.round(n/t*100) + '%';
-    const subject = `Quality check report · ${cityName} · ${humanDate(state.selectedDate)}`;
+    const pct = (n, t) => t === 0 ? 'â' : Math.round(n/t*100) + '%';
+    const subject = `Quality check report Â· ${cityName} Â· ${humanDate(state.selectedDate)}`;
     const liveUrl = `${window.location.origin}${window.location.pathname.replace(/[^/]+$/, '')}daily.html`;
     const html = `
         <div style="font-family:Inter,Arial,sans-serif;color:#1f2937;line-height:1.55;font-size:14px;max-width:580px">
-            <h2 style="margin:0 0 4px 0;font-size:18px;color:#0f172a">Bella &amp; Bona · ${cityName} QC snapshot</h2>
+            <h2 style="margin:0 0 4px 0;font-size:18px;color:#0f172a">Bella &amp; Bona Â· ${cityName} QC snapshot</h2>
             <div style="color:#64748b;font-size:13px;margin-bottom:14px">${humanDate(state.selectedDate)}</div>
             <table style="width:100%;border-collapse:collapse;font-size:13px;border:1px solid #e5e7eb;border-radius:8px;overflow:hidden">
                 <tr style="background:#f8fafc"><td style="padding:8px 10px;font-weight:700;color:#334155">Hot dishes pass</td><td style="padding:8px 10px;text-align:right;font-weight:700">${pct(hotR.pass, hotR.total)} <span style="color:#64748b;font-weight:500">(${hotR.pass}/${hotR.total})</span></td></tr>
@@ -3944,14 +3949,14 @@ async function sendSnapshotEmail(){
             <p style="margin:14px 0 0 0">Live combined Berlin + Munich dashboard:<br/>
                 <a href="${liveUrl}" style="color:#2563eb">${liveUrl}</a>
             </p>
-            <p style="margin:16px 0 0 0;color:#64748b;font-size:12px">— Bella &amp; Bona Culinary Operations · auto-generated from the QC app</p>
+            <p style="margin:16px 0 0 0;color:#64748b;font-size:12px">â Bella &amp; Bona Culinary Operations Â· auto-generated from the QC app</p>
         </div>
     `;
-    const text = `Bella & Bona · ${cityName} QC snapshot · ${humanDate(state.selectedDate)}\n\n`
+    const text = `Bella & Bona Â· ${cityName} QC snapshot Â· ${humanDate(state.selectedDate)}\n\n`
         + `Hot dishes pass:  ${pct(hotR.pass, hotR.total)}  (${hotR.pass}/${hotR.total})\n`
         + `Cold dishes pass: ${pct(coldR.pass, coldR.total)}  (${coldR.pass}/${coldR.total})\n`
         + `Weight within 5%: ${pct(wtOk, wtTot)}  (${wtOk}/${wtTot})\n\n`
-        + `Live dashboard: ${liveUrl}\n— Bella & Bona`;
+        + `Live dashboard: ${liveUrl}\nâ Bella & Bona`;
     return await callResend({ apiKey, from: sender, to, cc, subject, html, text });
 }
 
@@ -3975,7 +3980,7 @@ function buildAiPrompt(dish, c){
     const qT = avg(c.temperatures);
     const w = avg(c.weights);
     const isCold_ = isCold(dish);
-    const tempSpec = isCold_ ? `≤${COLD_MAX}°C (cold)` : `≥${HOT_MIN}°C (hot)`;
+    const tempSpec = isCold_ ? `â¤${COLD_MAX}Â°C (cold)` : `â¥${HOT_MIN}Â°C (hot)`;
     const ingList = (dish.dishIngredients || []).map(i => i.name + (i.weight ? ' (' + i.weight + ')' : '')).join(', ');
     return [
         `You are a head chef and HACCP-trained quality auditor reviewing ONE plated dish at Bella & Bona, a catering company. Be strict, factual, and brief.`,
@@ -3984,23 +3989,23 @@ function buildAiPrompt(dish, c){
         `Target weight: ${dish.theoreticalWeight ? dish.theoreticalWeight + ' g' : 'not set'}`,
         `Measured weight (avg of 3 samples): ${w != null ? Math.round(w) + ' g' : 'not measured'}`,
         `Temperature spec: ${tempSpec}`,
-        `Measured temperature (avg of 3 samples): ${qT != null ? qT.toFixed(1) + ' °C' : 'not measured'}`,
+        `Measured temperature (avg of 3 samples): ${qT != null ? qT.toFixed(1) + ' Â°C' : 'not measured'}`,
         `Expected ingredients (from recipe): ${ingList || 'none specified'}`,
         ``,
         `You will see ONE image: the actual plated dish that was prepared today.`,
         `Compare the photo against:`,
-        `  • the expected ingredient list (each item should be visibly present)`,
-        `  • portion appearance vs the target weight (under/over-portioned, sparse, overflowing)`,
-        `  • ingredient freshness, browning, dryness, oxidation, separation, sogginess`,
-        `  • plating quality (mess, spills, uneven distribution)`,
+        `  â¢ the expected ingredient list (each item should be visibly present)`,
+        `  â¢ portion appearance vs the target weight (under/over-portioned, sparse, overflowing)`,
+        `  â¢ ingredient freshness, browning, dryness, oxidation, separation, sogginess`,
+        `  â¢ plating quality (mess, spills, uneven distribution)`,
         `Also factor in:`,
-        `  • whether temperature is in/out of spec (${tempSpec})`,
-        `  • whether weight is within ±8% of the target`,
+        `  â¢ whether temperature is in/out of spec (${tempSpec})`,
+        `  â¢ whether weight is within Â±8% of the target`,
         ``,
-        `Reply with STRICT JSON only — no commentary, no code fences. Schema:`,
+        `Reply with STRICT JSON only â no commentary, no code fences. Schema:`,
         `{`,
         `  "score": <integer 0-100, 100 = perfect>,`,
-        `  "summary": "<one sentence, ≤120 chars, friendly but honest>",`,
+        `  "summary": "<one sentence, â¤120 chars, friendly but honest>",`,
         `  "differences": ["<short concrete issue 1>", "<short concrete issue 2>", ...]`,
         `}`,
         `If everything looks fine, return an empty differences array. NEVER invent ingredients you cannot see.`
@@ -4035,7 +4040,7 @@ async function callOpenAi(prompt, imageDataUrl, key){
 
 async function callGroq(prompt, imageDataUrl, key){
     // Groq's API is OpenAI-compatible. Vision model: Llama 4 Scout (multimodal).
-    // Free tier: 30 RPM, 14,400 RPD — plenty for a kitchen.
+    // Free tier: 30 RPM, 14,400 RPD â plenty for a kitchen.
     const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key },
@@ -4065,7 +4070,7 @@ async function callGroq(prompt, imageDataUrl, key){
 }
 
 async function callGemini(prompt, imageDataUrl, key, opts){
-    // Gemini accepts inline base64 — separate the data URL into mime + base64
+    // Gemini accepts inline base64 â separate the data URL into mime + base64
     const m = /^data:([^;]+);base64,(.+)$/.exec(imageDataUrl);
     if(!m) throw new Error('Captured image is not a base64 data URL');
     const mediaType = m[1] || 'image/jpeg';
@@ -4080,7 +4085,7 @@ async function callGemini(prompt, imageDataUrl, key, opts){
             contents: [{
                 role: 'user',
                 parts: [
-                    { text: prompt + '\n\nReturn ONLY the JSON object — no markdown, no prose, no code fences.' },
+                    { text: prompt + '\n\nReturn ONLY the JSON object â no markdown, no prose, no code fences.' },
                     { inline_data: { mime_type: mediaType, data: base64 } }
                 ]
             }],
@@ -4122,27 +4127,27 @@ async function callGemini(prompt, imageDataUrl, key, opts){
     let res = await doFetch();
 
     // On 429, only retry if it's a SHORT per-minute wait. Daily or
-    // project-quota 429s won't clear by waiting a few seconds — show a real
+    // project-quota 429s won't clear by waiting a few seconds â show a real
     // message immediately instead of pretending to retry.
     if(res.status === 429){
         const info = await parse429(res);
         if(info.kind === 'per-minute' && info.waitSec <= 60){
-            onStatus(`Rate-limited (per-minute) — waiting ${info.waitSec}s…`);
+            onStatus(`Rate-limited (per-minute) â waiting ${info.waitSec}sâ¦`);
             await new Promise(r => setTimeout(r, info.waitSec * 1000 + 1000));
-            onStatus('Retrying…');
+            onStatus('Retryingâ¦');
             res = await doFetch();
         } else if(info.kind === 'per-day'){
             throw new Error(
                 'Gemini daily free quota (1,500/day) is exhausted for this model. '
                 + 'It resets at midnight Pacific time. '
-                + 'Workaround now: open aistudio.google.com/app/apikey → "Create API key in new project" → use that fresh key. '
+                + 'Workaround now: open aistudio.google.com/app/apikey â "Create API key in new project" â use that fresh key. '
                 + '(Quota is per-project, so a new project starts fresh.)'
             );
         } else if(info.kind === 'project'){
             throw new Error(
                 'Gemini 429: this project has NO free-tier quota allocated. '
                 + 'Fix: open aistudio.google.com/app/apikey, delete this key, '
-                + 'then "Create API key in new project" — a fresh project always gets free quota. '
+                + 'then "Create API key in new project" â a fresh project always gets free quota. '
                 + 'Quota IDs hit: ' + info.ids
             );
         } else {
@@ -4156,7 +4161,7 @@ async function callGemini(prompt, imageDataUrl, key, opts){
             const snippet = txt.replace(/\s+/g, ' ').slice(0, 300);
             throw new Error(
                 'Gemini 429. Most likely cause: your key is on a project with no free-tier quota. '
-                + 'Fix: aistudio.google.com/app/apikey → DELETE the key → "Create API key in NEW project" → paste the new key here. '
+                + 'Fix: aistudio.google.com/app/apikey â DELETE the key â "Create API key in NEW project" â paste the new key here. '
                 + 'Google\'s exact message: ' + snippet
             );
         }
@@ -4195,7 +4200,7 @@ async function callAnthropic(prompt, imageDataUrl, key){
                 role: 'user',
                 content: [
                     { type: 'image', source: { type: 'base64', media_type: mediaType, data: base64 } },
-                    { type: 'text', text: prompt + '\n\nReturn ONLY the JSON object — no markdown, no prose.' }
+                    { type: 'text', text: prompt + '\n\nReturn ONLY the JSON object â no markdown, no prose.' }
                 ]
             }]
         })
@@ -4214,18 +4219,18 @@ async function callAnthropic(prompt, imageDataUrl, key){
 async function reviewDishWithAI(letter){
     const dish = (state.menu?.dishes || []).find(d => d.dishLetter === letter);
     const c = state.checks[letter] || {};
-    if(!c.capturedImage){ toast('Take a photo first — AI rates from the picture','fail'); return; }
+    if(!c.capturedImage){ toast('Take a photo first â AI rates from the picture','fail'); return; }
     if(!dish){ toast('Dish not found in this week\'s menu','fail'); return; }
 
     const cfg = getAiConfig();
     const proxyUrl = state.integrations?.aiProxyUrl;
     if(!cfg.provider && !proxyUrl){
-        toast('AI not set up — open Settings → Integrations','fail');
+        toast('AI not set up â open Settings â Integrations','fail');
         return;
     }
 
     const btn = document.querySelector(`[data-ai-review-letter="${letter}"]`);
-    if(btn){ btn.disabled = true; btn.textContent = 'Reviewing…'; }
+    if(btn){ btn.disabled = true; btn.textContent = 'Reviewingâ¦'; }
     try {
         let review;
         if(cfg.provider === 'groq' && cfg.key){
@@ -4270,7 +4275,7 @@ async function reviewDishWithAI(letter){
     } catch(err){
         console.error('AI review failed', err);
         toast('AI review failed: ' + (err.message || 'see console').slice(0, 80),'fail');
-        if(btn){ btn.disabled = false; btn.textContent = '✨ Review with AI'; }
+        if(btn){ btn.disabled = false; btn.textContent = 'â¨ Review with AI'; }
     }
 }
 
@@ -4289,13 +4294,13 @@ function buildEndOfDayReport(){
         const w = avg(c.weights);
         const status = readingStatus(d, c);
         const placement = c.placement || null;
-        let placementText = '—';
+        let placementText = 'â';
         if(placement){
             if(placement.type === 'warmer'){
                 const w = (state.storage.warmers || []).find(x => x.id === placement.containerId);
                 const layout = w ? WARMER_LAYOUTS[w.layout] : null;
                 const compLabel = layout?.labels?.[placement.compartment] || placement.compartment || '';
-                placementText = `${w?.name || 'Warmer'} · ${compLabel}`;
+                placementText = `${w?.name || 'Warmer'} Â· ${compLabel}`;
             } else if(placement.type === 'fridge'){
                 const f = (state.storage.fridges || []).find(x => x.id === placement.containerId);
                 placementText = f?.name || 'Fridge';
@@ -4326,17 +4331,17 @@ function buildEndOfDayReport(){
 
 function reportAsMarkdown(report){
     const lines = [];
-    lines.push(`# Bella & Bona — Culinary QC Report`);
-    lines.push(`**${humanDate(report.summary.date)}** · Generated ${nowHHMM()}`);
+    lines.push(`# Bella & Bona â Culinary QC Report`);
+    lines.push(`**${humanDate(report.summary.date)}** Â· Generated ${nowHHMM()}`);
     lines.push('');
-    lines.push(`**Summary:** ${report.summary.totalDishes} dishes · ${report.summary.passes} pass · ${report.summary.watches} watch · ${report.summary.holds} hold · ${report.summary.coverage} logged`);
+    lines.push(`**Summary:** ${report.summary.totalDishes} dishes Â· ${report.summary.passes} pass Â· ${report.summary.watches} watch Â· ${report.summary.holds} hold Â· ${report.summary.coverage} logged`);
     lines.push('');
     lines.push(`| Dish | Name | Asm | QC | Dispatch | Weight | Placement | AI | Status |`);
     lines.push(`|------|------|-----|----|----------|--------|-----------|----|--------|`);
     for(const it of report.items){
-        const f = (v, t) => v != null ? `${typeof v === 'number' ? v.toFixed(1) : v}°${t?` @${t}`:''}` : '—';
-        const aiText = it.qc.aiReview ? `${it.qc.aiReview.score != null ? it.qc.aiReview.score + '/100' : '?'} — ${(it.qc.aiReview.summary || '').slice(0, 60)}` : '—';
-        lines.push(`| ${it.letter} | ${it.name} | ${f(it.assembly.temp, it.assembly.time)} | ${f(it.qc.temp, it.qc.time)} | ${f(it.dispatch.temp, it.dispatch.time)} | ${it.qc.weight != null ? Math.round(it.qc.weight)+'g' : '—'} | ${it.placement} | ${aiText} | ${it.status.toUpperCase()} |`);
+        const f = (v, t) => v != null ? `${typeof v === 'number' ? v.toFixed(1) : v}Â°${t?` @${t}`:''}` : 'â';
+        const aiText = it.qc.aiReview ? `${it.qc.aiReview.score != null ? it.qc.aiReview.score + '/100' : '?'} â ${(it.qc.aiReview.summary || '').slice(0, 60)}` : 'â';
+        lines.push(`| ${it.letter} | ${it.name} | ${f(it.assembly.temp, it.assembly.time)} | ${f(it.qc.temp, it.qc.time)} | ${f(it.dispatch.temp, it.dispatch.time)} | ${it.qc.weight != null ? Math.round(it.qc.weight)+'g' : 'â'} | ${it.placement} | ${aiText} | ${it.status.toUpperCase()} |`);
     }
     return lines.join('\n');
 }
@@ -4355,7 +4360,7 @@ function reportAsTeamsCard(report){
                 version: '1.4',
                 body: [
                     { type: 'TextBlock', size: 'Large', weight: 'Bolder', text: 'Bella & Bona QC Report' },
-                    { type: 'TextBlock', text: humanDate(report.summary.date) + ' · Generated ' + nowHHMM(), isSubtle: true, wrap: true },
+                    { type: 'TextBlock', text: humanDate(report.summary.date) + ' Â· Generated ' + nowHHMM(), isSubtle: true, wrap: true },
                     { type: 'FactSet', facts: [
                         { title: 'Dishes', value: String(report.summary.totalDishes) },
                         { title: 'Pass', value: String(report.summary.passes) },
@@ -4372,10 +4377,10 @@ function reportAsTeamsCard(report){
 
 async function sendReportToTeamsNow(){
     const url = state.integrations?.teamsWebhookUrl;
-    if(!url){ toast('Teams webhook not configured — set it in Settings','fail'); return; }
+    if(!url){ toast('Teams webhook not configured â set it in Settings','fail'); return; }
     const report = buildEndOfDayReport();
     try {
-        toast('Sending to Teams…');
+        toast('Sending to Teamsâ¦');
         const res = await fetch(url, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -4385,11 +4390,11 @@ async function sendReportToTeamsNow(){
         toast('Report sent to Teams','ok');
     } catch(err){
         console.error('Teams send failed', err);
-        toast('Send failed — check webhook URL','fail');
+        toast('Send failed â check webhook URL','fail');
     }
 }
 /* === PDF report (daily / weekly / monthly / custom range) ===
-   Pulls all the data — menu, checks per date, storage config — and writes
+   Pulls all the data â menu, checks per date, storage config â and writes
    a multi-page PDF using jsPDF + autoTable.
 
    Public entry point: openReportDialog() (wired to the drawer's "Download
@@ -4407,7 +4412,7 @@ function rangeForPreset(preset){
         return { start: iso, end: iso };
     }
     if(preset === 'this-week'){
-        // Working week is Mon–Fri (Bella & Bona doesn't operate weekends)
+        // Working week is MonâFri (Bella & Bona doesn't operate weekends)
         const monday = isoOfMondayOf(today);
         const friday = shiftIso(monday, 4);
         return { start: monday, end: friday };
@@ -4430,7 +4435,7 @@ function rangeForPreset(preset){
     return { start: today, end: today };
 }
 function datesInRange(startIso, endIso){
-    // Working days only — Bella & Bona doesn't operate Sat/Sun, so every
+    // Working days only â Bella & Bona doesn't operate Sat/Sun, so every
     // report, aggregation, and iteration skips weekends.
     const out = [];
     let cur = startIso;
@@ -4482,13 +4487,13 @@ function openReportDialog(){
                 <div class="modal-head">
                     <div class="eyebrow">Report</div>
                     <h3 class="title">Download QC report</h3>
-                    <button class="modal-close" aria-label="Close" onclick="window.__qc.closeSettings()">×</button>
+                    <button class="modal-close" aria-label="Close" onclick="window.__qc.closeSettings()">Ã</button>
                 </div>
                 <div class="modal-body">
                     <div class="report-block">
                         <div class="section-mini">Report format</div>
                         <div class="report-chips">
-                            <button class="report-chip ${r.format==='checkpoint'?'is-on':''}" data-format="checkpoint" type="button">Checkpoint summary<span class="chip-sub">Single clean table · CP1/CP2/CP3</span></button>
+                            <button class="report-chip ${r.format==='checkpoint'?'is-on':''}" data-format="checkpoint" type="button">Checkpoint summary<span class="chip-sub">Single clean table Â· CP1/CP2/CP3</span></button>
                             <button class="report-chip ${r.format!=='checkpoint'?'is-on':''}" data-format="detailed" type="button">Detailed audit<span class="chip-sub">Full per-dish blocks + audit summary</span></button>
                         </div>
                         <div class="section-mini" style="margin-top:8px">Pick a date range</div>
@@ -4497,9 +4502,9 @@ function openReportDialog(){
                                 const labels = {
                                     'today':['Today', humanDate(todayIso())],
                                     'yesterday':['Yesterday', humanDate(shiftIso(todayIso(),-1))],
-                                    'this-week':['This week','Mon — Fri'],
-                                    'last-week':['Last week','previous Mon — Fri'],
-                                    'this-month':['This month','1st — end of month'],
+                                    'this-week':['This week','Mon â Fri'],
+                                    'last-week':['Last week','previous Mon â Fri'],
+                                    'this-month':['This month','1st â end of month'],
                                     'last-month':['Last month','previous calendar month'],
                                     'custom':['Custom','Pick from / to']
                                 };
@@ -4519,9 +4524,9 @@ function openReportDialog(){
                             </div>
                         ` : ''}
                         <div class="report-summary">
-                            ${range.start && range.end ? `<strong>${humanDate(range.start)}</strong> → <strong>${humanDate(range.end)}</strong> · ${days} day${days===1?'':'s'} included` : 'Pick a date range to include in the report.'}<br/>
+                            ${range.start && range.end ? `<strong>${humanDate(range.start)}</strong> â <strong>${humanDate(range.end)}</strong> Â· ${days} day${days===1?'':'s'} included` : 'Pick a date range to include in the report.'}<br/>
                             ${r.format === 'checkpoint'
-                                ? `<strong>Checkpoint summary:</strong> a single clean table per day with columns <em>ID · Dish · CP1 (Assembly) Time + Avg · CP2 (QC) Time + Avg · CP3 (Dispatch) Time + Avg</em>. Hot dishes grouped under <em>TARGET ≥${HOT_MIN}°C</em>, cold under <em>TARGET ≤${COLD_MAX}°C</em>. Temperature values colour-coded green / yellow / red against spec.`
+                                ? `<strong>Checkpoint summary:</strong> a single clean table per day with columns <em>ID Â· Dish Â· CP1 (Assembly) Time + Avg Â· CP2 (QC) Time + Avg Â· CP3 (Dispatch) Time + Avg</em>. Hot dishes grouped under <em>TARGET â¥${HOT_MIN}Â°C</em>, cold under <em>TARGET â¤${COLD_MAX}Â°C</em>. Temperature values colour-coded green / yellow / red against spec.`
                                 : `<strong>Detailed audit:</strong> per-dish detail blocks (Assembly contributors + temps, QC samples + weights + ingredients + photo + chef's note, Dispatch temps + time, every Placement compartment), plus an audit summary at the end: compliance by category, daily coverage, every out-of-spec reading, coverage gaps, repeat-issue dishes, contributor leaderboard, and a sign-off block.`}
                         </div>
                         <div class="report-actions">
@@ -4587,7 +4592,7 @@ function openReportDialog(){
                     ? { start: rangeState.customStart, end: rangeState.customEnd }
                     : rangeForPreset(rangeState.preset);
                 if(!rng.start || !rng.end){ toast('Pick a date range','fail'); return; }
-                viewBtn.disabled = true; viewBtn.textContent = 'Loading…';
+                viewBtn.disabled = true; viewBtn.textContent = 'Loadingâ¦';
                 try {
                     closeSettings();
                     await showCheckpointHtml(rng);
@@ -4609,13 +4614,13 @@ const rangeState = (window.rangeState = window.rangeState || { preset:'today', c
 
 async function generatePdfReport(range){
     if(!window.jspdf){
-        toast('PDF library still loading — try again in a sec','fail');
+        toast('PDF library still loading â try again in a sec','fail');
         return;
     }
     const { jsPDF } = window.jspdf;
     if(!jsPDF){ toast('PDF library not available','fail'); return; }
 
-    toast('Fetching data…');
+    toast('Fetching dataâ¦');
     const checksByDate = await fetchChecksForRange(range.start, range.end);
     const menusByWeek = await fetchMenusForRange(range.start, range.end);
     const storage = state.storage || { warmers: [], fridges: [], team: [] };
@@ -4637,7 +4642,7 @@ async function generatePdfReport(range){
         return pct <= WT_OK ? 'ok' : pct <= WT_WARN ? 'warn' : 'crit';
     };
 
-    // Status → RGB triplets
+    // Status â RGB triplets
     const COLOR = {
         ok:   [22,163,74],
         warn: [234,88,12],
@@ -4683,9 +4688,9 @@ async function generatePdfReport(range){
     const legendStrip = (y) => {
         const segW = innerW / 3;
         const segs = [
-            { label:'OK', spec:`Hot ≥${HOT_PASS}°C | Cold ≤${COLD_PASS}°C | Wt ≤${WT_OK*100}%`, fill:[220,252,231], color:COLOR.ok },
-            { label:'WARN', spec:`Hot ${HOT_WARN_MIN}–${HOT_PASS-1}°C | Cold ${COLD_PASS}–${COLD_WARN_MAX}°C | Wt ${WT_OK*100}–${WT_WARN*100}%`, fill:[254,243,199], color:COLOR.warn },
-            { label:'CRITICAL', spec:`Hot <${HOT_WARN_MIN}°C | Cold >${COLD_WARN_MAX}°C | Wt >${WT_WARN*100}%`, fill:[254,226,226], color:COLOR.crit }
+            { label:'OK', spec:`Hot â¥${HOT_PASS}Â°C | Cold â¤${COLD_PASS}Â°C | Wt â¤${WT_OK*100}%`, fill:[220,252,231], color:COLOR.ok },
+            { label:'WARN', spec:`Hot ${HOT_WARN_MIN}â${HOT_PASS-1}Â°C | Cold ${COLD_PASS}â${COLD_WARN_MAX}Â°C | Wt ${WT_OK*100}â${WT_WARN*100}%`, fill:[254,243,199], color:COLOR.warn },
+            { label:'CRITICAL', spec:`Hot <${HOT_WARN_MIN}Â°C | Cold >${COLD_WARN_MAX}Â°C | Wt >${WT_WARN*100}%`, fill:[254,226,226], color:COLOR.crit }
         ];
         segs.forEach((s, i) => {
             setFill(s.fill);
@@ -4715,7 +4720,7 @@ async function generatePdfReport(range){
         pdf.setFont('helvetica','normal').setFontSize(7.5);
         setText(COLOR.mute);
         pdf.text(sub, x + w/2, y + h/2 + 23, { align:'center' });
-        const tag = status === 'ok' ? 'OK' : status === 'warn' ? 'WARN' : status === 'crit' ? 'CRIT' : '—';
+        const tag = status === 'ok' ? 'OK' : status === 'warn' ? 'WARN' : status === 'crit' ? 'CRIT' : 'â';
         const tagColor = COLOR[status] || COLOR.na;
         setFill(tagColor);
         pdf.roundedRect(x + w/2 - 22, y + h - 14, 44, 11, 5, 5, 'F');
@@ -4784,12 +4789,12 @@ async function generatePdfReport(range){
         // Big avg
         pdf.setFont('helvetica','bold').setFontSize(18);
         setText(COLOR[status] || COLOR.na);
-        pdf.text(qT != null ? qT.toFixed(1) + '°C' : '—', x + w/2, y + h/2 + 6, { align:'center' });
+        pdf.text(qT != null ? qT.toFixed(1) + 'Â°C' : 'â', x + w/2, y + h/2 + 6, { align:'center' });
         // Three sample temps
         const t = c.temperatures || [];
         pdf.setFont('helvetica','normal').setFontSize(7);
         setText(COLOR.mute);
-        const ttxt = [0,1,2].map(i => t[i] != null ? Number(t[i]).toFixed(1)+'°' : '—').join('  ');
+        const ttxt = [0,1,2].map(i => t[i] != null ? Number(t[i]).toFixed(1)+'Â°' : 'â').join('  ');
         pdf.text(ttxt, x + w/2, y + h - 16, { align:'center' });
         // Bottom meta: warmer + set temp (placement-derived)
         const places = placementsOf(dish.dishLetter);
@@ -4820,12 +4825,12 @@ async function generatePdfReport(range){
         pdf.setFont('helvetica','normal').setFontSize(8);
         setText(COLOR.sub);
         const wk = isoYearWeek(date);
-        pdf.text(`Bella & Bona · ${cityName} · Dark Kitchen Operations · Week ${wk}`, margin + 10, y + 26);
+        pdf.text(`Bella & Bona Â· ${cityName} Â· Dark Kitchen Operations Â· Week ${wk}`, margin + 10, y + 26);
         y += 32;
 
         // Meta line
         const teamRoster = (storage.team || []).map(m => m.name).filter(Boolean).join(', ');
-        const meta = `${dishes.length} dishes · ${hot.length} hot · ${cold.length} cold${teamRoster ? ' · Team: ' + teamRoster : ''}`;
+        const meta = `${dishes.length} dishes Â· ${hot.length} hot Â· ${cold.length} cold${teamRoster ? ' Â· Team: ' + teamRoster : ''}`;
         y = subBar(meta, y);
         y += 4;
 
@@ -4833,7 +4838,7 @@ async function generatePdfReport(range){
         y = legendStrip(y) + 8;
 
         // --- Section 1: Compliance scorecard ---
-        y = titleBar('1. COMPLIANCE SCORECARD — Temperature pass rate by category', y);
+        y = titleBar('1. COMPLIANCE SCORECARD â Temperature pass rate by category', y);
         y = subBar('Pass = OK + WARN  |  Fail = CRITICAL only', y);
         y += 4;
         // Counters
@@ -4858,7 +4863,7 @@ async function generatePdfReport(range){
                 if(st === 'ok') counts.wt.pass++;
             }
         }
-        const pctTxt = (n, d) => d === 0 ? '—' : `${Math.round(n/d*100)}%`;
+        const pctTxt = (n, d) => d === 0 ? 'â' : `${Math.round(n/d*100)}%`;
         const ratePct = (n, d) => d === 0 ? 100 : Math.round(n/d*100);
         const cardStatus = (rate, denom) => {
             if(denom === 0) return 'na';
@@ -4878,7 +4883,7 @@ async function generatePdfReport(range){
 
         // --- Section 2: Overall gauge ---
         y = titleBar('2. OVERALL COMPLIANCE GAUGE', y);
-        y = subBar('Green 80–100% OK  |  Amber 60–80% Warn  |  Red <60% Critical', y);
+        y = subBar('Green 80â100% OK  |  Amber 60â80% Warn  |  Red <60% Critical', y);
         y += 4;
         const totals = { total: counts.hot.total + counts.cold.total + counts.wt.total,
                          pass:  counts.hot.pass  + counts.cold.pass  + counts.wt.pass };
@@ -4892,7 +4897,7 @@ async function generatePdfReport(range){
         y += 96 + 10;
 
         // --- Section 3: Hot dish cards ---
-        y = titleBar(`3. HOT DISH TEMPERATURES  —  ≥${HOT_PASS}°C OK  |  ${HOT_WARN_MIN}–${HOT_PASS-1}°C WARN  |  <${HOT_WARN_MIN}°C CRITICAL`, y);
+        y = titleBar(`3. HOT DISH TEMPERATURES  â  â¥${HOT_PASS}Â°C OK  |  ${HOT_WARN_MIN}â${HOT_PASS-1}Â°C WARN  |  <${HOT_WARN_MIN}Â°C CRITICAL`, y);
         y += 4;
         const colsHot = 4;
         const hotCardW = (innerW - (colsHot-1)*6) / colsHot;
@@ -4919,7 +4924,7 @@ async function generatePdfReport(range){
         if(y + 200 > pageH){ pdf.addPage(); y = 28; }
 
         // --- Section 4: Cold dish cards ---
-        y = titleBar(`4. COLD DISH TEMPERATURES  —  ≤${COLD_PASS}°C OK  |  ${COLD_PASS}–${COLD_WARN_MAX}°C WARN  |  >${COLD_WARN_MAX}°C CRITICAL`, y);
+        y = titleBar(`4. COLD DISH TEMPERATURES  â  â¤${COLD_PASS}Â°C OK  |  ${COLD_PASS}â${COLD_WARN_MAX}Â°C WARN  |  >${COLD_WARN_MAX}Â°C CRITICAL`, y);
         y += 4;
         const coldCardW = (innerW - (colsHot-1)*6) / colsHot;
         const coldCardH = 64;
@@ -4951,8 +4956,8 @@ async function generatePdfReport(range){
 
         // --- Section 5: Weight deviation table (all dishes, critical first) ---
         if(y + 80 > pageH){ pdf.addPage(); y = 28; }
-        y = titleBar('5. WEIGHT DEVIATION — All dishes (sorted: Critical first)', y);
-        y = subBar('+ = over  |  − = under  |  >10% Critical  |  5–10% Warn  |  ≤5% OK', y);
+        y = titleBar('5. WEIGHT DEVIATION â All dishes (sorted: Critical first)', y);
+        y = subBar('+ = over  |  â = under  |  >10% Critical  |  5â10% Warn  |  â¤5% OK', y);
         y += 2;
         const wtRows = dishes.map(d => {
             const c = checks[d.dishLetter] || {};
@@ -4982,9 +4987,9 @@ async function generatePdfReport(range){
                     r.letter, r.name, r.type,
                     r.theo + 'g',
                     r.avg.toFixed(1) + 'g',
-                    r.w1 != null ? Math.round(r.w1) + 'g' : '—',
-                    r.w2 != null ? Math.round(r.w2) + 'g' : '—',
-                    r.w3 != null ? Math.round(r.w3) + 'g' : '—',
+                    r.w1 != null ? Math.round(r.w1) + 'g' : 'â',
+                    r.w2 != null ? Math.round(r.w2) + 'g' : 'â',
+                    r.w3 != null ? Math.round(r.w3) + 'g' : 'â',
                     (r.devPct >= 0 ? '+' : '') + r.devPct.toFixed(1) + '%',
                     r.status.toUpperCase()
                 ]),
@@ -5028,7 +5033,7 @@ async function generatePdfReport(range){
             pdf.text('~/ Dish Lifecycle Tracking', margin + 10, y + 12);
             pdf.setFont('helvetica','normal').setFontSize(8);
             setText(COLOR.sub);
-            pdf.text(`${humanDate(date)} · Week ${wk} · Assembly → Warmer → QC Check → Dispatch`, margin + 10, y + 22);
+            pdf.text(`${humanDate(date)} Â· Week ${wk} Â· Assembly â Warmer â QC Check â Dispatch`, margin + 10, y + 22);
             y += 30;
 
             const boxW = (innerW - 24) / 4;
@@ -5043,13 +5048,13 @@ async function generatePdfReport(range){
                 pdf.text(label, x + boxW/2, y + 10, { align:'center' });
                 pdf.setFont('helvetica','bold').setFontSize(16);
                 setText(statusClr || COLOR.ink);
-                pdf.text(big || '—', x + boxW/2, y + 30, { align:'center' });
+                pdf.text(big || 'â', x + boxW/2, y + 30, { align:'center' });
                 pdf.setFont('helvetica','normal').setFontSize(7);
                 setText(COLOR.mute);
                 pdf.text(samples || '', x + boxW/2, y + 42, { align:'center' });
                 pdf.setFont('helvetica','bold').setFontSize(8);
                 setText(COLOR.ink);
-                pdf.text(time || '—', x + boxW/2, y + 53, { align:'center' });
+                pdf.text(time || 'â', x + boxW/2, y + 53, { align:'center' });
                 if(statusTxt){
                     setFill(fillBg[statusClr === COLOR.ok ? 'ok' : statusClr === COLOR.warn ? 'warn' : statusClr === COLOR.crit ? 'crit' : 'na'] || fillBg.na);
                     pdf.rect(x + 4, y + boxH - 12, boxW - 8, 9, 'F');
@@ -5059,7 +5064,7 @@ async function generatePdfReport(range){
                 }
             };
             const colorFor = (st) => st === 'ok' ? COLOR.ok : st === 'warn' ? COLOR.warn : st === 'crit' ? COLOR.crit : COLOR.na;
-            const statusLabel = (st, target) => st === 'ok' ? 'PASS ' + target : st === 'warn' ? 'WARN ' + target : st === 'crit' ? 'CRIT ' + target : '—';
+            const statusLabel = (st, target) => st === 'ok' ? 'PASS ' + target : st === 'warn' ? 'WARN ' + target : st === 'crit' ? 'CRIT ' + target : 'â';
 
             for(const dish of hot){
                 if(y + boxH + 30 > pageH){ pdf.addPage(); y = 28; }
@@ -5095,29 +5100,29 @@ async function generatePdfReport(range){
                 const asmTemps = c.assembly && Array.isArray(c.assembly.temps) ? c.assembly.temps : [c.assembly && c.assembly.temp];
                 const qcTemps = c.temperatures || [];
                 const dispTemps = c.dispatch && Array.isArray(c.dispatch.temps) ? c.dispatch.temps : [c.dispatch && c.dispatch.temp];
-                const target = `(≥${HOT_PASS}°C)`;
+                const target = `(â¥${HOT_PASS}Â°C)`;
 
                 drawBox(margin, y, 'ASSEMBLY',
-                    aT != null ? aT.toFixed(1) + '°C' : '—',
-                    asmTemps.filter(t => t != null).map(t => Number(t).toFixed(0)+'°').join(' '),
-                    (c.assembly && c.assembly.time) || '—',
+                    aT != null ? aT.toFixed(1) + 'Â°C' : 'â',
+                    asmTemps.filter(t => t != null).map(t => Number(t).toFixed(0)+'Â°').join(' '),
+                    (c.assembly && c.assembly.time) || 'â',
                     aT == null ? '' : statusLabel(hotStatus(aT), target),
                     colorFor(aT == null ? 'na' : hotStatus(aT))
                 );
                 drawBox(margin + (boxW + 8), y, 'TO WARMER',
-                    placeStr || '—', '', '—', '', COLOR.na
+                    placeStr || 'â', '', 'â', '', COLOR.na
                 );
                 drawBox(margin + 2*(boxW + 8), y, 'QC CHECK',
-                    qT != null ? qT.toFixed(1) + '°C' : '—',
-                    qcTemps.filter(t => t != null).map(t => Number(t).toFixed(0)+'°').join(' '),
-                    c.qcTime || '—',
+                    qT != null ? qT.toFixed(1) + 'Â°C' : 'â',
+                    qcTemps.filter(t => t != null).map(t => Number(t).toFixed(0)+'Â°').join(' '),
+                    c.qcTime || 'â',
                     qT == null ? '' : statusLabel(hotStatus(qT), target),
                     colorFor(qT == null ? 'na' : hotStatus(qT))
                 );
                 drawBox(margin + 3*(boxW + 8), y, 'DISPATCH',
-                    dT != null ? dT.toFixed(1) + '°C' : '—',
-                    dispTemps.filter(t => t != null).map(t => Number(t).toFixed(0)+'°').join(' '),
-                    (c.dispatch && c.dispatch.time) || '—',
+                    dT != null ? dT.toFixed(1) + 'Â°C' : 'â',
+                    dispTemps.filter(t => t != null).map(t => Number(t).toFixed(0)+'Â°').join(' '),
+                    (c.dispatch && c.dispatch.time) || 'â',
                     dT == null ? '' : statusLabel(hotStatus(dT), target),
                     colorFor(dT == null ? 'na' : hotStatus(dT))
                 );
@@ -5137,7 +5142,7 @@ async function generatePdfReport(range){
         pdf.setPage(p);
         pdf.setFont('helvetica','normal').setFontSize(7);
         setText(COLOR.mute);
-        pdf.text(`Bella & Bona · ${cityName} · QC Dashboard · ${humanDate(range.start)} → ${humanDate(range.end)} · Page ${p} of ${total}`, pageW/2, pageH - 14, { align:'center' });
+        pdf.text(`Bella & Bona Â· ${cityName} Â· QC Dashboard Â· ${humanDate(range.start)} â ${humanDate(range.end)} Â· Page ${p} of ${total}`, pageW/2, pageH - 14, { align:'center' });
     }
 
     const citySlug = window.__qc_city?.slug || 'city';
@@ -5146,17 +5151,17 @@ async function generatePdfReport(range){
     toast('Report downloaded','ok');
 }
 
-/* Checkpoint summary PDF — clean per-day table styled like the kitchen
+/* Checkpoint summary PDF â clean per-day table styled like the kitchen
    manager's classic CP1 / CP2 / CP3 sheet. Hot dishes first under
-   "TARGET ≥{HOT_MIN}°C", cold under "TARGET ≤{COLD_MAX}°C". Each row shows
+   "TARGET â¥{HOT_MIN}Â°C", cold under "TARGET â¤{COLD_MAX}Â°C". Each row shows
    Time + Avg for the three checkpoints (Assembly / QC / Dispatch), with
    colour-coded temperature pills (green=pass, amber=watch, red=hold). */
 async function generateCheckpointPdf(range){
-    if(!window.jspdf){ toast('PDF library still loading — try again','fail'); return; }
+    if(!window.jspdf){ toast('PDF library still loading â try again','fail'); return; }
     const { jsPDF } = window.jspdf;
     if(!jsPDF){ toast('PDF library not available','fail'); return; }
 
-    toast('Fetching data…');
+    toast('Fetching dataâ¦');
     const checksByDate = await fetchChecksForRange(range.start, range.end);
     const menusByWeek = await fetchMenusForRange(range.start, range.end);
     const dates = datesInRange(range.start, range.end);
@@ -5169,16 +5174,16 @@ async function generateCheckpointPdf(range){
 
     // Cover header
     pdf.setFont('helvetica','bold').setFontSize(18).setTextColor(31,41,55);
-    pdf.text(`Bella & Bona — QC Checkpoint Summary${window.__qc_city ? ' — ' + window.__qc_city.name : ''}`, margin, y);
+    pdf.text(`Bella & Bona â QC Checkpoint Summary${window.__qc_city ? ' â ' + window.__qc_city.name : ''}`, margin, y);
     y += 18;
     pdf.setFont('helvetica','normal').setFontSize(10).setTextColor(110,116,128);
-    pdf.text(`${humanDate(range.start)} → ${humanDate(range.end)} · ${dates.length} day${dates.length===1?'':'s'} · Generated ${humanDate(todayIso())} ${nowHHMM()}`, margin, y);
+    pdf.text(`${humanDate(range.start)} â ${humanDate(range.end)} Â· ${dates.length} day${dates.length===1?'':'s'} Â· Generated ${humanDate(todayIso())} ${nowHHMM()}`, margin, y);
     y += 16;
 
-    // tempCellFmt — returns [text, fillRGB, textRGB] for autoTable cell styling
+    // tempCellFmt â returns [text, fillRGB, textRGB] for autoTable cell styling
     const tempPill = (v, dish) => {
-        if(v == null) return { text: '—', fill: null, color: [110,116,128] };
-        const txt = v.toFixed(1) + '°';
+        if(v == null) return { text: 'â', fill: null, color: [110,116,128] };
+        const txt = v.toFixed(1) + 'Â°';
         const st = tempStatus(v, dish);
         if(st === 'pass')  return { text: txt, fill: [220,252,231], color: [22,101,52] };
         if(st === 'watch') return { text: txt, fill: [254,243,199], color: [146,64,14] };
@@ -5193,7 +5198,7 @@ async function generateCheckpointPdf(range){
         if(!dishes.length){
             if(y > pageH - 60){ pdf.addPage(); y = 50; }
             pdf.setFont('helvetica','italic').setFontSize(10).setTextColor(140,140,150);
-            pdf.text(`${humanDate(date)} — no menu recorded.`, margin, y); y += 18;
+            pdf.text(`${humanDate(date)} â no menu recorded.`, margin, y); y += 18;
             return;
         }
 
@@ -5221,11 +5226,11 @@ async function generateCheckpointPdf(range){
             return [
                 d.dishLetter,
                 d.dishName,
-                aTime || '—',
+                aTime || 'â',
                 tempPill(aT, d),
-                qTime || '—',
+                qTime || 'â',
                 tempPill(qT, d),
-                dTime || '—',
+                dTime || 'â',
                 tempPill(dT, d)
             ];
         });
@@ -5264,8 +5269,8 @@ async function generateCheckpointPdf(range){
             y = pdf.lastAutoTable.finalY + 10;
         };
 
-        drawSection(`HOT DISHES — TARGET ≥${HOT_MIN}°C`, hot, [254,226,226]);
-        drawSection(`COLD DISHES — TARGET ≤${COLD_MAX}°C`, cold, [219,234,254]);
+        drawSection(`HOT DISHES â TARGET â¥${HOT_MIN}Â°C`, hot, [254,226,226]);
+        drawSection(`COLD DISHES â TARGET â¤${COLD_MAX}Â°C`, cold, [219,234,254]);
         y += 4;
     };
 
@@ -5276,7 +5281,7 @@ async function generateCheckpointPdf(range){
     for(let p = 1; p <= total; p++){
         pdf.setPage(p);
         pdf.setFont('helvetica','normal').setFontSize(8).setTextColor(140,140,150);
-        const txt = `Bella & Bona · Checkpoint summary ${humanDate(range.start)} → ${humanDate(range.end)} · Page ${p} of ${total}`;
+        const txt = `Bella & Bona Â· Checkpoint summary ${humanDate(range.start)} â ${humanDate(range.end)} Â· Page ${p} of ${total}`;
         pdf.text(txt, pageW/2, pdf.internal.pageSize.getHeight() - 18, { align:'center' });
     }
 
@@ -5288,22 +5293,22 @@ async function generateCheckpointPdf(range){
 
 /* Render the same checkpoint summary as a clean styled HTML view, perfect
    for taking a screenshot directly off the site. Uses the same data model
-   as generateCheckpointPdf — Hot dishes grouped first, Cold second, each
+   as generateCheckpointPdf â Hot dishes grouped first, Cold second, each
    row showing CP1/CP2/CP3 (Assembly/QC/Dispatch) Time + colour-coded Avg. */
 async function showCheckpointHtml(range){
-    toast('Fetching data…');
+    toast('Fetching dataâ¦');
     const checksByDate = await fetchChecksForRange(range.start, range.end);
     const menusByWeek = await fetchMenusForRange(range.start, range.end);
     const dates = datesInRange(range.start, range.end);
 
     const tempPill = (v, dish) => {
-        if(v == null) return `<span class="rv-temp empty">—</span>`;
+        if(v == null) return `<span class="rv-temp empty">â</span>`;
         const st = tempStatus(v, dish);
         const cls = (st === 'pass' || st === 'watch' || st === 'hold') ? st : 'empty';
-        return `<span class="rv-temp ${cls}">${v.toFixed(1)}°</span>`;
+        return `<span class="rv-temp ${cls}">${v.toFixed(1)}Â°</span>`;
     };
     // Each CP cell shows time on the left and the temp pill on the right
-    const cpCell = (time, temp, dish) => `<td><div class="rv-cp"><span class="rv-time">${escapeHtml(time || '—')}</span>${tempPill(temp, dish)}</div></td>`;
+    const cpCell = (time, temp, dish) => `<td><div class="rv-cp"><span class="rv-time">${escapeHtml(time || 'â')}</span>${tempPill(temp, dish)}</div></td>`;
 
     const renderTable = (group) => {
         if(!group.length) return '';
@@ -5324,9 +5329,9 @@ async function showCheckpointHtml(range){
             <thead><tr>
                 <th class="rv-id">ID</th>
                 <th>Dish</th>
-                <th class="center rv-cp-col">CP1 · Assembly</th>
-                <th class="center rv-cp-col">CP2 · QC</th>
-                <th class="center rv-cp-col">CP3 · Dispatch</th>
+                <th class="center rv-cp-col">CP1 Â· Assembly</th>
+                <th class="center rv-cp-col">CP2 Â· QC</th>
+                <th class="center rv-cp-col">CP3 Â· Dispatch</th>
             </tr></thead>
             <tbody>${rows}</tbody>
         </table>`;
@@ -5347,10 +5352,10 @@ async function showCheckpointHtml(range){
         return `${dateBar}
             <div class="rv-grid">
                 <div class="rv-col">
-                    ${hot.length ? `<div class="rv-section-head hot"><span>Hot dishes (${hot.length})</span><span class="rv-target">Target ≥${HOT_MIN}°C</span></div>${renderTable(hot)}` : '<div class="rv-empty">No hot dishes</div>'}
+                    ${hot.length ? `<div class="rv-section-head hot"><span>Hot dishes (${hot.length})</span><span class="rv-target">Target â¥${HOT_MIN}Â°C</span></div>${renderTable(hot)}` : '<div class="rv-empty">No hot dishes</div>'}
                 </div>
                 <div class="rv-col">
-                    ${cold.length ? `<div class="rv-section-head cold"><span>Cold dishes (${cold.length})</span><span class="rv-target">Target ≤${COLD_MAX}°C</span></div>${renderTable(cold)}` : '<div class="rv-empty">No cold dishes</div>'}
+                    ${cold.length ? `<div class="rv-section-head cold"><span>Cold dishes (${cold.length})</span><span class="rv-target">Target â¤${COLD_MAX}Â°C</span></div>${renderTable(cold)}` : '<div class="rv-empty">No cold dishes</div>'}
                 </div>
             </div>
         `;
@@ -5360,8 +5365,8 @@ async function showCheckpointHtml(range){
     host.innerHTML = `
         <div class="rv-toolbar">
             <div class="rv-meta">
-                <strong>Bella & Bona · QC Checkpoint Summary</strong>
-                ${humanDate(range.start)} → ${humanDate(range.end)} · ${dates.length} day${dates.length===1?'':'s'} · Generated ${humanDate(todayIso())} ${nowHHMM()}
+                <strong>Bella & Bona Â· QC Checkpoint Summary</strong>
+                ${humanDate(range.start)} â ${humanDate(range.end)} Â· ${dates.length} day${dates.length===1?'':'s'} Â· Generated ${humanDate(todayIso())} ${nowHHMM()}
             </div>
             <div class="rv-actions">
                 <button class="rv-btn" type="button" onclick="window.print()">Print</button>
@@ -5420,7 +5425,7 @@ async function saveStageFromForm(stage){
     if(stage === 'assembly'){
         const wNum = parseDecimal(get('weight'));
         const note = get('note');
-        // Note: we no longer write a top-level `by` from this form —
+        // Note: we no longer write a top-level `by` from this form â
         // contributor attribution now lives in entries[]. Don't touch entries
         // here, saveStage uses Firebase update() so it preserves siblings.
         payload = {
@@ -5469,7 +5474,7 @@ async function resizeImageToDataUrl(file, maxSide=1024, quality=0.85){
 */
 let _camState = { stream: null, facing: 'environment' };
 
-/* openCamera(letter, opts) — opts.onCapture(dataUrl) optionally overrides
+/* openCamera(letter, opts) â opts.onCapture(dataUrl) optionally overrides
    the default save behavior. Default saves to c.capturedImage (QC tab).
    For Assembly: pass an onCapture that writes to c.assembly.image instead. */
 async function openCamera(letter, opts){
@@ -5487,12 +5492,12 @@ async function openCamera(letter, opts){
         scrim.innerHTML = `
             <div class="cam-stage">
                 <video class="cam-video" id="cam-video" autoplay muted playsinline></video>
-                ${extra || `<div class="cam-loading" id="cam-loading">Starting camera…</div>`}
+                ${extra || `<div class="cam-loading" id="cam-loading">Starting cameraâ¦</div>`}
             </div>
             <div class="cam-bar">
-                <button class="cam-btn" id="cam-cancel">✕ Cancel</button>
+                <button class="cam-btn" id="cam-cancel">â Cancel</button>
                 <button class="cam-shutter" id="cam-shutter" disabled aria-label="Capture"></button>
-                <button class="cam-flip" id="cam-flip" title="Switch camera" aria-label="Switch camera">⟳</button>
+                <button class="cam-flip" id="cam-flip" title="Switch camera" aria-label="Switch camera">â³</button>
             </div>
         `;
         scrim.querySelector('#cam-cancel').onclick = closeCamera;
@@ -5520,7 +5525,7 @@ async function openCamera(letter, opts){
             const file = e.target.files?.[0];
             if(!file) return;
             try{
-                toast('Processing photo…');
+                toast('Processing photoâ¦');
                 const dataUrl = await resizeImageToDataUrl(file, 1024, 0.85);
                 await saveDataUrl(dataUrl);
                 toast('Photo saved','ok');
@@ -5528,7 +5533,7 @@ async function openCamera(letter, opts){
                 renderModal();
             }catch(err){ toast('Photo save failed','fail'); console.error(err); }
         });
-        // Hide shutter when in error state — no live stream
+        // Hide shutter when in error state â no live stream
         scrim.querySelector('#cam-shutter').style.display = 'none';
         scrim.querySelector('#cam-flip').style.display = 'none';
     }
@@ -5541,7 +5546,7 @@ async function openCamera(letter, opts){
         }
         const vid = scrim.querySelector('#cam-video');
         const loading = scrim.querySelector('#cam-loading');
-        if(loading) loading.textContent = 'Starting camera…';
+        if(loading) loading.textContent = 'Starting cameraâ¦';
 
         if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
             showError('Camera not available', 'This browser does not support live camera capture. You can upload a photo from your device instead.');
@@ -5595,7 +5600,7 @@ async function captureFrame(letter){
         canvas.width = w; canvas.height = h;
         canvas.getContext('2d').drawImage(vid, 0, 0, w, h);
         const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
-        toast('Saving photo…');
+        toast('Saving photoâ¦');
         const onCapture = _camState.onCapture || (async (du) => saveCheckField(letter, { capturedImage: du, qcTime: nowHHMM() }));
         await onCapture(dataUrl);
         toast('Photo saved','ok');
@@ -5635,9 +5640,9 @@ function normalizeMenu(raw, opts){
     opts = opts || {};
     if(raw == null) throw new Error('Empty JSON');
     let parsed = raw;
-    // Bare array → wrap
+    // Bare array â wrap
     if(Array.isArray(parsed)) parsed = { dishes: parsed };
-    // Some exports wrap the menu in { menu: {...} } or { data: {...} } —
+    // Some exports wrap the menu in { menu: {...} } or { data: {...} } â
     // unwrap one or two layers automatically before giving up.
     const findDishesArray = (obj, depth = 0) => {
         if(!obj || typeof obj !== 'object' || depth > 3) return null;
@@ -5658,8 +5663,8 @@ function normalizeMenu(raw, opts){
     }
     console.log(`normalizeMenu: found ${parsed.dishes.length} raw dishes`);
 
-    // Case-insensitive type classifier — accepts any of:
-    //   "hot", "HOT", "Hot", "warm", "heated", "heiss", "heiß", "warmes"
+    // Case-insensitive type classifier â accepts any of:
+    //   "hot", "HOT", "Hot", "warm", "heated", "heiss", "heiÃ", "warmes"
     //   "cold", "COLD", "Cold", "kalt", "chilled", "kaltes"
     // Default when nothing matches: 'hot' (safer than always-cold which made
     // every dish look like it had a cold-temp spec).
@@ -5667,7 +5672,7 @@ function normalizeMenu(raw, opts){
         const s = String(val || '').toLowerCase().trim();
         if(!s) return null;
         if(/\b(cold|kalt|kaltes|chilled|cool|cooled)\b/.test(s)) return 'cold';
-        if(/\b(hot|warm|warmes|warmed|heated|heiss|heiß|hei[ßs]es)\b/.test(s)) return 'hot';
+        if(/\b(hot|warm|warmes|warmed|heated|heiss|heiÃ|hei[Ãs]es)\b/.test(s)) return 'hot';
         return null;
     };
 
@@ -5688,7 +5693,7 @@ function normalizeMenu(raw, opts){
             // Classify temperature. Tries d.type first (production format ships
             // lowercase 'cold'/'hot' here), then falls back to a handful of
             // alternative field names. The default for unrecognised types stays
-            // 'cold' — same as the original behaviour, so the existing menu
+            // 'cold' â same as the original behaviour, so the existing menu
             // continues to classify exactly as it did this morning.
             const dishType = classifyTemp(d.type) || classifyTemp(d.dishType) || classifyTemp(d.servingTemperature) || classifyTemp(d.temperature) || classifyTemp(d.category && d.category.name) || 'cold';
             // dishLetter: use stickerNo (A-Z, 1-9, or "addons-<short id>")
@@ -5696,7 +5701,7 @@ function normalizeMenu(raw, opts){
             if(isAddon && includeAddons) dishLetter = 'ad-' + (d.id ? d.id.slice(0,4) : Math.random().toString(36).slice(2,6));
             // De-duplicate dishLetter collisions
             let unique = dishLetter, n = 1;
-            while(seenLetters.has(unique)){ unique = dishLetter + '·' + (++n); }
+            while(seenLetters.has(unique)){ unique = dishLetter + 'Â·' + (++n); }
             seenLetters.add(unique);
 
             // Weight target: production doesn't ship this; try to derive from sum of ingredient amounts (only if all amounts look like grams), else null.
@@ -5742,7 +5747,7 @@ function normalizeMenu(raw, opts){
             dishes: out
         };
     } else {
-        // Simple QC format — validate required fields
+        // Simple QC format â validate required fields
         const bad = parsed.dishes.find(d=>!d || !d.dishLetter || !d.dishName || !d.dishType);
         if(bad) throw new Error('Each dish needs dishLetter, dishName, dishType (cold|hot)');
         normalized = {
@@ -5777,7 +5782,7 @@ function normalizeMenu(raw, opts){
 
 /* === Settings modal === */
 async function openSettings(){
-    // PIN gate — refuses to open the panel if a lock is set and the session
+    // PIN gate â refuses to open the panel if a lock is set and the session
     // hasn't been unlocked yet.
     const allowed = await promptPinIfLocked();
     if(!allowed) return;
@@ -5804,7 +5809,7 @@ async function openSettings(){
                     <span class="pill" style="text-transform:none;letter-spacing:0">Week ${weekId}</span>
                     <span class="pill" style="text-transform:none;letter-spacing:0">${state.menu?(state.menu.dishes||[]).length+' dishes':'no menu'}</span>
                 </div>
-                <button class="modal-close" aria-label="Close" onclick="window.__qc.closeSettings()">×</button>
+                <button class="modal-close" aria-label="Close" onclick="window.__qc.closeSettings()">Ã</button>
             </div>
             <div class="modal-body">
                 <details class="settings-help">
@@ -5812,19 +5817,19 @@ async function openSettings(){
                     <div style="margin-top:8px;line-height:1.5">
                         Paste a menu for ISO week <code>${weekId}</code>. Two formats are detected automatically:
                         <ul style="margin:6px 0 0 18px;padding:0">
-                            <li><b>Bella &amp; Bona production format</b> — the full weekly menu object (with <code>dishes[]</code> containing <code>variantName</code>, <code>stickerNo</code>, <code>type</code>). Addons (drinks/snacks/sides) are filtered out by default.</li>
-                            <li><b>Simple QC format</b> — array of dishes or <code>{dishes:[…]}</code> with fields <code>dishLetter</code>, <code>dishName</code>, <code>dishType</code> (<code>cold</code>/<code>hot</code>), <code>theoreticalWeight</code> (grams), optional <code>dishImage</code>, <code>dishIngredients</code>.</li>
+                            <li><b>Bella &amp; Bona production format</b> â the full weekly menu object (with <code>dishes[]</code> containing <code>variantName</code>, <code>stickerNo</code>, <code>type</code>). Addons (drinks/snacks/sides) are filtered out by default.</li>
+                            <li><b>Simple QC format</b> â array of dishes or <code>{dishes:[â¦]}</code> with fields <code>dishLetter</code>, <code>dishName</code>, <code>dishType</code> (<code>cold</code>/<code>hot</code>), <code>theoreticalWeight</code> (grams), optional <code>dishImage</code>, <code>dishIngredients</code>.</li>
                         </ul>
                         <pre style="margin-top:10px">${escapeHtml(sampleJson)}</pre>
                     </div>
                 </details>
                 <div class="field">
                     <label class="label">Menu JSON for week ${weekId}</label>
-                    <textarea class="comment-area" id="settings-menu-json" style="min-height:280px;font-family:ui-monospace,monospace;font-size:12.5px" placeholder="Paste the JSON for this week's menu here…">${escapeHtml(existing)}</textarea>
+                    <textarea class="comment-area" id="settings-menu-json" style="min-height:280px;font-family:ui-monospace,monospace;font-size:12.5px" placeholder="Paste the JSON for this week's menu hereâ¦">${escapeHtml(existing)}</textarea>
                 </div>
                 <label class="field" style="display:flex;align-items:center;gap:8px;margin-top:8px;cursor:pointer">
                     <input type="checkbox" id="settings-include-addons" />
-                    <span>Include addons (drinks, snacks, sides). Off by default — only main dishes appear on the QC sheet.</span>
+                    <span>Include addons (drinks, snacks, sides). Off by default â only main dishes appear on the QC sheet.</span>
                 </label>
 
                 <!-- Storage: warmers + fridges -->
@@ -5845,22 +5850,22 @@ async function openSettings(){
                     <button class="add-storage" type="button" id="add-team">+ Add team member</button>
                 </div>
 
-                <!-- Settings lock — PIN gate to prevent accidental edits -->
+                <!-- Settings lock â PIN gate to prevent accidental edits -->
                 <div class="storage-block">
-                    <h4>🔒 Settings lock</h4>
+                    <h4>ð Settings lock</h4>
                     <div style="font-size:12px;color:var(--mute);margin-bottom:8px">
                         Protect this page with a PIN so kitchen staff can't change the menu, warmers, or any other setting by accident.
-                        Anyone opening Settings will be asked for the PIN. Choose a number you'll remember — if you forget it, you'll need to edit Firebase directly to reset.
+                        Anyone opening Settings will be asked for the PIN. Choose a number you'll remember â if you forget it, you'll need to edit Firebase directly to reset.
                     </div>
-                    <div id="lock-state-row" style="font-size:13px;color:var(--ink);font-weight:600;margin-bottom:8px">${state.settingsLock && state.settingsLock.hash ? '✓ PIN is set — Settings are locked.' : '⚠ No PIN set — Settings are open to anyone.'}</div>
+                    <div id="lock-state-row" style="font-size:13px;color:var(--ink);font-weight:600;margin-bottom:8px">${state.settingsLock && state.settingsLock.hash ? 'â PIN is set â Settings are locked.' : 'â  No PIN set â Settings are open to anyone.'}</div>
                     <div class="storage-row" style="flex-wrap:wrap;gap:8px">
-                        <input type="password" id="lock-pin-1" inputmode="numeric" maxlength="12" placeholder="${state.settingsLock && state.settingsLock.hash ? 'New PIN' : 'Set a PIN (4–8 digits)'}" autocomplete="off" style="flex:1;min-width:140px"/>
+                        <input type="password" id="lock-pin-1" inputmode="numeric" maxlength="12" placeholder="${state.settingsLock && state.settingsLock.hash ? 'New PIN' : 'Set a PIN (4â8 digits)'}" autocomplete="off" style="flex:1;min-width:140px"/>
                         <input type="password" id="lock-pin-2" inputmode="numeric" maxlength="12" placeholder="Repeat PIN" autocomplete="off" style="flex:1;min-width:140px"/>
                         <button class="btn btn-primary" type="button" id="lock-save-btn">${state.settingsLock && state.settingsLock.hash ? 'Update PIN' : 'Lock Settings'}</button>
                     </div>
                     <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">
                         ${state.settingsLock && state.settingsLock.hash ? `
-                            <button class="btn" type="button" id="lock-now-btn">🔒 Lock now (close &amp; re-prompt PIN)</button>
+                            <button class="btn" type="button" id="lock-now-btn">ð Lock now (close &amp; re-prompt PIN)</button>
                             <button class="btn" type="button" id="lock-remove-btn" style="color:var(--hold)">Remove lock</button>
                         ` : ''}
                     </div>
@@ -5872,22 +5877,22 @@ async function openSettings(){
                     <h4>AI dish analysis</h4>
                     <div style="font-size:12px;color:var(--mute);margin-bottom:8px">
                         Sends today's dish photo + temp/weight/ingredients to a vision model.
-                        Returns a 0–100 score, a one-line summary, and a list of issues.
-                        <strong>Your API key is stored only on this device</strong> (browser localStorage) —
+                        Returns a 0â100 score, a one-line summary, and a list of issues.
+                        <strong>Your API key is stored only on this device</strong> (browser localStorage) â
                         never written to Firebase, never leaves this device except in the request to the chosen AI provider.<br><br>
                         <strong style="color:var(--pass)">Free options:</strong>
                         <ul style="margin:6px 0 6px 18px;padding:0;font-size:12px">
-                            <li><strong>Groq</strong> — best free option, no credit card, no quota games. Key: <a href="https://console.groq.com/keys" target="_blank" rel="noopener" style="color:var(--brand);text-decoration:underline">console.groq.com/keys</a></li>
-                            <li><strong>Gemini</strong> — Google's API, free tier sometimes refuses on accounts with prior GCP use. Key: <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener" style="color:var(--brand);text-decoration:underline">aistudio.google.com</a></li>
+                            <li><strong>Groq</strong> â best free option, no credit card, no quota games. Key: <a href="https://console.groq.com/keys" target="_blank" rel="noopener" style="color:var(--brand);text-decoration:underline">console.groq.com/keys</a></li>
+                            <li><strong>Gemini</strong> â Google's API, free tier sometimes refuses on accounts with prior GCP use. Key: <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener" style="color:var(--brand);text-decoration:underline">aistudio.google.com</a></li>
                         </ul>
                     </div>
                     <div class="storage-row" style="flex-wrap:wrap;gap:8px">
                         <select id="ai-provider-select" style="min-width:200px;padding:9px 11px;border-radius:8px;background:var(--bg-2);color:var(--ink);border:1px solid var(--line)">
-                            <option value="">— Off —</option>
-                            <option value="groq">Groq · Llama 4 Scout vision · FREE</option>
-                            <option value="gemini">Google Gemini 2.0 Flash · FREE</option>
-                            <option value="openai">OpenAI (GPT-4o-mini · paid)</option>
-                            <option value="anthropic">Anthropic (Claude 3.5 Sonnet · paid)</option>
+                            <option value="">â Off â</option>
+                            <option value="groq">Groq Â· Llama 4 Scout vision Â· FREE</option>
+                            <option value="gemini">Google Gemini 2.0 Flash Â· FREE</option>
+                            <option value="openai">OpenAI (GPT-4o-mini Â· paid)</option>
+                            <option value="anthropic">Anthropic (Claude 3.5 Sonnet Â· paid)</option>
                         </select>
                         <input type="password" id="ai-api-key" placeholder="Paste API key" autocomplete="off" style="flex:1;min-width:240px" />
                         <button class="btn" type="button" id="ai-test-btn">Test</button>
@@ -5896,7 +5901,7 @@ async function openSettings(){
                 </div>
 
                 <div class="storage-block">
-                    <h4>Email reports (Gmail SMTP) — used by the scheduled cron</h4>
+                    <h4>Email reports (Gmail SMTP) â used by the scheduled cron</h4>
                     <div style="font-size:12px;color:var(--mute);margin-bottom:8px">
                         The scheduled GitHub Action reads these credentials from Firebase and sends the daily / weekly QC email via Gmail's free SMTP.
                         Auth email is your Gmail (e.g. <code>berlinkitchen123@gmail.com</code>); App password is a 16-char password from
@@ -5913,16 +5918,16 @@ async function openSettings(){
                         <input type="text" id="gmail-from-name" value="${escapeAttr(state.integrations?.gmail?.fromName || 'Bellabona Kitchen')}" placeholder="From display name (e.g. Bellabona Kitchen)" style="flex:1;min-width:240px" />
                     </div>
                     <div class="storage-row" style="flex-wrap:wrap;gap:8px;margin-top:6px">
-                        <input type="text" id="gmail-from-address" value="${escapeAttr(state.integrations?.gmail?.fromAddress || '')}" placeholder="From address (optional — defaults to auth email; only use a verified alias)" style="flex:1;min-width:240px" />
+                        <input type="text" id="gmail-from-address" value="${escapeAttr(state.integrations?.gmail?.fromAddress || '')}" placeholder="From address (optional â defaults to auth email; only use a verified alias)" style="flex:1;min-width:240px" />
                     </div>
                     <div class="storage-row" style="flex-wrap:wrap;gap:8px;margin-top:6px">
-                        <input type="text" id="gmail-to" value="${escapeAttr(state.integrations?.gmail?.to || '')}" placeholder="To (primary recipient — e.g. Marcus@bellabona.com)" style="flex:1;min-width:240px" />
+                        <input type="text" id="gmail-to" value="${escapeAttr(state.integrations?.gmail?.to || '')}" placeholder="To (primary recipient â e.g. Marcus@bellabona.com)" style="flex:1;min-width:240px" />
                     </div>
                     <div class="storage-row" style="flex-wrap:wrap;gap:8px;margin-top:6px">
                         <input type="text" id="gmail-cc" value="${escapeAttr(state.integrations?.gmail?.cc || '')}" placeholder="CC (comma-separated)" style="flex:1;min-width:240px" />
                     </div>
                     <div style="font-size:11px;color:var(--mute);margin-top:6px">
-                        After saving here, open <a href="https://github.com/berlinkitchen123-blip/Culinary-Quality-Control/actions/workflows/qc-daily-email.yml" target="_blank" rel="noopener" style="color:var(--brand);text-decoration:underline">Actions → QC daily email → Run workflow</a> to fire a test send.
+                        After saving here, open <a href="https://github.com/berlinkitchen123-blip/Culinary-Quality-Control/actions/workflows/qc-daily-email.yml" target="_blank" rel="noopener" style="color:var(--brand);text-decoration:underline">Actions â QC daily email â Run workflow</a> to fire a test send.
                     </div>
                 </div>
 
@@ -5933,20 +5938,20 @@ async function openSettings(){
                         <a href="https://resend.com/api-keys" target="_blank" rel="noopener" style="color:var(--brand);text-decoration:underline">resend.com/api-keys</a>,
                         verify <code>bellabona.com</code> in their Domains tab so emails can come from
                         <code>@bellabona.com</code>, then paste the API key below.
-                        <strong>The key is stored only on this device</strong> — never in Firebase.
+                        <strong>The key is stored only on this device</strong> â never in Firebase.
                     </div>
                     <div class="storage-row" style="flex-wrap:wrap;gap:8px">
                         <input type="password" id="resend-api-key" placeholder="Resend API key (re_...)" autocomplete="off" style="flex:1;min-width:240px" />
                         <button class="btn" type="button" id="resend-test-btn">Test send</button>
                     </div>
                     <div class="storage-row" style="flex-wrap:wrap;margin-top:6px;gap:8px">
-                        <input type="text" id="resend-sender" value="${escapeAttr(state.integrations?.resendSender || 'Harsh@bellabona.com')}" placeholder="Sender · e.g. Harsh@bellabona.com" style="flex:1;min-width:240px" />
+                        <input type="text" id="resend-sender" value="${escapeAttr(state.integrations?.resendSender || 'Harsh@bellabona.com')}" placeholder="Sender Â· e.g. Harsh@bellabona.com" style="flex:1;min-width:240px" />
                     </div>
                     <div class="storage-row" style="flex-wrap:wrap;margin-top:6px;gap:8px">
-                        <input type="text" id="resend-to" value="${escapeAttr(state.integrations?.resendTo || '')}" placeholder='To · primary recipient (e.g. Marcus@bellabona.com)' style="flex:1;min-width:240px" />
+                        <input type="text" id="resend-to" value="${escapeAttr(state.integrations?.resendTo || '')}" placeholder='To Â· primary recipient (e.g. Marcus@bellabona.com)' style="flex:1;min-width:240px" />
                     </div>
                     <div class="storage-row" style="flex-wrap:wrap;margin-top:6px;gap:8px">
-                        <input type="text" id="resend-cc" value="${escapeAttr(state.integrations?.resendCc || '')}" placeholder='CC · comma-separated' style="flex:1;min-width:240px" />
+                        <input type="text" id="resend-cc" value="${escapeAttr(state.integrations?.resendCc || '')}" placeholder='CC Â· comma-separated' style="flex:1;min-width:240px" />
                     </div>
                     <div id="resend-test-result" style="font-size:12px;color:var(--mute);margin-top:6px"></div>
                 </div>
@@ -5958,7 +5963,7 @@ async function openSettings(){
                         and the 10:00 AM auto-report Teams webhook.
                     </div>
                     <div class="storage-row" style="flex-wrap:wrap">
-                        <input type="text" id="integ-ai-proxy" value="${escapeAttr(state.integrations?.aiProxyUrl || '')}" placeholder="AI proxy URL — fallback if no direct provider key" style="flex:1;min-width:240px" />
+                        <input type="text" id="integ-ai-proxy" value="${escapeAttr(state.integrations?.aiProxyUrl || '')}" placeholder="AI proxy URL â fallback if no direct provider key" style="flex:1;min-width:240px" />
                     </div>
                     <div class="storage-row" style="flex-wrap:wrap;margin-top:6px">
                         <input type="text" id="integ-teams-webhook" value="${escapeAttr(state.integrations?.teamsWebhookUrl || '')}" placeholder="MS Teams Power Automate webhook URL" style="flex:1;min-width:240px" />
@@ -6019,9 +6024,9 @@ async function openSettings(){
                 if(!provider){ aiTestResult.textContent = 'Pick a provider first.'; aiTestResult.style.color = 'var(--hold)'; return; }
                 if(!key){ aiTestResult.textContent = 'Paste your API key first.'; aiTestResult.style.color = 'var(--hold)'; return; }
                 setAiConfig({ provider, key });
-                aiTestBtn.disabled = true; aiTestBtn.textContent = 'Testing…';
+                aiTestBtn.disabled = true; aiTestBtn.textContent = 'Testingâ¦';
                 aiTestResult.textContent = ''; aiTestResult.style.color = 'var(--mute)';
-                // Text-only ping — validates the key + endpoint without needing
+                // Text-only ping â validates the key + endpoint without needing
                 // a valid image (vision models reject our 1px test pixel).
                 try {
                     const probe = 'Reply with EXACTLY this JSON: {"ok":true,"summary":"ping"}';
@@ -6057,10 +6062,10 @@ async function openSettings(){
                         if(!r.ok) throw new Error('Anthropic '+r.status+': '+(await r.text()).slice(0,200));
                         const d = await r.json(); resp = d.content?.[0]?.text || '';
                     }
-                    aiTestResult.textContent = '✓ Connected · ' + String(resp).slice(0, 80);
+                    aiTestResult.textContent = 'â Connected Â· ' + String(resp).slice(0, 80);
                     aiTestResult.style.color = 'var(--pass)';
                 } catch(err){
-                    aiTestResult.textContent = '✗ ' + (err.message || 'unknown error').slice(0, 200);
+                    aiTestResult.textContent = 'â ' + (err.message || 'unknown error').slice(0, 200);
                     aiTestResult.style.color = 'var(--hold)';
                 } finally {
                     aiTestBtn.disabled = false; aiTestBtn.textContent = 'Test';
@@ -6081,9 +6086,9 @@ async function openSettings(){
             if(p1 !== p2){ lockMsg.textContent = 'The two PINs don\'t match.'; lockMsg.style.color = 'var(--hold)'; return; }
             try {
                 await setSettingsPin(p1);
-                // Auto-close Settings so the admin sees the lock immediately —
+                // Auto-close Settings so the admin sees the lock immediately â
                 // next tap on Settings will prompt for the new PIN.
-                toast('✓ Settings locked. PIN required to re-open.', 'ok');
+                toast('â Settings locked. PIN required to re-open.', 'ok');
                 closeSettings();
             } catch(err){ lockMsg.textContent = 'Save failed: ' + (err.message || ''); lockMsg.style.color = 'var(--hold)'; }
         });
@@ -6092,7 +6097,7 @@ async function openSettings(){
     if(lockNowBtn){
         lockNowBtn.addEventListener('click', () => {
             lockSettingsNow();
-            toast('🔒 Locked. PIN required to re-open Settings.', 'ok');
+            toast('ð Locked. PIN required to re-open Settings.', 'ok');
             closeSettings();
         });
     }
@@ -6101,11 +6106,11 @@ async function openSettings(){
             if(!confirm('Remove the lock? Anyone with the URL will be able to change Settings.')) return;
             try {
                 await setSettingsPin(null);
-                lockMsg.textContent = '✓ Lock removed.';
+                lockMsg.textContent = 'â Lock removed.';
                 lockMsg.style.color = 'var(--mute)';
                 lockRemoveBtn.style.display = 'none';
                 const row = overlay.querySelector('#lock-state-row');
-                if(row) row.textContent = '⚠ No PIN set — Settings are open to anyone.';
+                if(row) row.textContent = 'â  No PIN set â Settings are open to anyone.';
             } catch(err){ lockMsg.textContent = 'Remove failed: ' + (err.message || ''); lockMsg.style.color = 'var(--hold)'; }
         });
     }
@@ -6149,7 +6154,7 @@ async function openSettings(){
             // Persist current values before sending
             setResendKey(key);
             await saveIntegrations({ resendSender: from, resendTo: to, resendCc: (resendCc?.value || '').trim() });
-            resendTestBtn.disabled = true; resendTestBtn.textContent = 'Sending…';
+            resendTestBtn.disabled = true; resendTestBtn.textContent = 'Sendingâ¦';
             resendTestResult.textContent = ''; resendTestResult.style.color = 'var(--mute)';
             try {
                 const resp = await callResend({
@@ -6157,14 +6162,14 @@ async function openSettings(){
                     from,
                     to,
                     cc: (resendCc?.value || '').split(',').map(s => s.trim()).filter(Boolean),
-                    subject: 'Resend test — Bella & Bona QC',
+                    subject: 'Resend test â Bella & Bona QC',
                     text: 'This is a test from the Culinary QC app to confirm the Resend integration works. You can delete this email.',
                     html: '<p style="font-family:Inter,Arial,sans-serif;color:#1f2937">This is a test from the <strong>Culinary QC app</strong> to confirm the Resend integration works.<br/>You can delete this email.</p>'
                 });
-                resendTestResult.textContent = '✓ Sent — message id ' + (resp.id || '(no id returned)');
+                resendTestResult.textContent = 'â Sent â message id ' + (resp.id || '(no id returned)');
                 resendTestResult.style.color = 'var(--pass)';
             } catch(err){
-                resendTestResult.textContent = '✗ ' + (err.message || 'unknown error').slice(0, 200);
+                resendTestResult.textContent = 'â ' + (err.message || 'unknown error').slice(0, 200);
                 resendTestResult.style.color = 'var(--hold)';
             } finally {
                 resendTestBtn.disabled = false; resendTestBtn.textContent = 'Test send';
@@ -6187,16 +6192,16 @@ async function openSettings(){
             return;
         }
         if(!menuObj.dishes.length){
-            toast('No main dishes found — tick "Include addons" if you only have add-ons','fail');
+            toast('No main dishes found â tick "Include addons" if you only have add-ons','fail');
             return;
         }
         try{
             await saveMenu(weekId, menuObj);
             state.menu = sortMenuByLetter(menuObj);
             renderAll();
-            toast(`Saved ${menuObj.dishes.length} dishes · Settings re-locked`, 'ok');
+            toast(`Saved ${menuObj.dishes.length} dishes Â· Settings re-locked`, 'ok');
             // Auto re-lock the session after every menu save so PIN is
-            // required to re-open Settings (matches Save → Lock behaviour).
+            // required to re-open Settings (matches Save â Lock behaviour).
             lockSettingsNow();
             closeSettings();
         }catch(e){ toast('Save failed','fail'); console.error(e); }
@@ -6305,9 +6310,9 @@ function fmtTime(ts){
     try{
         if(typeof ts==='string' && /^\d{1,2}:\d{2}/.test(ts)) return ts;
         const d=new Date(typeof ts==='number'?ts:parseInt(ts));
-        if(isNaN(d.getTime())) return '—';
+        if(isNaN(d.getTime())) return 'â';
         return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
-    }catch(e){ return '—'; }
+    }catch(e){ return 'â'; }
 }
 
 /* === Boot === */
@@ -6344,7 +6349,7 @@ function wire(){
     // Back to home from stage view
     const goHome = document.getElementById('go-home');
     if(goHome) goHome.addEventListener('click', ()=>setView('home'));
-    // Hash routing — back/forward, opening a deep link
+    // Hash routing â back/forward, opening a deep link
     window.addEventListener('hashchange', routeFromHash);
     document.querySelectorAll('.filter button').forEach(btn=>{
         btn.addEventListener('click',()=>{
@@ -6376,15 +6381,15 @@ function wire(){
     if(tcMeta) tcMeta.setAttribute('content', document.documentElement.getAttribute('data-theme') === 'dark' ? '#0f1115' : '#2563eb');
     document.getElementById('btn-export-summary').onclick=()=>{
         if(!state.menu) return;
-        const lines=[`Bella & Bona QC — ${humanDate(state.selectedDate)}`, `Report generated ${nowHHMM()} on ${humanDate(todayIso())}`, ''];
+        const lines=[`Bella & Bona QC â ${humanDate(state.selectedDate)}`, `Report generated ${nowHHMM()} on ${humanDate(todayIso())}`, ''];
         for(const d of (state.menu.dishes||[])){
             const c=state.checks[d.dishLetter]||{};
             const t=avg(c.temperatures), w=avg(c.weights);
             const aT=stageTempValue(c,'assembly'), dT=stageTempValue(c, 'dispatch');
             const aTime=c.assembly?.time, qTime=c.qcTime, dTime=c.dispatch?.time;
             const s=readingStatus(d,c);
-            const fmt = (val, time) => val!=null ? (typeof val === 'number' ? val.toFixed(1) : val) + '°' + (time?` @${time}`:'') : '—';
-            lines.push(`[${d.dishLetter}] ${d.dishName} (${isCold(d)?'cold':'hot'}) — Assembly ${fmt(aT, aTime)} / QC ${fmt(t!=null?t.toFixed(1):null, qTime)} / Dispatch ${fmt(dT, dTime)} · ${w!=null?Math.round(w)+'g':'—'}${d.theoreticalWeight?' of '+d.theoreticalWeight+'g':''} · ${s.toUpperCase()}${c.comment?' — '+c.comment:''}`);
+            const fmt = (val, time) => val!=null ? (typeof val === 'number' ? val.toFixed(1) : val) + 'Â°' + (time?` @${time}`:'') : 'â';
+            lines.push(`[${d.dishLetter}] ${d.dishName} (${isCold(d)?'cold':'hot'}) â Assembly ${fmt(aT, aTime)} / QC ${fmt(t!=null?t.toFixed(1):null, qTime)} / Dispatch ${fmt(dT, dTime)} Â· ${w!=null?Math.round(w)+'g':'â'}${d.theoreticalWeight?' of '+d.theoreticalWeight+'g':''} Â· ${s.toUpperCase()}${c.comment?' â '+c.comment:''}`);
         }
         navigator.clipboard.writeText(lines.join('\n')).then(()=>toast('Summary copied','ok'));
     };
@@ -6404,8 +6409,8 @@ function wire(){
             else if(action === 'report'){ closeDrawer(); openReportDialog(); }
             else if(action === 'email-snapshot'){
                 closeDrawer();
-                toast('Sending email…');
-                try { const r = await sendSnapshotEmail(); toast('✓ Snapshot emailed','ok'); }
+                toast('Sending emailâ¦');
+                try { const r = await sendSnapshotEmail(); toast('â Snapshot emailed','ok'); }
                 catch(err){ console.error('Email failed', err); toast(err.message || 'Email failed','fail'); }
             }
             else if(action === 'theme'){ document.getElementById('btn-theme').click(); refreshDrawer(); }
@@ -6443,7 +6448,7 @@ function applyCityChrome(city){
     if(!city) return;
     document.body.setAttribute('data-city', city.slug);
     document.documentElement.style.setProperty('--city-accent', city.accent);
-    document.title = `Culinary QC · ${city.name} · Bella & Bona`;
+    document.title = `Culinary QC Â· ${city.name} Â· Bella & Bona`;
     const upper = city.name.toUpperCase();
     const initial = city.name.charAt(0).toUpperCase();
     const setText = (id, txt) => { const el = document.getElementById(id); if(el) el.textContent = txt; };
@@ -6471,7 +6476,7 @@ state._unsubStorage = listenStorage();
 state._unsubIntegrations = listenIntegrations();
 state._unsubIngCats = listenIngredientCategories();
 state._unsubLock = listenSettingsLock();
-routeFromHash(); // honour deep-links (#/assembly, #/qc, #/dispatch, #/placement) — else show home
+routeFromHash(); // honour deep-links (#/assembly, #/qc, #/dispatch, #/placement) â else show home
 </script>
 
 </body>

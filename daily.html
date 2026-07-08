@@ -513,8 +513,8 @@ function renderCity(data, isSingleDay){
             const wtActualTxt = wActual != null ? Math.round(wActual)+'g' : '—';
             const comment = (c.comment || '').trim();
             const corrective = (c.correctiveAction || '').trim();
-            const comment = (c.comment || '').trim();
-      const corrective = (c.correctiveAction || '').trim();
+            comment = (c.comment || '').trim();
+      corrective = (c.correctiveAction || '').trim();
       const noteCell = `<span class="dish-note-cell">${comment ? `<span class="note-tag">N</span> ${escapeHtml(comment)}` : ''}${comment && corrective ? ' � ' : ''}${corrective ? `<span class="note-tag corrective">A</span> ${escapeHtml(corrective)}` : ''}${!comment && !corrective ? '<span style="color:#cbd5e1"></span>' : ''}</span>`;
             return `<div class="dish-row is-${worst}">
                 <span class="letter">${escapeHtml(d.dishLetter)}</span>

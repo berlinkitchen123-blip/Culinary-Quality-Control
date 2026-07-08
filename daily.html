@@ -93,7 +93,7 @@ body{padding:18px 22px 40px 22px;max-width:1320px;margin:0 auto}
 .dish-row .temp{display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.15}
 .dish-row .temp .cp-time{display:block;font-size:9px;font-weight:500;opacity:0.75;font-variant-numeric:tabular-nums;margin-top:1px}
 body.compact .dish-row .temp .cp-time{font-size:10px}
-.dish-note-cell{font-size:10px;line-height:1.4;color:#374151;padding:2px 4px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical}
+.dish-note-cell{font-size:10px;line-height:1.4;color:#374151;padding:2px 4px;min-width:0;overflow:hidden;word-break:break-word;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical}
 .dish-note{padding:3px 0 7px 30px;font-size:11px;color:#475569;line-height:1.45;border-bottom:1px solid #f3f4f6}
 .dish-note .note-tag{display:inline-block;background:#e0f2fe;color:#0369a1;font-weight:700;font-size:9.5px;letter-spacing:0.04em;text-transform:uppercase;padding:1.5px 6px;border-radius:4px;vertical-align:middle;margin-right:4px}
 .dish-note .note-tag.corrective{background:#fef3c7;color:#92400e}
@@ -205,7 +205,7 @@ body.compact .dish-list-section{font-size:11px;font-weight:800;letter-spacing:0.
 body.compact .dish-list-head,
 body.compact .dish-row{
     display:grid;
-    grid-template-columns:30px minmax(120px,0.7fr) 70px 70px 70px 70px 70px minmax(90px,1fr);
+    grid-template-columns:30px minmax(100px,0.6fr) 65px 65px 65px 65px 65px minmax(80px,0.8fr);
     gap:10px;
     align-items:center;
 }

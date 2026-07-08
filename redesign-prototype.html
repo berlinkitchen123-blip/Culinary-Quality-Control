@@ -3350,7 +3350,7 @@ function renderQcTab(dish, c){
     const ingredients=dish.dishIngredients||[];
     const selected=new Set(c.selectedIngredients||[]);
     const checkedCount = ingredients.filter(ing=>selected.has(ing.name)).length;
-    return `
+    return `<div class="modal-date-row"><span class="section-mini" style="margin:0;font-size:11px">Date</span><input type="date" id="modal-date-picker" value="${state.selectedDate}" class="modal-date-input"></div>
         <!-- Photo: reference + today's capture -->
         <div class="section-mini">Photo · reference vs. today</div>
         <div class="photo-row">
@@ -3626,6 +3626,11 @@ function bindTabHandlers(tab, dish){
         });
         // Comment + Corrective action (both optional)
         overlay.querySelector('#modal-comment')?.addEventListener('blur', saveModalComment);
+        overlay.querySelector('#modal-date-picker')?.addEventListener('change', async (e)=>{
+            const letter = modalState.letter;
+            await selectDate(e.target.value);
+            openModal(letter);
+        });
         overlay.querySelector('#modal-corrective')?.addEventListener('blur', saveModalCorrective);
         // Ingredients checklist (now lives inside the QC tab)
         overlay.querySelectorAll('.ing').forEach(el=>{

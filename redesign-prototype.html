@@ -3544,7 +3544,11 @@ function renderStageTab(stage, label, dish, c){
                 </div>
                 <div class="field full">
                     <label class="label">Note</label>
-                    <textarea data-stage-input="note" placeholder="What was noted at this stage?">${escapeHtml(data.note||'')}</textarea>
+                    <textarea id="modal-comment" class="comment-area" placeholder="Note — shared across Assembly, QC & Dispatch">${escapeHtml(c.comment||'')}</textarea>
+                </div>
+                <div class="field full">
+                    <label class="label">Corrective action</label>
+                    <textarea id="modal-corrective" class="comment-area" placeholder="Corrective action taken (reheat, re-portion, discard…)">${escapeHtml(c.correctiveAction||'')}</textarea>
                 </div>
             </div>
 

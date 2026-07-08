@@ -522,6 +522,7 @@ function renderCity(data, isSingleDay){
                 ${tCell(dp, tCP3)}
                 <span class="wt-theo">${wtTheoTxt}</span>
                 <span class="wt-actual dev-${wtSt}">${wtActualTxt}</span>
+${noteCell}
             </div>`;
         };
         bodyHtml = `
@@ -533,6 +534,7 @@ function renderCity(data, isSingleDay){
                     <span style="text-align:center">CP3</span>
                     <span style="text-align:center">Theo</span>
                     <span style="text-align:center">Actual</span>
+<span>Note / Action</span>
                 </div>
                 ${hotDishes.length ? `<div class="dish-list-section hot">Hot dishes (${hotDishes.length})</div>` : ''}
                 ${hotDishes.map(d => dishRow(d, true)).join('')}

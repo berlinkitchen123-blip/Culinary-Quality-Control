@@ -93,12 +93,7 @@ body{padding:18px 22px 40px 22px;max-width:1320px;margin:0 auto}
 .dish-row .temp{display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.15}
 .dish-row .temp .cp-time{display:block;font-size:9px;font-weight:500;opacity:0.75;font-variant-numeric:tabular-nums;margin-top:1px}
 body.compact .dish-row .temp .cp-time{font-size:10px}
-.dish-note-cell{min-width:0;overflow:hidden;border-radius:5px;border:1px solid #e2e8f0;background:#f8fafc;padding:4px 6px;font-size:10px;line-height:1.5;display:flex;flex-direction:column;gap:2px;word-break:break-word}
-.dish-note-cell .note-line{display:flex;align-items:flex-start;gap:4px;color:#374151}
-.dish-note-cell .note-line.empty{color:#cbd5e1}
-.dish-note-cell .note-badge{display:inline-block;flex-shrink:0;font-size:8px;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;padding:1px 4px;border-radius:3px;margin-top:1px}
-.dish-note-cell .note-badge.n{background:#dbeafe;color:#1d4ed8}
-.dish-note-cell .note-badge.a{background:#fef3c7;color:#92400e}
+.dish-note-cell{font-size:10px;line-height:1.4;color:#374151;padding:2px 4px;min-width:0;overflow:hidden;word-break:break-word;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical}
 .dish-note{padding:3px 0 7px 30px;font-size:11px;color:#475569;line-height:1.45;border-bottom:1px solid #f3f4f6}
 .dish-note .note-tag{display:inline-block;background:#e0f2fe;color:#0369a1;font-weight:700;font-size:9.5px;letter-spacing:0.04em;text-transform:uppercase;padding:1.5px 6px;border-radius:4px;vertical-align:middle;margin-right:4px}
 .dish-note .note-tag.corrective{background:#fef3c7;color:#92400e}
@@ -518,7 +513,7 @@ function renderCity(data, isSingleDay){
             const wtActualTxt = wActual != null ? Math.round(wActual)+'g' : '—';
             const comment = (c.comment || '').trim();
             const corrective = (c.correctiveAction || '').trim();
-                  const noteCell = `<span class="dish-note-cell">${comment ? `<span class="note-tag">N</span> ${escapeHtml(comment)}` : ''}${comment && corrective ? ' � ' : ''}${corrective ? `<span class="note-tag corrective">A</span> ${escapeHtml(corrective)}` : ''}${!comment && !corrective ? '<span style="color:#cbd5e1"></span>' : ''}</span>`;
+                  const noteCell = `<div class="dish-note-cell">${comment ? `<div class="note-line"><span class="note-badge n">Note</span><span>${escapeHtml(comment)}</span></div>` : '<div class="note-line empty">—</div>'}${corrective ? `<div class="note-line"><span class="note-badge a">Action</span><span>${escapeHtml(corrective)}</span></div>` : ''}</div>`;
             return `<div class="dish-row is-${worst}">
                 <span class="letter">${escapeHtml(d.dishLetter)}</span>
                 <span class="name">${escapeHtml(d.dishName)}</span>

@@ -78,7 +78,7 @@ body{padding:18px 22px 40px 22px;max-width:1320px;margin:0 auto}
 .overall .status-tag.na{background:#475569}
 
 .dish-list{margin-top:14px}
-.dish-list-head{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:#64748b;padding:6px 0;border-bottom:1px solid #e5e7eb;display:grid;grid-template-columns:24px minmax(0,0.7fr) 60px 60px 60px 60px 60px minmax(80px,1fr);gap:6px;align-items:center}
+.dish-list-head{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:#64748b;padding:6px 0;border-bottom:1px solid #e5e7eb;display:grid;grid-template-columns:24px minmax(0,0.7fr) 60px 60px 60px 60px 60px minmax(70px,0.6fr) minmax(70px,0.6fr);gap:6px;align-items:center}
 .dish-row{display:grid;grid-template-columns:24px minmax(0,0.7fr) 60px 60px 60px 60px 60px minmax(80px,1fr);gap:6px;padding:5px 0;border-bottom:1px solid #f3f4f6;font-size:12px;align-items:center}
 .dish-row .wt-theo{text-align:center;font-variant-numeric:tabular-nums;font-weight:600;color:#475569}
 .dish-row .wt-actual{text-align:center;font-variant-numeric:tabular-nums;font-weight:700;border-radius:4px;padding:2px 4px}
@@ -205,7 +205,7 @@ body.compact .dish-list-section{font-size:11px;font-weight:800;letter-spacing:0.
 body.compact .dish-list-head,
 body.compact .dish-row{
     display:grid;
-    grid-template-columns:30px minmax(100px,0.6fr) 65px 65px 65px 65px 65px minmax(80px,0.8fr);
+    grid-template-columns:30px minmax(100px,0.6fr) 65px 65px 65px 65px 65px minmax(70px,0.5fr) minmax(70px,0.5fr);
     gap:10px;
     align-items:center;
 }
@@ -513,7 +513,7 @@ function renderCity(data, isSingleDay){
             const wtActualTxt = wActual != null ? Math.round(wActual)+'g' : '—';
             const comment = (c.comment || '').trim();
             const corrective = (c.correctiveAction || '').trim();
-                  const noteCell = `<div class="dish-note-cell">${comment ? `<div class="note-line"><span class="note-badge n">Note</span><span>${escapeHtml(comment)}</span></div>` : '<div class="note-line empty">—</div>'}${corrective ? `<div class="note-line"><span class="note-badge a">Action</span><span>${escapeHtml(corrective)}</span></div>` : ''}</div>`;
+                  const noteCell = `<div class="dish-note-cell">${comment ? escapeHtml(comment) : '<span style="color:#cbd5e1">&#8212;</span>'}</div><div class="dish-note-cell">${corrective ? escapeHtml(corrective) : '<span style="color:#cbd5e1">&#8212;</span>'}</div>`;
             return `<div class="dish-row is-${worst}">
                 <span class="letter">${escapeHtml(d.dishLetter)}</span>
                 <span class="name">${escapeHtml(d.dishName)}</span>
@@ -534,7 +534,8 @@ ${noteCell}
                     <span style="text-align:center">CP3</span>
                     <span style="text-align:center">Theo</span>
                     <span style="text-align:center">Actual</span>
-<span>Note / Action</span>
+<span>Note</span>
+<span>Action</span>
                 </div>
                 ${hotDishes.length ? `<div class="dish-list-section hot">Hot dishes (${hotDishes.length})</div>` : ''}
                 ${hotDishes.map(d => dishRow(d, true)).join('')}

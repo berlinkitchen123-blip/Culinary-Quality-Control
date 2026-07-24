@@ -510,7 +510,7 @@ function renderCity(data, isSingleDay){
             const tCell = (v, time) => {
                 const timeHtml = time ? `<span class="cp-time">${escapeHtml(time)}</span>` : '';
                 if(v == null) return `<span class="temp na">—${timeHtml}</span>`;
-                const st2 = stOf(v); const lbl2 = {ok:'Pass',warn:'Hold',crit:'Fail'}[st2]||''; return `<span class="temp ${st2}">${v.toFixed(1)}°<span class="cp-label">${lbl2}</span>${timeHtml}</span>`;
+                const st2 = stOf(v); const lbl2 = ({ok:'Pass',warn:'Hold',crit: isHot ? 'Reheat' : 'Fail'})[st2]||''; return `<span class="temp ${st2}">${v.toFixed(1)}°<span class="cp-label">${lbl2}</span>${timeHtml}</span>`;
             };
             const tCP1 = (c.assembly && c.assembly.time) || null;
             const tCP2 = c.qcTime || null;

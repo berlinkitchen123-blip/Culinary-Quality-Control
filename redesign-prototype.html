@@ -1393,10 +1393,10 @@ if(activeCity.slug === 'berlin' || activeCity.slug === 'munich'){
     });
 }
 
-const HOT_MIN = 60;
-const COLD_MAX = 8;
-const HOT_WARN = 3;
-const COLD_WARN = 2;
+const HOT_MIN = 65;
+const COLD_MAX = 7;
+const HOT_WARN = 5;
+const COLD_WARN = 0;
 
 const state = {
     selectedDate: todayOrLastFriday(),
@@ -4638,12 +4638,12 @@ async function generatePdfReport(range){
 
     // Munich-style thresholds (slightly stricter than the app defaults).
     // OK = green, WARN = orange, CRITICAL = red.
-    const HOT_PASS = 60, HOT_WARN_MIN = 55;
-    const COLD_PASS = 6, COLD_WARN_MAX = 8;
+    const HOT_PASS = 65, HOT_WARN_MIN = 60;
+    const COLD_PASS = 7;
     const WT_OK = 0.05, WT_WARN = 0.10;
 
     const hotStatus = (v) => v == null ? 'na' : v >= HOT_PASS ? 'ok' : v >= HOT_WARN_MIN ? 'warn' : 'crit';
-    const coldStatus = (v) => v == null ? 'na' : v <= COLD_PASS ? 'ok' : v <= COLD_WARN_MAX ? 'warn' : 'crit';
+    const coldStatus = (v) => v == null ? 'na' : v <= COLD_PASS ? 'ok' : 'crit';
     const dishStatus = (d, v) => isCold(d) ? coldStatus(v) : hotStatus(v);
     const wtStatus = (theo, actual) => {
         if(!theo || actual == null) return 'na';

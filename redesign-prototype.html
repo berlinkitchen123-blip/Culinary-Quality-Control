@@ -2112,7 +2112,7 @@ function renderLetterTile(dish){
         : '';
     return `
         <article class="lt-tile ${cls}" data-letter="${escapeHtml(dish.dishLetter)}" role="button" tabindex="0" aria-label="${escapeHtml(dish.dishName)}">
-            <span class="lt-pip is-${s}" aria-hidden="true">${{pass:'Pass',hold:'Fail',watch:'Check',empty:''}[s]||''}</span>
+            <span class="lt-pip is-${s}" aria-hidden="true">${{pass:'Pass',hold: cls==='hot' ? 'Reheat' : 'Fail',watch:'Check',empty:''}[s]||''}</span>
             <span class="lt-letter">${escapeHtml(dish.dishLetter)}</span>
             <span class="lt-name">${escapeHtml(dish.dishName)}</span>
             <span class="lt-stages" aria-hidden="true">
@@ -4639,7 +4639,7 @@ async function generatePdfReport(range){
     // Munich-style thresholds (slightly stricter than the app defaults).
     // OK = green, WARN = orange, CRITICAL = red.
     const HOT_PASS = 65, HOT_WARN_MIN = 60;
-    const COLD_PASS = 7; const COLD_WARN_MAX = 7;
+    const COLD_PASS = 7;
     const WT_OK = 0.05, WT_WARN = 0.10;
 
     const hotStatus = (v) => v == null ? 'na' : v >= HOT_PASS ? 'ok' : v >= HOT_WARN_MIN ? 'warn' : 'crit';

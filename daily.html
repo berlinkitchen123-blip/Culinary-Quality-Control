@@ -93,7 +93,7 @@ body{padding:18px 22px 40px 22px;max-width:1320px;margin:0 auto}
 .dish-row .temp{display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.15}
 .dish-row .temp .cp-time{display:block;font-size:9px;font-weight:500;opacity:0.75;font-variant-numeric:tabular-nums;margin-top:1px}
 body.compact .dish-row .temp .cp-time{font-size:10px}
-.dish-note-cell{font-size:10px;line-height:1.4;color:#374151;padding:2px 4px;min-width:0;overflow:hidden;word-break:break-word;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical}
+.dish-note-cell{font-size:12px;line-height:1.4;color:#374151;padding:2px 4px;min-width:0;overflow:hidden;word-break:break-word;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical}
 .dish-note{padding:3px 0 7px 30px;font-size:11px;color:#475569;line-height:1.45;border-bottom:1px solid #f3f4f6}
 .dish-note .note-tag{display:inline-block;background:#e0f2fe;color:#0369a1;font-weight:700;font-size:9.5px;letter-spacing:0.04em;text-transform:uppercase;padding:1.5px 6px;border-radius:4px;vertical-align:middle;margin-right:4px}
 .dish-note .note-tag.corrective{background:#fef3c7;color:#92400e}
@@ -247,9 +247,9 @@ body.compact .dish-row.is-ok{display:grid}
 <div class="range-bar" id="range-bar"></div>
 
 <div class="legend">
-    <div class="legend-cell ok"><div class="lbl">✓ OK</div><div class="spec">Hot ≥60°C · Cold ≤8°C</div></div>
-    <div class="legend-cell warn"><div class="lbl">⚠ WARN</div><div class="spec">Hot 55–59°C · Cold 6–8°C</div></div>
-    <div class="legend-cell crit"><div class="lbl">✗ CRITICAL</div><div class="spec">Hot &lt;55°C · Cold &gt;8°C</div></div>
+    <div class="legend-cell ok"><div class="lbl">✓ OK</div><div class="spec">Hot ≥65°C · Cold ≤7°C</div></div>
+    <div class="legend-cell warn"><div class="lbl">⚠ WARN</div><div class="spec">Hot 60–64°C</div></div>
+    <div class="legend-cell crit"><div class="lbl">✗ CRITICAL</div><div class="spec">Hot &lt;60°C · Cold &gt;7°C</div></div>
 </div>
 
 <div class="cities" id="cities">
@@ -295,8 +295,8 @@ function getDb(city){
 }
 
 // ---- Helpers ----------------------------------------------------------------
-const HOT_PASS = 60, HOT_WARN_MIN = 55;
-const COLD_PASS = 6, COLD_WARN_MAX = 8;
+const HOT_PASS = 65, HOT_WARN_MIN = 60;
+const COLD_PASS = 7;
 const WT_OK = 0.05, WT_WARN = 0.10;
 
 const pad2 = (n) => String(n).padStart(2, '0');
@@ -371,7 +371,8 @@ const avg = (arr) => {
     return nums.reduce((s,v) => s+v, 0) / nums.length;
 };
 const hotStatus = (v) => v == null ? 'na' : v >= HOT_PASS ? 'ok' : v >= HOT_WARN_MIN ? 'warn' : 'crit';
-const coldStatus = (v) => v == null ? 'na' : v <= COLD_PASS ? 'ok' : v <= COLD_WARN_MAX ? 'warn' : 'crit';
+const coldStatus = (v) => v == null ? 'na' : v <= COLD_PASS ? 'ok' : 'crit';
+const coldStatusCp1 = (v) => v == null ? 'na' : v > 20 ? 'crit' : 'warn';
 const wtStatus = (theo, actual) => {
     if(!theo || actual == null) return 'na';
     const pct = Math.abs((actual - theo) / theo);
@@ -410,7 +411,7 @@ function computeDayScorecard(dishes, checks){
             } else {
                 c.hot.total++;
                 const st = hotStatus(v);
-                if(st === 'ok') c.hot.pass++;
+                if(st === 'ok' || st === 'warn') c.hot.pass++;
             }
         }
         const w = avg(ck.weights);
@@ -492,10 +493,10 @@ function renderCity(data, isSingleDay){
             const worst = ['crit','warn','ok','na'].find(s => [a,q,dp].some(v => stOf(v) === s)) || 'na';
             // Each temp cell renders temperature on top and the checkpoint's HH:MM
             // timestamp underneath, so the report doubles as an audit log.
-            const tCell = (v, time) => {
+            const tCell = (v, time, stFn) => {
                 const timeHtml = time ? `<span class="cp-time">${escapeHtml(time)}</span>` : '';
                 if(v == null) return `<span class="temp na">—${timeHtml}</span>`;
-                const st2 = stOf(v); const lbl2 = {ok:'Pass',warn:'Hold',crit:'Fail'}[st2]||''; return `<span class="temp ${st2}">${v.toFixed(1)}°<span class="cp-label">${lbl2}</span>${timeHtml}</span>`;
+                const st2 = stFn ? stFn(v) : stOf(v); const lbl2 = {ok:'Pass',warn:'Hold',crit:'Fail'}[st2]||''; return `<span class="temp ${st2}">${v.toFixed(1)}°<span class="cp-label">${lbl2}</span>${timeHtml}</span>`;
             };
             const tCP1 = (c.assembly && c.assembly.time) || null;
             const tCP2 = c.qcTime || null;
@@ -517,7 +518,7 @@ function renderCity(data, isSingleDay){
             return `<div class="dish-row is-${worst}">
                 <span class="letter">${escapeHtml(d.dishLetter)}</span>
                 <span class="name">${escapeHtml(d.dishName)}</span>
-                ${tCell(a, tCP1)}
+                ${tCell(a, tCP1, isHot ? null : coldStatusCp1)}
                 ${tCell(q, tCP2)}
                 ${tCell(dp, tCP3)}
                 <span class="wt-theo">${wtTheoTxt}</span>

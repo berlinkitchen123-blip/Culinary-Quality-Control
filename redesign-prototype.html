@@ -3219,6 +3219,14 @@ function renderModal(){
                 <button class="modal-tab ${tab==='qc'?'is-active':''} ${(hasQc||hasIng||hasPhoto)?'has-data':''}" data-tab="qc"><span class="tab-dot"></span>② QC check</button>
                 <button class="modal-tab ${tab==='dispatch'?'is-active':''} ${hasDispatch?'has-data':''}" data-tab="dispatch"><span class="tab-dot"></span>③ Dispatch</button>
             </div>
+            
+        <!-- Allergens shared across all tabs -->
+        <div class="allergen-row" id="modal-allergen-row" style="padding:8px 0;margin-bottom:4px">
+          <span class="allergen-label">Allergens</span>
+          ${(dish.allergens && dish.allergens.length > 0)
+            ? dish.allergens.map(a => `<span class="allergen-badge">${escapeHtml(a.name)}</span>`).join('')
+            : '<span class="allergen-badge no-allergens">None declared</span>'}
+        </div>
             <div class="modal-body" id="modal-body">
                 ${renderTabContent(tab, dish, c)}
             </div>
@@ -3351,6 +3359,12 @@ function renderQcTab(dish, c){
     const selected=new Set(c.selectedIngredients||[]);
     const checkedCount = ingredients.filter(ing=>selected.has(ing.name)).length;
     return `<div class="modal-date-row"><span class="section-mini" style="margin:0;font-size:11px">Date</span><input type="date" id="modal-date-picker" value="${state.selectedDate}" class="modal-date-input"></div>
+        <div class="allergen-row">
+          <span class="allergen-label">Allergens</span>
+          ${(dish.allergens && dish.allergens.length > 0)
+            ? dish.allergens.map(a => `<span class="allergen-badge">${escapeHtml(a.name)}</span>`).join('')
+            : '<span class="allergen-badge no-allergens">None declared</span>'}
+        </div>
         <!-- Photo: reference + today's capture -->
         <div class="section-mini">Photo · reference vs. today</div>
         <div class="photo-row">
@@ -5744,6 +5758,7 @@ function normalizeMenu(raw, opts){
                 stickerNo: sticker,
                 isAddon,
                 productId: d.id || null,
+                allergens: (d.allergens || []).map(a => ({name: a.name, value: a.value})),
                 spiciness: d.spiciness || 0
             });
         }

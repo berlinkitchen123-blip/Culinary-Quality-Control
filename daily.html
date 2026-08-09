@@ -793,15 +793,22 @@ function renderWeekCompare(berlinData, munichData, dates) {
 function renderMonthlyReport(data,dates){const city=data.city;const fmtDate=iso=>{const d=new Date(iso+'T00:00:00Z');return d.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short',timeZone:'UTC'});};const fmtTemp=v=>v==null?'—':v.toFixed(1)+'°';const stH=v=>v==null?'na':v>=HOT_PASS?'ok':v>=HOT_WARN_MIN?'warn':'crit';const stC=v=>v==null?'na':v<=COLD_PASS?'ok':'crit';const stCp1=v=>v==null?'na':v>20?'crit':'warn';const lbl={ok:'Pass',warn:'Check',crit:'Fail',na:'—'};const clr={ok:'#16a34a',warn:'#ea580c',crit:'#b91c1c',na:'#9ca3af'};const bg={ok:'#dcfce7',warn:'#fef3c7',crit:'#fee2e2',na:'#f3f4f6'};const dishMap=new Map();for(const wk of data.weeks){const menu=data.menus[wk];if(menu&&menu.dishes)for(const d of menu.dishes)if(!dishMap.has(d.dishLetter))dishMap.set(d.dishLetter,d);}const dishes=Array.from(dishMap.values()).sort((a,b)=>a.dishLetter.localeCompare(b.dishLetter,undefined,{numeric:true}));const renderDish=dish=>{const isHot=!isCold(dish);const rows=dates.map(date=>{const ck=(data.checks[date]||{})[dish.dishLetter]||{};const a=ck.assembly&&(ck.assembly.temps?avg(ck.assembly.temps):ck.assembly.temp!=null?ck.assembly.temp:null);const q=avg(ck.temperatures);const dp=ck.dispatch&&(ck.dispatch.temps?avg(ck.dispatch.temps):ck.dispatch.temp!=null?ck.dispatch.temp:null);const note=(ck.comment||'').trim();const action=(ck.correctiveAction||'').trim();if(a==null&&q==null&&dp==null&&!note&&!action)return '';const sA=isHot?stH(a):stCp1(a);const sQ=isHot?stH(q):stC(q);const sD=isHot?stH(dp):stC(dp);const badge=(v,s)=>v!=null?'<span style="display:inline-block;padding:2px 5px;border-radius:4px;font-size:10px;font-weight:700;background:'+bg[s]+';color:'+clr[s]+'">'+fmtTemp(v)+'<br><span style="font-size:9px">'+lbl[s]+'</span></span>':'<span style="color:#9ca3af;font-size:10px">—</span>';return '<tr style="border-bottom:1px solid #f1f5f9"><td style="padding:5px 8px;font-size:11px;color:#475569;white-space:nowrap">'+fmtDate(date)+'</td><td style="padding:5px 8px;text-align:center">'+badge(a,sA)+'</td><td style="padding:5px 8px;text-align:center">'+badge(q,sQ)+'</td><td style="padding:5px 8px;text-align:center">'+badge(dp,sD)+'</td><td style="padding:5px 8px;font-size:10px;color:#374151;max-width:130px">'+escapeHtml(note||'—')+'</td><td style="padding:5px 8px;font-size:10px;color:#374151;max-width:130px">'+escapeHtml(action||'—')+'</td></tr>';}).filter(Boolean).join('');if(!rows)return '';return '<div style="margin-bottom:12px;border:1px solid #e5e7eb;border-radius:10px;overflow:hidden"><div style="background:#f8fafc;padding:8px 12px;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;gap:8px"><span style="font-size:16px;font-weight:800;color:#0f172a">'+escapeHtml(dish.dishLetter)+'</span><span style="font-size:12px;font-weight:600;color:#1f2937">'+escapeHtml(dish.dishName)+'</span><span style="margin-left:auto;font-size:10px;font-weight:700;color:'+(isHot?'#b91c1c':'#1d4ed8')+'">'+(isHot?'HOT':'COLD')+'</span></div><table style="width:100%;border-collapse:collapse"><thead><tr style="background:#f1f5f9"><th style="padding:5px 8px;text-align:left;font-size:10px;font-weight:700;color:#64748b">Date</th><th style="padding:5px 8px;text-align:center;font-size:10px;font-weight:700;color:#64748b">CP1</th><th style="padding:5px 8px;text-align:center;font-size:10px;font-weight:700;color:#64748b">CP2</th><th style="padding:5px 8px;text-align:center;font-size:10px;font-weight:700;color:#64748b">CP3</th><th style="padding:5px 8px;text-align:left;font-size:10px;font-weight:700;color:#64748b">Note</th><th style="padding:5px 8px;text-align:left;font-size:10px;font-weight:700;color:#64748b">Action</th></tr></thead><tbody>'+rows+'</tbody></table></div>';};const sc=computeRangeScorecard(data);const hp=sc.hot.total===0?null:Math.round(sc.hot.pass/sc.hot.total*100);const cp=sc.cold.total===0?null:Math.round(sc.cold.pass/sc.cold.total*100);const op=sc.overall.pct;const hot=dishes.filter(d=>!isCold(d));const cold=dishes.filter(d=>isCold(d));const body=(hot.length?'<div style="font-size:11px;font-weight:700;text-transform:uppercase;color:#b91c1c;padding:4px 0 10px">Hot dishes</div>'+hot.map(renderDish).join(''):'')+(cold.length?'<div style="font-size:11px;font-weight:700;text-transform:uppercase;color:#1d4ed8;padding:12px 0 10px">Cold dishes</div>'+cold.map(renderDish).join(''):'');if(!body.trim())return '';return '<div style="background:#fff;border-radius:14px;border:1px solid #e5e7eb;padding:20px;margin-bottom:20px"><div style="display:flex;align-items:center;gap:12px;padding-bottom:12px;margin-bottom:14px;border-bottom:1px solid #f1f5f9"><div style="width:40px;height:40px;border-radius:10px;background:'+(city.class==='berlin'?'#2563eb':'#16a34a')+';color:white;font-size:18px;font-weight:800;display:flex;align-items:center;justify-content:center">'+city.name.charAt(0)+'</div><div><div style="font-size:17px;font-weight:800;color:#0f172a">'+city.name+' Monthly QC Report</div><div style="font-size:12px;color:#64748b">'+humanDate(dates[0])+' — '+humanDate(dates[dates.length-1])+' · '+dates.length+' days · thresholds: hot ≥'+HOT_PASS+'°C / cold ≤'+COLD_PASS+'°C</div></div><div style="margin-left:auto;display:flex;gap:14px;text-align:center"><div><div style="font-size:20px;font-weight:800;color:'+(op>=80?'#16a34a':op>=60?'#ea580c':'#b91c1c')+'">'+(op==null?'—':op+'%')+'</div><div style="font-size:10px;color:#64748b">Overall</div></div><div><div style="font-size:20px;font-weight:800;color:'+(hp==null?'#9ca3af':hp>=80?'#16a34a':hp>=60?'#ea580c':'#b91c1c')+'">'+(hp==null?'—':hp+'%')+'</div><div style="font-size:10px;color:#64748b">Hot</div></div><div><div style="font-size:20px;font-weight:800;color:'+(cp==null?'#9ca3af':cp>=80?'#16a34a':cp>=60?'#ea580c':'#b91c1c')+'">'+(cp==null?'—':cp+'%')+'</div><div style="font-size:10px;color:#64748b">Cold</div></div></div></div>'+body+'</div>';}
 
 
+
 function renderSmartMonthlyReport(data,dates){
 const city=data.city;
 const stH=v=>v==null?'na':v>=HOT_PASS?'ok':v>=HOT_WARN_MIN?'warn':'crit';
 const stC=v=>v==null?'na':v<=COLD_PASS?'ok':'crit';
 const clr={ok:'#16a34a',warn:'#ea580c',crit:'#b91c1c',na:'#e5e7eb'};
 const pc=p=>p==null?'#9ca3af':p>=80?'#16a34a':p>=60?'#ea580c':'#b91c1c';
+const bg={ok:'#dcfce7',warn:'#fef3c7',crit:'#fee2e2',na:'#f3f4f6'};
+const lbl={ok:'Pass',warn:'Check',crit:'Fail',na:'—'};
+const fmtT=v=>v==null?'—':v.toFixed(1)+'°';
+const fmtD=iso=>{const d=new Date(iso+'T00:00:00Z');return d.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short',timeZone:'UTC'});};
+// Build dish map
 const dishMap=new Map();
 for(const wk of data.weeks){const m=data.menus[wk];if(m&&m.dishes)for(const d of m.dishes)if(!dishMap.has(d.dishLetter))dishMap.set(d.dishLetter,d);}
 const dishes=Array.from(dishMap.values()).sort((a,b)=>a.dishLetter.localeCompare(b.dishLetter,undefined,{numeric:true}));
+// Build matrix
 const matrix={};const dailyC=[];
 for(const date of dates){
   let dp=0,tp=0;
@@ -810,8 +817,8 @@ for(const date of dates){
     const isHt=!isCold(dish);
     const a=ck.assembly&&(ck.assembly.temps?avg(ck.assembly.temps):ck.assembly.temp!=null?ck.assembly.temp:null);
     const q=avg(ck.temperatures);
-    const dp2=ck.dispatch&&(ck.dispatch.temps?avg(ck.dispatch.temps):ck.dispatch.temp!=null?ck.dispatch.temp:null);
-    const v=dp2!=null?dp2:(q!=null?q:a);
+    const d2=ck.dispatch&&(ck.dispatch.temps?avg(ck.dispatch.temps):ck.dispatch.temp!=null?ck.dispatch.temp:null);
+    const v=d2!=null?d2:(q!=null?q:a);
     const st=v==null?'na':(isHt?stH(v):stC(v));
     if(!matrix[dish.dishLetter])matrix[dish.dishLetter]={};
     matrix[dish.dishLetter][date]=st;
@@ -819,140 +826,93 @@ for(const date of dates){
   }
   dailyC.push(tp===0?null:Math.round(dp/tp*100));
 }
+// Dish stats
 const dishStats=dishes.map(dish=>{
   let pass=0,check=0,fail=0,total=0;const temps=[];
   for(const date of dates){
     const st=matrix[dish.dishLetter][date];
     if(st==='ok'){pass++;total++;}else if(st==='warn'){check++;total++;}else if(st==='crit'){fail++;total++;}
     const ck=(data.checks[date]||{})[dish.dishLetter]||{};
-    const dp2=ck.dispatch&&(ck.dispatch.temps?avg(ck.dispatch.temps):ck.dispatch.temp!=null?ck.dispatch.temp:null);
-    if(dp2!=null)temps.push({v:dp2});
+    const d2=ck.dispatch&&(ck.dispatch.temps?avg(ck.dispatch.temps):ck.dispatch.temp!=null?ck.dispatch.temp:null);
+    if(d2!=null)temps.push({v:d2});
   }
   const rate=total===0?null:Math.round((pass+check)/total*100);
   return{dish,pass,check,fail,total,rate,temps};
 }).filter(d=>d.total>0).sort((a,b)=>(a.rate??100)-(b.rate??100));
+// Overall scorecard
 const sc=computeRangeScorecard(data);
-const op=sc.overall.pct,hp=sc.hot.total===0?null:Math.round(sc.hot.pass/sc.hot.total*100),cp2=sc.cold.total===0?null:Math.round(sc.cold.pass/sc.cold.total*100);
+const op=sc.overall.pct;
+const hp=sc.hot.total===0?null:Math.round(sc.hot.pass/sc.hot.total*100);
+const cp2=sc.cold.total===0?null:Math.round(sc.cold.pass/sc.cold.total*100);
 // Trend SVG
 const W=560,H=72,pad=6;
-const trendPts=dailyC.map((v,i)=>v==null?null:{x:pad+i/(Math.max(dates.length-1,1))*(W-pad*2),y:pad+(1-v/100)*(H-pad*2)}).filter(Boolean);
-const trendLine=trendPts.length>1?trendPts.map((p,i)=>(i===0?'M':'L')+p.x.toFixed(1)+','+p.y.toFixed(1)).join(' '):'';
+const tPoints=dailyC.map((v,i)=>v==null?null:{x:pad+i/(Math.max(dates.length-1,1))*(W-pad*2),y:pad+(1-v/100)*(H-pad*2)}).filter(Boolean);
+const tLine=tPoints.length>1?tPoints.map((p,i)=>(i===0?'M':'L')+p.x.toFixed(1)+','+p.y.toFixed(1)).join(' '):'';
 const thrY=(pad+(1-80/100)*(H-pad*2)).toFixed(1);
-const trendSvg=trendPts.length>1?'<svg width="100%" viewBox="0 0 '+W+' '+H+'" style="display:block;margin:6px 0 14px"><line x1="'+pad+'" y1="'+thrY+'" x2="'+(W-pad)+'" y2="'+thrY+'" stroke="#d1d5db" stroke-width="1" stroke-dasharray="4,3"/><text x="'+(W-pad+2)+'" y="'+(parseFloat(thrY)+4)+'" font-size="9" fill="#9ca3af">80%</text><path d="'+trendLine+'" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>'+trendPts.map(p=>'<circle cx="'+p.x.toFixed(1)+'" cy="'+p.y.toFixed(1)+'" r="2.5" fill="'+pc(dailyC[trendPts.indexOf(p)])+'"/>').join('')+'</svg>':'';
+const trendSvg=tPoints.length>1?('<svg width="100%" viewBox="0 0 '+W+' '+H+'" style="display:block;margin:6px 0 14px"><line x1="'+pad+'" y1="'+thrY+'" x2="'+(W-pad)+'" y2="'+thrY+'" stroke="#d1d5db" stroke-width="1" stroke-dasharray="4,3"/><text x="'+(W-pad+2)+'" y="'+(parseFloat(thrY)+4)+'" font-size="9" fill="#9ca3af">80%</text><path d="'+tLine+'" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>'+tPoints.map(p=>'<circle cx="'+p.x.toFixed(1)+'" cy="'+p.y.toFixed(1)+'" r="2.5" fill="'+pc(dailyC[tPoints.indexOf(p)])+'"/>').join('')+'</svg>'):'';
 // Heatmap
-const CW=Math.max(12,Math.floor(460/Math.max(dates.length,1))),CH=16,LW=28,hmH=dishes.length*CH+24;
-const heatmap='<div style="overflow-x:auto;margin-bottom:14px"><svg width="'+(LW+dates.length*CW+2)+'" height="'+hmH+'" style="display:block">'+
-dates.map((date,di)=>{const d=new Date(date+'T00:00:00Z');return '<text x="'+(LW+di*CW+CW/2).toFixed(1)+'" y="13" text-anchor="middle" font-size="9" fill="#9ca3af">'+d.getUTCDate()+'</text>';}).join('')+
-dishes.map((dish,ri)=>
-'<text x="'+(LW-3)+'" y="'+(24+ri*CH+CH/2+4).toFixed(1)+'" text-anchor="end" font-size="10" fill="#374151" font-weight="500">'+escapeHtml(dish.dishLetter)+'</text>'+
-dates.map((date,di)=>{const st=matrix[dish.dishLetter][date]||'na';return '<rect x="'+(LW+di*CW+1)+'" y="'+(24+ri*CH+2)+'" width="'+(CW-2)+'" height="'+(CH-4)+'" rx="2" fill="'+clr[st]+'" opacity="'+(st==='na'?'0.18':'0.8')+'"><title>'+escapeHtml(dish.dishLetter)+' '+date+': '+st+'</title></rect>';}).join('')
-).join('')+'</svg></div>';
-// Sparkline helper
-const spark=temps=>{
-  if(temps.length<2)return '';
-  const vs=temps.map(t=>t.v),mn=Math.min(...vs),mx=Math.max(...vs,mn+1);
-  const pts=temps.map((t,i)=>({x:(i/(temps.length-1)*76).toFixed(1),y:(24-(t.v-mn)/(mx-mn)*22).toFixed(1)}));
-  return '<svg width="80" height="28" viewBox="0 0 80 28" style="flex-shrink:0"><path d="'+pts.map((p,i)=>(i===0?'M':'L')+p.x+','+p.y).join(' ')+'" fill="none" stroke="#2563eb" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>';
-};
+const CW=Math.max(12,Math.floor(460/Math.max(dates.length,1))),CH=16,LW=28;
+const hmH=dishes.length*CH+24;
+const heatmap='<div style="overflow-x:auto;margin-bottom:14px"><svg width="'+(LW+dates.length*CW+2)+'" height="'+hmH+'" style="display:block">'+dates.map((date,di)=>{const d=new Date(date+'T00:00:00Z');return '<text x="'+(LW+di*CW+CW/2).toFixed(1)+'" y="13" text-anchor="middle" font-size="9" fill="#9ca3af">'+d.getUTCDate()+'</text>';}).join('')+dishes.map((dish,ri)=>'<text x="'+(LW-3)+'" y="'+(24+ri*CH+CH/2+4).toFixed(1)+'" text-anchor="end" font-size="10" fill="#374151" font-weight="500">'+escapeHtml(dish.dishLetter)+'</text>'+dates.map((date,di)=>{const st=matrix[dish.dishLetter][date]||'na';return '<rect x="'+(LW+di*CW+1)+'" y="'+(24+ri*CH+2)+'" width="'+(CW-2)+'" height="'+(CH-4)+'" rx="2" fill="'+clr[st]+'" opacity="'+(st==='na'?'0.18':'0.8')+'"><title>'+escapeHtml(dish.dishLetter)+' '+date+' '+st+'</title></rect>';}).join('')).join('')+'</svg></div>';
+// Sparkline
+const spark=temps=>{if(temps.length<2)return '';const vs=temps.map(t=>t.v),mn=Math.min(...vs),mx=Math.max(...vs,mn+1);const pts=temps.map((t,i)=>({x:(i/(temps.length-1)*76).toFixed(1),y:(24-(t.v-mn)/(mx-mn)*22).toFixed(1)}));return '<svg width="80" height="28" viewBox="0 0 80 28" style="flex-shrink:0"><path d="'+pts.map((p,i)=>(i===0?'M':'L')+p.x+','+p.y).join(' ')+'" fill="none" stroke="#2563eb" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>';};
 const topIssues=dishStats.slice(0,3).filter(d=>(d.rate??100)<80);
-
-// Detailed per-dish table
-const fmtDate2=iso=>{const d=new Date(iso+'T00:00:00Z');return d.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short',timeZone:'UTC'});};
-const fmtTemp2=v=>v==null?'—':v.toFixed(1)+'°';
-const bg2={ok:'#dcfce7',warn:'#fef3c7',crit:'#fee2e2',na:'#f3f4f6'};
-const clr2={ok:'#16a34a',warn:'#ea580c',crit:'#b91c1c',na:'#9ca3af'};
-const lbl2={ok:'Pass',warn:'Check',crit:'Fail',na:'—'};
-const badge2=(v,s)=>v!=null?'<span style="display:inline-block;padding:2px 5px;border-radius:4px;font-size:10px;font-weight:700;background:'+bg2[s]+';color:'+clr2[s]+'">'+fmtTemp2(v)+'<br><span style="font-size:9px">'+lbl2[s]+'</span></span>':'<span style="color:#9ca3af;font-size:10px">—</span>';
-const detailCards=dishes.map(dish=>{
+// --- VISUAL SECTION ---
+let out='<div style="background:#fff;border-radius:14px;border:1px solid #e5e7eb;padding:20px;margin-bottom:20px">';
+// Header
+out+='<div style="display:flex;align-items:center;gap:12px;padding-bottom:14px;margin-bottom:16px;border-bottom:1px solid #f1f5f9">';
+out+='<div style="width:42px;height:42px;border-radius:10px;background:'+(city.class==='berlin'?'#2563eb':'#16a34a')+';color:white;font-size:20px;font-weight:800;display:flex;align-items:center;justify-content:center">'+city.name.charAt(0)+'</div>';
+out+='<div><div style="font-size:17px;font-weight:800;color:#0f172a">'+city.name+' Monthly Performance</div><div style="font-size:12px;color:#64748b">'+humanDate(dates[0])+' — '+humanDate(dates[dates.length-1])+' · '+dates.length+' days</div></div>';
+out+='<div style="margin-left:auto;display:flex;gap:12px">';
+[['Overall',op],['Hot',hp],['Cold',cp2]].forEach(function(item){out+='<div style="background:#f8fafc;border-radius:10px;padding:8px 12px;text-align:center"><div style="font-size:22px;font-weight:800;color:'+pc(item[1])+'">'+(item[1]==null?'—':item[1]+'%')+'</div><div style="font-size:10px;color:#64748b">'+item[0]+'</div></div>';});
+out+='</div></div>';
+// Trend
+if(trendSvg)out+='<div style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:4px">Daily compliance trend</div>'+trendSvg;
+// Heatmap
+out+='<div style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px">Dish heatmap</div>'+heatmap;
+// Issues
+if(topIssues.length){out+='<div style="background:#fef2f2;border-radius:10px;padding:10px 14px;border:1px solid #fecaca;margin-bottom:14px"><div style="font-size:11px;font-weight:700;color:#b91c1c;margin-bottom:6px">Needs attention</div>';topIssues.forEach(function(d){out+='<div style="display:flex;align-items:center;gap:8px;padding:4px 0;border-bottom:1px solid #fee2e2"><b style="font-size:12px;color:#0f172a;width:20px">'+escapeHtml(d.dish.dishLetter)+'</b><span style="font-size:11px;color:#374151;flex:1">'+escapeHtml(d.dish.dishName)+'</span><span style="font-size:11px;font-weight:700;padding:1px 7px;border-radius:99px;background:#fee2e2;color:#b91c1c">'+d.fail+' fail</span><span style="font-size:12px;font-weight:800;color:'+pc(d.rate)+'">'+d.rate+'%</span></div>';});out+='</div>';}
+// Dish cards
+out+='<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:8px">';
+dishStats.forEach(function(d){const isHt=!isCold(d.dish);out+='<div style="border:1px solid #e5e7eb;border-radius:10px;padding:10px;background:#fafafa"><div style="display:flex;align-items:center;gap:6px;margin-bottom:5px"><b style="font-size:13px;color:#0f172a">'+escapeHtml(d.dish.dishLetter)+'</b><span style="font-size:11px;color:#374151;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="'+escapeHtml(d.dish.dishName)+'">'+escapeHtml(d.dish.dishName)+'</span><span style="font-size:9px;font-weight:700;padding:1px 5px;border-radius:99px;background:'+(isHt?'#fee2e2':'#dbeafe')+';color:'+(isHt?'#b91c1c':'#1d4ed8')+'">'+(isHt?'H':'C')+'</span></div><div style="display:flex;align-items:center;gap:8px"><div style="flex:1"><div style="height:5px;background:#f1f5f9;border-radius:3px"><div style="height:5px;border-radius:3px;background:'+pc(d.rate)+';width:'+(d.rate||0)+'%"></div></div><div style="display:flex;justify-content:space-between;margin-top:2px"><span style="font-size:9px;color:#9ca3af">'+d.total+' days</span><span style="font-size:11px;font-weight:700;color:'+pc(d.rate)+'">'+(d.rate==null?'—':d.rate+'%')+'</span></div><div style="font-size:9px;color:#64748b">'+(d.pass?'<span style="color:#16a34a">'+d.pass+'✓ </span>':'')+  (d.check?'<span style="color:#ea580c">'+d.check+'~ </span>':'')+(d.fail?'<span style="color:#b91c1c">'+d.fail+'✗</span>':'')+'</div></div>'+spark(d.temps)+'</div></div>';});
+out+='</div>';
+// --- DETAILED TABLE SECTION ---
+out+='<div style="margin-top:24px;padding-top:16px;border-top:2px solid #f1f5f9"><div style="font-size:13px;font-weight:700;color:#0f172a;margin-bottom:14px">Full detail — each dish, every day</div>';
+dishes.forEach(function(dish){
   const isHt=!isCold(dish);
-  const rows=dates.map(date=>{
+  const dstat=dishStats.find(function(d){return d.dish.dishLetter===dish.dishLetter;});
+  const rows=dates.map(function(date){
     const ck=(data.checks[date]||{})[dish.dishLetter]||{};
     const a=ck.assembly&&(ck.assembly.temps?avg(ck.assembly.temps):ck.assembly.temp!=null?ck.assembly.temp:null);
     const q=avg(ck.temperatures);
-    const dp3=ck.dispatch&&(ck.dispatch.temps?avg(ck.dispatch.temps):ck.dispatch.temp!=null?ck.dispatch.temp:null);
+    const d2=ck.dispatch&&(ck.dispatch.temps?avg(ck.dispatch.temps):ck.dispatch.temp!=null?ck.dispatch.temp:null);
     const note=(ck.comment||'').trim();
     const action=(ck.correctiveAction||'').trim();
-    if(a==null&&q==null&&dp3==null&&!note&&!action)return '';
+    if(a==null&&q==null&&d2==null&&!note&&!action)return '';
     const sA=isHt?stH(a):(a==null?'na':a>20?'crit':'warn');
     const sQ=isHt?stH(q):stC(q);
-    const sD=isHt?stH(dp3):stC(dp3);
-    return '<tr style="border-bottom:1px solid #f1f5f9"><td style="padding:5px 8px;font-size:11px;color:#475569;white-space:nowrap">'+fmtDate2(date)+'</td><td style="padding:5px 8px;text-align:center">'+badge2(a,sA)+'</td><td style="padding:5px 8px;text-align:center">'+badge2(q,sQ)+'</td><td style="padding:5px 8px;text-align:center">'+badge2(dp3,sD)+'</td><td style="padding:5px 8px;font-size:10px;color:#374151;max-width:130px">'+escapeHtml(note||'—')+'</td><td style="padding:5px 8px;font-size:10px;color:#374151;max-width:130px">'+escapeHtml(action||'—')+'</td></tr>';
+    const sD=isHt?stH(d2):stC(d2);
+    const badge=function(v,s){return v!=null?('<span style="display:inline-block;padding:2px 5px;border-radius:4px;font-size:10px;font-weight:700;background:'+bg[s]+';color:'+clr[s]+'">'+fmtT(v)+'<br><span style="font-size:9px">'+lbl[s]+'</span></span>'):'<span style="color:#9ca3af;font-size:10px">—</span>';};
+    return '<tr style="border-bottom:1px solid #f1f5f9"><td style="padding:5px 8px;font-size:11px;color:#475569;white-space:nowrap">'+fmtD(date)+'</td><td style="padding:5px 8px;text-align:center">'+badge(a,sA)+'</td><td style="padding:5px 8px;text-align:center">'+badge(q,sQ)+'</td><td style="padding:5px 8px;text-align:center">'+badge(d2,sD)+'</td><td style="padding:5px 8px;font-size:10px;color:#374151;max-width:130px">'+escapeHtml(note||'—')+'</td><td style="padding:5px 8px;font-size:10px;color:#374151;max-width:130px">'+escapeHtml(action||'—')+'</td></tr>';
   }).filter(Boolean).join('');
-  if(!rows)return '';
-  const stat=dishStats.find(d=>d.dish.dishLetter===dish.dishLetter);
-  return '<div style="margin-bottom:12px;border:1px solid #e5e7eb;border-radius:10px;overflow:hidden">'+
-    '<div style="background:#f8fafc;padding:8px 12px;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;gap:8px">'+
-    '<b style="font-size:16px;color:#0f172a">'+escapeHtml(dish.dishLetter)+'</b>'+
-    '<span style="font-size:12px;font-weight:600;color:#1f2937;flex:1">'+escapeHtml(dish.dishName)+'</span>'+
-    (stat?'<span style="font-size:12px;font-weight:700;color:'+pc(stat.rate)+'">'+(stat.rate??'—')+'%</span>':'')+
-    '<span style="font-size:10px;font-weight:700;padding:1px 7px;border-radius:99px;background:'+(isHt?'#fee2e2':'#dbeafe')+';color:'+(isHt?'#b91c1c':'#1d4ed8')+';margin-left:6px">'+(isHt?'HOT':'COLD')+'</span>'+
-    '</div>'+
-    '<table style="width:100%;border-collapse:collapse"><thead><tr style="background:#f1f5f9">'+
-    '<th style="padding:5px 8px;text-align:left;font-size:10px;font-weight:700;color:#64748b">Date</th>'+
-    '<th style="padding:5px 8px;text-align:center;font-size:10px;font-weight:700;color:#64748b">CP1 Assembly</th>'+
-    '<th style="padding:5px 8px;text-align:center;font-size:10px;font-weight:700;color:#64748b">CP2 QC Check</th>'+
-    '<th style="padding:5px 8px;text-align:center;font-size:10px;font-weight:700;color:#64748b">CP3 Dispatch</th>'+
-    '<th style="padding:5px 8px;text-align:left;font-size:10px;font-weight:700;color:#64748b">Note</th>'+
-    '<th style="padding:5px 8px;text-align:left;font-size:10px;font-weight:700;color:#64748b">Corrective Action</th>'+
-    '</tr></thead><tbody>'+rows+'</tbody></table></div>';
-}).join('');
-const detailHtml=detailCards.trim()?'<div style="margin-top:20px"><div style="font-size:13px;font-weight:700;color:#0f172a;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid #e5e7eb">Full detail — all dishes</div>'+detailCards+'</div>':'';
-return '<div style="background:#fff;border-radius:14px;border:1px solid #e5e7eb;padding:20px;margin-bottom:20px">'+
-'<div style="display:flex;align-items:center;gap:12px;padding-bottom:14px;margin-bottom:16px;border-bottom:1px solid #f1f5f9">'+
-'<div style="width:42px;height:42px;border-radius:10px;background:'+(city.class==='berlin'?'#2563eb':'#16a34a')+';color:white;font-size:20px;font-weight:800;display:flex;align-items:center;justify-content:center">'+city.name.charAt(0)+'</div>'+
-'<div><div style="font-size:17px;font-weight:800;color:#0f172a">'+city.name+' · Monthly Performance</div><div style="font-size:12px;color:#64748b">'+humanDate(dates[0])+' — '+humanDate(dates[dates.length-1])+' · '+dates.length+' days</div></div>'+
-'<div style="margin-left:auto;display:flex;gap:12px">'+
-[['Overall',op],['Hot',hp],['Cold',cp2]].map(([l,v])=>'<div style="background:#f8fafc;border-radius:10px;padding:8px 12px;text-align:center"><div style="font-size:22px;font-weight:800;color:'+pc(v)+'">'+(v==null?'—':v+'%')+'</div><div style="font-size:10px;color:#64748b;text-transform:uppercase">'+l+'</div></div>').join('')+
-'</div></div>'+
-(trendSvg?'<div style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:4px">Daily compliance trend</div>'+trendSvg:'')+
-'<div style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px">Dish heatmap <span style="font-weight:400;color:#9ca3af">green=pass · amber=check · red=fail</span></div>'+heatmap+
-(topIssues.length?'<div style="background:#fef2f2;border-radius:10px;padding:10px 14px;border:1px solid #fecaca;margin-bottom:14px"><div style="font-size:11px;font-weight:700;color:#b91c1c;margin-bottom:6px">Needs attention</div>'+topIssues.map(d=>'<div style="display:flex;align-items:center;gap:8px;padding:4px 0;border-bottom:1px solid #fee2e2"><b style="font-size:12px;color:#0f172a;width:20px">'+escapeHtml(d.dish.dishLetter)+'</b><span style="font-size:11px;color:#374151;flex:1">'+escapeHtml(d.dish.dishName)+'</span><span style="font-size:11px;font-weight:700;padding:1px 7px;border-radius:99px;background:#fee2e2;color:#b91c1c">'+d.fail+' fail</span><span style="font-size:12px;font-weight:800;color:'+pc(d.rate)+'">'+d.rate+'%</span></div>').join('')+'</div>':'')+
-'<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:8px">'+
-dishStats.map(d=>'<div style="border:1px solid #e5e7eb;border-radius:10px;padding:10px;background:#fafafa"><div style="display:flex;align-items:center;gap:6px;margin-bottom:5px"><b style="font-size:13px;color:#0f172a">'+escapeHtml(d.dish.dishLetter)+'</b><span style="font-size:11px;color:#374151;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+escapeHtml(d.dish.dishName)+'</span><span style="font-size:9px;font-weight:700;padding:1px 5px;border-radius:99px;background:'+(isCold(d.dish)?'#dbeafe':'#fee2e2')+';color:'+(isCold(d.dish)?'#1d4ed8':'#b91c1c')+'">'+(isCold(d.dish)?'C':'H')+'</span></div><div style="display:flex;align-items:center;gap:8px"><div style="flex:1"><div style="height:5px;background:#f1f5f9;border-radius:3px"><div style="height:5px;border-radius:3px;background:'+pc(d.rate)+';width:'+(d.rate??0)+'%"></div></div><div style="display:flex;justify-content:space-between;margin-top:2px"><span style="font-size:9px;color:#9ca3af">'+d.total+' days logged</span><span style="font-size:11px;font-weight:700;color:'+pc(d.rate)+'">'+(d.rate==null?'—':d.rate+'%')+'</span></div><div style="font-size:9px;color:#64748b">'+(d.pass?'<span style="color:#16a34a">'+d.pass+'✓ </span>':'')+(d.check?'<span style="color:#ea580c">'+d.check+'~ </span>':'')+(d.fail?'<span style="color:#b91c1c">'+d.fail+'✗</span>':'')+'</div></div>'+spark(d.temps)+'</div></div>').join('')+
-
-// Detailed per-dish table
-const fmtDate2=iso=>{const d=new Date(iso+'T00:00:00Z');return d.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short',timeZone:'UTC'});};
-const fmtTemp2=v=>v==null?'—':v.toFixed(1)+'°';
-const bg2={ok:'#dcfce7',warn:'#fef3c7',crit:'#fee2e2',na:'#f3f4f6'};
-const clr2={ok:'#16a34a',warn:'#ea580c',crit:'#b91c1c',na:'#9ca3af'};
-const lbl2={ok:'Pass',warn:'Check',crit:'Fail',na:'—'};
-const badge2=(v,s)=>v!=null?'<span style="display:inline-block;padding:2px 5px;border-radius:4px;font-size:10px;font-weight:700;background:'+bg2[s]+';color:'+clr2[s]+'">'+fmtTemp2(v)+'<br><span style="font-size:9px">'+lbl2[s]+'</span></span>':'<span style="color:#9ca3af;font-size:10px">—</span>';
-const detailCards=dishes.map(dish=>{
-  const isHt=!isCold(dish);
-  const rows=dates.map(date=>{
-    const ck=(data.checks[date]||{})[dish.dishLetter]||{};
-    const a=ck.assembly&&(ck.assembly.temps?avg(ck.assembly.temps):ck.assembly.temp!=null?ck.assembly.temp:null);
-    const q=avg(ck.temperatures);
-    const dp3=ck.dispatch&&(ck.dispatch.temps?avg(ck.dispatch.temps):ck.dispatch.temp!=null?ck.dispatch.temp:null);
-    const note=(ck.comment||'').trim();
-    const action=(ck.correctiveAction||'').trim();
-    if(a==null&&q==null&&dp3==null&&!note&&!action)return '';
-    const sA=isHt?stH(a):(a==null?'na':a>20?'crit':'warn');
-    const sQ=isHt?stH(q):stC(q);
-    const sD=isHt?stH(dp3):stC(dp3);
-    return '<tr style="border-bottom:1px solid #f1f5f9"><td style="padding:5px 8px;font-size:11px;color:#475569;white-space:nowrap">'+fmtDate2(date)+'</td><td style="padding:5px 8px;text-align:center">'+badge2(a,sA)+'</td><td style="padding:5px 8px;text-align:center">'+badge2(q,sQ)+'</td><td style="padding:5px 8px;text-align:center">'+badge2(dp3,sD)+'</td><td style="padding:5px 8px;font-size:10px;color:#374151;max-width:130px">'+escapeHtml(note||'—')+'</td><td style="padding:5px 8px;font-size:10px;color:#374151;max-width:130px">'+escapeHtml(action||'—')+'</td></tr>';
-  }).filter(Boolean).join('');
-  if(!rows)return '';
-  const stat=dishStats.find(d=>d.dish.dishLetter===dish.dishLetter);
-  return '<div style="margin-bottom:12px;border:1px solid #e5e7eb;border-radius:10px;overflow:hidden">'+
-    '<div style="background:#f8fafc;padding:8px 12px;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;gap:8px">'+
-    '<b style="font-size:16px;color:#0f172a">'+escapeHtml(dish.dishLetter)+'</b>'+
-    '<span style="font-size:12px;font-weight:600;color:#1f2937;flex:1">'+escapeHtml(dish.dishName)+'</span>'+
-    (stat?'<span style="font-size:12px;font-weight:700;color:'+pc(stat.rate)+'">'+(stat.rate??'—')+'%</span>':'')+
-    '<span style="font-size:10px;font-weight:700;padding:1px 7px;border-radius:99px;background:'+(isHt?'#fee2e2':'#dbeafe')+';color:'+(isHt?'#b91c1c':'#1d4ed8')+';margin-left:6px">'+(isHt?'HOT':'COLD')+'</span>'+
-    '</div>'+
-    '<table style="width:100%;border-collapse:collapse"><thead><tr style="background:#f1f5f9">'+
-    '<th style="padding:5px 8px;text-align:left;font-size:10px;font-weight:700;color:#64748b">Date</th>'+
-    '<th style="padding:5px 8px;text-align:center;font-size:10px;font-weight:700;color:#64748b">CP1 Assembly</th>'+
-    '<th style="padding:5px 8px;text-align:center;font-size:10px;font-weight:700;color:#64748b">CP2 QC Check</th>'+
-    '<th style="padding:5px 8px;text-align:center;font-size:10px;font-weight:700;color:#64748b">CP3 Dispatch</th>'+
-    '<th style="padding:5px 8px;text-align:left;font-size:10px;font-weight:700;color:#64748b">Note</th>'+
-    '<th style="padding:5px 8px;text-align:left;font-size:10px;font-weight:700;color:#64748b">Corrective Action</th>'+
-    '</tr></thead><tbody>'+rows+'</tbody></table></div>';
-}).join('');
-const detailHtml=detailCards.trim()?'<div style="margin-top:20px"><div style="font-size:13px;font-weight:700;color:#0f172a;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid #e5e7eb">Full detail — all dishes</div>'+detailCards+'</div>':'';
-return '<div style="background:#fff;border-radius:14px;border:1px solid #e5e7eb;padding:20px;margin-bottom:20px">'+
-'<div style="display:flex;align-items:center;gap:12px;padding-bottom:14px;margin-bottom:16px;border-bottom:1px solid #f1f5f9">' + city.name + '</div>' + detailHtml + '</div>';
+  if(!rows)return;
+  out+='<div style="margin-bottom:12px;border:1px solid #e5e7eb;border-radius:10px;overflow:hidden">';
+  out+='<div style="background:#f8fafc;padding:8px 12px;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;gap:8px">';
+  out+='<b style="font-size:16px;color:#0f172a">'+escapeHtml(dish.dishLetter)+'</b>';
+  out+='<span style="font-size:12px;font-weight:600;color:#1f2937;flex:1">'+escapeHtml(dish.dishName)+'</span>';
+  if(dstat)out+='<span style="font-size:12px;font-weight:700;color:'+pc(dstat.rate)+'">'+(dstat.rate??'—')+'%</span>';
+  out+='<span style="font-size:10px;font-weight:700;padding:1px 7px;border-radius:99px;background:'+(isHt?'#fee2e2':'#dbeafe')+';color:'+(isHt?'#b91c1c':'#1d4ed8')+';margin-left:6px">'+(isHt?'HOT':'COLD')+'</span>';
+  out+='</div><table style="width:100%;border-collapse:collapse"><thead><tr style="background:#f1f5f9">';
+  out+='<th style="padding:5px 8px;text-align:left;font-size:10px;font-weight:700;color:#64748b">Date</th>';
+  out+='<th style="padding:5px 8px;text-align:center;font-size:10px;font-weight:700;color:#64748b">CP1 Assembly</th>';
+  out+='<th style="padding:5px 8px;text-align:center;font-size:10px;font-weight:700;color:#64748b">CP2 QC</th>';
+  out+='<th style="padding:5px 8px;text-align:center;font-size:10px;font-weight:700;color:#64748b">CP3 Dispatch</th>';
+  out+='<th style="padding:5px 8px;text-align:left;font-size:10px;font-weight:700;color:#64748b">Note</th>';
+  out+='<th style="padding:5px 8px;text-align:left;font-size:10px;font-weight:700;color:#64748b">Corrective Action</th>';
+  out+='</tr></thead><tbody>'+rows+'</tbody></table></div>';
+});
+out+='</div></div>';
+return out;
 }
 
 async function loadAndRender(){

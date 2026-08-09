@@ -795,7 +795,6 @@ function renderMonthlyReport(data,dates){const city=data.city;const fmtDate=iso=
 
 
 
-function filterDishes(inp){var v=inp.value.toLowerCase();var r=inp.closest(".city-month-report");if(!r)return;r.querySelectorAll(".dish-month-item").forEach(function(el){el.style.display=(!v||el.dataset.dishName.includes(v))?"":"none";});}
 
 function renderSmartMonthlyReport(data,dates){
 const city=data.city;

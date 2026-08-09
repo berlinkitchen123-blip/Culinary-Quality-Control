@@ -858,7 +858,7 @@ const heatmap='<div style="overflow-x:auto;margin-bottom:14px"><svg width="'+(LW
 const spark=temps=>{if(temps.length<2)return '';const vs=temps.map(t=>t.v),mn=Math.min(...vs),mx=Math.max(...vs,mn+1);const pts=temps.map((t,i)=>({x:(i/(temps.length-1)*76).toFixed(1),y:(24-(t.v-mn)/(mx-mn)*22).toFixed(1)}));return '<svg width="80" height="28" viewBox="0 0 80 28" style="flex-shrink:0"><path d="'+pts.map((p,i)=>(i===0?'M':'L')+p.x+','+p.y).join(' ')+'" fill="none" stroke="#2563eb" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>';};
 const topIssues=dishStats.slice(0,3).filter(d=>(d.rate??100)<80);
 // --- VISUAL SECTION ---
-let out='<div style="background:#fff;border-radius:14px;border:1px solid #e5e7eb;padding:20px;margin-bottom:20px">';
+let out='<div class="city-month-report" style="background:#fff;border-radius:14px;border:1px solid #e5e7eb;padding:20px;margin-bottom:20px">';
 // Header
 out+='<div style="display:flex;align-items:center;gap:12px;padding-bottom:14px;margin-bottom:16px;border-bottom:1px solid #f1f5f9">';
 out+='<div style="width:42px;height:42px;border-radius:10px;background:'+(city.class==='berlin'?'#2563eb':'#16a34a')+';color:white;font-size:20px;font-weight:800;display:flex;align-items:center;justify-content:center">'+city.name.charAt(0)+'</div>';
@@ -866,6 +866,7 @@ out+='<div><div style="font-size:17px;font-weight:800;color:#0f172a">'+city.name
 out+='<div style="margin-left:auto;display:flex;gap:12px">';
 [['Overall',op],['Hot',hp],['Cold',cp2]].forEach(function(item){out+='<div style="background:#f8fafc;border-radius:10px;padding:8px 12px;text-align:center"><div style="font-size:22px;font-weight:800;color:'+pc(item[1])+'">'+(item[1]==null?'—':item[1]+'%')+'</div><div style="font-size:10px;color:#64748b">'+item[0]+'</div></div>';});
 out+='</div></div>';
+out+='<div style="margin-bottom:14px"><input type="search" placeholder="Search dish..." oninput="filterDishes(this)" style="width:100%;padding:8px 12px;border:1.5px solid #e5e7eb;border-radius:8px;font-size:13px;font-family:inherit;background:#fff;box-sizing:border-box"/></div>';
 // Trend
 if(trendSvg)out+='<div style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:4px">Daily compliance trend</div>'+trendSvg;
 // Heatmap
@@ -896,7 +897,7 @@ dishes.forEach(function(dish){
     return '<tr style="border-bottom:1px solid #f1f5f9"><td style="padding:5px 8px;font-size:11px;color:#475569;white-space:nowrap">'+fmtD(date)+'</td><td style="padding:5px 8px;text-align:center">'+badge(a,sA)+'</td><td style="padding:5px 8px;text-align:center">'+badge(q,sQ)+'</td><td style="padding:5px 8px;text-align:center">'+badge(d2,sD)+'</td><td style="padding:5px 8px;font-size:10px;color:#374151;max-width:130px">'+escapeHtml(note||'—')+'</td><td style="padding:5px 8px;font-size:10px;color:#374151;max-width:130px">'+escapeHtml(action||'—')+'</td></tr>';
   }).filter(Boolean).join('');
   if(!rows)return;
-  out+='<div style="margin-bottom:12px;border:1px solid #e5e7eb;border-radius:10px;overflow:hidden">';
+  out+='<div class="dish-month-item" data-dish-name="'+(dish.dishLetter+' '+dish.dishName).toLowerCase()+'" style="margin-bottom:12px;border:1px solid #e5e7eb;border-radius:10px;overflow:hidden">';
   out+='<div style="background:#f8fafc;padding:8px 12px;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;gap:8px">';
   out+='<b style="font-size:16px;color:#0f172a">'+escapeHtml(dish.dishLetter)+'</b>';
   out+='<span style="font-size:12px;font-weight:600;color:#1f2937;flex:1">'+escapeHtml(dish.dishName)+'</span>';
@@ -915,6 +916,7 @@ out+='</div></div>';
 return out;
 }
 
+function filterDishes(inp){var v=inp.value.toLowerCase();var r=inp.closest(".city-month-report");if(!r)return;r.querySelectorAll(".dish-month-item").forEach(function(el){el.style.display=(!v||el.dataset.dishName.includes(v))?"":"none";});}
 async function loadAndRender(){
     const r = rangeState.preset === 'custom' ? { start: rangeState.start, end: rangeState.end } : rangeForPreset(rangeState.preset);
     if(!r.start || !r.end || r.start > r.end){

@@ -855,6 +855,48 @@ const spark=temps=>{
   return '<svg width="80" height="28" viewBox="0 0 80 28" style="flex-shrink:0"><path d="'+pts.map((p,i)=>(i===0?'M':'L')+p.x+','+p.y).join(' ')+'" fill="none" stroke="#2563eb" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 };
 const topIssues=dishStats.slice(0,3).filter(d=>(d.rate??100)<80);
+
+// Detailed per-dish table
+const fmtDate2=iso=>{const d=new Date(iso+'T00:00:00Z');return d.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short',timeZone:'UTC'});};
+const fmtTemp2=v=>v==null?'—':v.toFixed(1)+'°';
+const bg2={ok:'#dcfce7',warn:'#fef3c7',crit:'#fee2e2',na:'#f3f4f6'};
+const clr2={ok:'#16a34a',warn:'#ea580c',crit:'#b91c1c',na:'#9ca3af'};
+const lbl2={ok:'Pass',warn:'Check',crit:'Fail',na:'—'};
+const badge2=(v,s)=>v!=null?'<span style="display:inline-block;padding:2px 5px;border-radius:4px;font-size:10px;font-weight:700;background:'+bg2[s]+';color:'+clr2[s]+'">'+fmtTemp2(v)+'<br><span style="font-size:9px">'+lbl2[s]+'</span></span>':'<span style="color:#9ca3af;font-size:10px">—</span>';
+const detailCards=dishes.map(dish=>{
+  const isHt=!isCold(dish);
+  const rows=dates.map(date=>{
+    const ck=(data.checks[date]||{})[dish.dishLetter]||{};
+    const a=ck.assembly&&(ck.assembly.temps?avg(ck.assembly.temps):ck.assembly.temp!=null?ck.assembly.temp:null);
+    const q=avg(ck.temperatures);
+    const dp3=ck.dispatch&&(ck.dispatch.temps?avg(ck.dispatch.temps):ck.dispatch.temp!=null?ck.dispatch.temp:null);
+    const note=(ck.comment||'').trim();
+    const action=(ck.correctiveAction||'').trim();
+    if(a==null&&q==null&&dp3==null&&!note&&!action)return '';
+    const sA=isHt?stH(a):(a==null?'na':a>20?'crit':'warn');
+    const sQ=isHt?stH(q):stC(q);
+    const sD=isHt?stH(dp3):stC(dp3);
+    return '<tr style="border-bottom:1px solid #f1f5f9"><td style="padding:5px 8px;font-size:11px;color:#475569;white-space:nowrap">'+fmtDate2(date)+'</td><td style="padding:5px 8px;text-align:center">'+badge2(a,sA)+'</td><td style="padding:5px 8px;text-align:center">'+badge2(q,sQ)+'</td><td style="padding:5px 8px;text-align:center">'+badge2(dp3,sD)+'</td><td style="padding:5px 8px;font-size:10px;color:#374151;max-width:130px">'+escapeHtml(note||'—')+'</td><td style="padding:5px 8px;font-size:10px;color:#374151;max-width:130px">'+escapeHtml(action||'—')+'</td></tr>';
+  }).filter(Boolean).join('');
+  if(!rows)return '';
+  const stat=dishStats.find(d=>d.dish.dishLetter===dish.dishLetter);
+  return '<div style="margin-bottom:12px;border:1px solid #e5e7eb;border-radius:10px;overflow:hidden">'+
+    '<div style="background:#f8fafc;padding:8px 12px;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;gap:8px">'+
+    '<b style="font-size:16px;color:#0f172a">'+escapeHtml(dish.dishLetter)+'</b>'+
+    '<span style="font-size:12px;font-weight:600;color:#1f2937;flex:1">'+escapeHtml(dish.dishName)+'</span>'+
+    (stat?'<span style="font-size:12px;font-weight:700;color:'+pc(stat.rate)+'">'+(stat.rate??'—')+'%</span>':'')+
+    '<span style="font-size:10px;font-weight:700;padding:1px 7px;border-radius:99px;background:'+(isHt?'#fee2e2':'#dbeafe')+';color:'+(isHt?'#b91c1c':'#1d4ed8')+';margin-left:6px">'+(isHt?'HOT':'COLD')+'</span>'+
+    '</div>'+
+    '<table style="width:100%;border-collapse:collapse"><thead><tr style="background:#f1f5f9">'+
+    '<th style="padding:5px 8px;text-align:left;font-size:10px;font-weight:700;color:#64748b">Date</th>'+
+    '<th style="padding:5px 8px;text-align:center;font-size:10px;font-weight:700;color:#64748b">CP1 Assembly</th>'+
+    '<th style="padding:5px 8px;text-align:center;font-size:10px;font-weight:700;color:#64748b">CP2 QC Check</th>'+
+    '<th style="padding:5px 8px;text-align:center;font-size:10px;font-weight:700;color:#64748b">CP3 Dispatch</th>'+
+    '<th style="padding:5px 8px;text-align:left;font-size:10px;font-weight:700;color:#64748b">Note</th>'+
+    '<th style="padding:5px 8px;text-align:left;font-size:10px;font-weight:700;color:#64748b">Corrective Action</th>'+
+    '</tr></thead><tbody>'+rows+'</tbody></table></div>';
+}).join('');
+const detailHtml=detailCards.trim()?'<div style="margin-top:20px"><div style="font-size:13px;font-weight:700;color:#0f172a;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid #e5e7eb">Full detail — all dishes</div>'+detailCards+'</div>':'';
 return '<div style="background:#fff;border-radius:14px;border:1px solid #e5e7eb;padding:20px;margin-bottom:20px">'+
 '<div style="display:flex;align-items:center;gap:12px;padding-bottom:14px;margin-bottom:16px;border-bottom:1px solid #f1f5f9">'+
 '<div style="width:42px;height:42px;border-radius:10px;background:'+(city.class==='berlin'?'#2563eb':'#16a34a')+';color:white;font-size:20px;font-weight:800;display:flex;align-items:center;justify-content:center">'+city.name.charAt(0)+'</div>'+
@@ -867,7 +909,50 @@ return '<div style="background:#fff;border-radius:14px;border:1px solid #e5e7eb;
 (topIssues.length?'<div style="background:#fef2f2;border-radius:10px;padding:10px 14px;border:1px solid #fecaca;margin-bottom:14px"><div style="font-size:11px;font-weight:700;color:#b91c1c;margin-bottom:6px">Needs attention</div>'+topIssues.map(d=>'<div style="display:flex;align-items:center;gap:8px;padding:4px 0;border-bottom:1px solid #fee2e2"><b style="font-size:12px;color:#0f172a;width:20px">'+escapeHtml(d.dish.dishLetter)+'</b><span style="font-size:11px;color:#374151;flex:1">'+escapeHtml(d.dish.dishName)+'</span><span style="font-size:11px;font-weight:700;padding:1px 7px;border-radius:99px;background:#fee2e2;color:#b91c1c">'+d.fail+' fail</span><span style="font-size:12px;font-weight:800;color:'+pc(d.rate)+'">'+d.rate+'%</span></div>').join('')+'</div>':'')+
 '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:8px">'+
 dishStats.map(d=>'<div style="border:1px solid #e5e7eb;border-radius:10px;padding:10px;background:#fafafa"><div style="display:flex;align-items:center;gap:6px;margin-bottom:5px"><b style="font-size:13px;color:#0f172a">'+escapeHtml(d.dish.dishLetter)+'</b><span style="font-size:11px;color:#374151;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+escapeHtml(d.dish.dishName)+'</span><span style="font-size:9px;font-weight:700;padding:1px 5px;border-radius:99px;background:'+(isCold(d.dish)?'#dbeafe':'#fee2e2')+';color:'+(isCold(d.dish)?'#1d4ed8':'#b91c1c')+'">'+(isCold(d.dish)?'C':'H')+'</span></div><div style="display:flex;align-items:center;gap:8px"><div style="flex:1"><div style="height:5px;background:#f1f5f9;border-radius:3px"><div style="height:5px;border-radius:3px;background:'+pc(d.rate)+';width:'+(d.rate??0)+'%"></div></div><div style="display:flex;justify-content:space-between;margin-top:2px"><span style="font-size:9px;color:#9ca3af">'+d.total+' days logged</span><span style="font-size:11px;font-weight:700;color:'+pc(d.rate)+'">'+(d.rate==null?'—':d.rate+'%')+'</span></div><div style="font-size:9px;color:#64748b">'+(d.pass?'<span style="color:#16a34a">'+d.pass+'✓ </span>':'')+(d.check?'<span style="color:#ea580c">'+d.check+'~ </span>':'')+(d.fail?'<span style="color:#b91c1c">'+d.fail+'✗</span>':'')+'</div></div>'+spark(d.temps)+'</div></div>').join('')+
-'</div></div>';
+
+// Detailed per-dish table
+const fmtDate2=iso=>{const d=new Date(iso+'T00:00:00Z');return d.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short',timeZone:'UTC'});};
+const fmtTemp2=v=>v==null?'—':v.toFixed(1)+'°';
+const bg2={ok:'#dcfce7',warn:'#fef3c7',crit:'#fee2e2',na:'#f3f4f6'};
+const clr2={ok:'#16a34a',warn:'#ea580c',crit:'#b91c1c',na:'#9ca3af'};
+const lbl2={ok:'Pass',warn:'Check',crit:'Fail',na:'—'};
+const badge2=(v,s)=>v!=null?'<span style="display:inline-block;padding:2px 5px;border-radius:4px;font-size:10px;font-weight:700;background:'+bg2[s]+';color:'+clr2[s]+'">'+fmtTemp2(v)+'<br><span style="font-size:9px">'+lbl2[s]+'</span></span>':'<span style="color:#9ca3af;font-size:10px">—</span>';
+const detailCards=dishes.map(dish=>{
+  const isHt=!isCold(dish);
+  const rows=dates.map(date=>{
+    const ck=(data.checks[date]||{})[dish.dishLetter]||{};
+    const a=ck.assembly&&(ck.assembly.temps?avg(ck.assembly.temps):ck.assembly.temp!=null?ck.assembly.temp:null);
+    const q=avg(ck.temperatures);
+    const dp3=ck.dispatch&&(ck.dispatch.temps?avg(ck.dispatch.temps):ck.dispatch.temp!=null?ck.dispatch.temp:null);
+    const note=(ck.comment||'').trim();
+    const action=(ck.correctiveAction||'').trim();
+    if(a==null&&q==null&&dp3==null&&!note&&!action)return '';
+    const sA=isHt?stH(a):(a==null?'na':a>20?'crit':'warn');
+    const sQ=isHt?stH(q):stC(q);
+    const sD=isHt?stH(dp3):stC(dp3);
+    return '<tr style="border-bottom:1px solid #f1f5f9"><td style="padding:5px 8px;font-size:11px;color:#475569;white-space:nowrap">'+fmtDate2(date)+'</td><td style="padding:5px 8px;text-align:center">'+badge2(a,sA)+'</td><td style="padding:5px 8px;text-align:center">'+badge2(q,sQ)+'</td><td style="padding:5px 8px;text-align:center">'+badge2(dp3,sD)+'</td><td style="padding:5px 8px;font-size:10px;color:#374151;max-width:130px">'+escapeHtml(note||'—')+'</td><td style="padding:5px 8px;font-size:10px;color:#374151;max-width:130px">'+escapeHtml(action||'—')+'</td></tr>';
+  }).filter(Boolean).join('');
+  if(!rows)return '';
+  const stat=dishStats.find(d=>d.dish.dishLetter===dish.dishLetter);
+  return '<div style="margin-bottom:12px;border:1px solid #e5e7eb;border-radius:10px;overflow:hidden">'+
+    '<div style="background:#f8fafc;padding:8px 12px;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;gap:8px">'+
+    '<b style="font-size:16px;color:#0f172a">'+escapeHtml(dish.dishLetter)+'</b>'+
+    '<span style="font-size:12px;font-weight:600;color:#1f2937;flex:1">'+escapeHtml(dish.dishName)+'</span>'+
+    (stat?'<span style="font-size:12px;font-weight:700;color:'+pc(stat.rate)+'">'+(stat.rate??'—')+'%</span>':'')+
+    '<span style="font-size:10px;font-weight:700;padding:1px 7px;border-radius:99px;background:'+(isHt?'#fee2e2':'#dbeafe')+';color:'+(isHt?'#b91c1c':'#1d4ed8')+';margin-left:6px">'+(isHt?'HOT':'COLD')+'</span>'+
+    '</div>'+
+    '<table style="width:100%;border-collapse:collapse"><thead><tr style="background:#f1f5f9">'+
+    '<th style="padding:5px 8px;text-align:left;font-size:10px;font-weight:700;color:#64748b">Date</th>'+
+    '<th style="padding:5px 8px;text-align:center;font-size:10px;font-weight:700;color:#64748b">CP1 Assembly</th>'+
+    '<th style="padding:5px 8px;text-align:center;font-size:10px;font-weight:700;color:#64748b">CP2 QC Check</th>'+
+    '<th style="padding:5px 8px;text-align:center;font-size:10px;font-weight:700;color:#64748b">CP3 Dispatch</th>'+
+    '<th style="padding:5px 8px;text-align:left;font-size:10px;font-weight:700;color:#64748b">Note</th>'+
+    '<th style="padding:5px 8px;text-align:left;font-size:10px;font-weight:700;color:#64748b">Corrective Action</th>'+
+    '</tr></thead><tbody>'+rows+'</tbody></table></div>';
+}).join('');
+const detailHtml=detailCards.trim()?'<div style="margin-top:20px"><div style="font-size:13px;font-weight:700;color:#0f172a;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid #e5e7eb">Full detail — all dishes</div>'+detailCards+'</div>':'';
+return '<div style="background:#fff;border-radius:14px;border:1px solid #e5e7eb;padding:20px;margin-bottom:20px">'+
+'<div style="display:flex;align-items:center;gap:12px;padding-bottom:14px;margin-bottom:16px;border-bottom:1px solid #f1f5f9">' + city.name + '</div>' + detailHtml + '</div>';
 }
 
 async function loadAndRender(){

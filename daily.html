@@ -790,6 +790,53 @@ function renderWeekCompare(berlinData, munichData, dates) {
   </div>`;
 }
 
+
+function renderMonthlyReport(data, dates) {
+  const city = data.city;
+  const fmtDate = iso => { const d=new Date(iso+'T00:00:00Z'); return d.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short',timeZone:'UTC'}); };
+  const fmtTemp = v => v==null ? '—' : v.toFixed(1)+'°';
+  const stH = v => v==null?'na':v>=HOT_PASS?'ok':v>=HOT_WARN_MIN?'warn':'crit';
+  const stC = v => v==null?'na':v<=COLD_PASS?'ok':'crit';
+  const stCp1 = v => v==null?'na':v>20?'crit':'warn';
+  const lbl = {ok:'Pass',warn:'Check',crit:'Fail',na:'—'};
+  const clr = {ok:'#16a34a',warn:'#ea580c',crit:'#b91c1c',na:'#9ca3af'};
+  const bg  = {ok:'#dcfce7',warn:'#fef3c7',crit:'#fee2e2',na:'#f3f4f6'};
+  const dishMap = new Map();
+  for (const wk of data.weeks) {
+    const menu = data.menus[wk];
+    if (menu && menu.dishes) for (const d of menu.dishes) if (!dishMap.has(d.dishLetter)) dishMap.set(d.dishLetter, d);
+  }
+  const dishes = Array.from(dishMap.values()).sort((a,b) => a.dishLetter.localeCompare(b.dishLetter,undefined,{numeric:true}));
+  const renderDish = dish => {
+    const isHot = !isCold(dish);
+    const rows = dates.map(date => {
+      const ck = (data.checks[date]||{})[dish.dishLetter]||{};
+      const a = ck.assembly&&(ck.assembly.temps?avg(ck.assembly.temps):ck.assembly.temp!=null?ck.assembly.temp:null);
+      const q = avg(ck.temperatures);
+      const dp = ck.dispatch&&(ck.dispatch.temps?avg(ck.dispatch.temps):ck.dispatch.temp!=null?ck.dispatch.temp:null);
+      const note = (ck.comment||'').trim();
+      const action = (ck.correctiveAction||'').trim();
+      if (a==null&&q==null&&dp==null&&!note&&!action) return '';
+      const sA = isHot?stH(a):stCp1(a);
+      const sQ = isHot?stH(q):stC(q);
+      const sD = isHot?stH(dp):stC(dp);
+      const badge = (v,s) => v!=null ? '<span style="display:inline-block;padding:2px 6px;border-radius:4px;font-size:10px;font-weight:700;background:'+bg[s]+';color:'+clr[s]+'">'+fmtTemp(v)+'<br><span style="font-size:9px">'+lbl[s]+'</span></span>' : '<span style="color:#9ca3af;font-size:11px">—</span>';
+      return '<tr style="border-bottom:1px solid #f1f5f9"><td style="padding:6px 8px;font-size:11px;color:#475569;white-space:nowrap">'+fmtDate(date)+'</td><td style="padding:6px 8px;text-align:center">'+badge(a,sA)+'</td><td style="padding:6px 8px;text-align:center">'+badge(q,sQ)+'</td><td style="padding:6px 8px;text-align:center">'+badge(dp,sD)+'</td><td style="padding:6px 8px;font-size:10px;color:#374151;max-width:130px">'+escapeHtml(note||'—')+'</td><td style="padding:6px 8px;font-size:10px;color:#374151;max-width:130px">'+escapeHtml(action||'—')+'</td></tr>';
+    }).filter(Boolean).join('');
+    if (!rows) return '';
+    return '<div style="margin-bottom:14px;border:1px solid #e5e7eb;border-radius:10px;overflow:hidden"><div style="background:#f8fafc;padding:9px 12px;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;gap:8px"><span style="font-size:17px;font-weight:800;color:#0f172a">'+escapeHtml(dish.dishLetter)+'</span><span style="font-size:13px;font-weight:600;color:#1f2937">'+escapeHtml(dish.dishName)+'</span><span style="margin-left:auto;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:'+(isHot?'#b91c1c':'#1d4ed8')+'">'+(isHot?'Hot':'Cold')+'</span></div><table style="width:100%;border-collapse:collapse"><thead><tr style="background:#f1f5f9"><th style="padding:6px 8px;text-align:left;font-size:10px;font-weight:700;color:#64748b;text-transform:uppercase">Date</th><th style="padding:6px 8px;text-align:center;font-size:10px;font-weight:700;color:#64748b;text-transform:uppercase">CP1</th><th style="padding:6px 8px;text-align:center;font-size:10px;font-weight:700;color:#64748b;text-transform:uppercase">CP2</th><th style="padding:6px 8px;text-align:center;font-size:10px;font-weight:700;color:#64748b;text-transform:uppercase">CP3</th><th style="padding:6px 8px;text-align:left;font-size:10px;font-weight:700;color:#64748b;text-transform:uppercase">Note</th><th style="padding:6px 8px;text-align:left;font-size:10px;font-weight:700;color:#64748b;text-transform:uppercase">Action</th></tr></thead><tbody>'+rows+'</tbody></table></div>';
+  };
+  const sc = computeRangeScorecard(data);
+  const hotPct = sc.hot.total===0?null:Math.round(sc.hot.pass/sc.hot.total*100);
+  const coldPct = sc.cold.total===0?null:Math.round(sc.cold.pass/sc.cold.total*100);
+  const ovPct = sc.overall.pct;
+  const hotDishes = dishes.filter(d=>!isCold(d));
+  const coldDishes = dishes.filter(d=>isCold(d));
+  const body = (hotDishes.length?'<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:#b91c1c;padding:4px 0 10px">Hot dishes</div>'+hotDishes.map(renderDish).join(''):'')+(coldDishes.length?'<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:#1d4ed8;padding:4px 0 10px;margin-top:4px">Cold dishes</div>'+coldDishes.map(renderDish).join(''):'');
+  if (!body.trim()) return '';
+  return '<div style="background:#fff;border-radius:14px;border:1px solid #e5e7eb;padding:20px;margin-bottom:20px"><div style="display:flex;align-items:center;gap:12px;padding-bottom:14px;margin-bottom:16px;border-bottom:1px solid #f1f5f9"><div style="width:42px;height:42px;border-radius:10px;background:'+(city.class==='berlin'?'#2563eb':'#16a34a')+';color:white;font-size:20px;font-weight:800;display:flex;align-items:center;justify-content:center">'+city.name.charAt(0)+'</div><div><div style="font-size:18px;font-weight:800;color:#0f172a">'+city.name+' · Monthly QC Report</div><div style="font-size:12px;color:#64748b;margin-top:2px">'+humanDate(dates[0])+' — '+humanDate(dates[dates.length-1])+' · '+dates.length+' days</div></div><div style="margin-left:auto;display:flex;gap:16px;text-align:center"><div><div style="font-size:22px;font-weight:800;color:'+(ovPct>=80?'#16a34a':ovPct>=60?'#ea580c':'#b91c1c')+'">'+(ovPct==null?'—':ovPct+'%')+'</div><div style="font-size:10px;color:#64748b;text-transform:uppercase">Overall</div></div><div><div style="font-size:22px;font-weight:800;color:'+(hotPct==null?'#9ca3af':hotPct>=80?'#16a34a':hotPct>=60?'#ea580c':'#b91c1c')+'">'+(hotPct==null?'—':hotPct+'%')+'</div><div style="font-size:10px;color:#64748b;text-transform:uppercase">Hot</div></div><div><div style="font-size:22px;font-weight:800;color:'+(coldPct==null?'#9ca3af':coldPct>=80?'#16a34a':coldPct>=60?'#ea580c':'#b91c1c')+'">'+(coldPct==null?'—':coldPct+'%')+'</div><div style="font-size:10px;color:#64748b;text-transform:uppercase">Cold</div></div></div></div>'+body+'</div>';
+}
+
 async function loadAndRender(){
     const r = rangeState.preset === 'custom' ? { start: rangeState.start, end: rangeState.end } : rangeForPreset(rangeState.preset);
     if(!r.start || !r.end || r.start > r.end){
@@ -810,10 +857,12 @@ async function loadAndRender(){
             .catch(err => ({ city: c, dates, weeks:[], menus:{}, checks:{}, error: err.message || String(err) }))
         ));
         // Weekly comparison page
-    const isWeekly = ['this-week','last-week','this-month','last-month'].includes(rangeState.preset) && dates.length > 1;
+    const isWeekly = ['this-week','last-week'].includes(rangeState.preset) && dates.length > 1;
+    const isMonthly = ['this-month','last-month'].includes(rangeState.preset) && dates.length > 1;
     const weekCompareHtml = isWeekly && results.length >= 2 && !results[0].error && !results[1].error
       ? renderWeekCompare(results[0], results[1], dates)
       : '';
+    if (isMonthly) { host.innerHTML = results.filter(r=>!r.error).map(r => renderMonthlyReport(r, dates)).join(''); return; }
     host.innerHTML = weekCompareHtml + results.map(r => {
             if(r.error){
                 return `<div class="city"><div class="city-head ${r.city.class}"><div class="mark">${r.city.name.charAt(0)}</div><div class="info"><div class="name">${r.city.name}</div><div class="meta">Failed to load</div></div></div><div class="err">${escapeHtml(r.error)}</div></div>`;

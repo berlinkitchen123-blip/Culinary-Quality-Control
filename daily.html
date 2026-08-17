@@ -816,7 +816,7 @@ const dishes=Array.from(byPid.values()).sort((a,b)=>a.dishName.localeCompare(b.d
 // Daily compliance
 const dailyC=dates.map(d=>{let p=0,t=0;ckByPid.forEach(dm=>{const e=dm.get(d);if(!e)return;const v=gD(e.ck)!=null?gD(e.ck):gQ(e.ck);const st=v==null?'na':(!isCold(e.dish)?stH(v):stC(v));if(st!=='na'){t++;if(st==='ok'||st==='warn')p++;}});return t===0?null:Math.round(p/t*100);});
 // Dish stats
-const stats=[];byPid.forEach((dish,pid)=>{const dm=ckByPid.get(pid)||new Map();let pass=0,chk=0,fail=0,tot=0;const ts=[];dm.forEach(e=>{const v=gD(e.ck)!=null?gD(e.ck):gQ(e.ck);const st=v==null?'na':(!isCold(e.dish)?stH(v):stC(v));if(st!=='na'){tot++;if(st==='ok')pass++;else if(st==='warn')chk++;else fail++;}if(gD(e.ck)!=null)ts.push(gD(e.ck));});const rate=tot===0?null:Math.round((pass+chk)/tot*100);stats.push({dish,pid,pass,chk,fail,tot,rate,ts,dm});});
+const stats=[];byPid.forEach((dish,pid)=>{const dm=ckByPid.get(pid)||new Map();let pass=0,chk=0,fail=0,tot=0;const ts=[];dm.forEach(e=>{const v=gD(e.ck)!=null?gD(e.ck):gQ(e.ck);const st=v==null?'na':(!isCold(e.dish)?stH(v):stC(v));if(st!=='na'){tot++;if(st==='ok')pass++;else if(st==='warn')chk++;else fail++;}if(gD(e.ck)!=null)ts.push(gD(e.ck));});const rate=tot===0?null:Math.round((pass+chk)/tot*100);var notes=[],acts=[];dm.forEach(function(e){var n=(e.ck.comment||"").trim(),a=(e.ck.correctiveAction||"").trim();if(n&&notes.indexOf(n)<0)notes.push(n);if(a&&acts.indexOf(a)<0)acts.push(a);});stats.push({dish,pid,pass,chk,fail,tot,rate,ts,dm,notes,acts});});
 stats.sort((a,b)=>(a.rate??100)-(b.rate??100));
 const sc=computeRangeScorecard(data);
 const op=sc.overall.pct,hp=sc.hot.total===0?null:Math.round(sc.hot.pass/sc.hot.total*100),cp=sc.cold.total===0?null:Math.round(sc.cold.pass/sc.cold.total*100);

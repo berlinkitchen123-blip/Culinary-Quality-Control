@@ -14,7 +14,29 @@
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%232563eb'/%3E%3Ctext x='16' y='22' text-anchor='middle' font-family='Inter,sans-serif' font-weight='800' font-size='14' fill='white'%3EBB%3C/text%3E%3C/svg%3E">
 
     <!-- PDF generation libraries (loaded lazily — only needed for Reports) -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer>
+// 3D tilt on dish tiles
+document.addEventListener('mousemove', function(e){
+  const tile = e.target.closest('.lt-tile');
+  if(!tile) return;
+  const r=tile.getBoundingClientRect(),x=(e.clientX-r.left)/r.width-.5,y=(e.clientY-r.top)/r.height-.5;
+  tile.style.transform='perspective(600px) rotateY('+(x*10)+'deg) rotateX('+(-y*10)+'deg) translateZ(4px)';
+});
+document.addEventListener('mouseleave', function(e){
+  const tile = e.target.closest && e.target.closest('.lt-tile');
+  if(tile) tile.style.transform='';
+}, true);
+document.addEventListener('click', function(e){
+  const btn=e.target.closest('.btn');
+  if(!btn)return;
+  const rip=document.createElement('span');rip.className='bb-rip';
+  const rect=btn.getBoundingClientRect(),s=Math.max(rect.width,rect.height);
+  rip.style.cssText='width:'+s+'px;height:'+s+'px;left:'+(e.clientX-rect.left-s/2)+'px;top:'+(e.clientY-rect.top-s/2)+'px';
+  btn.classList.add('btn-ripple');btn.appendChild(rip);
+  setTimeout(()=>rip.remove(),600);
+});
+
+</script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js" defer></script>
 
     <!-- Theme bootstrap — applied BEFORE first paint to avoid a flash -->

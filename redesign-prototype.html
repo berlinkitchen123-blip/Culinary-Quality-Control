@@ -943,6 +943,17 @@ html[data-theme="dark"] #report-view-host{background:#f9fafb}
 .settings-help summary::before{content:'▸ ';color:var(--mute);transition:transform 160ms ease;display:inline-block}
 .settings-help[open] summary::before{transform:rotate(90deg)}
 .settings-help pre{background:white;border:1px solid var(--line);border-radius:6px;padding:10px;font-size:11px;overflow:auto;margin-top:8px;max-height:240px;font-family:ui-monospace,monospace}
+
+.lt-tile{transform-style:preserve-3d;transition:box-shadow .3s,border-color .3s}
+.lt-tile:hover{box-shadow:0 14px 36px rgba(0,0,0,.2)}
+.stage-card{position:relative;overflow:hidden;transition:transform .25s cubic-bezier(.23,1,.32,1),box-shadow .25s}
+.stage-card:hover{transform:translateY(-3px);box-shadow:0 12px 28px rgba(0,0,0,.15)}
+.stage-card::after{content:'';position:absolute;inset:-1px;border-radius:inherit;background:linear-gradient(135deg,rgba(255,255,255,.06),transparent);pointer-events:none;opacity:0;transition:opacity .3s}
+.stage-card:hover::after{opacity:1}
+.btn-ripple{position:relative;overflow:hidden}
+.bb-rip{position:absolute;border-radius:50%;background:rgba(255,255,255,.25);transform:scale(0);animation:bbr .55s linear;pointer-events:none}
+@keyframes bbr{to{transform:scale(4);opacity:0}}
+
 </style>
 </head>
 <body>

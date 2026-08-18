@@ -243,6 +243,27 @@ body.compact .dish-row.is-ok{display:grid}
     body.compact{background:white}
     body.compact .city{page-break-inside:avoid;break-inside:avoid}
 }
+
+/* ── BB Enhanced Buttons (from Animation Lab) ── */
+.btn-bb{display:inline-flex;align-items:center;gap:.5rem;padding:8px 14px;border-radius:8px;font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;border:none;position:relative;overflow:hidden;transition:all .3s;text-decoration:none}
+/* Sheen – Print button */
+.btn-bb-sheen{background:linear-gradient(135deg,#2563eb,#1d4ed8);color:#fff}
+.btn-bb-sheen::before{content:'';position:absolute;top:-50%;left:-75%;width:50%;height:200%;background:rgba(255,255,255,.22);transform:skewX(-20deg);transition:left .5s cubic-bezier(.4,0,.2,1)}
+.btn-bb-sheen:hover::before{left:125%}
+.btn-bb-sheen:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(37,99,235,.35)}
+/* Liquid – Copy AI button */
+.btn-bb-liquid{background:transparent;color:#2563eb;border:1.5px solid #2563eb}
+.btn-bb-liquid::before{content:'';position:absolute;top:-100%;left:-10%;width:120%;height:0;background:#2563eb;border-radius:50% 50% 0 0/40% 40% 0 0;transition:height .4s cubic-bezier(.4,0,.2,1),top .4s cubic-bezier(.4,0,.2,1);z-index:0}
+.btn-bb-liquid:hover::before{top:0;height:200%}
+.btn-bb-liquid:hover{color:#fff}
+.btn-bb-liquid span{position:relative;z-index:1}
+/* Morph – Refresh & Copy email */
+.btn-bb-morph{background:#f8fafc;color:#1f2937;border:1px solid #e5e7eb}
+.btn-bb-morph:hover{border-radius:24px;background:#0f172a;color:#fff;border-color:#0f172a;transform:scale(1.04)}
+/* Ripple */
+.btn-bb .ripple{position:absolute;border-radius:50%;background:rgba(255,255,255,.3);transform:scale(0);animation:bb-ripple .55s linear;pointer-events:none}
+@keyframes bb-ripple{to{transform:scale(4);opacity:0}}
+
 </style>
 </head>
 <body>
@@ -253,9 +274,9 @@ body.compact .dish-row.is-ok{display:grid}
         <div class="sub" id="sub-line">Loading…</div>
     </div>
     <div class="actions">
-        <button class="btn" type="button" onclick="window.location.reload()">↻ Refresh</button>
-        <button class="btn" type="button" onclick="copySummary()">📋 Copy email summary</button>
-        <button class="btn primary" type="button" onclick="window.print()">🖨️ Print / Save as PDF</button>
+        <button class="btn btn-bb btn-bb-morph" type="button" onclick="window.location.reload();addRipple(event,this)">↻ Refresh</button>
+        <button class="btn btn-bb btn-bb-morph" type="button" onclick="copySummary();addRipple(event,this)">📋 Copy email summary</button>
+        <button class="btn btn-bb btn-bb-sheen" type="button" onclick="window.print();addRipple(event,this)">🖨️ Print / Save as PDF</button>
     </div>
 </div>
 
@@ -949,6 +970,7 @@ async function loadAndRender(){
     }
 }
 
+window.addRipple=function(e,btn){const r=document.createElement('span');r.className='ripple';const rect=btn.getBoundingClientRect();const s=Math.max(rect.width,rect.height);r.style.cssText='width:'+s+'px;height:'+s+'px;left:'+(e.clientX-rect.left-s/2)+'px;top:'+(e.clientY-rect.top-s/2)+'px';btn.appendChild(r);setTimeout(()=>r.remove(),600);};
 window.copySummary = function(){
     const data = window.__cityData || {};
     const r = rangeState.preset === 'custom' ? { start: rangeState.start, end: rangeState.end } : rangeForPreset(rangeState.preset);

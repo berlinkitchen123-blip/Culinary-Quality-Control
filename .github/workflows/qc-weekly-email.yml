@@ -3,9 +3,6 @@ name: QC weekly email
 # See qc-daily-email.yml for the cron-vs-DST explanation.
 
 on:
-  schedule:
-    - cron: '7 8 * * 5'   # 08:07 UTC Friday = 10:07 Berlin summer
-    - cron: '7 9 * * 5'   # 09:07 UTC Friday = 10:07 Berlin winter
   workflow_dispatch:
 
 jobs:

@@ -22,19 +22,11 @@ jobs:
   send:
     runs-on: ubuntu-latest
     steps:
-      - name: Check that it's 10:00 Berlin now
-        id: check
-        run: |
-          HOUR=$(TZ=Europe/Berlin date +%H)
-          MIN=$(TZ=Europe/Berlin date +%M)
-          echo "Berlin time right now: ${HOUR}:${MIN}"
-          if [ "$HOUR" = "10" ] || [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            echo "proceed=true" >> $GITHUB_OUTPUT
-            echo "✓ Proceeding (manual trigger or matches 10:00 Berlin)."
-          else
-            echo "proceed=false" >> $GITHUB_OUTPUT
-            echo "⏭  Skipping — the OTHER scheduled run today (DST partner) will fire at 10:00 Berlin."
-          fi
+      - name: Manual trigger
+  id: check
+  run: |
+    echo "proceed=true" >> $GITHUB_OUTPUT
+    echo "Manual run confirmed."
 
       - name: Checkout
         if: steps.check.outputs.proceed == 'true'

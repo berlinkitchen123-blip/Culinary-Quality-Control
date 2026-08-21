@@ -1,6 +1,4 @@
 name: QC weekly email
-# Always sends at 10:00 Europe/Berlin every Friday — DST-proof.
-# See qc-daily-email.yml for the cron-vs-DST explanation.
 
 on:
   workflow_dispatch:
@@ -9,62 +7,41 @@ jobs:
   send:
     runs-on: ubuntu-latest
     steps:
-      - name: Check that it's 10:00 Berlin now
-        id: check
-        run: |
-          HOUR=$(TZ=Europe/Berlin date +%H)
-          echo "Berlin time right now: ${HOUR}h"
-          if [ "$HOUR" = "10" ] || [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            echo "proceed=true" >> $GITHUB_OUTPUT
-          else
-            echo "proceed=false" >> $GITHUB_OUTPUT
-            echo "⏭  Skipping — DST partner will fire at 10:00 Berlin."
-          fi
-
       - name: Checkout
-        if: steps.check.outputs.proceed == 'true'
         uses: actions/checkout@v4
 
       - name: Set up Node
-        if: steps.check.outputs.proceed == 'true'
         uses: actions/setup-node@v4
         with:
           node-version: '22'
 
       - name: Install dependencies
-        if: steps.check.outputs.proceed == 'true'
         working-directory: scripts
         run: npm install --no-audit --no-fund
 
       - name: Fetch Gmail credentials from Firebase
-        if: steps.check.outputs.proceed == 'true'
         id: gmail
         run: |
           set -euo pipefail
-          RAW='{"user":"x","appPassword":"x","fromName":"Bellabona Kitchen","to":"Yousuf@bellabona.com","cc":"Matteo.cricco@bellabona.com, niccolo.lapini@bellabona.com, Abbas@bellabona.com, harsh@bellabona.com, Ivan@bellabona.com, Dhiraj@bellabona.com, Roberto@bellabona.com "}'
-          if [ -z "$RAW" ] || [ "$RAW" = "null" ]; then
-            echo "::error::No Gmail config found in Firebase. Open the app → Settings → Email reports (Gmail SMTP) and fill it in."
-            exit 1
-          fi
+          RAW='{"user":"x","appPassword":"x","fromName":"Bellabona Kitchen","to":"Marcus@bellabona.com","cc":"Matteo.cricco@bellabona.com, niccolo.lapini@bellabona.com, Abbas@bellabona.com, harsh@bellabona.com, yousuf@bellabona.com, Dhiraj@bellabona.com, Kurt@bellabona.com, Roberto@bellabona.com "}'
           OUT=$(node -e "
-            const c = $RAW;
-            const fromName = (c.fromName || 'Bellabona Kitchen').trim();
-            const fromAddr = (c.fromAddress || c.user || '').trim();
-            const sender = fromName ? fromName + ' <' + fromAddr + '>' : fromAddr;
-            const to = (c.to || 'Marcus@bellabona.com').trim();
-            const cc = (c.cc || '').trim();
-            process.stdout.write([
-              'user='   + (c.user || ''),
-              'pass='   + (c.appPassword || ''),
-              'sender=' + sender,
-              'to='     + to,
-              'cc='     + cc
-            ].join('\n'));
+          const c = $RAW;
+          const fromName = (c.fromName || 'Bellabona Kitchen').trim();
+          const fromAddr = (c.fromAddress || c.user || '').trim();
+          const sender = fromName ? fromName + ' <' + fromAddr + '>' : fromAddr;
+          const to = (c.to || 'Marcus@bellabona.com').trim();
+          const cc = (c.cc || '').trim();
+          process.stdout.write([
+            'user=' + (c.user || ''),
+            'pass=' + (c.appPassword || ''),
+            'sender=' + sender,
+            'to=' + to,
+            'cc=' + cc
+          ].join('\n'));
           ")
           echo "$OUT" >> "$GITHUB_OUTPUT"
 
       - name: Generate PDF and email via Gmail SMTP
-        if: steps.check.outputs.proceed == 'true'
         working-directory: scripts
         env:
           GMAIL_USER: ${{ secrets.GMAIL_USER }}

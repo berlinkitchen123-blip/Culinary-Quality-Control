@@ -23,7 +23,7 @@ jobs:
         id: gmail
         run: |
           set -euo pipefail
-          RAW='{"user":"x","appPassword":"x","fromName":"Bellabona Kitchen","to":"Yousuf@bellabona.com","cc":"Matteo.cricco@bellabona.com, niccolo.lapini@bellabona.com, Abbas@bellabona.com, harsh@bellabona.com, Dhiraj@bellabona.com, Ivan@bellabona, Roberto@bellabona.com "}'
+          RAW='{"user":"x","appPassword":"x","fromName":"Bellabona Kitchen","to":"Yousuf@bellabona.com","cc":"Matteo.cricco@bellabona.com, niccolo.lapini@bellabona.com, Abbas@bellabona.com, harsh@bellabona.com, Dhiraj@bellabona.com, charmaine@bellabona.com, Ivan@bellabona, Roberto@bellabona.com "}'
           OUT=$(node -e "
           const c = $RAW;
           const fromName = (c.fromName || 'Bellabona Kitchen').trim();

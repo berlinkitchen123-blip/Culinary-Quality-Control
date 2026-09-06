@@ -3581,7 +3581,7 @@ function renderStageTab(stage, label, dish, c){
 
             <div class="stage-form" style="margin-top:14px">
                 <div class="field">
-                    <label class="label">Weight (optional, g)</label>
+                    <label class="label">Weight (optional, g)${dish.theoreticalWeight ? '<span style="margin-left:8px;font-size:11px;font-weight:700;padding:2px 8px;border-radius:99px;background:#dbeafe;color:#1d4ed8">Target: '+dish.theoreticalWeight+'g</span>' : ''}</label>
                     <input class="num" type="number" step="1" inputmode="numeric" data-stage-input="weight" value="${data.weight!=null?data.weight:''}" placeholder="—" />
                 </div>
                 <div class="field full">

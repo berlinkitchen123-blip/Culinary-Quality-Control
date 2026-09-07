@@ -1413,11 +1413,12 @@ if(activeCity.slug === 'berlin' || activeCity.slug === 'munich'){
         document.getElementById('auth-signout-btn').onclick = () => signOut(auth);
     }
 
-    // Auth removed — app starts directly without login
+    // Auth removed — no login required
     overlay.remove();
     window.__qc_user = { email: 'ops@bellabona.com' };
     window.__qc_signOut = () => {};
 }
+
 
 const HOT_MIN = 65;
 const COLD_MAX = 7;

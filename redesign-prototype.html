@@ -1413,9 +1413,9 @@ if(activeCity.slug === 'berlin' || activeCity.slug === 'munich'){
         document.getElementById('auth-signout-btn').onclick = () => signOut(auth);
     }
 
-    // Auth bypassed — skip login, go straight to app
+    // Auth removed — app starts directly without login
     overlay.remove();
-    window.__qc_user = { email: 'ops@bellabona.com', displayName: 'Kitchen Ops' };
+    window.__qc_user = { email: 'ops@bellabona.com' };
     window.__qc_signOut = () => {};
 }
 

@@ -1260,7 +1260,7 @@ html[data-theme="dark"] #report-view-host{background:#f9fafb}
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
 import { getDatabase, ref, get, onValue, set, update, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
-import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 
 /* === Multi-city config ===
    Each city has its own Firebase project, fully isolated data (menus,
@@ -1413,7 +1413,8 @@ if(activeCity.slug === 'berlin' || activeCity.slug === 'munich'){
         document.getElementById('auth-signout-btn').onclick = () => signOut(auth);
     }
 
-    // Auth removed — no login required
+    // Auth: sign in anonymously — no login screen, valid Firebase token
+    try { await signInAnonymously(auth); } catch(e) { console.warn('Anon auth failed',e); }
     overlay.remove();
     window.__qc_user = { email: 'ops@bellabona.com' };
     window.__qc_signOut = () => {};

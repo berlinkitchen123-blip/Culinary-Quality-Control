@@ -5643,8 +5643,28 @@ async function captureFrame(letter){
         else if(h > maxSide){ w = Math.round(w * maxSide / h); h = maxSide; }
         const canvas = document.createElement('canvas');
         canvas.width = w; canvas.height = h;
-        canvas.getContext('2d').drawImage(vid, 0, 0, w, h);
-        const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+        // Wait for video to be ready (fixes "capture failed" on some devices)
+        if(!vid.videoWidth || !vid.videoHeight) {
+            await new Promise(res => setTimeout(res, 500));
+        }
+        if(!vid.videoWidth || !vid.videoHeight) {
+            throw new Error('Video stream not ready — please wait and try again');
+        }
+        let dataUrl;
+        // Try ImageCapture API first (better quality on mobile)
+        try {
+            const track = vid.srcObject && vid.srcObject.getVideoTracks()[0];
+            if(track && window.ImageCapture) {
+                const ic = new ImageCapture(track);
+                const blob = await ic.takePhoto();
+                dataUrl = await new Promise((res,rej)=>{const fr=new FileReader();fr.onload=()=>res(fr.result);fr.onerror=rej;fr.readAsDataURL(blob);});
+            }
+        } catch(_) { /* fall through to canvas */ }
+        // Canvas fallback
+        if(!dataUrl) {
+            canvas.getContext('2d').drawImage(vid, 0, 0, w, h);
+            dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+        }
         toast('Saving photo…');
         const onCapture = _camState.onCapture || (async (du) => saveCheckField(letter, { capturedImage: du, qcTime: nowHHMM() }));
         await onCapture(dataUrl);
@@ -5652,7 +5672,7 @@ async function captureFrame(letter){
         closeCamera();
         renderModal();
     } catch(err){
-        console.error('Capture failed', err);
+        console.error(err && err.message ? err.message : 'Capture failed — try again or use the upload option', err);
         toast('Capture failed','fail');
         if(shutter) shutter.disabled = false;
     }

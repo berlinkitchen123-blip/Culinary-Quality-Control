@@ -1260,7 +1260,7 @@ html[data-theme="dark"] #report-view-host{background:#f9fafb}
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
 import { getDatabase, ref, get, onValue, set, update, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
-import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+import { getAuth } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 
 /* === Multi-city config ===
    Each city has its own Firebase project, fully isolated data (menus,
@@ -1369,8 +1369,7 @@ window.__qc_city = activeCity;
 
 // City auth: anonymous sign-in (no login screen needed)
 if(activeCity.slug === 'berlin' || activeCity.slug === 'munich'){
-    try { const auth=getAuth(app); await signInAnonymously(auth); } catch(e){ console.warn('Anon auth:',e.code); }
-}
+    }
 
 
 const HOT_MIN = 65;

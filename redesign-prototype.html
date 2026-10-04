@@ -1380,6 +1380,7 @@ const COLD_WARN = 0;
 const state = {
     selectedDate: todayOrLastFriday(),
     weekStartIso: null,
+    weekChecks: {},   // { 'YYYY-MM-DD': checksObj } — all days in selected week
     menu: null,
     checks: {},
     filter: 'all',
@@ -1535,7 +1536,38 @@ async function loadMenuForWeek(weekId){
   if(val) _menuCache.set(weekId,val);
   return val;
 }
-function listenChecks(date){ return onValue(ref(db,`quality-checks/${date}`), snap=>{ state.checks=snap.val()||{}; renderAll(); }); }
+function listenChecks(date){ return onValue(ref(db,`quality-checks/${date}`), snap=>{ state.weekChecks[date]=snap.val()||{}; if(state.selectedDate===date){ state.checks=state.weekChecks[date]; renderAll(); } }); }
+
+/* Week-scoped data loader — fetches all 5 days in parallel, live-listens only today */
+let _weekUnsubs = [];
+async function selectWeek(mondayIso){
+    // Tear down previous week's listeners
+    _weekUnsubs.forEach(fn=>fn()); _weekUnsubs=[];
+    if(state._unsub){ state._unsub(); state._unsub=null; }
+    if(state._unsubIng){ state._unsubIng(); state._unsubIng=null; }
+    state.weekStartIso=mondayIso;
+    state.weekChecks={};
+    // Load menu for this week
+    const wk=isoYearWeek(mondayIso);
+    try{ state.menu=sortMenuByLetter(await loadMenuForWeek(wk)); }catch(e){ state.menu=null; }
+    // Fetch all 5 days in parallel
+    const today=todayIso();
+    const days=[0,1,2,3,4].map(o=>shiftIso(mondayIso,o));
+    await Promise.all(days.map(async d=>{
+        if(d===today){
+            // Live listener for today so saves reflect instantly
+            _weekUnsubs.push(listenChecks(d));
+        } else {
+            try{ const snap=await get(ref(db,`quality-checks/${d}`)); state.weekChecks[d]=snap.val()||{}; }
+            catch(e){ state.weekChecks[d]={}; }
+        }
+    }));
+    // Ingredient log — live listener for today, one-time for the rest
+    _weekUnsubs.push(listenIngredientLogs(today));
+    // Sync current view
+    state.checks=state.weekChecks[state.selectedDate]||{};
+    renderAll();
+}
 
 /* === Storage (warmers + fridges) === */
 function listenStorage(){
@@ -6370,15 +6402,16 @@ function fmtTime(ts){
 
 /* === Boot === */
 async function selectDate(iso){
+    const newMonday=isoOfMondayOf(iso);
     state.selectedDate=iso;
-    state.weekStartIso=isoOfMondayOf(iso);
-    const wk=isoYearWeek(iso);
-    try{ state.menu = sortMenuByLetter(await loadMenuForWeek(wk)); }catch(e){ state.menu=null; }
-    if(state._unsub) state._unsub();
-    state._unsub=listenChecks(iso);
-    if(state._unsubIng) state._unsubIng();
-    state._unsubIng = listenIngredientLogs(iso);
-    renderAll();
+    if(newMonday!==state.weekStartIso){
+        // Week changed — fetch the whole new week
+        await selectWeek(newMonday);
+    } else {
+        // Same week — read instantly from cache, no Firebase round-trip
+        state.checks=state.weekChecks[iso]||{};
+        renderAll();
+    }
 }
 
 function setStage(stg){
@@ -6390,8 +6423,8 @@ function setStage(stg){
 }
 
 function wire(){
-  // Pre-fetch this week's menu to warm the cache
-  try { const wk=isoYearWeek(state.selectedDate); if(wk) loadMenuForWeek(wk).catch(()=>{}); } catch(e){}
+  // Load the current week (menu + all 5 days check data)
+  selectWeek(isoOfMondayOf(state.selectedDate)).catch(e=>console.warn('Week load failed',e));
 
     document.getElementById('week-prev').onclick=()=>{ state.weekStartIso=shiftIso(state.weekStartIso,-7); selectDate(state.weekStartIso); };
     document.getElementById('week-next').onclick=()=>{ state.weekStartIso=shiftIso(state.weekStartIso,7); selectDate(state.weekStartIso); };

@@ -1527,6 +1527,7 @@ function stageLabel(s){ return s==='assembly'?'Assembly':s==='qc'?'QC Check':s==
 
 /* === Firebase === */
 const _menuCache=new Map();
+const _photoCache={}; // { "date/letter": dataUrl } lazy-loaded
 async function loadMenuForWeek(weekId){
   if(_menuCache.has(weekId)) return _menuCache.get(weekId);
   const s=await get(ref(db,`menus/${weekId}`));
@@ -1830,6 +1831,22 @@ async function saveAiReview(letter, review){
 async function saveCheckField(dishLetter, partial){
     const path=`quality-checks/${state.selectedDate}/${dishLetter}`;
     await update(ref(db, path), { ...partial, date: state.selectedDate, dishLetter, timestamp: serverTimestamp() });
+}
+/* Photos live in a separate DB path so listenChecks never downloads image data */
+async function savePhoto(dishLetter, dataUrl){
+    const cacheKey=`${state.selectedDate}/${dishLetter}`;
+    _photoCache[cacheKey]=dataUrl;
+    await set(ref(db, `quality-check-photos/${state.selectedDate}/${dishLetter}`), dataUrl);
+    await update(ref(db, `quality-checks/${state.selectedDate}/${dishLetter}`), {
+        hasPhoto:true, date:state.selectedDate, dishLetter, timestamp:serverTimestamp()
+    });
+}
+async function loadPhoto(date, letter){
+    const cacheKey=`${date}/${letter}`;
+    if(_photoCache[cacheKey]!==undefined) return _photoCache[cacheKey];
+    const snap=await get(ref(db, `quality-check-photos/${date}/${letter}`));
+    _photoCache[cacheKey]=snap.val()||null;
+    return _photoCache[cacheKey];
 }
 async function saveStage(dishLetter, stage, partial){
     const path=`quality-checks/${state.selectedDate}/${dishLetter}/${stage}`;
@@ -3156,12 +3173,20 @@ function detachKbTracking(){
     document.body.style.setProperty('--kb-offset', '0px');
 }
 
-function openModal(letter){
+async function openModal(letter){
     modalState.letter=letter;
     modalState.tab=state.stage; // open to the current top-level stage
     renderModal();
     document.getElementById('modal-overlay').classList.remove('hidden');
     lockBodyScroll();
+    // Lazy-load photo into cache if not already there
+    const cacheKey=`${state.selectedDate}/${letter}`;
+    const c=state.checks[letter]||{};
+    if((c.hasPhoto||c.capturedImage) && _photoCache[cacheKey]===undefined){
+        if(c.capturedImage){ _photoCache[cacheKey]=c.capturedImage; }
+        else { await loadPhoto(state.selectedDate, letter); }
+        renderModal(); // re-render with photo
+    }
 }
 function closeModal(){
     const ovr = document.getElementById('modal-overlay');
@@ -3175,6 +3200,7 @@ function renderModal(){
     const dish=(state.menu?.dishes||[]).find(d=>d.dishLetter===letter);
     if(!dish) return;
     const c=state.checks[letter]||{};
+    const capturedImage=_photoCache[`${state.selectedDate}/${letter}`]||c.capturedImage||null;
     const cls=isCold(dish)?'cold':'hot';
     const overlay=document.getElementById('modal-overlay');
     const s=readingStatus(dish,c);
@@ -3183,7 +3209,7 @@ function renderModal(){
     const hasDispatch = hasStageData(c, 'dispatch');
     const hasQc = (c.temperatures||[]).some(v=>v!=null);
     const hasIng = (c.selectedIngredients||[]).length > 0;
-    const hasPhoto = !!c.capturedImage;
+    const hasPhoto = !!(capturedImage||c.hasPhoto);
     const hasIngredientLog = c.ingredients && Object.keys(c.ingredients).some(k => c.ingredients[k] && (c.ingredients[k].temp != null || c.ingredients[k].image));
     const lastTime = mostRecentTime(c);
     overlay.innerHTML=`
@@ -3345,8 +3371,8 @@ function renderQcTab(dish, c){
                 <div class="photo-label">Reference</div>
             </div>
             <div class="photo">
-                ${c.capturedImage
-                    ? `<img src="${escapeAttr(c.capturedImage)}" alt="Today's capture"/>
+                ${capturedImage
+                    ? `<img src="${escapeAttr(capturedImage)}" alt="Today's capture"/>
                        <div class="photo-label">Today</div>
                        <button class="photo-action" type="button" data-action="open-camera">Retake</button>`
                     : `<div class="photo-empty">
@@ -3362,7 +3388,7 @@ function renderQcTab(dish, c){
                 }
             </div>
         </div>
-        ${dish.dishImage && c.capturedImage ? `
+        ${dish.dishImage && capturedImage ? `
             <div class="ai-review-row" style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;padding:10px 12px;background:var(--bg-3);border:1px solid var(--line);border-radius:10px;margin-bottom:14px">
                 <div style="display:flex;flex-direction:column;gap:2px">
                     <span style="font-weight:700;font-size:13px;color:var(--ink)">AI photo review</span>
@@ -3592,8 +3618,7 @@ function renderPhotoTab(dish, c){
                 <div class="photo-label">Reference</div>
             </div>
             <div class="photo">
-                ${c.capturedImage
-                    ? `<img src="${escapeAttr(c.capturedImage)}" alt="Today's capture"/>
+        ${dish.dishImage && capturedImage ? `
                        <div class="photo-label">Today's capture</div>
                        <label class="photo-action"><input type="file" accept="image/*" capture="environment" id="photo-input"/>Retake</label>`
                     : `<div class="photo-empty">
@@ -3654,7 +3679,8 @@ function bindTabHandlers(tab, dish){
                 try{
                     toast('Processing photo…');
                     const dataUrl=await resizeImageToDataUrl(file, 600, 0.72);
-                    await saveCheckField(letter, { capturedImage: dataUrl, qcTime: nowHHMM() });
+                    await savePhoto(letter, dataUrl);
+                    await saveCheckField(letter, { qcTime: nowHHMM() });
                     toast('Photo saved','ok');
                     renderModal();
                 }catch(err){ toast('Photo save failed','fail'); console.error(err); }
@@ -4223,7 +4249,8 @@ async function callAnthropic(prompt, imageDataUrl, key){
 async function reviewDishWithAI(letter){
     const dish = (state.menu?.dishes || []).find(d => d.dishLetter === letter);
     const c = state.checks[letter] || {};
-    if(!c.capturedImage){ toast('Take a photo first — AI rates from the picture','fail'); return; }
+    const capturedImg=_photoCache[`${state.selectedDate}/${letter}`]||c.capturedImage||null;
+    if(!capturedImg){ toast('Take a photo first — AI rates from the picture','fail'); return; }
     if(!dish){ toast('Dish not found in this week\'s menu','fail'); return; }
 
     const cfg = getAiConfig();
@@ -4238,22 +4265,22 @@ async function reviewDishWithAI(letter){
     try {
         let review;
         if(cfg.provider === 'groq' && cfg.key){
-            review = await callGroq(buildAiPrompt(dish, c), c.capturedImage, cfg.key);
+            review = await callGroq(buildAiPrompt(dish, c), capturedImg, cfg.key);
         } else if(cfg.provider === 'gemini' && cfg.key){
-            review = await callGemini(buildAiPrompt(dish, c), c.capturedImage, cfg.key, {
+            review = await callGemini(buildAiPrompt(dish, c), capturedImg, cfg.key, {
                 onStatus: (msg) => { if(btn){ btn.textContent = msg; } }
             });
         } else if(cfg.provider === 'openai' && cfg.key){
-            review = await callOpenAi(buildAiPrompt(dish, c), c.capturedImage, cfg.key);
+            review = await callOpenAi(buildAiPrompt(dish, c), capturedImg, cfg.key);
         } else if(cfg.provider === 'anthropic' && cfg.key){
-            review = await callAnthropic(buildAiPrompt(dish, c), c.capturedImage, cfg.key);
+            review = await callAnthropic(buildAiPrompt(dish, c), capturedImg, cfg.key);
         } else if(proxyUrl){
             const res = await fetch(proxyUrl, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     referenceUrl: dish.dishImage,
-                    capturedDataUrl: c.capturedImage,
+                    capturedDataUrl: capturedImg,
                     dishName: dish.dishName,
                     ingredients: (dish.dishIngredients || []).map(i => i.name)
                 })
@@ -4316,7 +4343,7 @@ function buildEndOfDayReport(){
             qc: { temp: qT, weight: w, time: c.qcTime || null,
                    ingredientsConfirmed: (c.selectedIngredients || []).length,
                    ingredientsTotal: (d.dishIngredients || []).length,
-                   hasPhoto: !!c.capturedImage, comment: c.comment || '',
+                   hasPhoto: !!(capturedImage||c.hasPhoto), comment: c.comment || '',
                    aiReview: c.aiReview || null },
             dispatch: { temp: dT, time: c.dispatch?.time || null },
             placement: placementText,
@@ -5484,7 +5511,8 @@ let _camState = { stream: null, facing: 'environment' };
 async function openCamera(letter, opts){
     opts = opts || {};
     const saveDataUrl = opts.onCapture || (async (dataUrl) => {
-        await saveCheckField(letter, { capturedImage: dataUrl, qcTime: nowHHMM() });
+        await savePhoto(letter, dataUrl);
+        await saveCheckField(letter, { qcTime: nowHHMM() });
     });
     // Stash on module state so captureFrame (top-level) can read it
     _camState.onCapture = saveDataUrl;
@@ -5625,7 +5653,7 @@ async function captureFrame(letter){
             dataUrl = canvas.toDataURL('image/jpeg', 0.72);
         }
         toast('Saving photo…');
-        const onCapture = _camState.onCapture || (async (du) => saveCheckField(letter, { capturedImage: du, qcTime: nowHHMM() }));
+        const onCapture = _camState.onCapture || (async (du) => { await savePhoto(letter, du); await saveCheckField(letter, { qcTime: nowHHMM() }); });
         await onCapture(dataUrl);
         toast('Photo saved','ok');
         closeCamera();

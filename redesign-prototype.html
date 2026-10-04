@@ -1567,6 +1567,37 @@ async function selectWeek(mondayIso){
     // Sync current view
     state.checks=state.weekChecks[state.selectedDate]||{};
     renderAll();
+    // Silently heal any inline photos left over from before the migration
+    migrateInlinePhotosForWeek(mondayIso).catch(()=>{});
+}
+
+/* Auto-migration: moves any capturedImage still stored inline in quality-checks
+   to the separate quality-check-photos path. Runs quietly in the background
+   every time a week is loaded. Safe to call multiple times — skips already-migrated entries. */
+async function migrateInlinePhotosForWeek(mondayIso){
+    const days=[0,1,2,3,4].map(o=>shiftIso(mondayIso,o));
+    for(const d of days){
+        const checks=state.weekChecks[d]||{};
+        for(const [letter, c] of Object.entries(checks)){
+            if(!c || !c.capturedImage) continue; // already clean
+            try{
+                const cacheKey=`${d}/${letter}`;
+                // Copy to photo path if not already there
+                const existing=await get(ref(db,`quality-check-photos/${d}/${letter}`));
+                if(!existing.exists()) await set(ref(db,`quality-check-photos/${d}/${letter}`),c.capturedImage);
+                // Cache it locally
+                _photoCache[cacheKey]=c.capturedImage;
+                // Remove from main record
+                await update(ref(db,`quality-checks/${d}/${letter}`),{capturedImage:null,hasPhoto:true});
+                // Remove from in-memory cache so re-render uses photo path
+                if(state.weekChecks[d] && state.weekChecks[d][letter]){
+                    state.weekChecks[d][letter].capturedImage=null;
+                    state.weekChecks[d][letter].hasPhoto=true;
+                }
+                console.log(`[migrate] cleaned capturedImage from quality-checks/${d}/${letter}`);
+            }catch(e){ /* non-fatal — will retry next load */ }
+        }
+    }
 }
 
 /* === Storage (warmers + fridges) === */

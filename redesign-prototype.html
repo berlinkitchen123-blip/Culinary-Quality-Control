@@ -1526,7 +1526,14 @@ function statusLabel(s){ return s==='pass'?'Pass':s==='watch'?'Watch':s==='hold'
 function stageLabel(s){ return s==='assembly'?'Assembly':s==='qc'?'QC Check':s==='dispatch'?'Dispatch':s; }
 
 /* === Firebase === */
-async function loadMenuForWeek(weekId){ const s=await get(ref(db,`menus/${weekId}`)); return s.val(); }
+const _menuCache=new Map();
+async function loadMenuForWeek(weekId){
+  if(_menuCache.has(weekId)) return _menuCache.get(weekId);
+  const s=await get(ref(db,`menus/${weekId}`));
+  const val=s.val();
+  if(val) _menuCache.set(weekId,val);
+  return val;
+}
 function listenChecks(date){ return onValue(ref(db,`quality-checks/${date}`), snap=>{ state.checks=snap.val()||{}; renderAll(); }); }
 
 /* === Storage (warmers + fridges) === */
@@ -6355,6 +6362,9 @@ function setStage(stg){
 }
 
 function wire(){
+  // Pre-fetch this week's menu to warm the cache
+  try { const wk=isoYearWeek(state.selectedDate); if(wk) loadMenuForWeek(wk).catch(()=>{}); } catch(e){}
+
     document.getElementById('week-prev').onclick=()=>{ state.weekStartIso=shiftIso(state.weekStartIso,-7); selectDate(state.weekStartIso); };
     document.getElementById('week-next').onclick=()=>{ state.weekStartIso=shiftIso(state.weekStartIso,7); selectDate(state.weekStartIso); };
     document.querySelectorAll('.stage-tab').forEach(btn=>{

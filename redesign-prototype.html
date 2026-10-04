@@ -1380,7 +1380,6 @@ const COLD_WARN = 0;
 const state = {
     selectedDate: todayOrLastFriday(),
     weekStartIso: null,
-    weekChecks: {},   // { 'YYYY-MM-DD': checksObj } — all days in selected week
     menu: null,
     checks: {},
     filter: 'all',
@@ -1527,78 +1526,8 @@ function statusLabel(s){ return s==='pass'?'Pass':s==='watch'?'Watch':s==='hold'
 function stageLabel(s){ return s==='assembly'?'Assembly':s==='qc'?'QC Check':s==='dispatch'?'Dispatch':s; }
 
 /* === Firebase === */
-const _menuCache=new Map();
-const _photoCache={}; // { "date/letter": dataUrl } lazy-loaded
-async function loadMenuForWeek(weekId){
-  if(_menuCache.has(weekId)) return _menuCache.get(weekId);
-  const s=await get(ref(db,`menus/${weekId}`));
-  const val=s.val();
-  if(val) _menuCache.set(weekId,val);
-  return val;
-}
-function listenChecks(date){ return onValue(ref(db,`quality-checks/${date}`), snap=>{ state.weekChecks[date]=snap.val()||{}; if(state.selectedDate===date){ state.checks=state.weekChecks[date]; renderAll(); } }); }
-
-/* Week-scoped data loader — fetches all 5 days in parallel, live-listens only today */
-let _weekUnsubs = [];
-async function selectWeek(mondayIso){
-    // Tear down previous week's listeners
-    _weekUnsubs.forEach(fn=>fn()); _weekUnsubs=[];
-    if(state._unsub){ state._unsub(); state._unsub=null; }
-    if(state._unsubIng){ state._unsubIng(); state._unsubIng=null; }
-    state.weekStartIso=mondayIso;
-    state.weekChecks={};
-    // Load menu for this week
-    const wk=isoYearWeek(mondayIso);
-    try{ state.menu=sortMenuByLetter(await loadMenuForWeek(wk)); }catch(e){ state.menu=null; }
-    // Fetch all 5 days in parallel
-    const today=todayIso();
-    const days=[0,1,2,3,4].map(o=>shiftIso(mondayIso,o));
-    await Promise.all(days.map(async d=>{
-        if(d===today){
-            // Live listener for today so saves reflect instantly
-            _weekUnsubs.push(listenChecks(d));
-        } else {
-            try{ const snap=await get(ref(db,`quality-checks/${d}`)); state.weekChecks[d]=snap.val()||{}; }
-            catch(e){ state.weekChecks[d]={}; }
-        }
-    }));
-    // Ingredient log — live listener for today, one-time for the rest
-    _weekUnsubs.push(listenIngredientLogs(today));
-    // Sync current view
-    state.checks=state.weekChecks[state.selectedDate]||{};
-    renderAll();
-    // Silently heal any inline photos left over from before the migration
-    migrateInlinePhotosForWeek(mondayIso).catch(()=>{});
-}
-
-/* Auto-migration: moves any capturedImage still stored inline in quality-checks
-   to the separate quality-check-photos path. Runs quietly in the background
-   every time a week is loaded. Safe to call multiple times — skips already-migrated entries. */
-async function migrateInlinePhotosForWeek(mondayIso){
-    const days=[0,1,2,3,4].map(o=>shiftIso(mondayIso,o));
-    for(const d of days){
-        const checks=state.weekChecks[d]||{};
-        for(const [letter, c] of Object.entries(checks)){
-            if(!c || !c.capturedImage) continue; // already clean
-            try{
-                const cacheKey=`${d}/${letter}`;
-                // Copy to photo path if not already there
-                const existing=await get(ref(db,`quality-check-photos/${d}/${letter}`));
-                if(!existing.exists()) await set(ref(db,`quality-check-photos/${d}/${letter}`),c.capturedImage);
-                // Cache it locally
-                _photoCache[cacheKey]=c.capturedImage;
-                // Remove from main record
-                await update(ref(db,`quality-checks/${d}/${letter}`),{capturedImage:null,hasPhoto:true});
-                // Remove from in-memory cache so re-render uses photo path
-                if(state.weekChecks[d] && state.weekChecks[d][letter]){
-                    state.weekChecks[d][letter].capturedImage=null;
-                    state.weekChecks[d][letter].hasPhoto=true;
-                }
-                console.log(`[migrate] cleaned capturedImage from quality-checks/${d}/${letter}`);
-            }catch(e){ /* non-fatal — will retry next load */ }
-        }
-    }
-}
+async function loadMenuForWeek(weekId){ const s=await get(ref(db,`menus/${weekId}`)); return s.val(); }
+function listenChecks(date){ return onValue(ref(db,`quality-checks/${date}`), snap=>{ state.checks=snap.val()||{}; renderAll(); }); }
 
 /* === Storage (warmers + fridges) === */
 function listenStorage(){
@@ -1894,22 +1823,6 @@ async function saveAiReview(letter, review){
 async function saveCheckField(dishLetter, partial){
     const path=`quality-checks/${state.selectedDate}/${dishLetter}`;
     await update(ref(db, path), { ...partial, date: state.selectedDate, dishLetter, timestamp: serverTimestamp() });
-}
-/* Photos live in a separate DB path so listenChecks never downloads image data */
-async function savePhoto(dishLetter, dataUrl){
-    const cacheKey=`${state.selectedDate}/${dishLetter}`;
-    _photoCache[cacheKey]=dataUrl;
-    await set(ref(db, `quality-check-photos/${state.selectedDate}/${dishLetter}`), dataUrl);
-    await update(ref(db, `quality-checks/${state.selectedDate}/${dishLetter}`), {
-        hasPhoto:true, date:state.selectedDate, dishLetter, timestamp:serverTimestamp()
-    });
-}
-async function loadPhoto(date, letter){
-    const cacheKey=`${date}/${letter}`;
-    if(_photoCache[cacheKey]!==undefined) return _photoCache[cacheKey];
-    const snap=await get(ref(db, `quality-check-photos/${date}/${letter}`));
-    _photoCache[cacheKey]=snap.val()||null;
-    return _photoCache[cacheKey];
 }
 async function saveStage(dishLetter, stage, partial){
     const path=`quality-checks/${state.selectedDate}/${dishLetter}/${stage}`;
@@ -2680,7 +2593,7 @@ function renderIngredientsStageView(){
         if(inp){
             inp.addEventListener('change', async (e) => {
                 const file = e.target.files?.[0]; if(!file) return;
-                try { toast('Processing photo…'); const dataUrl = await resizeImageToDataUrl(file, 600, 0.72); await savePhoto(dataUrl); toast('Photo saved','ok'); renderAll(); }
+                try { toast('Processing photo…'); const dataUrl = await resizeImageToDataUrl(file, 1024, 0.85); await savePhoto(dataUrl); toast('Photo saved','ok'); renderAll(); }
                 catch(err){ toast('Photo save failed','fail'); console.error(err); }
             });
         }
@@ -3236,20 +3149,12 @@ function detachKbTracking(){
     document.body.style.setProperty('--kb-offset', '0px');
 }
 
-async function openModal(letter){
+function openModal(letter){
     modalState.letter=letter;
     modalState.tab=state.stage; // open to the current top-level stage
     renderModal();
     document.getElementById('modal-overlay').classList.remove('hidden');
     lockBodyScroll();
-    // Lazy-load photo into cache if not already there
-    const cacheKey=`${state.selectedDate}/${letter}`;
-    const c=state.checks[letter]||{};
-    if((c.hasPhoto||c.capturedImage) && _photoCache[cacheKey]===undefined){
-        if(c.capturedImage){ _photoCache[cacheKey]=c.capturedImage; }
-        else { await loadPhoto(state.selectedDate, letter); }
-        renderModal(); // re-render with photo
-    }
 }
 function closeModal(){
     const ovr = document.getElementById('modal-overlay');
@@ -3263,7 +3168,6 @@ function renderModal(){
     const dish=(state.menu?.dishes||[]).find(d=>d.dishLetter===letter);
     if(!dish) return;
     const c=state.checks[letter]||{};
-    const capturedImage=_photoCache[`${state.selectedDate}/${letter}`]||c.capturedImage||null;
     const cls=isCold(dish)?'cold':'hot';
     const overlay=document.getElementById('modal-overlay');
     const s=readingStatus(dish,c);
@@ -3272,7 +3176,7 @@ function renderModal(){
     const hasDispatch = hasStageData(c, 'dispatch');
     const hasQc = (c.temperatures||[]).some(v=>v!=null);
     const hasIng = (c.selectedIngredients||[]).length > 0;
-    const hasPhoto = !!(capturedImage||c.hasPhoto);
+    const hasPhoto = !!c.capturedImage;
     const hasIngredientLog = c.ingredients && Object.keys(c.ingredients).some(k => c.ingredients[k] && (c.ingredients[k].temp != null || c.ingredients[k].image));
     const lastTime = mostRecentTime(c);
     overlay.innerHTML=`
@@ -3434,8 +3338,8 @@ function renderQcTab(dish, c){
                 <div class="photo-label">Reference</div>
             </div>
             <div class="photo">
-                ${capturedImage
-                    ? `<img src="${escapeAttr(capturedImage)}" alt="Today's capture"/>
+                ${c.capturedImage
+                    ? `<img src="${escapeAttr(c.capturedImage)}" alt="Today's capture"/>
                        <div class="photo-label">Today</div>
                        <button class="photo-action" type="button" data-action="open-camera">Retake</button>`
                     : `<div class="photo-empty">
@@ -3451,7 +3355,7 @@ function renderQcTab(dish, c){
                 }
             </div>
         </div>
-        ${dish.dishImage && capturedImage ? `
+        ${dish.dishImage && c.capturedImage ? `
             <div class="ai-review-row" style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;padding:10px 12px;background:var(--bg-3);border:1px solid var(--line);border-radius:10px;margin-bottom:14px">
                 <div style="display:flex;flex-direction:column;gap:2px">
                     <span style="font-weight:700;font-size:13px;color:var(--ink)">AI photo review</span>
@@ -3681,7 +3585,8 @@ function renderPhotoTab(dish, c){
                 <div class="photo-label">Reference</div>
             </div>
             <div class="photo">
-        ${dish.dishImage && capturedImage ? `
+                ${c.capturedImage
+                    ? `<img src="${escapeAttr(c.capturedImage)}" alt="Today's capture"/>
                        <div class="photo-label">Today's capture</div>
                        <label class="photo-action"><input type="file" accept="image/*" capture="environment" id="photo-input"/>Retake</label>`
                     : `<div class="photo-empty">
@@ -3741,9 +3646,8 @@ function bindTabHandlers(tab, dish){
                 if(!file) return;
                 try{
                     toast('Processing photo…');
-                    const dataUrl=await resizeImageToDataUrl(file, 600, 0.72);
-                    await savePhoto(letter, dataUrl);
-                    await saveCheckField(letter, { qcTime: nowHHMM() });
+                    const dataUrl=await resizeImageToDataUrl(file, 1024, 0.85);
+                    await saveCheckField(letter, { capturedImage: dataUrl, qcTime: nowHHMM() });
                     toast('Photo saved','ok');
                     renderModal();
                 }catch(err){ toast('Photo save failed','fail'); console.error(err); }
@@ -3848,7 +3752,7 @@ function bindTabHandlers(tab, dish){
                     if(!file) return;
                     try {
                         toast('Processing photo…');
-                        const dataUrl = await resizeImageToDataUrl(file, 600, 0.72);
+                        const dataUrl = await resizeImageToDataUrl(file, 1024, 0.85);
                         await saveIngPhoto(dataUrl);
                         toast('Photo saved','ok');
                         renderModal();
@@ -3884,7 +3788,7 @@ function bindTabHandlers(tab, dish){
                 if(!file) return;
                 try {
                     toast('Processing photo…');
-                    const dataUrl = await resizeImageToDataUrl(file, 600, 0.72);
+                    const dataUrl = await resizeImageToDataUrl(file, 1024, 0.85);
                     await saveAsmPhoto(dataUrl);
                     toast('Photo saved','ok');
                     renderModal();
@@ -4312,8 +4216,7 @@ async function callAnthropic(prompt, imageDataUrl, key){
 async function reviewDishWithAI(letter){
     const dish = (state.menu?.dishes || []).find(d => d.dishLetter === letter);
     const c = state.checks[letter] || {};
-    const capturedImg=_photoCache[`${state.selectedDate}/${letter}`]||c.capturedImage||null;
-    if(!capturedImg){ toast('Take a photo first — AI rates from the picture','fail'); return; }
+    if(!c.capturedImage){ toast('Take a photo first — AI rates from the picture','fail'); return; }
     if(!dish){ toast('Dish not found in this week\'s menu','fail'); return; }
 
     const cfg = getAiConfig();
@@ -4328,22 +4231,22 @@ async function reviewDishWithAI(letter){
     try {
         let review;
         if(cfg.provider === 'groq' && cfg.key){
-            review = await callGroq(buildAiPrompt(dish, c), capturedImg, cfg.key);
+            review = await callGroq(buildAiPrompt(dish, c), c.capturedImage, cfg.key);
         } else if(cfg.provider === 'gemini' && cfg.key){
-            review = await callGemini(buildAiPrompt(dish, c), capturedImg, cfg.key, {
+            review = await callGemini(buildAiPrompt(dish, c), c.capturedImage, cfg.key, {
                 onStatus: (msg) => { if(btn){ btn.textContent = msg; } }
             });
         } else if(cfg.provider === 'openai' && cfg.key){
-            review = await callOpenAi(buildAiPrompt(dish, c), capturedImg, cfg.key);
+            review = await callOpenAi(buildAiPrompt(dish, c), c.capturedImage, cfg.key);
         } else if(cfg.provider === 'anthropic' && cfg.key){
-            review = await callAnthropic(buildAiPrompt(dish, c), capturedImg, cfg.key);
+            review = await callAnthropic(buildAiPrompt(dish, c), c.capturedImage, cfg.key);
         } else if(proxyUrl){
             const res = await fetch(proxyUrl, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     referenceUrl: dish.dishImage,
-                    capturedDataUrl: capturedImg,
+                    capturedDataUrl: c.capturedImage,
                     dishName: dish.dishName,
                     ingredients: (dish.dishIngredients || []).map(i => i.name)
                 })
@@ -4406,7 +4309,7 @@ function buildEndOfDayReport(){
             qc: { temp: qT, weight: w, time: c.qcTime || null,
                    ingredientsConfirmed: (c.selectedIngredients || []).length,
                    ingredientsTotal: (d.dishIngredients || []).length,
-                   hasPhoto: !!(capturedImage||c.hasPhoto), comment: c.comment || '',
+                   hasPhoto: !!c.capturedImage, comment: c.comment || '',
                    aiReview: c.aiReview || null },
             dispatch: { temp: dT, time: c.dispatch?.time || null },
             placement: placementText,
@@ -5548,7 +5451,7 @@ function flashSaved(){
     window.__saveFlash=setTimeout(()=>{ el.textContent=''; }, 1500);
 }
 
-async function resizeImageToDataUrl(file, maxSide=600, quality=0.72){
+async function resizeImageToDataUrl(file, maxSide=1024, quality=0.85){
     const url=URL.createObjectURL(file);
     try{
         const img=await new Promise((res,rej)=>{ const i=new Image(); i.onload=()=>res(i); i.onerror=rej; i.src=url; });
@@ -5574,8 +5477,7 @@ let _camState = { stream: null, facing: 'environment' };
 async function openCamera(letter, opts){
     opts = opts || {};
     const saveDataUrl = opts.onCapture || (async (dataUrl) => {
-        await savePhoto(letter, dataUrl);
-        await saveCheckField(letter, { qcTime: nowHHMM() });
+        await saveCheckField(letter, { capturedImage: dataUrl, qcTime: nowHHMM() });
     });
     // Stash on module state so captureFrame (top-level) can read it
     _camState.onCapture = saveDataUrl;
@@ -5621,7 +5523,7 @@ async function openCamera(letter, opts){
             if(!file) return;
             try{
                 toast('Processing photo…');
-                const dataUrl = await resizeImageToDataUrl(file, 600, 0.72);
+                const dataUrl = await resizeImageToDataUrl(file, 1024, 0.85);
                 await saveDataUrl(dataUrl);
                 toast('Photo saved','ok');
                 closeCamera();
@@ -5687,7 +5589,7 @@ async function captureFrame(letter){
     if(shutter) shutter.disabled = true;
     try {
         const vw = vid.videoWidth, vh = vid.videoHeight;
-        const maxSide = 600;
+        const maxSide = 1024;
         let w = vw, h = vh;
         if(w >= h && w > maxSide){ h = Math.round(h * maxSide / w); w = maxSide; }
         else if(h > maxSide){ w = Math.round(w * maxSide / h); h = maxSide; }
@@ -5713,10 +5615,10 @@ async function captureFrame(letter){
         // Canvas fallback
         if(!dataUrl) {
             canvas.getContext('2d').drawImage(vid, 0, 0, w, h);
-            dataUrl = canvas.toDataURL('image/jpeg', 0.72);
+            dataUrl = canvas.toDataURL('image/jpeg', 0.85);
         }
         toast('Saving photo…');
-        const onCapture = _camState.onCapture || (async (du) => { await savePhoto(letter, du); await saveCheckField(letter, { qcTime: nowHHMM() }); });
+        const onCapture = _camState.onCapture || (async (du) => saveCheckField(letter, { capturedImage: du, qcTime: nowHHMM() }));
         await onCapture(dataUrl);
         toast('Photo saved','ok');
         closeCamera();
@@ -6433,16 +6335,15 @@ function fmtTime(ts){
 
 /* === Boot === */
 async function selectDate(iso){
-    const newMonday=isoOfMondayOf(iso);
     state.selectedDate=iso;
-    if(newMonday!==state.weekStartIso){
-        // Week changed — fetch the whole new week
-        await selectWeek(newMonday);
-    } else {
-        // Same week — read instantly from cache, no Firebase round-trip
-        state.checks=state.weekChecks[iso]||{};
-        renderAll();
-    }
+    state.weekStartIso=isoOfMondayOf(iso);
+    const wk=isoYearWeek(iso);
+    try{ state.menu = sortMenuByLetter(await loadMenuForWeek(wk)); }catch(e){ state.menu=null; }
+    if(state._unsub) state._unsub();
+    state._unsub=listenChecks(iso);
+    if(state._unsubIng) state._unsubIng();
+    state._unsubIng = listenIngredientLogs(iso);
+    renderAll();
 }
 
 function setStage(stg){
@@ -6454,9 +6355,6 @@ function setStage(stg){
 }
 
 function wire(){
-  // Load the current week (menu + all 5 days check data)
-  selectWeek(isoOfMondayOf(state.selectedDate)).catch(e=>console.warn('Week load failed',e));
-
     document.getElementById('week-prev').onclick=()=>{ state.weekStartIso=shiftIso(state.weekStartIso,-7); selectDate(state.weekStartIso); };
     document.getElementById('week-next').onclick=()=>{ state.weekStartIso=shiftIso(state.weekStartIso,7); selectDate(state.weekStartIso); };
     document.querySelectorAll('.stage-tab').forEach(btn=>{

@@ -2600,7 +2600,7 @@ function renderIngredientsStageView(){
         if(inp){
             inp.addEventListener('change', async (e) => {
                 const file = e.target.files?.[0]; if(!file) return;
-                try { toast('Processing photo…'); const dataUrl = await resizeImageToDataUrl(file, 1024, 0.85); await savePhoto(dataUrl); toast('Photo saved','ok'); renderAll(); }
+                try { toast('Processing photo…'); const dataUrl = await resizeImageToDataUrl(file, 600, 0.72); await savePhoto(dataUrl); toast('Photo saved','ok'); renderAll(); }
                 catch(err){ toast('Photo save failed','fail'); console.error(err); }
             });
         }
@@ -3653,7 +3653,7 @@ function bindTabHandlers(tab, dish){
                 if(!file) return;
                 try{
                     toast('Processing photo…');
-                    const dataUrl=await resizeImageToDataUrl(file, 1024, 0.85);
+                    const dataUrl=await resizeImageToDataUrl(file, 600, 0.72);
                     await saveCheckField(letter, { capturedImage: dataUrl, qcTime: nowHHMM() });
                     toast('Photo saved','ok');
                     renderModal();
@@ -3759,7 +3759,7 @@ function bindTabHandlers(tab, dish){
                     if(!file) return;
                     try {
                         toast('Processing photo…');
-                        const dataUrl = await resizeImageToDataUrl(file, 1024, 0.85);
+                        const dataUrl = await resizeImageToDataUrl(file, 600, 0.72);
                         await saveIngPhoto(dataUrl);
                         toast('Photo saved','ok');
                         renderModal();
@@ -3795,7 +3795,7 @@ function bindTabHandlers(tab, dish){
                 if(!file) return;
                 try {
                     toast('Processing photo…');
-                    const dataUrl = await resizeImageToDataUrl(file, 1024, 0.85);
+                    const dataUrl = await resizeImageToDataUrl(file, 600, 0.72);
                     await saveAsmPhoto(dataUrl);
                     toast('Photo saved','ok');
                     renderModal();
@@ -5458,7 +5458,7 @@ function flashSaved(){
     window.__saveFlash=setTimeout(()=>{ el.textContent=''; }, 1500);
 }
 
-async function resizeImageToDataUrl(file, maxSide=1024, quality=0.85){
+async function resizeImageToDataUrl(file, maxSide=600, quality=0.72){
     const url=URL.createObjectURL(file);
     try{
         const img=await new Promise((res,rej)=>{ const i=new Image(); i.onload=()=>res(i); i.onerror=rej; i.src=url; });
@@ -5530,7 +5530,7 @@ async function openCamera(letter, opts){
             if(!file) return;
             try{
                 toast('Processing photo…');
-                const dataUrl = await resizeImageToDataUrl(file, 1024, 0.85);
+                const dataUrl = await resizeImageToDataUrl(file, 600, 0.72);
                 await saveDataUrl(dataUrl);
                 toast('Photo saved','ok');
                 closeCamera();
@@ -5596,7 +5596,7 @@ async function captureFrame(letter){
     if(shutter) shutter.disabled = true;
     try {
         const vw = vid.videoWidth, vh = vid.videoHeight;
-        const maxSide = 1024;
+        const maxSide = 600;
         let w = vw, h = vh;
         if(w >= h && w > maxSide){ h = Math.round(h * maxSide / w); w = maxSide; }
         else if(h > maxSide){ w = Math.round(w * maxSide / h); h = maxSide; }
@@ -5622,7 +5622,7 @@ async function captureFrame(letter){
         // Canvas fallback
         if(!dataUrl) {
             canvas.getContext('2d').drawImage(vid, 0, 0, w, h);
-            dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+            dataUrl = canvas.toDataURL('image/jpeg', 0.72);
         }
         toast('Saving photo…');
         const onCapture = _camState.onCapture || (async (du) => saveCheckField(letter, { capturedImage: du, qcTime: nowHHMM() }));

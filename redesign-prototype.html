@@ -1820,6 +1820,19 @@ async function saveAiReview(letter, review){
     await saveCheckField(letter, { aiReview: review });
 }
 
+/* Photos stored separately so quality-checks path stays small.
+   onValue on quality-checks only sends temperatures/notes (~50KB),
+   not photos (~10MB), to all connected devices on every write. */
+async function savePhoto(dishLetter, dataUrl){
+    await set(ref(db, `quality-check-photos/${state.selectedDate}/${dishLetter}`), dataUrl);
+    await update(ref(db, `quality-checks/${state.selectedDate}/${dishLetter}`), {
+        hasPhoto: true, date: state.selectedDate, dishLetter, timestamp: serverTimestamp()
+    });
+}
+async function loadPhoto(date, letter){
+    const snap = await get(ref(db, `quality-check-photos/${date}/${letter}`));
+    return snap.val() || null;
+}
 async function saveCheckField(dishLetter, partial){
     const path=`quality-checks/${state.selectedDate}/${dishLetter}`;
     await update(ref(db, path), { ...partial, date: state.selectedDate, dishLetter, timestamp: serverTimestamp() });
@@ -3176,7 +3189,7 @@ function renderModal(){
     const hasDispatch = hasStageData(c, 'dispatch');
     const hasQc = (c.temperatures||[]).some(v=>v!=null);
     const hasIng = (c.selectedIngredients||[]).length > 0;
-    const hasPhoto = !!c.capturedImage;
+    const hasPhoto = !!(c.capturedImage || c.hasPhoto);
     const hasIngredientLog = c.ingredients && Object.keys(c.ingredients).some(k => c.ingredients[k] && (c.ingredients[k].temp != null || c.ingredients[k].image));
     const lastTime = mostRecentTime(c);
     overlay.innerHTML=`
@@ -3647,7 +3660,8 @@ function bindTabHandlers(tab, dish){
                 try{
                     toast('Processing photo…');
                     const dataUrl=await resizeImageToDataUrl(file, 1024, 0.85);
-                    await saveCheckField(letter, { capturedImage: dataUrl, qcTime: nowHHMM() });
+                    await savePhoto(letter, dataUrl);
+                    await saveCheckField(letter, { qcTime: nowHHMM() });
                     toast('Photo saved','ok');
                     renderModal();
                 }catch(err){ toast('Photo save failed','fail'); console.error(err); }
@@ -5477,7 +5491,8 @@ let _camState = { stream: null, facing: 'environment' };
 async function openCamera(letter, opts){
     opts = opts || {};
     const saveDataUrl = opts.onCapture || (async (dataUrl) => {
-        await saveCheckField(letter, { capturedImage: dataUrl, qcTime: nowHHMM() });
+        await savePhoto(letter, dataUrl);
+        await saveCheckField(letter, { qcTime: nowHHMM() });
     });
     // Stash on module state so captureFrame (top-level) can read it
     _camState.onCapture = saveDataUrl;
@@ -5618,7 +5633,7 @@ async function captureFrame(letter){
             dataUrl = canvas.toDataURL('image/jpeg', 0.85);
         }
         toast('Saving photo…');
-        const onCapture = _camState.onCapture || (async (du) => saveCheckField(letter, { capturedImage: du, qcTime: nowHHMM() }));
+        const onCapture = _camState.onCapture || (async (du) => { await savePhoto(letter, du); await saveCheckField(letter, { qcTime: nowHHMM() }); });
         await onCapture(dataUrl);
         toast('Photo saved','ok');
         closeCamera();

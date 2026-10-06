@@ -6391,8 +6391,8 @@ function setStage(stg){
 }
 
 function wire(){
-    document.getElementById('week-prev').onclick=()=>{ state.weekStartIso=shiftIso(state.weekStartIso,-7); selectDate(state.weekStartIso); };
-    document.getElementById('week-next').onclick=()=>{ state.weekStartIso=shiftIso(state.weekStartIso,7); selectDate(state.weekStartIso); };
+    document.getElementById('week-prev').onclick=()=>{ state.weekStartIso=shiftIso(state.weekStartIso,-7); renderWeekStrip(); };
+    document.getElementById('week-next').onclick=()=>{ state.weekStartIso=shiftIso(state.weekStartIso,7); renderWeekStrip(); };
     document.querySelectorAll('.stage-tab').forEach(btn=>{
         btn.addEventListener('click',()=>setStage(btn.getAttribute('data-stage')));
     });

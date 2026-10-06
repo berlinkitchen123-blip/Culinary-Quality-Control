@@ -6339,10 +6339,31 @@ async function selectDate(iso){
     state.weekStartIso=isoOfMondayOf(iso);
     const wk=isoYearWeek(iso);
     try{ state.menu = sortMenuByLetter(await loadMenuForWeek(wk)); }catch(e){ state.menu=null; }
-    if(state._unsub) state._unsub();
-    state._unsub=listenChecks(iso);
-    if(state._unsubIng) state._unsubIng();
-    state._unsubIng = listenIngredientLogs(iso);
+    if(state._unsub){ state._unsub(); state._unsub=null; }
+    const today=todayIso();
+    if(iso===today){
+        // Today: live listener — staff are actively logging
+        state._unsub=listenChecks(iso);
+    } else {
+        // Past date: one-time fetch, strip capturedImage so photos
+        // are never downloaded (saves mobile data — each photo is ~10MB)
+        try{
+            const snap=await get(ref(db,`quality-checks/${iso}`));
+            const data=snap.val()||{};
+            Object.values(data).forEach(function(c){ if(c && c.capturedImage) delete c.capturedImage; });
+            state.checks=data;
+        }catch(e){ state.checks={}; }
+        renderAll();
+    }
+    if(state._unsubIng){ state._unsubIng(); state._unsubIng=null; }
+    if(iso===today){
+        state._unsubIng=listenIngredientLogs(iso);
+    } else {
+        try{
+            const snap=await get(ref(db,`ingredient-logs/${iso}`));
+            state.ingredientLogs=snap.val()||{};
+        }catch(e){ state.ingredientLogs={}; }
+    }
     renderAll();
 }
 

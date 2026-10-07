@@ -3167,17 +3167,20 @@ function detachKbTracking(){
 
 async function openModal(letter){
     modalState.letter=letter;
-    modalState.tab=state.stage; // open to the current top-level stage
+    modalState.tab=state.stage;
     renderModal();
     document.getElementById('modal-overlay').classList.remove('hidden');
     lockBodyScroll();
-    // Lazy-load photo from separate path if needed
-    const c = state.checks[letter] || {};
-    const cacheKey = `${state.selectedDate}/${letter}`;
-    if((c.hasPhoto || c.capturedImage) && !_photoCache[cacheKey]){
-        if(c.capturedImage){ _photoCache[cacheKey] = c.capturedImage; }
-        else { const photo = await loadPhoto(state.selectedDate, letter); if(photo) _photoCache[cacheKey] = photo; }
-        renderModal(); // re-render with photo loaded
+    // For today only: lazy-load photo (staff need to see it for active QC)
+    // Past dates: photo not auto-loaded — tap "Load photo" button if needed
+    if(state.selectedDate === todayIso()){
+        const c = state.checks[letter] || {};
+        const cacheKey = `${state.selectedDate}/${letter}`;
+        if((c.hasPhoto || c.capturedImage) && !_photoCache[cacheKey]){
+            if(c.capturedImage){ _photoCache[cacheKey] = c.capturedImage; }
+            else { const photo = await loadPhoto(state.selectedDate, letter); if(photo) _photoCache[cacheKey] = photo; }
+            renderModal();
+        }
     }
 }
 function closeModal(){
@@ -3367,7 +3370,12 @@ function renderQcTab(dish, c){
                     ? `<img src="${escapeAttr(capturedImage)}" alt="Today's capture"/>
                        <div class="photo-label">Today</div>
                        <button class="photo-action" type="button" data-action="open-camera">Retake</button>`
-                    : `<div class="photo-empty">
+                    : (c.hasPhoto
+                        ? `<div class="photo-empty">
+                             <div style="font-weight:600;color:var(--ink-2);font-size:13px">Photo saved</div>
+                             <button class="btn btn-sm" type="button" data-action="load-photo" style="margin-top:8px;font-size:12px">View photo</button>
+                           </div>`
+                        : `<div class="photo-empty">
                          <div style="font-weight:600;color:var(--ink-2);font-size:13px">No capture today</div>
                          <button class="camera-btn" type="button" data-action="open-camera">
                            <svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
@@ -3376,7 +3384,7 @@ function renderQcTab(dish, c){
                          <label class="cam-upload" style="color:var(--mute);text-decoration:underline;font-size:12px;cursor:pointer">or upload a file
                            <input type="file" accept="image/*" id="photo-input"/>
                          </label>
-                       </div>`
+                       </div>`)
                 }
             </div>
         </div>
@@ -3658,6 +3666,15 @@ function bindTabHandlers(tab, dish){
         // Camera button (opens live camera overlay)
         overlay.querySelectorAll('[data-action="open-camera"]').forEach(btn=>{
             btn.addEventListener('click', (e)=>{ e.preventDefault(); openCamera(letter); });
+        });
+        // Load photo on demand for past dates
+        overlay.querySelectorAll('[data-action="load-photo"]').forEach(btn=>{
+            btn.addEventListener('click', async ()=>{
+                btn.textContent='Loading…'; btn.disabled=true;
+                const photo = await loadPhoto(state.selectedDate, letter);
+                if(photo){ _photoCache[`${state.selectedDate}/${letter}`]=photo; renderModal(); }
+                else{ btn.textContent='No photo found'; }
+            });
         });
         // AI photo review
         overlay.querySelectorAll('[data-ai-review-letter]').forEach(btn=>{

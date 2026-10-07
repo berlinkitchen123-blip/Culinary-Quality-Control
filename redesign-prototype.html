@@ -3243,7 +3243,7 @@ function renderTabContent(tab, dish, c, capturedImage){
     if(tab === 'dispatch') return renderStageTab('dispatch', 'Dispatch', dish, c);
     if(tab === 'ingredient') return renderIngredientTab(dish, c);
     // Fallback: QC (photo + ingredients + temp + weight + notes — one combined view)
-    return renderQcTab(dish, c);
+    return renderQcTab(dish, c, capturedImage);
 }
 
 /* Ingredient tab — per-ingredient temp + photo capture for raw-material
@@ -3347,7 +3347,7 @@ function renderIngredientDetail(dish, c, ing){
     `;
 }
 
-function renderQcTab(dish, c){
+function renderQcTab(dish, c, capturedImage){
     const tAvg=avg(c.temperatures), wAvg=avg(c.weights);
     const wDelta = wAvg!=null && dish.theoreticalWeight ? ((wAvg-dish.theoreticalWeight)/dish.theoreticalWeight*100) : null;
     const cls=isCold(dish)?'cold':'hot';
@@ -3602,7 +3602,7 @@ function renderIngredientsTab(dish, c){
     `;
 }
 
-function renderPhotoTab(dish, c){
+function renderPhotoTab(dish, c, capturedImage){
     return `
         <div class="photo-row">
             <div class="photo">

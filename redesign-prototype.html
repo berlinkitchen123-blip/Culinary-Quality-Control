@@ -1820,10 +1820,13 @@ async function saveAiReview(letter, review){
     await saveCheckField(letter, { aiReview: review });
 }
 
+const _photoCache = {}; // { "date/letter": dataUrl } — session memory cache
 /* Photos stored separately so quality-checks path stays small.
    onValue on quality-checks only sends temperatures/notes (~50KB),
    not photos (~10MB), to all connected devices on every write. */
 async function savePhoto(dishLetter, dataUrl){
+    // Cache immediately so modal re-render shows photo without waiting for Firebase
+    _photoCache[`${state.selectedDate}/${dishLetter}`] = dataUrl;
     await set(ref(db, `quality-check-photos/${state.selectedDate}/${dishLetter}`), dataUrl);
     await update(ref(db, `quality-checks/${state.selectedDate}/${dishLetter}`), {
         hasPhoto: true, date: state.selectedDate, dishLetter, timestamp: serverTimestamp()
@@ -3162,12 +3165,20 @@ function detachKbTracking(){
     document.body.style.setProperty('--kb-offset', '0px');
 }
 
-function openModal(letter){
+async function openModal(letter){
     modalState.letter=letter;
     modalState.tab=state.stage; // open to the current top-level stage
     renderModal();
     document.getElementById('modal-overlay').classList.remove('hidden');
     lockBodyScroll();
+    // Lazy-load photo from separate path if needed
+    const c = state.checks[letter] || {};
+    const cacheKey = `${state.selectedDate}/${letter}`;
+    if((c.hasPhoto || c.capturedImage) && !_photoCache[cacheKey]){
+        if(c.capturedImage){ _photoCache[cacheKey] = c.capturedImage; }
+        else { const photo = await loadPhoto(state.selectedDate, letter); if(photo) _photoCache[cacheKey] = photo; }
+        renderModal(); // re-render with photo loaded
+    }
 }
 function closeModal(){
     const ovr = document.getElementById('modal-overlay');
@@ -3181,6 +3192,7 @@ function renderModal(){
     const dish=(state.menu?.dishes||[]).find(d=>d.dishLetter===letter);
     if(!dish) return;
     const c=state.checks[letter]||{};
+    const capturedImage=_photoCache[`${state.selectedDate}/${letter}`]||c.capturedImage||null;
     const cls=isCold(dish)?'cold':'hot';
     const overlay=document.getElementById('modal-overlay');
     const s=readingStatus(dish,c);
@@ -3351,8 +3363,8 @@ function renderQcTab(dish, c){
                 <div class="photo-label">Reference</div>
             </div>
             <div class="photo">
-                ${c.capturedImage
-                    ? `<img src="${escapeAttr(c.capturedImage)}" alt="Today's capture"/>
+                ${capturedImage
+                    ? `<img src="${escapeAttr(capturedImage)}" alt="Today's capture"/>
                        <div class="photo-label">Today</div>
                        <button class="photo-action" type="button" data-action="open-camera">Retake</button>`
                     : `<div class="photo-empty">
@@ -3368,7 +3380,7 @@ function renderQcTab(dish, c){
                 }
             </div>
         </div>
-        ${dish.dishImage && c.capturedImage ? `
+        ${dish.dishImage && capturedImage ? `
             <div class="ai-review-row" style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;padding:10px 12px;background:var(--bg-3);border:1px solid var(--line);border-radius:10px;margin-bottom:14px">
                 <div style="display:flex;flex-direction:column;gap:2px">
                     <span style="font-weight:700;font-size:13px;color:var(--ink)">AI photo review</span>
@@ -3598,8 +3610,8 @@ function renderPhotoTab(dish, c){
                 <div class="photo-label">Reference</div>
             </div>
             <div class="photo">
-                ${c.capturedImage
-                    ? `<img src="${escapeAttr(c.capturedImage)}" alt="Today's capture"/>
+                ${capturedImage
+                    ? `<img src="${escapeAttr(capturedImage)}" alt="Today's capture"/>
                        <div class="photo-label">Today's capture</div>
                        <label class="photo-action"><input type="file" accept="image/*" capture="environment" id="photo-input"/>Retake</label>`
                     : `<div class="photo-empty">
@@ -4230,7 +4242,8 @@ async function callAnthropic(prompt, imageDataUrl, key){
 async function reviewDishWithAI(letter){
     const dish = (state.menu?.dishes || []).find(d => d.dishLetter === letter);
     const c = state.checks[letter] || {};
-    if(!c.capturedImage){ toast('Take a photo first — AI rates from the picture','fail'); return; }
+    const _cachedPhoto = _photoCache[`${state.selectedDate}/${letter}`] || c.capturedImage || null;
+    if(!_cachedPhoto){ toast('Take a photo first — AI rates from the picture','fail'); return; }
     if(!dish){ toast('Dish not found in this week\'s menu','fail'); return; }
 
     const cfg = getAiConfig();
@@ -4245,22 +4258,22 @@ async function reviewDishWithAI(letter){
     try {
         let review;
         if(cfg.provider === 'groq' && cfg.key){
-            review = await callGroq(buildAiPrompt(dish, c), c.capturedImage, cfg.key);
+            review = await callGroq(buildAiPrompt(dish, c), _cachedPhoto, cfg.key);
         } else if(cfg.provider === 'gemini' && cfg.key){
-            review = await callGemini(buildAiPrompt(dish, c), c.capturedImage, cfg.key, {
+            review = await callGemini(buildAiPrompt(dish, c), _cachedPhoto, cfg.key, {
                 onStatus: (msg) => { if(btn){ btn.textContent = msg; } }
             });
         } else if(cfg.provider === 'openai' && cfg.key){
-            review = await callOpenAi(buildAiPrompt(dish, c), c.capturedImage, cfg.key);
+            review = await callOpenAi(buildAiPrompt(dish, c), _cachedPhoto, cfg.key);
         } else if(cfg.provider === 'anthropic' && cfg.key){
-            review = await callAnthropic(buildAiPrompt(dish, c), c.capturedImage, cfg.key);
+            review = await callAnthropic(buildAiPrompt(dish, c), _cachedPhoto, cfg.key);
         } else if(proxyUrl){
             const res = await fetch(proxyUrl, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     referenceUrl: dish.dishImage,
-                    capturedDataUrl: c.capturedImage,
+                    capturedDataUrl: _cachedPhoto,
                     dishName: dish.dishName,
                     ingredients: (dish.dishIngredients || []).map(i => i.name)
                 })

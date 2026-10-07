@@ -3224,7 +3224,7 @@ function renderModal(){
                 <button class="modal-tab ${tab==='dispatch'?'is-active':''} ${hasDispatch?'has-data':''}" data-tab="dispatch"><span class="tab-dot"></span>③ Dispatch</button>
             </div>
             <div class="modal-body" id="modal-body">
-                ${renderTabContent(tab, dish, c)}
+                ${renderTabContent(tab, dish, c, capturedImage)}
             </div>
             <div class="modal-foot">
                 <span class="hint">Auto-saves on blur. <span class="save-state" id="modal-save-state"></span></span>
@@ -3238,7 +3238,7 @@ function renderModal(){
     bindTabHandlers(tab, dish);
 }
 
-function renderTabContent(tab, dish, c){
+function renderTabContent(tab, dish, c, capturedImage){
     if(tab === 'assembly') return renderStageTab('assembly', 'Assembly', dish, c);
     if(tab === 'dispatch') return renderStageTab('dispatch', 'Dispatch', dish, c);
     if(tab === 'ingredient') return renderIngredientTab(dish, c);

@@ -1836,6 +1836,20 @@ async function loadPhoto(date, letter){
     const snap = await get(ref(db, `quality-check-photos/${date}/${letter}`));
     return snap.val() || null;
 }
+/* Assembly photos stored separately — same reason as QC photos */
+async function saveAssemblyPhoto(dishLetter, dataUrl){
+    const cacheKey=`asm/${state.selectedDate}/${dishLetter}`;
+    _photoCache[cacheKey]=dataUrl;
+    await set(ref(db,`quality-check-photos/assembly/${state.selectedDate}/${dishLetter}`), dataUrl);
+    await saveStage(dishLetter,"assembly",{hasImage:true});
+}
+async function loadAssemblyPhoto(date, letter){
+    const cacheKey=`asm/${date}/${letter}`;
+    if(_photoCache[cacheKey]!==undefined) return _photoCache[cacheKey];
+    const snap=await get(ref(db,`quality-check-photos/assembly/${date}/${letter}`));
+    _photoCache[cacheKey]=snap.val()||null;
+    return _photoCache[cacheKey];
+}
 async function saveCheckField(dishLetter, partial){
     const path=`quality-checks/${state.selectedDate}/${dishLetter}`;
     await update(ref(db, path), { ...partial, date: state.selectedDate, dishLetter, timestamp: serverTimestamp() });
@@ -3171,14 +3185,23 @@ async function openModal(letter){
     renderModal();
     document.getElementById('modal-overlay').classList.remove('hidden');
     lockBodyScroll();
-    // Lazy-load photo when modal opens — only for this dish, only if it has a photo
+    // Lazy-load QC + Assembly photos when modal opens
     const c = state.checks[letter] || {};
+    let needsRerender = false;
     const cacheKey = `${state.selectedDate}/${letter}`;
     if((c.hasPhoto || c.capturedImage) && !_photoCache[cacheKey]){
         if(c.capturedImage){ _photoCache[cacheKey] = c.capturedImage; }
         else { const photo = await loadPhoto(state.selectedDate, letter); if(photo) _photoCache[cacheKey] = photo; }
-        renderModal();
+        needsRerender = true;
     }
+    const asmCacheKey = `asm/${state.selectedDate}/${letter}`;
+    const asmHasImage = c.assembly && (c.assembly.hasImage || c.assembly.image);
+    if(asmHasImage && !_photoCache[asmCacheKey]){
+        if(c.assembly && c.assembly.image){ _photoCache[asmCacheKey] = c.assembly.image; }
+        else { const p = await loadAssemblyPhoto(state.selectedDate, letter); if(p) _photoCache[asmCacheKey] = p; }
+        needsRerender = true;
+    }
+    if(needsRerender) renderModal();
 }
 function closeModal(){
     const ovr = document.getElementById('modal-overlay');
@@ -3516,7 +3539,7 @@ function renderStageTab(stage, label, dish, c){
         };
         // Assembly photo (no reference image — single panel + camera button).
         // Stored separately from QC's photo at c.assembly.image so both can coexist.
-        const asmImage = c.assembly && c.assembly.image;
+        const asmImage = _photoCache[`asm/${state.selectedDate}/${dish.dishLetter}`] || (c.assembly && c.assembly.image) || null;
         const photoBlock = `
             <div class="section-mini" style="margin-top:14px">Assembly photo · single shot from the line</div>
             <div class="asm-photo-row">
@@ -3800,10 +3823,10 @@ function bindTabHandlers(tab, dish){
             });
         });
 
-        // Assembly photo — write to c.assembly.image via saveStage so it
-        // doesn't collide with the QC photo at c.capturedImage.
+        // Assembly photo — saved to separate path to keep quality-checks small
         const saveAsmPhoto = async (dataUrl) => {
-            await saveStage(lettr, 'assembly', { image: dataUrl, time: nowHHMM() });
+            await saveAssemblyPhoto(lettr, dataUrl);
+            await saveStage(lettr, 'assembly', { time: nowHHMM() });
         };
         overlay.querySelectorAll('[data-asm-camera]').forEach(btn => {
             btn.addEventListener('click', (e) => { e.preventDefault(); openCamera(lettr, { onCapture: saveAsmPhoto }); });
@@ -3815,7 +3838,7 @@ function bindTabHandlers(tab, dish){
                 if(!file) return;
                 try {
                     toast('Processing photo…');
-                    const dataUrl = await resizeImageToDataUrl(file, 1024, 0.85);
+                    const dataUrl = await resizeImageToDataUrl(file, 600, 0.72);
                     await saveAsmPhoto(dataUrl);
                     toast('Photo saved','ok');
                     renderModal();
